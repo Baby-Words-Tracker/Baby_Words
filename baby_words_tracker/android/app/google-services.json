@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "37552098276",
+    "project_id": "baby-word-tracker",
+    "storage_bucket": "baby-word-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37552098276:android:e325a32d1990f42f60d5f1",
+        "android_client_info": {
+          "package_name": "com.example.baby_words_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDw0xn1tqT9cP2Po5WFPEgkQ8Xf7To4BO0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
