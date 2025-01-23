@@ -12,7 +12,12 @@
           "package_name": "com.example.baby_words_tracker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "37552098276-kl9s1djkavnfq9pngml0nt32ebqc00q3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDw0xn1tqT9cP2Po5WFPEgkQ8Xf7To4BO0"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "37552098276-kl9s1djkavnfq9pngml0nt32ebqc00q3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.babyWordsTracker"
+              }
+            }
+          ]
         }
       }
     }
