@@ -1,17 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
-class repository {
+class FirestoreRepository {
   final database = FirebaseFirestore.instance;
 
-  repository();
+  FirestoreRepository();
 
-  //TODO: change this so that we can set the id if needed
   Future<String> create(String collectionName, Map<String, dynamic> data) async {
     final collection = database.collection(collectionName);
     final docRef = await collection.add(data);
     return docRef.id;
   }
+
+  //TODO: add create function that allows docId as argument
 
   Future<Map<String, dynamic>> read(String collectionName, String docId) async {
     final docRef = database.collection(collectionName).doc(docId);
