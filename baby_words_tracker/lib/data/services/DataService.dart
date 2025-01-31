@@ -76,10 +76,10 @@ class DataService{
 
   //word_tracker services
   //TODO: change to be a subcollection
-  String createWordTracker(String wordID, DateTime firstUtterance, int numUtterances, String videoID) {
+  String createWordTracker(String childId, String wordID, DateTime firstUtterance, int numUtterances, String videoID) {
     final object = WordTracker(id: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
     late String returnId; 
-    repo.create("WordTracker", object.toMap()).then(
+    repo.createSubcollection("Child", childId, "WordTracker", object.toMap()).then(
       (id) {
         returnId = id;
       }
