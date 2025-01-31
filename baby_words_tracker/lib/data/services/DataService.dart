@@ -17,8 +17,8 @@ class DataService{
   DataService();
 
   //parent services
-  String createParent(String par_id, String parEmail, String parName, List<String> parChildIDs ) {
-    final par = Parent(id : par_id, email: parEmail, name : parName, childIDs : parChildIDs); 
+  String createParent(String parEmail, String parName, List<String> parChildIDs ) {
+    final par = Parent(email: parEmail, name : parName, childIDs : parChildIDs); 
     late String returnId; 
     repo.create("Parent", par.toMap()).then(
       (id) {
