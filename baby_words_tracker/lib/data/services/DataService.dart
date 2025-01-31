@@ -29,30 +29,14 @@ class DataService{
   }
 
   void addChildToParent(String parentId, String childId){
-    late Parent parentObject;
-    repo.read("Parent", parentId).then(
-      (data) {
-        parentObject = Parent.fromMap(data);
-      }
-    );
-    parentObject.childIDs.add(childId);
-
-    late Child childObject;
-    repo.read("Child", childId).then(
-      (data) {
-        childObject = Child.fromMap(data);
-      }
-    );
-    childObject.parentIDs.add(parentId);
-
-    repo.update("Parent", parentId, parentObject.toMap());
-    repo.update("Child", childId, childObject.toMap());
+    repo.appendToArrayField("Parent", parentId, "childIDs", childId);
+    repo.appendToArrayField("Child", childId, "parentIDs", parentId)
   }
 
 
   //child services
-  String createChild(String cid, DateTime cBirthDay, String cName, int cWordCount, List<String> cParentIDs) {
-    final object = Child(id : cid, birthday: cBirthDay, name: cName, wordCount: cWordCount, parentIDs: cParentIDs);
+  String createChild(DateTime cBirthDay, String cName, int cWordCount, List<String> cParentIDs) {
+    final object = Child(birthday: cBirthDay, name: cName, wordCount: cWordCount, parentIDs: cParentIDs);
     late String returnId;
     repo.create("Child", object.toMap()).then(
       (id) {
@@ -76,7 +60,7 @@ class DataService{
 
   //word_tracker services
   //TODO: change to be a subcollection
-  String createWordTracker(String childId, String wordID, DateTime firstUtterance, int numUtterances, String videoID) {
+  String createWordTracker(String childId, String wordID, DateTime firstUtterance, int numUtterances, [String? videoID]) {
     final object = WordTracker(id: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
     late String returnId; 
     repo.createSubcollection("Child", childId, "WordTracker", object.toMap()).then(
@@ -84,18 +68,18 @@ class DataService{
         returnId = id;
       }
     );
-    return returnId; 
+    return returnId;
   }
 
   //researcher services
-  String addResearcher(String researcherID, String email, String name, String institution, String? phoneNumber) {
-    final object = Researcher(id: researcherID, email: email, name: name, institution: institution);
+  String addResearcher(String email, String name, String institution, [String? phoneNumber]) {
+    final object = Researcher(email: email, name: name, institution: institution, phoneNumber: phoneNumber);
     late String returnId;
     repo.create("Researcher", object.toMap()).then(
       (id) {
         returnId = id;
       }
-    ); 
+    );
     return returnId;
   }
 
