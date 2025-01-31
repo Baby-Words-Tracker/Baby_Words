@@ -14,6 +14,12 @@ class FirestoreRepository {
 
   //TODO: add create function that allows docId as argument
 
+  Future<String> createSubcollection(String collectionName, String docId, String subcollectionName, Map<String, dynamic> data) async{
+      final CollectionReference ref = database.collection(collectionName).doc(docId).collection(subcollectionName);
+      final docRef = await ref.add(data);
+      return docRef.id; 
+  }
+
   Future<Map<String, dynamic>> read(String collectionName, String docId) async {
     final docRef = database.collection(collectionName).doc(docId);
     final doc = await docRef.get();
