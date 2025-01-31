@@ -65,7 +65,7 @@ class FirestoreRepository {
   }
 
   //isEqualTo
-  Future<List<Map<String, dynamic>>> query(String collectionName, String field, dynamic value) async {
+  Future<List<Map<String, dynamic>>> queryByField(String collectionName, String field, dynamic value) async {
     final collection = database.collection(collectionName);
     final snapshot = await collection.where(field, isEqualTo: value).get();
     if (snapshot.docs.isEmpty) {
