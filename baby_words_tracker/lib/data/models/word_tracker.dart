@@ -3,28 +3,28 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Wordtracker {
-  final String wordID;
+class WordTracker {
+  final String? id;
   final DateTime firstUtterance;
   final int numUtterances;
   final String videoID;
 
 
-  Wordtracker({
-    required this.wordID,
+  WordTracker({
+    this.id,
     required this.firstUtterance,
     required this.numUtterances,
     required this.videoID,
   });
 
-  Wordtracker copyWith({
-    String? wordID,
+  WordTracker copyWith({
+    String? id,
     DateTime? firstUtterance,
     int? numUtterances,
     String? videoID,
   }) {
-    return Wordtracker(
-      wordID: wordID ?? this.wordID,
+    return WordTracker(
+      id: id ?? this.id,
       firstUtterance: firstUtterance ?? this.firstUtterance,
       numUtterances: numUtterances ?? this.numUtterances,
       videoID: videoID ?? this.videoID,
@@ -33,16 +33,14 @@ class Wordtracker {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'wordID': wordID,
       'firstUtterance': Timestamp.fromDate(firstUtterance),
       'numUtterances': numUtterances,
       'videoID': videoID,
     };
   }
 
-  factory Wordtracker.fromMap(Map<String, dynamic> map) {
-    return Wordtracker(
-      wordID: map['wordID'] as String,
+  factory WordTracker.fromMap(Map<String, dynamic> map) {
+    return WordTracker(
       firstUtterance: map['firstUtterance'] != Null ? (map['firstUtterance'] as Timestamp).toDate() :  DateTime.fromMillisecondsSinceEpoch(0),
       numUtterances: (map['numUtterances'] ?? 0) as int,
       videoID: (map['videoID'] ?? '') as String,
@@ -51,19 +49,19 @@ class Wordtracker {
 
   String toJson() => json.encode(toMap());
 
-  factory Wordtracker.fromJson(String source) => Wordtracker.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory WordTracker.fromJson(String source) => WordTracker.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'Wordtracker(wordID: $wordID, firstUtterance: $firstUtterance, numUtterances: $numUtterances, videoID: $videoID)';
+    return 'Wordtracker(wordID: $id, firstUtterance: $firstUtterance, numUtterances: $numUtterances, videoID: $videoID)';
   }
 
   @override
-  bool operator ==(covariant Wordtracker other) {
+  bool operator ==(covariant WordTracker other) {
     if (identical(this, other)) return true;
   
     return 
-      other.wordID == wordID &&
+      other.id == id &&
       other.firstUtterance == firstUtterance &&
       other.numUtterances == numUtterances &&
       other.videoID == videoID;
@@ -71,7 +69,7 @@ class Wordtracker {
 
   @override
   int get hashCode {
-    return wordID.hashCode ^
+    return (id?.hashCode ?? 0) ^
       firstUtterance.hashCode ^
       numUtterances.hashCode ^
       videoID.hashCode;

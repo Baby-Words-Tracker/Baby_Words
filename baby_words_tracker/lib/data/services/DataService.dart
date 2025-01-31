@@ -1,6 +1,6 @@
 import '../repositories/FirestoreRepository.dart';
-import '../models/Child.dart';
-import '../models/Parent.dart';
+import '../models/child.dart';
+import '../models/parent.dart';
 import '../models/researcher.dart';
 import '../models/word_tracker.dart';
 import '../models/word.dart';
@@ -77,7 +77,7 @@ class DataService{
   //word_tracker services
   //TODO: change to be a subcollection
   String createWordTracker(String wordID, DateTime firstUtterance, int numUtterances, String videoID) {
-    final object = Wordtracker(wordID: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
+    final object = WordTracker(id: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
     late String returnId; 
     repo.create("WordTracker", object.toMap()).then(
       (id) {
@@ -89,7 +89,7 @@ class DataService{
 
   //researcher services
   String addResearcher(String researcherID, String email, String name, String institution, String? phoneNumber) {
-    final object = Researcher(researcherID: researcherID, email: email, name: name, institution: institution);
+    final object = Researcher(id: researcherID, email: email, name: name, institution: institution);
     late String returnId;
     repo.create("Researcher", object.toMap()).then(
       (id) {

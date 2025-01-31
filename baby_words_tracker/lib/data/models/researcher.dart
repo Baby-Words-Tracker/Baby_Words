@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 class Researcher {
-  final String researcherID;
+  final String? id;
   final String email;
   final String name;
   final String institution;
@@ -10,7 +10,7 @@ class Researcher {
 
 
   Researcher({
-    required this.researcherID,
+    this.id,
     required this.email,
     required this.name,
     required this.institution,
@@ -18,14 +18,14 @@ class Researcher {
   });
 
   Researcher copyWith({
-    String? researcherID,
+    String? id,
     String? email,
     String? name,
     String? institution,
     String? phoneNumber,
   }) {
     return Researcher(
-      researcherID: researcherID ?? this.researcherID,
+      id: id ?? this.id,
       email: email ?? this.email,
       name: name ?? this.name,
       institution: institution ?? this.institution,
@@ -35,7 +35,6 @@ class Researcher {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'researcherID': researcherID,
       'email': email,
       'name': name,
       'institution': institution,
@@ -45,7 +44,6 @@ class Researcher {
 
   factory Researcher.fromMap(Map<String, dynamic> map) {
     return Researcher(
-      researcherID: map['researcherID'] as String,
       email: map['email'] as String,
       name: map['name'] as String,
       institution: map['institution'] as String,
@@ -59,7 +57,7 @@ class Researcher {
 
   @override
   String toString() {
-    return 'Researcher(researcherID: $researcherID, email: $email, name: $name, institution: $institution, phoneNumber: $phoneNumber)';
+    return 'Researcher(id: $id, email: $email, name: $name, institution: $institution, phoneNumber: $phoneNumber)';
   }
 
   @override
@@ -67,7 +65,7 @@ class Researcher {
     if (identical(this, other)) return true;
   
     return 
-      other.researcherID == researcherID &&
+      other.id == id &&
       other.email == email &&
       other.name == name &&
       other.institution == institution &&
@@ -76,7 +74,7 @@ class Researcher {
 
   @override
   int get hashCode {
-    return researcherID.hashCode ^
+    return (id?.hashCode ?? 0) ^
       email.hashCode ^
       name.hashCode ^
       institution.hashCode ^

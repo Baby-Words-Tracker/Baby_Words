@@ -5,20 +5,19 @@ import 'package:collection/collection.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Child {
-  final String id;
+  final String? id;
   final DateTime birthday;
   final String name;
   final int wordCount;
   final List<String> parentIDs;
   
   Child({
-    required this.id,
+    this.id,
     required this.birthday,
     required this.name,
     required this.wordCount,
     required this.parentIDs,
   });
-
 
   Child copyWith({
     String? id,
@@ -38,7 +37,6 @@ class Child {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
       'birthday': Timestamp.fromDate(birthday),
       'name': name,
       'wordCount': wordCount,
@@ -48,7 +46,6 @@ class Child {
 
   factory Child.fromMap(Map<String, dynamic> map) {
     return Child(
-      id: map['id'] as String,
       birthday: map['birthday'] != Null ? (map['birthday'] as Timestamp).toDate() :  DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
       wordCount: (map['wordCount'] ?? 0) as int,
@@ -80,7 +77,7 @@ class Child {
 
   @override
   int get hashCode {
-    return id.hashCode ^
+    return (id?.hashCode ?? 0) ^
       birthday.hashCode ^
       name.hashCode ^
       wordCount.hashCode ^

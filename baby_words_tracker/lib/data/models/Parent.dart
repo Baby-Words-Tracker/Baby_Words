@@ -5,13 +5,13 @@ import 'package:collection/collection.dart';
 
 
 class Parent {
-  final String id;
+  final String? id;
   final String email;
   final String name;
   final List<String> childIDs;
   
   Parent({
-    required this.id,
+    this.id,
     required this.email,
     required this.name,
     required this.childIDs,
@@ -34,7 +34,6 @@ class Parent {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
       'email': email,
       'name': name,
       'childIDs': childIDs,
@@ -43,10 +42,9 @@ class Parent {
 
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
-      id: map['id'] as String,
       email: map['email'] as String,
       name: (map['name'] ?? '') as String,
-      childIDs: map['childIDs'] != Null ? List<String>.from(map['childIDs'] as List<String>) : [],
+      childIDs: map['childIDs'] != null ? List<String>.from(map['childIDs'] as List<String>) : [],
     );
   }
 
@@ -73,7 +71,7 @@ class Parent {
 
   @override
   int get hashCode {
-    return id.hashCode ^
+    return (id?.hashCode ?? 0) ^
       email.hashCode ^
       name.hashCode ^
       childIDs.hashCode;
