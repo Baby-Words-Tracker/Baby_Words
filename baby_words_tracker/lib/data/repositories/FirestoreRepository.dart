@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class FirestoreRepository {
-  final database = FirebaseFirestore.instance;
-
+  static final database = FirebaseFirestore.instance;
+  
   FirestoreRepository();
 
   Future<String> create(String collectionName, Map<String, dynamic> data) async {
