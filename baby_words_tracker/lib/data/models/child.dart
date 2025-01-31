@@ -37,7 +37,7 @@ class Child {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'birthday': Timestamp.fromDate(birthday),
+      'birthday': birthday,
       'name': name,
       'wordCount': wordCount,
       'parentIDs': parentIDs,
@@ -46,7 +46,7 @@ class Child {
 
   factory Child.fromMap(Map<String, dynamic> map) {
     return Child(
-      birthday: map['birthday'] != null ? (map['birthday'] as Timestamp).toDate() :  DateTime.fromMillisecondsSinceEpoch(0),
+      birthday: map['birthday'] is Timestamp ? (map['birthday'] as Timestamp).toDate() : (map['birthday'] ?? DateTime.fromMillisecondsSinceEpoch(0)),
       name: (map['name'] ?? '') as String,
       wordCount: (map['wordCount'] ?? 0) as int,
       parentIDs: map['parentIDs'] != null ?  List<String>.from(map['parentIDs'] as List<String>) : [],

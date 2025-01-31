@@ -33,7 +33,7 @@ class WordTracker {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'firstUtterance': Timestamp.fromDate(firstUtterance),
+      'firstUtterance': firstUtterance,
       'numUtterances': numUtterances,
       'videoID': videoID,
     };
