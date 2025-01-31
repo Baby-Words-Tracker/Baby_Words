@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreRepository {
   static final database = FirebaseFirestore.instance;
-  
+
   FirestoreRepository();
 
   Future<String> create(String collectionName, Map<String, dynamic> data) async {
@@ -32,6 +32,21 @@ class FirestoreRepository {
   Future<void> update(String collectionName, String docId, Map<String, dynamic> data) async {
     final docRef = database.collection(collectionName).doc(docId);
     await docRef.update(data);
+  }
+
+  Future<void> updateField(String collectionName, String docId, String field, dynamic value) async {
+    final docRef = database.collection(collectionName).doc(docId);
+    await docRef.update({field: value});
+  }
+
+  Future<void> appendToArrayField(String collectionName, String docID, String field, dynamic value) async {
+    final docRef = database.collection(collectionName).doc(docID);
+    await docRef.update({field: FieldValue.arrayUnion([value])});
+  }
+
+  Future<void> removeFromArrayField(String collectionName, String docID, String field, dynamic value) async {
+    final docRef = database.collection(collectionName).doc(docID);
+    await docRef.update({field: FieldValue.arrayRemove([value])});
   }
 
   Future<void> delete(String collectionName, String docId) async {
