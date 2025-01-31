@@ -30,7 +30,7 @@ class DataService{
 
   void addChildToParent(String parentId, String childId){
     repo.appendToArrayField("Parent", parentId, "childIDs", childId);
-    repo.appendToArrayField("Child", childId, "parentIDs", parentId)
+    repo.appendToArrayField("Child", childId, "parentIDs", parentId);
   }
 
 
@@ -50,7 +50,7 @@ class DataService{
   String createWord(String word_name, List<LanguageCode> LanguageCodes, PartOfSpeech PartOfSpeech, String Definition) {
     final object = Word(word: word_name, languageCodes : LanguageCodes, partOfSpeech: PartOfSpeech, definition: Definition);
     late String returnId;
-    repo.create("Word", object.toMap()).then(
+    repo.createWithId("Word", word_name, object.toMap()).then(
       (id) {
         returnId = id;
       }
@@ -59,11 +59,10 @@ class DataService{
   }
 
   //word_tracker services
-  //TODO: change to be a subcollection
   String createWordTracker(String childId, String wordID, DateTime firstUtterance, int numUtterances, [String? videoID]) {
     final object = WordTracker(id: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
     late String returnId; 
-    repo.createSubcollection("Child", childId, "WordTracker", object.toMap()).then(
+    repo.createSubcollectionWithId("Child", childId, "WordTracker", wordID, object.toMap()).then(
       (id) {
         returnId = id;
       }
