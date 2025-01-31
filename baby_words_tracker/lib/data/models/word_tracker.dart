@@ -7,14 +7,14 @@ class WordTracker {
   final String? id;
   final DateTime firstUtterance;
   final int numUtterances;
-  final String videoID;
+  final String? videoID;
 
 
   WordTracker({
     this.id,
     required this.firstUtterance,
     required this.numUtterances,
-    required this.videoID,
+    this.videoID,
   });
 
   WordTracker copyWith({
@@ -43,7 +43,7 @@ class WordTracker {
     return WordTracker(
       firstUtterance: map['firstUtterance'] != null ? (map['firstUtterance'] as Timestamp).toDate() :  DateTime.fromMillisecondsSinceEpoch(0),
       numUtterances: (map['numUtterances'] ?? 0) as int,
-      videoID: (map['videoID'] ?? '') as String,
+      videoID: map['videoID'] != null ? map['videoID'] as String : null,
     );
   }
 
@@ -72,6 +72,6 @@ class WordTracker {
     return (id?.hashCode ?? 0) ^
       firstUtterance.hashCode ^
       numUtterances.hashCode ^
-      videoID.hashCode;
+      (videoID?.hashCode ?? 0);
   }
 }
