@@ -39,6 +39,15 @@ class FirestoreRepository {
     return doc.data() as Map<String, dynamic>;
   }
 
+  Future<Map<String,dynamic>> readSubcollection(String collectionName, String docId, String subcollectionName, String subId) async {
+    final docRef = database.collection(collectionName).doc(docId).collection(subcollectionName).doc(subId);
+    final doc = await docRef.get();
+    if(!doc.exists) {
+      throw Exception('Document not found');
+    }
+    return doc.data() as Map<String, dynamic>;
+  }
+
   Future<void> update(String collectionName, String docId, Map<String, dynamic> data) async {
     final docRef = database.collection(collectionName).doc(docId);
     await docRef.update(data);

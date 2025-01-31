@@ -12,7 +12,7 @@ set of functions that are allowed to directly access the models and repository
 */
 class DataService{
 
-  final FirestoreRepository repo = FirestoreRepository();
+  static final FirestoreRepository repo = FirestoreRepository();
 
   DataService();
 

@@ -54,7 +54,7 @@ class Word {
 
   String toJson() => json.encode(toMap());
 
-  factory Word.fromJson(String source) => Word.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Word.fromJson(String source, String id) => Word.fromMap(json.decode(source) as Map<String, dynamic>, id);
 
   @override
   String toString() {
