@@ -6,6 +6,7 @@ class repository {
 
   repository();
 
+  //TODO: change this so that we can set the id if needed
   Future<String> create(String collectionName, Map<String, dynamic> data) async {
     final collection = database.collection(collectionName);
     final docRef = await collection.add(data);
