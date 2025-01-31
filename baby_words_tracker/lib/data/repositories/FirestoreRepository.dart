@@ -58,6 +58,11 @@ class FirestoreRepository {
     await docRef.update({field: value});
   }
 
+  Future<void> incrementField(String collectionName, String docId, String field, int value) async {
+    final docRef = database.collection(collectionName).doc(docId);
+    await docRef.update({field: FieldValue.increment(value)});
+  }
+
   Future<void> appendToArrayField(String collectionName, String docID, String field, dynamic value) async {
     final docRef = database.collection(collectionName).doc(docID);
     await docRef.update({field: FieldValue.arrayUnion([value])});

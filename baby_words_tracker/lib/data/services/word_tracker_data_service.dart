@@ -7,10 +7,11 @@ class WordTrackerDataService {
 
   Future<String> createWordTracker(String childId, String wordID, DateTime firstUtterance, int numUtterances, [String? videoID]) async {
     final object = WordTracker(id: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
+    fireRepo.incrementField("Child", childId, "wordCount", 1);
     return await fireRepo.createSubcollectionWithId("Child", childId, "WordTracker", wordID, object.toMap());
   }
 
-  Future<WordTracker> getResearcher(String childId, String id) async {
+  Future<WordTracker> getWordTracker(String childId, String id) async {
     return WordTracker.fromMap(await fireRepo.readSubcollection("Child", childId, "Word", id));
   }
 
