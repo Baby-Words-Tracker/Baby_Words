@@ -1,5 +1,7 @@
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:collection/collection.dart';
 
 class FirestoreRepository {
   static final database = FirebaseFirestore.instance;
@@ -46,6 +48,21 @@ class FirestoreRepository {
       throw Exception('Document not found');
     }
     return doc.data() as Map<String, dynamic>;
+  }
+
+  Future<List<DataWithId>> readMultiple(String collectionName, List<String> docIds) async {
+    final collection = database.collection(collectionName);
+
+    List<DataWithId> docs = List.empty(growable: true);
+    
+    final List<List<String>> idGroups = docIds.slices(10).toList(); 
+
+    for (final group in idGroups) {
+      final snapshot = await collection.where(FieldPath.documentId, whereIn: group).get();
+      docs.addAll(snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)));
+    }
+
+    return docs;
   }
 
   Future<void> update(String collectionName, String docId, Map<String, dynamic> data) async {
