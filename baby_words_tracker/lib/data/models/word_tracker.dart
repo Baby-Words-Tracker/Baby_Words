@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:baby_words_tracker/util/time_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WordTracker {
@@ -41,7 +42,7 @@ class WordTracker {
 
   factory WordTracker.fromMap(Map<String, dynamic> map) {
     return WordTracker(
-      firstUtterance: map['firstUtterance'] ??  DateTime.fromMillisecondsSinceEpoch(0),
+      firstUtterance: map['firstUtterance'] != null ? convertToDateTime(map['firstUtterance']) : DateTime.fromMillisecondsSinceEpoch(0),
       numUtterances: (map['numUtterances'] ?? 0) as int,
       videoID: map['videoID'] != null ? map['videoID'] as String : null,
     );

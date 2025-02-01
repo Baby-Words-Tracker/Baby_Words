@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:baby_words_tracker/util/time_utils.dart';
+
 import 'package:collection/collection.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -46,7 +48,7 @@ class Child {
 
   factory Child.fromMap(Map<String, dynamic> map) {
     return Child(
-      birthday: map['birthday'] ?? DateTime.fromMillisecondsSinceEpoch(0),
+      birthday: map['birthday'] != null ? convertToDateTime(map['birthday']) : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
       wordCount: (map['wordCount'] ?? 0) as int,
       parentIDs: map['parentIDs'] != null ?  List<String>.from(map['parentIDs'] as List<String>) : [],
