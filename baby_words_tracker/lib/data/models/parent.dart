@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 
 class Parent {
@@ -51,6 +52,12 @@ class Parent {
   String toJson() => json.encode(toMap());
 
   factory Parent.fromJson(String source) => Parent.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  factory Parent.fromDataWithId(DataWithId source) {
+    Map<String, dynamic> data = source.data;
+    data['id'] = source.id;
+    return Parent.fromMap(data); 
+  }
 
   @override
   String toString() {

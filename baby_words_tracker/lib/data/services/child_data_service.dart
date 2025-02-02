@@ -26,5 +26,4 @@ class ChildDataService {
     return child.wordCount; 
   }
 
-  
 }

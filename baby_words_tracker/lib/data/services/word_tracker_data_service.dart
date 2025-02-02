@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
 
 class WordTrackerDataService {
@@ -13,6 +14,22 @@ class WordTrackerDataService {
 
   Future<WordTracker> getWordTracker(String childId, String id) async {
     return WordTracker.fromMap(await fireRepo.readSubcollection("Child", childId, "Word", id));
+  }
+
+  Future<List<WordTracker>> getWordsFromTime(String childId, DateTime time) async {
+    final List<DataWithId> data = await fireRepo.subFieldGreaterThan("Child", childId, "WordTracker", "firstUtterance", time);
+    
+    List<WordTracker> words = List.empty(growable: true);
+    for(DataWithId word in data) {
+      words.add(WordTracker.fromDataWithId(word));
+    }
+
+    return words;
+  }
+
+  Future<List<WordTracker>> getWordsFromDate(String childId, DateTime) async {
+    List<WordTracker> words = List.empty(growable : true); 
+    return words; 
   }
 
 }

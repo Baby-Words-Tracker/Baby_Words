@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:baby_words_tracker/util/time_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class WordTracker {
   final String? id;
@@ -51,6 +52,12 @@ class WordTracker {
   String toJson() => json.encode(toMap());
 
   factory WordTracker.fromJson(String source) => WordTracker.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  factory WordTracker.fromDataWithId(DataWithId source) {
+    Map<String, dynamic> data = source.data;
+    data['id'] = source.id;
+    return WordTracker.fromMap(data); 
+  }
 
   @override
   String toString() {

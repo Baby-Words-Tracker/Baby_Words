@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:collection/collection.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Word {
 
@@ -55,6 +56,10 @@ class Word {
   String toJson() => json.encode(toMap());
 
   factory Word.fromJson(String source, String id) => Word.fromMap(json.decode(source) as Map<String, dynamic>, id);
+
+  factory Word.fromDataWithId(DataWithId source) {
+    return Word.fromMap(source.data, source.id); 
+  }
 
   @override
   String toString() {

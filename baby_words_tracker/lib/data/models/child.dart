@@ -5,6 +5,7 @@ import 'package:baby_words_tracker/util/time_utils.dart';
 
 import 'package:collection/collection.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Child {
   final String? id;
@@ -58,6 +59,12 @@ class Child {
   String toJson() => json.encode(toMap());
 
   factory Child.fromJson(String source) => Child.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  factory Child.fromDataWithId(DataWithId source) {
+    Map<String, dynamic> data = source.data;
+    data['id'] = source.id;
+    return Child.fromMap(data); 
+  }
 
   @override
   String toString() {

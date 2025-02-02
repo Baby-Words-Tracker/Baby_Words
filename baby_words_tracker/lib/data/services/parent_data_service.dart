@@ -1,7 +1,8 @@
 import 'package:baby_words_tracker/data/models/parent.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:flutter/foundation.dart';
 
 class ParentDataService {
 
@@ -24,10 +25,11 @@ class ParentDataService {
 
   Future<List<Child>> getChildList(String id) async {
     final parent = Parent.fromMap(await fireRepo.read("Parent", id));
+    final List<DataWithId> data= await fireRepo.readMultiple("Child", parent.childIDs);
     List<Child> children = List.empty(growable: true);
-    final childService = ChildDataService();
-    for(String childId in parent.childIDs) {
-      children.add(await childService.getChild(childId)); 
+
+    for(DataWithId child in data) {
+      children.add(Child.fromDataWithId(child)); 
     }
     return children; 
   }

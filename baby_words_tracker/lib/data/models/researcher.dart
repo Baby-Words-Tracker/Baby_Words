@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Researcher {
   final String? id;
@@ -54,6 +55,12 @@ class Researcher {
   String toJson() => json.encode(toMap());
 
   factory Researcher.fromJson(String source) => Researcher.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  factory Researcher.fromDataWithId(DataWithId source) {
+    Map<String, dynamic> data = source.data;
+    data['id'] = source.id;
+    return Researcher.fromMap(data); 
+  }
 
   @override
   String toString() {
