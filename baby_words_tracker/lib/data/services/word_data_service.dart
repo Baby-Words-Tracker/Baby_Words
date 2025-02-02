@@ -16,7 +16,7 @@ class WordDataService {
   }
 
   Future<Word> getWord(String id) async {
-    return Word.fromMap(await fireRepo.read("Word", id), id);
+    return Word.fromDataWithId(await fireRepo.read("Word", id));
   }
 
 }

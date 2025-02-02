@@ -15,7 +15,7 @@ class ParentDataService {
   }
 
   Future<Parent> getParent(String id) async {
-    return Parent.fromMap(await fireRepo.read("Parent", id));
+    return Parent.fromDataWithId(await fireRepo.read("Parent", id));
   }
 
   void addChildToParent(String parentId, String childId) async {
@@ -24,7 +24,7 @@ class ParentDataService {
   }
 
   Future<List<Child>> getChildList(String id) async {
-    final parent = Parent.fromMap(await fireRepo.read("Parent", id));
+    final parent = Parent.fromDataWithId(await fireRepo.read("Parent", id));
     final List<DataWithId> data= await fireRepo.readMultiple("Child", parent.childIDs);
     List<Child> children = List.empty(growable: true);
 

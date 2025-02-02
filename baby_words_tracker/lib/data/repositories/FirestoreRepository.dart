@@ -32,22 +32,22 @@ class FirestoreRepository {
     return subDoc; 
   }
 
-  Future<Map<String, dynamic>> read(String collectionName, String docId) async {
+  Future<DataWithId> read(String collectionName, String docId) async {
     final docRef = database.collection(collectionName).doc(docId);
     final doc = await docRef.get();
     if (!doc.exists) {
       throw Exception('Document not found');
     }
-    return doc.data() as Map<String, dynamic>;
+    return DataWithId(id: doc.id, data: doc.data() as Map<String, dynamic>);
   }
 
-  Future<Map<String,dynamic>> readSubcollection(String collectionName, String docId, String subcollectionName, String subId) async {
+  Future<DataWithId> readSubcollection(String collectionName, String docId, String subcollectionName, String subId) async {
     final docRef = database.collection(collectionName).doc(docId).collection(subcollectionName).doc(subId);
     final doc = await docRef.get();
     if(!doc.exists) {
       throw Exception('Document not found');
     }
-    return doc.data() as Map<String, dynamic>;
+    return DataWithId(id: doc.id, data : doc.data() as Map<String, dynamic>);
   }
 
   Future<List<DataWithId>> readMultiple(String collectionName, List<String> docIds) async {

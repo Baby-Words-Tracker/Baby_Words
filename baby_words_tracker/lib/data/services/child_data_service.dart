@@ -18,11 +18,11 @@ class ChildDataService {
   }
 
   Future<Child> getChild(String id) async {
-    return Child.fromMap(await firebaseRepo.read("Child", id));
+    return Child.fromDataWithId(await firebaseRepo.read("Child", id));
   }
 
   Future<int> getNumWords(String id) async {
-    final child = Child.fromMap(await firebaseRepo.read("Child", id));
+    final child = Child.fromDataWithId(await firebaseRepo.read("Child", id));
     return child.wordCount; 
   }
 

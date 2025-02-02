@@ -12,7 +12,7 @@ class ResearcherDataService {
   }
 
   Future<Researcher> getResearcher(String id) async {
-    return Researcher.fromMap(await fireRepo.read("Researcher", id));
+    return Researcher.fromDataWithId(await fireRepo.read("Researcher", id));
   }
 
 }

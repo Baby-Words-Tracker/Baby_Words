@@ -13,7 +13,7 @@ class WordTrackerDataService {
   }
 
   Future<WordTracker> getWordTracker(String childId, String id) async {
-    return WordTracker.fromMap(await fireRepo.readSubcollection("Child", childId, "Word", id));
+    return WordTracker.fromDataWithId(await fireRepo.readSubcollection("Child", childId, "Word", id));
   }
 
   Future<List<WordTracker>> getWordsFromTime(String childId, DateTime time) async {
