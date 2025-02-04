@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'pages/addtext.dart';
+import 'pages/home_page.dart';
+import 'pages/stats.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +25,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
         useMaterial3: true,
       ),
-      home: const AddTextPage(title: 'Baby Word Tracker'),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => HomePage(),
+        '/stats': (context) => StatsPage(),
+        '/addtext': (context) => const AddTextPage(title: "Add Text",),
+      },
     );
   }
 }
