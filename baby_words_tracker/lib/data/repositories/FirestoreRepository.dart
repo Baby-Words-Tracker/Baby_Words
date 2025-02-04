@@ -20,13 +20,13 @@ class FirestoreRepository {
     return docId; 
   }
 
-  Future<String> createSubcollection(String collectionName, String docId, String subcollectionName, Map<String, dynamic> data) async{
+  Future<String> createSubcollectionDoc(String collectionName, String docId, String subcollectionName, Map<String, dynamic> data) async{
       final CollectionReference ref = database.collection(collectionName).doc(docId).collection(subcollectionName);
       final docRef = await ref.add(data);
       return docRef.id; 
   }
 
-  Future<String> createSubcollectionWithId(String collectionName, String docId, String subcollectionName, String subDoc, Map<String, dynamic> data) async {
+  Future<String> createSubcollectionDocWithId(String collectionName, String docId, String subcollectionName, String subDoc, Map<String, dynamic> data) async {
     final collection = database.collection(collectionName).doc(docId).collection(subcollectionName);
     await collection.doc(subDoc).set(data);
     return subDoc; 
