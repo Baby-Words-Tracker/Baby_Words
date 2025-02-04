@@ -15,12 +15,17 @@ class ChildDataService extends ChangeNotifier {
     return object.copyWith(id: returnId); 
   }
 
-  Future<Child> getChild(String id) async {
-    return Child.fromDataWithId(await firebaseRepo.read("Child", id));
+  Future<Child?> getChild(String id) async {
+    final child = await firebaseRepo.read("Child", id);
+    if (child == null) return null;
+    return Child.fromDataWithId(child);
   }
 
   Future<int> getNumWords(String id) async {
-    final child = Child.fromDataWithId(await firebaseRepo.read("Child", id));
+    final object = await firebaseRepo.read("Child", id); 
+    if (object == null) return 0; 
+    
+    final child = Child.fromDataWithId(object);
     return child.wordCount; 
   }
 
