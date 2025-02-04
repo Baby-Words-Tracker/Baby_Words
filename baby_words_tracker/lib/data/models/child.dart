@@ -43,7 +43,7 @@ class Child {
       'birthday': birthday,
       'name': name,
       'wordCount': wordCount,
-      'parentIDs': parentIDs,
+      'parentIDs': parentIDs as List<dynamic>,
     };
   }
 
