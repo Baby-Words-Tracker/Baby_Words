@@ -107,6 +107,17 @@ class FirestoreRepository {
     return data;
   }
 
+  Future<List<DataWithId>> subQueryByField(String collectionName, String docId, String subcollection, String field, dynamic value) async {
+    final collection = database.collection(collectionName).doc(docId).collection(subcollection);
+    final snapshot = await collection.where(field, isEqualTo: value).get();
+    List<DataWithId> data = List.empty(growable: true);
+
+    for(DocumentSnapshot doc in snapshot.docs) {
+      data.add(DataWithId.fromFirestore(doc));
+    }
+    return data;
+  }
+
   Future<List<DataWithId>> fieldGreaterThan(String collectionName, String field, dynamic value) async {
     final collection = database.collection(collectionName);
     final querySnapshot = await collection.where(field, isGreaterThan: value).get();
