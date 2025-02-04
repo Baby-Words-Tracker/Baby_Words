@@ -65,6 +65,21 @@ class FirestoreRepository {
     return docs;
   }
 
+  Future<List<DataWithId>> readMultipleSubcollectionDocs(String collectionName, String docId, String subcollectionName, List<String> docIds) async {
+    final collection = database.collection(collectionName).doc(docId).collection(subcollectionName);
+
+    List<DataWithId> docs = List.empty(growable: true);
+    
+    final List<List<String>> idGroups = docIds.slices(10).toList(); 
+
+    for (final group in idGroups) {
+      final snapshot = await collection.where(FieldPath.documentId, whereIn: group).get();
+      docs.addAll(snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)));
+    }
+
+    return docs;
+  }
+
   Future<void> update(String collectionName, String docId, Map<String, dynamic> data) async {
     final docRef = database.collection(collectionName).doc(docId);
     await docRef.update(data);
