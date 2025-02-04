@@ -27,9 +27,15 @@ class WordTrackerDataService {
     return words;
   }
 
-  Future<List<WordTracker>> getWordsFromDate(String childId, DateTime) async {
-    List<WordTracker> words = List.empty(growable : true); 
-    return words; 
+  Future<List<WordTracker>> getWordsFromDate(String childId, DateTime date) async {
+    final List<DataWithId> data = await fireRepo.subQueryByField("Child", childId, "WordTracker", "firstUtterance", date);
+    
+    List<WordTracker> words = List.empty(growable: true);
+    for(DataWithId word in data) {
+      words.add(WordTracker.fromDataWithId(word));
+    }
+
+    return words;
   }
 
 }
