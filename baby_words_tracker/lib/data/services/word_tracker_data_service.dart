@@ -1,8 +1,9 @@
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:flutter/foundation.dart';
 
-class WordTrackerDataService {
+class WordTrackerDataService  extends ChangeNotifier{
 
   static final fireRepo = FirestoreRepository();
 
@@ -11,6 +12,7 @@ class WordTrackerDataService {
     fireRepo.incrementField("Child", childId, "wordCount", 1);
     String returnId = await fireRepo.createSubcollectionDocWithId("Child", childId, "WordTracker", wordID, object.toMap());
 
+    notifyListeners();
     return object.copyWith(id: returnId);
   }
 
