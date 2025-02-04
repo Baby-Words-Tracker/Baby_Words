@@ -9,11 +9,13 @@ class ParentDataService  extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //Parent services
-  Future<String> createParent(String parEmail, String parName, List<String> parChildIDs ) async {
+  Future<Parent> createParent(String parEmail, String parName, List<String> parChildIDs) async {
     final par = Parent(email: parEmail, name : parName, childIDs : parChildIDs); 
 
+    String returnId = await fireRepo.create("Parent", par.toMap());
     notifyListeners();
-    return await fireRepo.create("Parent", par.toMap());  
+
+    return par.copyWith(id: returnId);  
   }
 
   Future<Parent> getParent(String id) async {

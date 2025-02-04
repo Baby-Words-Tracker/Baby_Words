@@ -7,11 +7,12 @@ class ResearcherDataService extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //Reseacher services
-   Future<String> createResearcher(String email, String name, String institution, [String? phoneNumber]) async {
+   Future<Researcher> createResearcher(String email, String name, String institution, [String? phoneNumber]) async {
     final object = Researcher(email: email, name: name, institution: institution, phoneNumber: phoneNumber);
+    String returnId = await fireRepo.create("Researcher", object.toMap())
 
     notifyListeners();
-    return await fireRepo.create("Researcher", object.toMap());
+    return object.copyWith(id: returnId);
   }
 
   Future<Researcher> getResearcher(String id) async {
