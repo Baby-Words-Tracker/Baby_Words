@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'addtext.dart'; // Import the second page
+import 'add_text.dart'; // Import the second page
 import 'stats.dart';
 
 
