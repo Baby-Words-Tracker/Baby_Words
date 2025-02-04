@@ -15,7 +15,8 @@ import 'package:baby_words_tracker/data/models/word.dart';
 
 class StatsPage extends StatelessWidget {
   @override
-  final TextEditingController _controller = TextEditingController(); // Controller
+  final TextEditingController wordTextController = TextEditingController(); // Controller
+  final TextEditingController idController = TextEditingController(); // Controller
   Widget build(BuildContext context) {
     //FIXME: dependency inject these (obviously)
     ParentDataService parentService = ParentDataService();
@@ -66,10 +67,20 @@ class StatsPage extends StatelessWidget {
             //   child: Text("Add Example Parent and Child (please only press once lmao)"),
             // ),
             TextField(
-              controller: _controller,
+              controller: wordTextController,
               decoration: const InputDecoration(
                 //border: OutlineInputBorder(),
-                hintText: 'Enter word',
+                hintText: 'Add this word to..',
+                hintStyle: TextStyle(color: Colors.white),
+                filled: true,  
+                fillColor: Color(0xFF9E1B32),
+              ),
+            ),
+            TextField(
+              controller: idController,
+              decoration: const InputDecoration(
+                //border: OutlineInputBorder(),
+                hintText: 'child with id.. [or leave empty for testing child]',
                 hintStyle: TextStyle(color: Colors.white),
                 filled: true,  
                 fillColor: Color(0xFF9E1B32),
@@ -79,7 +90,14 @@ class StatsPage extends StatelessWidget {
               //submit button currently doesn't do anything
               child: OutlinedButton(
                 onPressed: () {
-                  addWordToChild(_controller.text, childService, wordService, trackerService);
+                  if (idController.text != "")
+                  {
+                    addWordToChild(wordTextController.text, childService, wordService, trackerService, id: idController.text);
+                  } else {
+                    addWordToChild(wordTextController.text, childService, wordService, trackerService);
+                  }
+                  wordTextController.clear();
+                  idController.clear();
                 },
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Color(0xFF828A8F), 
@@ -148,5 +166,5 @@ async {
   //FIXME: implement language, part of speech, defn
   Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
   //FIXME: numUtterances to be removed
-  trackerService.createWordTracker(id, word, DateTime.now(), 1);
+  trackerService.createWordTracker(id, word, DateTime.now());
 }

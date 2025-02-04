@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
@@ -19,7 +20,8 @@ class WordDataService extends ChangeNotifier{
   }
 
   Future<Word> getWord(String id) async {
-    return Word.fromDataWithId(await fireRepo.read("Word", id));
+    //FIXME: really hacky way to handle nullity
+    return Word.fromDataWithId(await fireRepo.read("Word", id) ?? DataWithId(id: "", data: {"null" : "data"}));
   }
 
 }
