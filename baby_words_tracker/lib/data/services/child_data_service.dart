@@ -1,7 +1,8 @@
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:flutter/foundation.dart';
 
-class ChildDataService {
+class ChildDataService extends ChangeNotifier {
 
   static final firebaseRepo = FirestoreRepository();
 
@@ -14,6 +15,8 @@ class ChildDataService {
         returnId = id;
       }
     );
+
+    notifyListeners();
     return returnId; 
   }
 

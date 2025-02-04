@@ -4,13 +4,15 @@ import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
 import 'package:flutter/foundation.dart';
 
-class ParentDataService {
+class ParentDataService  extends ChangeNotifier{
 
   static final fireRepo = FirestoreRepository();
 
   //Parent services
   Future<String> createParent(String parEmail, String parName, List<String> parChildIDs ) async {
     final par = Parent(email: parEmail, name : parName, childIDs : parChildIDs); 
+
+    notifyListeners();
     return await fireRepo.create("Parent", par.toMap());  
   }
 
@@ -21,6 +23,8 @@ class ParentDataService {
   void addChildToParent(String parentId, String childId) async {
     await fireRepo.appendToArrayField("Parent", parentId, "childIDs", childId);
     await fireRepo.appendToArrayField("Child", childId, "parentIDs", parentId);
+
+    notifyListeners();
   }
 
   Future<List<Child>> getChildList(String id) async {
