@@ -18,8 +18,12 @@ class ParentDataService  extends ChangeNotifier{
     return par.copyWith(id: returnId);  
   }
 
-  Future<Parent> getParent(String id) async {
-    return Parent.fromDataWithId(await fireRepo.read("Parent", id));
+  Future<Parent?> getParent(String id) async {
+    final parent = await fireRepo.read("Parent", id);
+    if (parent == null) {
+      return null;
+    }
+    return Parent.fromDataWithId(parent);
   }
 
   void addChildToParent(String parentId, String childId) async {
@@ -30,9 +34,12 @@ class ParentDataService  extends ChangeNotifier{
   }
 
   Future<List<Child>> getChildList(String id) async {
-    final parent = Parent.fromDataWithId(await fireRepo.read("Parent", id));
-    final List<DataWithId> data= await fireRepo.readMultiple("Child", parent.childIDs);
+    final object = await fireRepo.read("Parent", id);
     List<Child> children = List.empty(growable: true);
+    if(object == null) return children;
+
+    final parent = Parent.fromDataWithId(object);
+    final List<DataWithId> data= await fireRepo.readMultiple("Child", parent.childIDs);
 
     for(DataWithId child in data) {
       children.add(Child.fromDataWithId(child)); 

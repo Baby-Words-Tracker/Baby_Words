@@ -9,14 +9,16 @@ class ResearcherDataService extends ChangeNotifier{
   //Reseacher services
    Future<Researcher> createResearcher(String email, String name, String institution, [String? phoneNumber]) async {
     final object = Researcher(email: email, name: name, institution: institution, phoneNumber: phoneNumber);
-    String returnId = await fireRepo.create("Researcher", object.toMap())
+    String returnId = await fireRepo.create("Researcher", object.toMap());
 
     notifyListeners();
     return object.copyWith(id: returnId);
   }
 
-  Future<Researcher> getResearcher(String id) async {
-    return Researcher.fromDataWithId(await fireRepo.read("Researcher", id));
+  Future<Researcher?> getResearcher(String id) async {
+    final researcher = await fireRepo.read("Researcher", id);
+    if (researcher == null) return null;
+    return Researcher.fromDataWithId(researcher);
   }
 
 }

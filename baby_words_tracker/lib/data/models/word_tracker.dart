@@ -8,14 +8,12 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 class WordTracker {
   final String? id;
   final DateTime firstUtterance;
-  final int numUtterances;
   final String? videoID;
 
 
   WordTracker({
     this.id,
     required this.firstUtterance,
-    required this.numUtterances,
     this.videoID,
   });
 
@@ -28,7 +26,6 @@ class WordTracker {
     return WordTracker(
       id: id ?? this.id,
       firstUtterance: firstUtterance ?? this.firstUtterance,
-      numUtterances: numUtterances ?? this.numUtterances,
       videoID: videoID ?? this.videoID,
     );
   }
@@ -36,7 +33,6 @@ class WordTracker {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'firstUtterance': firstUtterance,
-      'numUtterances': numUtterances,
       'videoID': videoID,
     };
   }
@@ -44,7 +40,6 @@ class WordTracker {
   factory WordTracker.fromMap(Map<String, dynamic> map) {
     return WordTracker(
       firstUtterance: map['firstUtterance'] != null ? convertToDateTime(map['firstUtterance']) : DateTime.fromMillisecondsSinceEpoch(0),
-      numUtterances: (map['numUtterances'] ?? 0) as int,
       videoID: map['videoID'] != null ? map['videoID'] as String : null,
     );
   }
@@ -61,7 +56,7 @@ class WordTracker {
 
   @override
   String toString() {
-    return 'Wordtracker(wordID: $id, firstUtterance: $firstUtterance, numUtterances: $numUtterances, videoID: $videoID)';
+    return 'Wordtracker(wordID: $id, firstUtterance: $firstUtterance, videoID: $videoID)';
   }
 
   @override
@@ -71,7 +66,6 @@ class WordTracker {
     return 
       other.id == id &&
       other.firstUtterance == firstUtterance &&
-      other.numUtterances == numUtterances &&
       other.videoID == videoID;
   }
 
@@ -79,7 +73,6 @@ class WordTracker {
   int get hashCode {
     return (id?.hashCode ?? 0) ^
       firstUtterance.hashCode ^
-      numUtterances.hashCode ^
       (videoID?.hashCode ?? 0);
   }
 }

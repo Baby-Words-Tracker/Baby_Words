@@ -7,8 +7,8 @@ class WordTrackerDataService  extends ChangeNotifier{
 
   static final fireRepo = FirestoreRepository();
 
-  Future<WordTracker> createWordTracker(String childId, String wordID, DateTime firstUtterance, int numUtterances, [String? videoID]) async {
-    final object = WordTracker(id: wordID, firstUtterance: firstUtterance, numUtterances: numUtterances, videoID: videoID);
+  Future<WordTracker> createWordTracker(String childId, String wordID, DateTime firstUtterance, [String? videoID]) async {
+    final object = WordTracker(id: wordID, firstUtterance: firstUtterance, videoID: videoID);
     fireRepo.incrementField("Child", childId, "wordCount", 1);
     String returnId = await fireRepo.createSubcollectionDocWithId("Child", childId, "WordTracker", wordID, object.toMap());
 
@@ -16,8 +16,10 @@ class WordTrackerDataService  extends ChangeNotifier{
     return object.copyWith(id: returnId);
   }
 
-  Future<WordTracker> getWordTracker(String childId, String id) async {
-    return WordTracker.fromDataWithId(await fireRepo.readSubcollection("Child", childId, "Word", id));
+  Future<WordTracker?> getWordTracker(String childId, String id) async {
+    final word = await fireRepo.readSubcollection("Child", childId, "Word", id);
+    if (word == null) return null;
+    return WordTracker.fromDataWithId(word);
   }
 
   Future<List<WordTracker>> getWordsFromTime(String childId, DateTime time) async {
