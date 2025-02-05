@@ -19,9 +19,11 @@ class WordDataService extends ChangeNotifier{
     return object.copyWith(word: returnId);
   }
 
-  Future<Word> getWord(String id) async {
-    //FIXME: really hacky way to handle nullity
-    return Word.fromDataWithId(await fireRepo.read("Word", id) ?? DataWithId(id: "", data: {"null" : "data"}));
+  Future<Word?> getWord(String id) async {
+    final word = await fireRepo.read("Word", id);
+    if (word == null) return null;
+    
+    return Word.fromDataWithId(word);
   }
 
 }
