@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
@@ -17,13 +18,7 @@ class StatsPage extends StatelessWidget {
   @override
   final TextEditingController wordTextController = TextEditingController(); // Controller
   final TextEditingController idController = TextEditingController(); // Controller
-  Widget build(BuildContext context) {
-    //FIXME: dependency inject these (obviously)
-    ParentDataService parentService = ParentDataService();
-    ChildDataService childService = ChildDataService();
-    WordDataService wordService = WordDataService();
-    WordTrackerDataService trackerService = WordTrackerDataService();
-    
+  Widget build(BuildContext context) {   
 
     return Scaffold(
       appBar: AppBar(title: Text("Second Page")),
@@ -87,14 +82,13 @@ class StatsPage extends StatelessWidget {
               ),
             ),
             Center(
-              //submit button currently doesn't do anything
               child: OutlinedButton(
                 onPressed: () {
-                  if (idController.text != "")
+                  if (idController.text != "") //add the word to the child with the id, or the default testing child if no input
                   {
-                    addWordToChild(wordTextController.text, childService, wordService, trackerService, id: idController.text);
+                    addWordToChild(wordTextController.text, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), id: idController.text);
                   } else {
-                    addWordToChild(wordTextController.text, childService, wordService, trackerService);
+                    addWordToChild(wordTextController.text, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>());
                   }
                   wordTextController.clear();
                   idController.clear();
