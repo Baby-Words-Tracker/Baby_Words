@@ -1,8 +1,11 @@
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/pages/auth_gate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -11,11 +14,12 @@ import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(
     MultiProvider(
         providers: [
@@ -24,6 +28,14 @@ void main() {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
+          Provider<FirebaseAuth>(
+            create: (_) => FirebaseAuth.instance,
+          ),
+          ChangeNotifierProvider<AuthenticationService>(
+            create: (context) => AuthenticationService(
+              firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
+            ),
+          ),
         ],
         child: const MyApp(),
       ),
@@ -42,11 +54,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      initialRoute: '/authgate',
       routes: {
-        '/': (context) => HomePage(),
+        '/': (context) => const HomePage(),
         '/stats': (context) => StatsPage(),
         '/addtext': (context) => const AddTextPage(title: "Add Text",),
+        '/authgate': (context) => const AuthGate(),
       },
     );
   }
