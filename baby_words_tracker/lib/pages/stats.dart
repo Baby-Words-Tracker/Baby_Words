@@ -16,9 +16,12 @@ import 'package:baby_words_tracker/data/models/word.dart';
 
 
 class StatsPage extends StatelessWidget {
-  @override
   final TextEditingController wordTextController = TextEditingController(); // Controller
-  final TextEditingController idController = TextEditingController(); // Controller
+  final TextEditingController idController = TextEditingController();
+
+  StatsPage({super.key}); // Controller
+
+  @override
   Widget build(BuildContext context) {   
 
     return Scaffold(
