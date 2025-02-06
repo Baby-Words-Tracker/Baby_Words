@@ -34,14 +34,17 @@ class WordTrackerDataService  extends ChangeNotifier{
   }
 
   Future<List<WordTracker>> getWordsFromDate(String childId, DateTime date) async {
-    final List<DataWithId> data = await fireRepo.subQueryByField("Child", childId, "WordTracker", "firstUtterance", date);
-    
-    List<WordTracker> words = List.empty(growable: true);
-    for(DataWithId word in data) {
-      words.add(WordTracker.fromDataWithId(word));
-    }
+  // Calculate start and end of the day for the given date
+  DateTime startOfDay = DateTime(date.year, date.month, date.day);
+  DateTime endOfDay = startOfDay.add(Duration(days: 1)).subtract(Duration(seconds: 1));
 
-    return words;
-  }
+  final List<DataWithId> data = await fireRepo.subQueryByDateRange(
+    "Child", childId, "WordTracker", "firstUtterance", startOfDay, endOfDay
+  );
+  
+  List<WordTracker> words = data.map((word) => WordTracker.fromDataWithId(word)).toList();
+  
+  return words;
+}
 
 }

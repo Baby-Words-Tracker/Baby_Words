@@ -39,6 +39,7 @@ class WordTracker {
 
   factory WordTracker.fromMap(Map<String, dynamic> map) {
     return WordTracker(
+      id: map['id'] != null ? map['id'] as String : null,
       firstUtterance: map['firstUtterance'] != null ? convertToDateTime(map['firstUtterance']) : DateTime.fromMillisecondsSinceEpoch(0),
       videoID: map['videoID'] != null ? map['videoID'] as String : null,
     );

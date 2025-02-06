@@ -133,6 +133,25 @@ class FirestoreRepository {
     return data;
   }
 
+  Future<List<DataWithId>> subQueryByDateRange(
+  String collectionName,
+  String docId,
+  String subcollection,
+  String field,
+  DateTime startDate,
+  DateTime endDate
+  ) async {
+    final collection = database.collection(collectionName).doc(docId).collection(subcollection);
+    final snapshot = await collection
+        .where(field, isGreaterThanOrEqualTo: startDate)
+        .where(field, isLessThanOrEqualTo: endDate)
+        .get();
+
+    List<DataWithId> data = snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)).toList();
+    
+    return data;
+  }
+
   Future<List<DataWithId>> fieldGreaterThan(String collectionName, String field, dynamic value) async {
     final collection = database.collection(collectionName);
     final querySnapshot = await collection.where(field, isGreaterThan: value).get();

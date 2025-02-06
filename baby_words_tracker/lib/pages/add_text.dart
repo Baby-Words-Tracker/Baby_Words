@@ -31,7 +31,7 @@ class _AddTextPageState extends State<AddTextPage> {
       backgroundColor: Color(0xFF828A8F),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(widget.title, style: const TextStyle(color: Color(0xFF9E1B32), 
+        title: const Text('Baby Words Tracker', style: TextStyle(color: Color(0xFF9E1B32), 
                                                          fontSize: 24,        
                                                          fontWeight: FontWeight.bold, 
                                                         ),
@@ -41,8 +41,26 @@ class _AddTextPageState extends State<AddTextPage> {
         color: Color(0xFF9E1B32),
         child: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Text('Baby Word Tracker', style: TextStyle(color: Colors.white, fontSize: 20), textAlign: TextAlign.center,
-                ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+          Icon(
+              Icons.home,
+              color: Colors.white,
+              size: 40.0,
+              ),
+          Icon(
+              Icons.chat_bubble_outlined,
+              color: Colors.white,
+              size: 40.0,
+          ),
+          Icon(
+              Icons.bar_chart_outlined,
+              color: Colors.white,
+              size: 40.0,
+          ),
+  ],
+)
   ),
 ),
       body: Padding(

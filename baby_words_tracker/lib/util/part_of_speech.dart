@@ -6,7 +6,7 @@ enum PartOfSpeech {
   pronoun,
   preposition,
   conjunction,
-  arcticle,
+  article,
   unknown,
 }
 
@@ -28,7 +28,7 @@ extension PartofspeechExtension on PartOfSpeech {
         return "Preposition";
       case PartOfSpeech.conjunction:
         return "Conjunction";
-      case PartOfSpeech.arcticle:
+      case PartOfSpeech.article:
         return "Article";
       default:
         return "Unknown";

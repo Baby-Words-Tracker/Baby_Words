@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:flutter/material.dart';
@@ -107,6 +108,12 @@ class StatsPage extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
+                getTimeSeriesNewWords(context.read<ChildDataService>(), context.read<WordTrackerDataService>(), 3); // Go back to the previous page
+              },
+              child: Text("Get Time Series Data"),
+            ),
+            ElevatedButton(
+              onPressed: () {
                 Navigator.pop(context); // Go back to the previous page
               },
               child: Text("Go Back"),
@@ -133,13 +140,23 @@ async {
   return csvTable;
 }
 
-// Future<List<List<dynamic>>> getNewWordCount()
-// async {
-  
-// }
+Future<List<List<WordTracker>>> getTimeSeriesNewWords(ChildDataService childService, WordTrackerDataService trackerService, int days, {String id = "gz1Qe32xJcF0oRGmhw7f"})
+async {
+  //for the number of days, grab the amount of words learned
+  DateTime now = DateTime.now();
+  List<List<WordTracker>> data = List.empty(growable: true);;
+  for (var i = 0; i < days; i++) {
+    DateTime targetDay = DateTime(now.year, now.month, now.day - i);
+    data.add(await trackerService.getWordsFromDate(id, targetDay));
+    for (var wordTracker in data[i]) {
+      print("\n\n\n\n\n\n\n" + wordTracker.toString());
+    }
+  }
+  return data;
+}
 
 
-Future<String> createExampleParentChild(ParentDataService parentService, ChildDataService childService)
+Future<String> createExampleParentChild(ParentDataService parentService, ChildDataService childService) //function only for testing
 async {
   Parent parent = await parentService.createParent("test2@test.test", "testParent1", []);
   print("Added parent with id" + (parent.id ?? "FAILED"));
@@ -157,8 +174,7 @@ async {
   {
     return;
   }
-  //FIXME: implement language, part of speech, defn
+  //FIXME: implement language, part of speech, defn, spellcheck
   Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
-  //FIXME: numUtterances to be removed
   trackerService.createWordTracker(id, word, DateTime.now());
 }
