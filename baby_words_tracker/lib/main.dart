@@ -1,5 +1,11 @@
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/services/parent_data_service.dart';
+import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'pages/add_text.dart';
 import 'pages/home_page.dart';
@@ -10,7 +16,18 @@ void main() {
   Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ChildDataService()),
+          ChangeNotifierProvider(create: (_) => ParentDataService()),
+          ChangeNotifierProvider(create: (_) => ResearcherDataService()),
+          ChangeNotifierProvider(create: (_) => WordDataService()),
+          ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
+        ],
+        child: const MyApp(),
+      ),
+    );
 }
 
 class MyApp extends StatelessWidget {
