@@ -1,4 +1,4 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
+// import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
@@ -31,11 +31,11 @@ void main() async {
           Provider<FirebaseAuth>(
             create: (_) => FirebaseAuth.instance,
           ),
-          ChangeNotifierProvider<AuthenticationService>(
-            create: (context) => AuthenticationService(
-              firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
-            ),
-          ),
+          // ChangeNotifierProvider<AuthenticationService>(
+          //   create: (context) => AuthenticationService(
+          //     firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
+          //   ),
+          // ),
         ],
         child: const MyApp(),
       ),
