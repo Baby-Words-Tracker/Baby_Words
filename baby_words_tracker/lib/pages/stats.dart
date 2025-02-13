@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
+import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:flutter/material.dart';
@@ -172,13 +173,23 @@ String numDaysToAmountOfTimeName(int day)
   {
     return "${(day/7).toInt()} Weeks";
   }
-  return "${day} Days";
+  return "$day Days";
 }
 
 enum GraphType {
   newWordsPerDay,
 }
 
+extension GraphTypeExtension on GraphType {
+  String get displayName {
+    switch (this) {
+      case GraphType.newWordsPerDay:
+        return "New Words / Day";
+      default:
+        return "Unknown";
+    }
+  }
+}
 
 Future<void> addThisManyDaysWorthOfExampleDataToTestChildInALinearIncreasingFormat(int n, WordTrackerDataService trackerService) //testing function FIXME:remove
 async {
@@ -284,49 +295,22 @@ Column lengthChangeFeature(BuildContext context, TextEditingController inputCont
     ],
   );
 }
-  
 
-// TextField(
-//                   controller: wordTextController,
-//                   decoration: const InputDecoration(
-//                     //border: OutlineInputBorder(),
-//                     hintText: 'Add this word to..',
-//                     hintStyle: TextStyle(color: Colors.white),
-//                     filled: true,  
-//                     fillColor: Color(0xFF9E1B32),
-//                   ),
-//                 ),
-//                 TextField(
-//                   controller: idController,
-//                   decoration: const InputDecoration(
-//                     //border: OutlineInputBorder(),
-//                     hintText: 'child with id.. [or leave empty for testing child]',
-//                     hintStyle: TextStyle(color: Colors.white),
-//                     filled: true,  
-//                     fillColor: Color(0xFF9E1B32),
-//                   ),
-//                 ),
-//                 Center(
-//                   child: OutlinedButton(
-//                     onPressed: () {
-//                       if (idController.text != "") //add the word to the child with the id, or the default testing child if no input
-//                       {
-//                         addWordToChild(wordTextController.text, context.read<ChildDataService>(), context.read<WordDataService>(),  trackerService, id: idController.text);
-//                       } else {
-//                         addWordToChild(wordTextController.text, context.read<ChildDataService>(), context.read<WordDataService>(),  trackerService);
-//                       }
-//                       wordTextController.clear();
-//                       idController.clear();
-//                     },
-//                     style: OutlinedButton.styleFrom(
-//                       backgroundColor: const Color(0xFF828A8F), 
-//                       foregroundColor: Colors.white,        
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(20), 
-//                       ),
-//                       side: const BorderSide(color: Colors.white, width: 2),
-//                       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0), 
-//                     ),
-//                     child: const Text('Submit', style: TextStyle(fontSize: 18)),
-//                   )
-//                 ),
+
+// DropdownButton<String> GraphyTypeSelectDropdown(GraphType currType, void Function(GraphType type) changeParentGraphType)
+// {
+//   return DropdownButton<String>(
+//     value: currType.displayName,
+//     hint: const Text('Select an option'),
+//     icon: Icon(Icons.arrow_downward),
+//     onChanged: (String? newValue) {
+//       changeParentGraphType(newValue);
+//     },
+//     items: options.map<DropdownMenuItem<String>>((String value) {
+//       return DropdownMenuItem<String>(
+//         value: value,
+//         child: Text(value),
+//       );
+//     }).toList(),
+//   );
+// }
