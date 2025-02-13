@@ -1,7 +1,9 @@
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/util/graph_type.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:baby_words_tracker/util/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
@@ -154,42 +156,6 @@ async {
   trackerService.createWordTracker(id, word, DateTime.now());
 }
 
-String numDaysToAmountOfTimeName(int day)
-{
-  if (day == 1){
-    return "Day";
-  }
-  if (day == 7) {
-    return "Week";
-  }
-  if (day == 30) {
-    return "Month";
-  }
-  if (day % 30 == 0)
-  {
-    return "${(day/30).toInt()} Months";
-  }
-  if (day % 7 == 0)
-  {
-    return "${(day/7).toInt()} Weeks";
-  }
-  return "$day Days";
-}
-
-enum GraphType {
-  newWordsPerDay,
-}
-
-extension GraphTypeExtension on GraphType {
-  String get displayName {
-    switch (this) {
-      case GraphType.newWordsPerDay:
-        return "New Words / Day";
-      default:
-        return "Unknown";
-    }
-  }
-}
 
 Future<void> addThisManyDaysWorthOfExampleDataToTestChildInALinearIncreasingFormat(int n, WordTrackerDataService trackerService) //testing function FIXME:remove
 async {
@@ -297,20 +263,24 @@ Column lengthChangeFeature(BuildContext context, TextEditingController inputCont
 }
 
 
-// DropdownButton<String> GraphyTypeSelectDropdown(GraphType currType, void Function(GraphType type) changeParentGraphType)
-// {
-//   return DropdownButton<String>(
-//     value: currType.displayName,
-//     hint: const Text('Select an option'),
-//     icon: Icon(Icons.arrow_downward),
-//     onChanged: (String? newValue) {
-//       changeParentGraphType(newValue);
-//     },
-//     items: options.map<DropdownMenuItem<String>>((String value) {
-//       return DropdownMenuItem<String>(
-//         value: value,
-//         child: Text(value),
-//       );
-//     }).toList(),
-//   );
-// }
+DropdownButton<String> graphTypeSelectDropdown(GraphType currType, void Function(GraphType type) changeParentGraphType)
+{
+  List<String> options = List.empty(growable: true);
+  for (var graphType in GraphType.values) { //generate a list of all the string names of the graph types
+    options.add(graphType.displayName);
+  }
+  return DropdownButton<String>(
+    value: currType.displayName,
+    hint: const Text('Select an option'),
+    icon: Icon(Icons.arrow_downward),
+    onChanged: (String? newValue) {
+        changeParentGraphType(GraphTypeExtension.fromString(newValue ?? ""));
+    },
+    items: options.map<DropdownMenuItem<String>>((String value) {
+      return DropdownMenuItem<String>(
+        value: value,
+        child: Text(value),
+      );
+    }).toList(),
+  );
+}
