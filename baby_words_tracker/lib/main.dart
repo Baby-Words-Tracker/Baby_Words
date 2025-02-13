@@ -31,11 +31,6 @@ void main() async {
           Provider<FirebaseAuth>(
             create: (_) => FirebaseAuth.instance,
           ),
-          ChangeNotifierProvider<AuthenticationService>(
-            create: (context) => AuthenticationService(
-              firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
-            ),
-          ),
         ],
         child: const MyApp(),
       ),
