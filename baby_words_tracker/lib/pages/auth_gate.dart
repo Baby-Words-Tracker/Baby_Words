@@ -4,6 +4,7 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' as io;  // For checking platform
 
 import 'home_page.dart';
@@ -12,7 +13,9 @@ class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   String getPlatformKey() {
-    if (io.Platform.isIOS) {
+    if(kIsWeb) {
+      return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com';  // Use this key for web
+    } else if (io.Platform.isIOS) {
       return '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com';  // Use this key for iOS
     } 
     return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com';  // Use this key for all other platforms
