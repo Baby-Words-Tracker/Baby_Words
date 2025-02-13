@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "37552098276-kl9s1djkavnfq9pngml0nt32ebqc00q3.apps.googleusercontent.com",
+          "client_id": "37552098276-62gnq8ula4275n94hoev1hdh6dd33vuc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.baby_words_tracker",
+            "certificate_hash": "93765a07abcfb1a4445768b6add59917cbc36c76"
+          }
+        },
+        {
+          "client_id": "37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -27,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "37552098276-kl9s1djkavnfq9pngml0nt32ebqc00q3.apps.googleusercontent.com",
+              "client_id": "37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com",
               "client_type": 3
             },
             {
