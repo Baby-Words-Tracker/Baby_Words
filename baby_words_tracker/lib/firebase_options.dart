@@ -69,6 +69,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '37552098276',
     projectId: 'baby-word-tracker',
     storageBucket: 'baby-word-tracker.firebasestorage.app',
+    androidClientId: '37552098276-62gnq8ula4275n94hoev1hdh6dd33vuc.apps.googleusercontent.com',
     iosClientId: '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com',
     iosBundleId: 'com.example.babyWordsTracker',
   );
