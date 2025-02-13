@@ -16,27 +16,42 @@ class HomePage extends StatelessWidget {
                                                         ),
                     ),
       ),
-      bottomNavigationBar: const BottomAppBar(
-        color: Color(0xFF9E1B32),
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFF9E1B32),
         child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-          Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-              ),
-          Icon(
-              Icons.chat_bubble_outlined,
-              color: Colors.white,
-              size: 40.0,
+          IconButton(
+            icon: const Icon(
+                Icons.home,
+                color: Colors.white,
+                size: 40.0,
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/');
+                  },
           ),
-          Icon(
-              Icons.bar_chart_outlined,
-              color: Colors.white,
-              size: 40.0,
+          IconButton(
+            icon: const Icon(
+                Icons.chat_bubble_outlined,
+                color: Colors.white,
+                size: 40.0,
+            ),
+            onPressed: () {
+                  Navigator.pushNamed(context, '/addtext');
+                  },
+          ),
+          IconButton(
+            icon: const Icon(
+                Icons.bar_chart_outlined,
+                color: Colors.white,
+                size: 40.0,
+            ),
+            onPressed: () {
+                  Navigator.pushNamed(context, '/stats');
+                  },
           ),
   ],
 )
@@ -45,6 +60,10 @@ class HomePage extends StatelessWidget {
       body: Center(
         child: Column(
           children: [
+            const SizedBox(
+            height : 70,
+          ),
+            const Text('Hello, User!', style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
             const SizedBox(
             height : 60,
           ),
