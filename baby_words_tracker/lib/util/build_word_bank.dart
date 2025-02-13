@@ -8,8 +8,6 @@ import 'dart:io';
 
 void build_word_bank() async {
   List<String> words= List.empty(growable: true);
-  /* final input = File('../../assests/data.csv').openRead();
-  final fields = await input.transform(utf8.decoder).transform(const CsvToListConverter()).toList(); */
   final csvString = await rootBundle.loadString('assets/data.csv');
 
   // Parse the CSV
@@ -19,14 +17,8 @@ void build_word_bank() async {
   for (var row in csvTable) {
     words.add(row[0]); 
   }
-  final wordsFound = words.length;
-  print("number of words found: $wordsFound");
 
-  int addedWords = 0;
   for (String word in words) {
     final checkedWord = checkAndUpdateWords(word);
-    if (checkedWord != null) addedWords++; 
   }
-  
-  print(addedWords); 
 }
