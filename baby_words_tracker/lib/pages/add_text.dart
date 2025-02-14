@@ -118,10 +118,15 @@ class _AddTextPageState extends State<AddTextPage> {
 
                 _parseWords();
 
+                var correctWords = 0;
+                var totalWords = 0;
+
                 for (var word in parsedWords){
+                  totalWords++;
                   Word? result = await checkAndUpdateWords(word);
                   if(result != null){
                     addWordToChild(word, childDataService, wordDataService, wordTrackerDataService);
+                    correctWords++;
                   }
                   else{
                     if (!context.mounted) return;
@@ -130,7 +135,7 @@ class _AddTextPageState extends State<AddTextPage> {
                     builder: (BuildContext context) {
                     return AlertDialog(
                       title: const Text('Error'),
-                      content: Text('$word not found, please try again'),
+                      content: Text('$word not found in dictionary, please try again'),
                       actions: <Widget>[
                     TextButton(
                       child: const Text('OK'),
@@ -147,6 +152,7 @@ class _AddTextPageState extends State<AddTextPage> {
                 }
                 }
                 if (!context.mounted) return;
+                if(totalWords == correctWords){
                     await showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -165,6 +171,7 @@ class _AddTextPageState extends State<AddTextPage> {
                   },
                 );
                 _controller.clear();
+                }
                 },
                 style: OutlinedButton.styleFrom(
                 backgroundColor: Color(0xFF828A8F), 
