@@ -1,9 +1,13 @@
-// import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/auth/user_model_service.dart';
+
+import 'package:baby_words_tracker/data/models/parent.dart';
+
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -31,11 +35,18 @@ void main() async {
           Provider<FirebaseAuth>(
             create: (_) => FirebaseAuth.instance,
           ),
-          // ChangeNotifierProvider<AuthenticationService>(
-          //   create: (context) => AuthenticationService(
-          //     firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
-          //   ),
-          // ),
+          ChangeNotifierProvider<AuthenticationService>(
+            create: (context) => AuthenticationService(
+              Provider.of<FirebaseAuth>(context, listen: false)
+            ),
+          ),
+          ChangeNotifierProvider<UserModelService>(
+            create: (context) => UserModelService(
+              parentDataService: Provider.of<ParentDataService>(context, listen:false), 
+              researcherDataService: Provider.of<ResearcherDataService>(context, listen:false), 
+              authenticationService: Provider.of<AuthenticationService>(context, listen:false)
+              ),
+          ),
         ],
         child: const MyApp(),
       ),

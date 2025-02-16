@@ -111,26 +111,24 @@ class FirestoreRepository {
   }
 
   //isEqualTo
-  Future<List<DataWithId>> queryByField(String collectionName, String field, dynamic value) async {
+  Future<List<DataWithId>> queryByField(String collectionName, String field, dynamic value, {int? limit}) async {
     final collection = database.collection(collectionName);
-    final snapshot = await collection.where(field, isEqualTo: value).get();
-    List<DataWithId> data = List.empty(growable: true);
 
-    for(DocumentSnapshot doc in snapshot.docs) {
-      data.add(DataWithId.fromFirestore(doc));
+    Query query = collection.where(field, isEqualTo: value);
+
+    if (limit != null) {
+      query = query.limit(limit);
     }
-    return data;
+
+    final snapshot = await query.get();
+
+    return snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)).toList();
   }
 
   Future<List<DataWithId>> subQueryByField(String collectionName, String docId, String subcollection, String field, dynamic value) async {
     final collection = database.collection(collectionName).doc(docId).collection(subcollection);
     final snapshot = await collection.where(field, isEqualTo: value).get();
-    List<DataWithId> data = List.empty(growable: true);
-
-    for(DocumentSnapshot doc in snapshot.docs) {
-      data.add(DataWithId.fromFirestore(doc));
-    }
-    return data;
+    return snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)).toList();
   }
 
   Future<List<DataWithId>> subQueryByDateRange(
@@ -172,6 +170,25 @@ class FirestoreRepository {
       data.add(DataWithId.fromFirestore(doc));
     }
     return data;
+  }
+
+  Future<String?> createWithUniqueField(String collectionName, Map<String, dynamic> data, String fieldName, dynamic fieldValue) async {
+    final collectionRef = FirebaseFirestore.instance.collection(collectionName);
+
+    return await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final querySnapshot = await collectionRef
+          .where(fieldName, isEqualTo: fieldValue)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        throw Exception("Field: $fieldName already exists in collection $collectionName!");
+      }
+
+      final newDocRef = collectionRef.doc(); // Random ID
+      transaction.set(newDocRef, data);
+      return newDocRef.id;
+    });
   }
   
 }
