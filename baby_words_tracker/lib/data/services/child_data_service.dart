@@ -1,6 +1,8 @@
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class ChildDataService extends ChangeNotifier {
 
@@ -27,6 +29,16 @@ class ChildDataService extends ChangeNotifier {
     
     final child = Child.fromDataWithId(object);
     return child.wordCount; 
+  }
+
+  Future<List<WordTracker>> getAllKnownWords(String id) async {
+    final List<DataWithId> docs = await firebaseRepo.readAllFromSubcollection("Child", id, "WordTracker");
+
+    List<WordTracker> words = List.empty(growable: true);
+    for (DataWithId doc in docs) {
+      words.add(WordTracker.fromDataWithId(doc));
+    }
+    return words;
   }
 
 }

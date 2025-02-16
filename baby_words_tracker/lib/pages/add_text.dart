@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/util/check_and_update_words.dart';
 import 'package:flutter/material.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
@@ -110,18 +111,56 @@ class _AddTextPageState extends State<AddTextPage> {
           ),
             Center(
               child: OutlinedButton(
-                onPressed: (){ _parseWords(); 
+                onPressed: () async {  
+                final childDataService = context.read<ChildDataService>();
+                final wordDataService = context.read<WordDataService>();
+                final wordTrackerDataService = context.read<WordTrackerDataService>();
+
+                _parseWords();
+
+                var correctWords = 0;
+                var totalWords = 0;
+
                 for (var word in parsedWords){
-                  addWordToChild(word, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>());
+                  totalWords++;
+                  Word? result = await checkAndUpdateWords(word);
+                  if(result != null){
+                    addWordToChild(word, childDataService, wordDataService, wordTrackerDataService);
+                    correctWords++;
+                  }
+                  else{
+                    if (!context.mounted) return;
+                    await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Error'),
+                      content: Text('$word not found in dictionary, please try again'),
+                      actions: <Widget>[
+                    TextButton(
+                      child: const Text('OK'),
+                      onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                      _controller.clear();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+                break;
                 }
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                  return AlertDialog(
+                }
+                if (!context.mounted) return;
+                if(totalWords == correctWords){
+                    await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                    return AlertDialog(
                       title: const Text('Success'),
                       content: const Text('Words successfully submitted'),
                       actions: <Widget>[
-                  TextButton(
+                    TextButton(
                     child: const Text('OK'),
                     onPressed: () {
                     Navigator.of(context).pop(); // Close the dialog
@@ -132,6 +171,7 @@ class _AddTextPageState extends State<AddTextPage> {
                   },
                 );
                 _controller.clear();
+                }
                 },
                 style: OutlinedButton.styleFrom(
                 backgroundColor: Color(0xFF828A8F), 
@@ -160,6 +200,6 @@ async {
     return;
   }
   //FIXME: implement language, part of speech, defn, spellcheck
-  Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
+  //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
   trackerService.createWordTracker(id, word, DateTime.now());
 }

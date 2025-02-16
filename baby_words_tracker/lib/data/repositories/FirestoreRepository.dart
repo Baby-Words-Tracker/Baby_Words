@@ -80,6 +80,21 @@ class FirestoreRepository {
     return docs;
   }
 
+  Future<List<DataWithId>> readAllFromSubcollection(String parentCollection, String parentId, String subCollection) async {
+    CollectionReference subCollectionRef = database.collection(parentCollection).doc(parentId).collection(subCollection);
+    QuerySnapshot snapshot = await subCollectionRef.get();
+
+    List<DataWithId> documents = List.empty(growable: true);
+    snapshot.docs.forEach((doc) {
+      documents.add(DataWithId.fromFirestore(doc));
+    });
+
+    for (DocumentSnapshot doc in snapshot.docs) {
+      documents.add(DataWithId.fromFirestore(doc));
+    }
+    return documents;
+}
+
   Future<void> update(String collectionName, String docId, Map<String, dynamic> data) async {
     final docRef = database.collection(collectionName).doc(docId);
     await docRef.update(data);

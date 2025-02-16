@@ -11,3 +11,25 @@ DateTime convertToDateTime(dynamic timestamp) {
     throw ArgumentError('Unsupported timestamp format: $timestamp');
   }
 }
+
+String numDaysToAmountOfTimeName(int day)
+{
+  if (day == 1){
+    return "Day";
+  }
+  if (day == 7) {
+    return "Week";
+  }
+  if (day == 30) {
+    return "Month";
+  }
+  if (day % 30 == 0)
+  {
+    return "${(day/30).toInt()} Months";
+  }
+  if (day % 7 == 0)
+  {
+    return "${(day/7).toInt()} Weeks";
+  }
+  return "$day Days";
+}
