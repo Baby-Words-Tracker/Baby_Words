@@ -43,12 +43,14 @@ class Researcher {
     };
   }
 
+  // TODO: make this 
   factory Researcher.fromMap(Map<String, dynamic> map) {
     return Researcher(
+      id: map['id'] as String?,
       email: map['email'] as String,
-      name: map['name'] as String,
-      institution: map['institution'] as String,
-      phoneNumber: map['phoneNumber'] != null ? map['phoneNumber'] as String : null,
+      name: map['name'] as String? ?? '',
+      institution: map['institution'] as String? ?? '',
+      phoneNumber: map['phoneNumber'] as String?,
     );
   }
 

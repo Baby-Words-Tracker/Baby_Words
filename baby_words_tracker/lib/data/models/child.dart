@@ -49,10 +49,11 @@ class Child {
 
   factory Child.fromMap(Map<String, dynamic> map) {
     return Child(
+      id: map['id'] as String?,
       birthday: map['birthday'] != null ? convertToDateTime(map['birthday']) : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
       wordCount: (map['wordCount'] ?? 0) as int,
-      parentIDs: map['parentIDs'] != null ?  List<String>.from(map['parentIDs'] as List<dynamic>) : [],
+      parentIDs: (map['parentIDs'] != null && map['parentIDs'] is List) ?  List<String>.from(map['parentIDs'].map.whereType<String>()) : [], // TODO: fix this conversion, it will erro
     );
   }
 

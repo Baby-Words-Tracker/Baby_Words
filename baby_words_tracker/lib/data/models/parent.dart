@@ -43,9 +43,10 @@ class Parent {
 
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
+      id: map['id'] as String?,
       email: map['email'] as String,
-      name: (map['name'] ?? '') as String,
-      childIDs: map['childIDs'] != null ? List<String>.from(map['childIDs'] as List<String>) : [],
+      name: map['name'] as String? ?? '',
+      childIDs: (map['childIDs'] != null && map['childIDs'] is List) ? List<String>.from(map['childIDs'].whereType<String>()) : [],
     );
   }
 
