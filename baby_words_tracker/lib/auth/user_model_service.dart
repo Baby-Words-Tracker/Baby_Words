@@ -19,6 +19,9 @@ class UserModelService extends ChangeNotifier {
   Parent? _parent;
   Researcher? _researcher;
 
+  bool _parentChanged = false;
+  bool _researcherChanged = false;
+
   UserModelService({
     required ParentDataService parentDataService, 
     required ResearcherDataService researcherDataService,
@@ -28,28 +31,62 @@ class UserModelService extends ChangeNotifier {
        _authenticationService = authenticationService
   {
     _parentDataService.addListener(
-      _updateParent
+      _setParentFlag
     );
     _researcherDataService.addListener(
-      _updateResearcher
+      _setResearcherFlag
     );
     _authenticationService.addListener(
       _updateUser
     );
   }
 
+  void _setParentFlag() {
+    _parentChanged = true;
+  }
+
+  void _setResearcherFlag() {
+    _researcherChanged = true;
+  }
+
   Future<void> _updateUser() async {
     if (!_authenticationService.isAuthenticated) {
       _userType = UserType.unauthenticated;
+      _parent = null;
+      _researcher = null;
+
       notifyListeners();
       return;
     }
     else {
       await setUserByEmail(_authenticationService.userEmail);
+      bool userChanged = false;
+      await refreshUser();
+
+      switch(userType) {
+        case UserType.parent:
+          if (_parent?.email != _authenticationService.userEmail) {
+            await setUserByEmail(_authenticationService.userEmail);
+            userChanged = true;
+          }
+          break;
+        case UserType.researcher:
+          if (_researcherChanged) {
+            await _updateResearcher();
+            userChanged = true;
+          }
+          break;
+        default:
+          break;
+      }
+
     }
   }
 
   Future<void> refreshUser() async {
+    _parentChanged = false;
+    _researcherChanged = false;
+
     if (_userType == UserType.unauthenticated) {
       return;
     }
@@ -119,6 +156,16 @@ class UserModelService extends ChangeNotifier {
       setUserParent(parent);
       return;
     }
+  }
+
+
+  dynamic getCurrentUserModel() {
+    if (_userType == UserType.parent) {
+      return _parent;
+    } else if (_userType == UserType.researcher) {
+      return _researcher;
+    }
+    return null;
   }
 
   UserType get userType => _userType;

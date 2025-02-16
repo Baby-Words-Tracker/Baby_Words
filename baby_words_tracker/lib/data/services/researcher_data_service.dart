@@ -21,4 +21,12 @@ class ResearcherDataService extends ChangeNotifier{
     return Researcher.fromDataWithId(researcher);
   }
 
+  Future<Researcher?> getResearcherByEmail(String email) async {
+    final researcherList = await fireRepo.queryByField("Researcher", "email", email, limit: 1);
+    if (researcherList.isEmpty) {
+      return null;
+    }
+    return Researcher.fromDataWithId(researcherList.first);
+  }
+
 }

@@ -18,6 +18,13 @@ class ParentDataService  extends ChangeNotifier{
     return par.copyWith(id: returnId);  
   }
 
+  Future<Parent> updateParent(String id, String email, String name, List<String> childIDs) async {
+    final parent = Parent(id: id, email: email, name: name, childIDs: childIDs);
+    await fireRepo.update("Parent", id, parent.toMap());
+    notifyListeners();
+    return parent;
+  }
+
   Future<Parent?> getParent(String id) async {
     final parent = await fireRepo.read("Parent", id);
     if (parent == null) {
@@ -26,10 +33,17 @@ class ParentDataService  extends ChangeNotifier{
     return Parent.fromDataWithId(parent);
   }
 
+  Future<Parent?> getParentByEmail(String email) async {
+    final parentList = await fireRepo.queryByField("Parent", "email", email, limit: 1);
+    if (parentList.isEmpty) {
+      return null;
+    }
+    return Parent.fromDataWithId(parentList.first);
+  }
+
   void addChildToParent(String parentId, String childId) async {
     await fireRepo.appendToArrayField("Parent", parentId, "childIDs", childId);
     await fireRepo.appendToArrayField("Child", childId, "parentIDs", parentId);
-
     notifyListeners();
   }
 

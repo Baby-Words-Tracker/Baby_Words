@@ -6,7 +6,6 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -34,6 +33,7 @@ class AuthGate extends StatelessWidget {
     }
 
     Parent? newParent = await parentDataService.getParent(user.email!);
+    Researcher testResearcher = await ResearcherDataService().getResearcher(user.email!);
 
     newParent ??= await parentDataService.createParent(user.email!, user.displayName ?? 'New Parent', []);
 
@@ -112,6 +112,7 @@ class AuthGate extends StatelessWidget {
         if (user == null) {
           throw Exception('User is null in auth_gate');
         }
+        
         return FutureBuilder<Parent>(
           future: _addUserToDatabase(context, user),
           builder: (context, parentSnapshot) {
