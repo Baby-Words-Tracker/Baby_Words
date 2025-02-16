@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
@@ -32,6 +33,12 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
+          Provider<GeneralUserService>(
+            create: (context) => GeneralUserService(
+              parentDataService: Provider.of<ParentDataService>(context, listen: false),
+              researcherDataService: Provider.of<ResearcherDataService>(context, listen: false),
+            ),
+          ),
           Provider<FirebaseAuth>(
             create: (_) => FirebaseAuth.instance,
           ),
@@ -44,7 +51,8 @@ void main() async {
             create: (context) => UserModelService(
               parentDataService: Provider.of<ParentDataService>(context, listen:false), 
               researcherDataService: Provider.of<ResearcherDataService>(context, listen:false), 
-              authenticationService: Provider.of<AuthenticationService>(context, listen:false)
+              authenticationService: Provider.of<AuthenticationService>(context, listen:false),
+              generalUserService: Provider.of<GeneralUserService>(context, listen:false),
               ),
           ),
         ],
