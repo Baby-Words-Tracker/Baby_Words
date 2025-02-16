@@ -13,8 +13,13 @@ class WordDataService extends ChangeNotifier{
   //word services
   Future<Word> createWord(String word_name, List<LanguageCode> LanguageCodes, PartOfSpeech PartOfSpeech, String Definition) async {
     final object = Word(word: word_name, languageCodes : LanguageCodes, partOfSpeech: PartOfSpeech, definition: Definition);
-    String returnId = await fireRepo.createWithId("Word", word_name, object.toMap());
+    String? returnId = await fireRepo.createWithId("Word", word_name, object.toMap());
     notifyListeners();
+
+    // TODO: update this so it returns null if the creation fails
+    if (returnId == null) {
+      return object;
+    }
 
     return object.copyWith(word: returnId);
   }

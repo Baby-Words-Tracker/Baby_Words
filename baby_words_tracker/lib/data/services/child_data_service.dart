@@ -9,10 +9,14 @@ class ChildDataService extends ChangeNotifier {
   static final firebaseRepo = FirestoreRepository();
 
   //child services
-  Future<Child> createChild(DateTime cBirthDay, String cName, int cWordCount, List<String> cParentIDs) async {
+  Future<Child?> createChild(DateTime cBirthDay, String cName, int cWordCount, List<String> cParentIDs) async {
     final object = Child(birthday: cBirthDay, name: cName, wordCount: cWordCount, parentIDs: cParentIDs);
-    String returnId = await firebaseRepo.create("Child", object.toMap());
+    String? returnId = await firebaseRepo.create("Child", object.toMap());
     
+    if (returnId == null) {
+      return null;
+    }
+
     notifyListeners();
     return object.copyWith(id: returnId); 
   }

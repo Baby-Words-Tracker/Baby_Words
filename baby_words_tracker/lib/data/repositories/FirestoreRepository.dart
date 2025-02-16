@@ -1,6 +1,8 @@
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:collection/collection.dart';
 
 class FirestoreRepository {
@@ -8,16 +10,26 @@ class FirestoreRepository {
 
   FirestoreRepository();
 
-  Future<String> create(String collectionName, Map<String, dynamic> data) async {
-    final collection = database.collection(collectionName);
-    final docRef = await collection.add(data);
-    return docRef.id;
+  Future<String?> create(String collectionName, Map<String, dynamic> data) async {
+    try {
+      final collection = database.collection(collectionName);
+      final docRef = await collection.add(data);
+      return docRef.id;
+    } catch (e) {
+      debugPrint("Error creating document in $collectionName: $e");
+      return null;
+    }
   }
 
-  Future<String> createWithId(String collectionName, String docId, Map<String, dynamic> data) async {
-    final collection = database.collection(collectionName);
-    await collection.doc(docId).set(data);
-    return docId; 
+  Future<String?> createWithId(String collectionName, String docId, Map<String, dynamic> data) async {
+    try{
+      final collection = database.collection(collectionName);
+      await collection.doc(docId).set(data);
+      return docId;
+    } catch (e) {
+      debugPrint("Error creating document in $collectionName: $e");
+      return null;
+    }
   }
 
   Future<String> createSubcollectionDoc(String collectionName, String docId, String subcollectionName, Map<String, dynamic> data) async{
@@ -95,14 +107,30 @@ class FirestoreRepository {
     return documents;
 }
 
-  Future<void> update(String collectionName, String docId, Map<String, dynamic> data) async {
+  Future<bool> update(String collectionName, String docId, Map<String, dynamic> data) async {
     final docRef = database.collection(collectionName).doc(docId);
-    await docRef.update(data);
+
+    try {
+      await docRef.update(data);
+      return true;
+    }
+    catch (e) {
+      debugPrint("Error updating docuemnt $collectionName/$docId: $e");
+      return false;
+    }
   }
 
-  Future<void> updateField(String collectionName, String docId, String field, dynamic value) async {
+  Future<bool> updateField(String collectionName, String docId, String field, dynamic value) async {
     final docRef = database.collection(collectionName).doc(docId);
-    await docRef.update({field: value});
+    
+    try {
+      await docRef.update({field: value});
+      return true;
+    }
+    catch (e) {
+      debugPrint("Error updating field $field in document $collectionName/$docId: $e");
+      return false;
+    }
   }
 
   Future<void> incrementField(String collectionName, String docId, String field, int value) async {
@@ -137,6 +165,8 @@ class FirestoreRepository {
 
     final snapshot = await query.get();
 
+    debugPrint("Query of field $field in collection $collection returned ${snapshot.docs.length} documents");
+
     return snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)).toList();
   }
 
@@ -146,6 +176,7 @@ class FirestoreRepository {
     return snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)).toList();
   }
 
+  // TODO: create composite index for this
   Future<List<DataWithId>> subQueryByDateRange(
   String collectionName,
   String docId,
@@ -188,22 +219,25 @@ class FirestoreRepository {
   }
 
   Future<String?> createWithUniqueField(String collectionName, Map<String, dynamic> data, String fieldName, dynamic fieldValue) async {
-    final collectionRef = FirebaseFirestore.instance.collection(collectionName);
+    final collectionRef = database.collection(collectionName);
 
-    return await FirebaseFirestore.instance.runTransaction((transaction) async {
+    try{
       final querySnapshot = await collectionRef
           .where(fieldName, isEqualTo: fieldValue)
           .limit(1)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        throw Exception("Field: $fieldName already exists in collection $collectionName!");
+        return null; // already exists
       }
+      
+      DocumentReference newDocRef = await collectionRef.add(data);
 
-      final newDocRef = collectionRef.doc(); // Random ID
-      transaction.set(newDocRef, data);
       return newDocRef.id;
-    });
+    } catch (e) {
+      debugPrint("Error creating document with unique $fieldName in $collectionName: $e");
+      return null;
+    }
   }
   
 }

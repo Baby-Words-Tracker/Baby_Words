@@ -9,18 +9,42 @@ class ParentDataService  extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //Parent services
-  Future<Parent> createParent(String parEmail, String parName, List<String> parChildIDs) async {
+  Future<Parent?> createParent(String parEmail, String parName, List<String> parChildIDs) async {
     final par = Parent(email: parEmail, name : parName, childIDs : parChildIDs); 
+    String? returnId = await fireRepo.create("Parent", par.toMap());
+    
+    if (returnId == null) {
+      return null;
+    }
 
-    String returnId = await fireRepo.create("Parent", par.toMap());
     notifyListeners();
-
-    return par.copyWith(id: returnId);  
+    return par.copyWith(id: returnId);
   }
 
-  Future<Parent> updateParent(String id, String email, String name, List<String> childIDs) async {
+  Future<Parent?> updateParent(String id, String email, String name, List<String> childIDs) async {
     final parent = Parent(id: id, email: email, name: name, childIDs: childIDs);
-    await fireRepo.update("Parent", id, parent.toMap());
+    bool success = await fireRepo.update("Parent", id, parent.toMap());
+
+    if (!success) {
+      return null;
+    }
+
+    notifyListeners();
+    return parent;
+  }
+
+  Future<Parent?> updateParentFromModel(Parent parent) async {
+    if (parent.id == null) {
+      debugPrint("Error: updateParentFromModel called with parent object that has null ID");
+      return null;
+    }
+
+    bool success = await fireRepo.update("Parent", parent.id!, parent.toMap());
+
+    if (!success) {
+      return null;
+    }
+
     notifyListeners();
     return parent;
   }
