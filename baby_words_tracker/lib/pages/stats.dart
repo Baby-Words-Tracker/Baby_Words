@@ -18,7 +18,7 @@ import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
-final List<GraphType> graphsWithLength = [GraphType.newWordsPerDay];
+final List<GraphType> graphsWithLength = [GraphType.newWordsPerDay]; // List of GraphTypes that have a length parameter
 
 class StatsPage extends StatefulWidget {
   @override
@@ -28,7 +28,7 @@ class StatsPage extends StatefulWidget {
 class _StatsPageState extends State<StatsPage> {
   //Default graph setup
   int graphLength = 7;
-  GraphType graphType = GraphType.newWordsPerDay;
+  GraphType graphType = GraphType.newWordsPerDay; // Use the enum GraphType to determine what graph should be displayed
 
   //Allow children to change graph state
   void updateLength(int length) {
@@ -42,32 +42,35 @@ class _StatsPageState extends State<StatsPage> {
     });
   }
 
-  //Graph Caching
+  //Graph Caching, the dynamic will be either null or the correct type of list for its corresponding GraphType
   Map<GraphType, dynamic> graphCache = {};
 
-  @override
+  //controllers for two editable text boxes, allowing for reading of user inputs
   final TextEditingController textcontroller1 = TextEditingController(); 
- // Controller
   final TextEditingController textcontroller2 = TextEditingController(); 
- // Controller
+
+  @override
   Widget build(BuildContext context) {   
-      for (var graphType in GraphType.values) { //initialize cache
-        if (!graphCache.keys.contains(graphType))
+      for (var graphType in GraphType.values) { //initialize cache, setting every key,value pair that isnt initialized to null so caching functions can check them
+        if (!graphCache.keys.contains(graphType)) {
           graphCache[graphType] = null;
+        }
       }
 
     return Scaffold(
       appBar: AppBar(title: const Text("Learning Summary")),
       body: Center(
-        child: Consumer<WordTrackerDataService>(
+        child: Consumer<WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
           builder: (context, trackerService, child) {
             return Column(
               children: [
                 
                 graphHeader(graphType, graphLength),
-
+                
+                //Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
                 graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache),
 
+                //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
                 lengthChangeFeature(context, graphType, textcontroller1, updateLength),
 
                 const Text("Select Graph Type:"),
@@ -102,15 +105,19 @@ async {
   return data;
 }
 
+//Displays the correct graph title based on the graph parameters
 Text graphHeader(GraphType type, int days)
 {
   if (graphsWithLength.contains(type))
   {
     return Text("${type.displayName} for the Past ${numDaysToAmountOfTimeName(days)}:");
   }
-  else return Text("${type.displayName}");
+  else {
+    return Text("${type.displayName}");
+  }
 }
 
+//Simple switch statement to allow for differen graphs in 1 widget
 Widget graphSwitcher(GraphType type, ChildDataService childService, WordDataService wordService, WordTrackerDataService trackerService, int days, Map<GraphType, dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}) // switch statement to decide what graph to display
 {
   switch (type) {
@@ -123,7 +130,8 @@ Widget graphSwitcher(GraphType type, ChildDataService childService, WordDataServ
   }
 }
 
-//Get the number of wordsof each part of a speech a child has learned
+//Get the number of words of each part of a speech a child has learned
+//Integrates with cache to prevent over querying. Data will only update upon reloading the page
 Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(ChildDataService childService, WordDataService wordService, Map<GraphType, dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
 async {
   if (cache[GraphType.wordsByPartOfSpeech] != null) return cache[GraphType.wordsByPartOfSpeech];
