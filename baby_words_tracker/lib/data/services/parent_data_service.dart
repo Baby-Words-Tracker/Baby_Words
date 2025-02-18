@@ -1,7 +1,7 @@
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class ParentDataService  extends ChangeNotifier{

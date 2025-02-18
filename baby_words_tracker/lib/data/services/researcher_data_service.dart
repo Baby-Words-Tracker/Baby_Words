@@ -1,5 +1,5 @@
 import 'package:baby_words_tracker/data/models/researcher.dart';
-import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class ResearcherDataService extends ChangeNotifier{

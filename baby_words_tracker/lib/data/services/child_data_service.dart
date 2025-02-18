@@ -1,5 +1,5 @@
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
+import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
