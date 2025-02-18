@@ -1,19 +1,23 @@
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
 import 'package:flutter/material.dart';
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
-import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+
+// baby words packages
+import 'package:baby_words_tracker/data/services/parent_data_service.dart';
+
+import 'package:baby_words_tracker/data/models/word.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/models/word.dart';
+
+import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
+
 
 class AddTextPage extends StatefulWidget {
   const AddTextPage({super.key, required this.title});
@@ -44,7 +48,7 @@ class _AddTextPageState extends State<AddTextPage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      backgroundColor: Color(0xFF828A8F),
+      backgroundColor: const Color(0xFF828A8F),
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text('Baby Word Tracker', style: TextStyle(color: Color(0xFF9E1B32), 
@@ -174,7 +178,7 @@ class _AddTextPageState extends State<AddTextPage> {
                 }
                 },
                 style: OutlinedButton.styleFrom(
-                backgroundColor: Color(0xFF828A8F), 
+                backgroundColor: const Color(0xFF828A8F), 
                 foregroundColor: Colors.white,        
                 shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),  
@@ -195,11 +199,12 @@ class _AddTextPageState extends State<AddTextPage> {
 
 Future<void> addWordToChild(String word, ChildDataService childService, WordDataService wordService, WordTrackerDataService trackerService, {String id = "gz1Qe32xJcF0oRGmhw7f"})
 async {
-  if (childService.getChild(id) == null)
-  {
-    return;
-  }
   //FIXME: implement language, part of speech, defn, spellcheck
   //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
-  trackerService.createWordTracker(id, word, DateTime.now());
+  if (await trackerService.createWordTracker(id, word, DateTime.now()) == null) {
+    debugPrint("AddText: Error adding word to child");
+  }
+  else {
+    debugPrint("AddText: Word added to child");
+  }
 }

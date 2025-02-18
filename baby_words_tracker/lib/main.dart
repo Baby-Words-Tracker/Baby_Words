@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/authgate',
       routes: {
         '/': (context) => const HomePage(),
-        '/stats': (context) => StatsPage(),
+        '/stats': (context) => const StatsPage(),
         '/addtext': (context) => const AddTextPage(title: "Add Text",),
         '/authgate': (context) => const AuthGate(),
       },

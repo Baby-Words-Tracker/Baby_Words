@@ -1,7 +1,5 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'add_text.dart'; // Import the second page
-import 'stats.dart';
 
 
 class HomePage extends StatelessWidget {
@@ -93,7 +91,7 @@ class HomePage extends StatelessWidget {
                 Navigator.pushNamed(context, '/addtext');
               },
               style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF828A8F), 
+              backgroundColor: const Color(0xFF828A8F), 
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
@@ -118,7 +116,7 @@ class HomePage extends StatelessWidget {
                 Navigator.pushNamed(context, '/stats');
               },
               style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF828A8F), 
+              backgroundColor: const Color(0xFF828A8F), 
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness

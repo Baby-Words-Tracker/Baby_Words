@@ -31,17 +31,15 @@ FutureBuilder<List<List<dynamic>>> chartFromCSV(){
       // for (var item in csvData.take(5)) { // Print first 5 elements
       //   print("X: ${item[0]} (Type: ${item[0].runtimeType}), Y: ${item[1]} (Type: ${item[1].runtimeType})");
       // }
-      return Container(
-        child: SfCartesianChart(
-          primaryXAxis: CategoryAxis(),
-          series: [
-            LineSeries<List<dynamic>, String>(
-                dataSource: csvData.take(10).toList(),// use the first 10 elements for the chart
-                xValueMapper: (List<dynamic> data, _) => data[0].toString(), //_ indicates an unused parameter in Dart
-                yValueMapper: (List<dynamic> data, _) => int.tryParse(data[1].toString()) ?? 0
-              )
-          ],
-        )
+      return SfCartesianChart(
+        primaryXAxis: const CategoryAxis(),
+        series: [
+          LineSeries<List<dynamic>, String>(
+              dataSource: csvData.take(10).toList(),// use the first 10 elements for the chart
+              xValueMapper: (List<dynamic> data, _) => data[0].toString(), //_ indicates an unused parameter in Dart
+              yValueMapper: (List<dynamic> data, _) => int.tryParse(data[1].toString()) ?? 0
+            )
+        ],
       );
     }
   );

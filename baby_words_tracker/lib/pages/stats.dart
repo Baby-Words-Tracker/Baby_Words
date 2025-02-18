@@ -1,25 +1,26 @@
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
+
 import 'package:baby_words_tracker/util/graph_type.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/time_utils.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:csv/csv.dart';
-import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 
+import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/services/parent_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_data_service.dart';
 
 class StatsPage extends StatefulWidget {
+  const StatsPage({super.key});
+
   @override
   State<StatsPage> createState() => _StatsPageState();
 }
@@ -41,11 +42,12 @@ class _StatsPageState extends State<StatsPage> {
     });
   }
 
-  @override
+  /// Controller
   final TextEditingController textcontroller1 = TextEditingController(); 
- // Controller
+  /// Controller
   final TextEditingController textcontroller2 = TextEditingController(); 
- // Controller
+
+  @override
   Widget build(BuildContext context) {   
     return Scaffold(
       appBar: AppBar(title: const Text("Learning Summary")),
@@ -272,7 +274,7 @@ DropdownButton<String> graphTypeSelectDropdown(GraphType currType, void Function
   return DropdownButton<String>(
     value: currType.displayName,
     hint: const Text('Select an option'),
-    icon: Icon(Icons.arrow_downward),
+    icon: const Icon(Icons.arrow_downward),
     onChanged: (String? newValue) {
         changeParentGraphType(GraphTypeExtension.fromString(newValue ?? ""));
     },
