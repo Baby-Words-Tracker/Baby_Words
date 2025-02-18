@@ -7,8 +7,6 @@ import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 
-import 'package:baby_words_tracker/data/models/parent.dart';
-
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +18,15 @@ import 'pages/home_page.dart';
 import 'pages/stats.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    debugPrint("Initializing Firebase");
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint("Error initializing Firebase: $e");
+  }
 
   runApp(
     MultiProvider(
@@ -67,6 +70,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    Provider.of<UserModelService>(context, listen: false);
+
+    
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(

@@ -8,7 +8,7 @@ class AuthenticationService extends ChangeNotifier {
 
   AuthenticationService(this._firebaseAuthInstance) {
     _firebaseAuthInstance.userChanges().listen((User? user) {
-      debugPrint("User change detected");
+      debugPrint("AuthenticationService: User change detected");
 
       if ((_user == null && user != null) ||
           (_user != null && user == null) || 
@@ -16,7 +16,7 @@ class AuthenticationService extends ChangeNotifier {
           _user?.email != user?.email || 
           _user?.photoURL != user?.photoURL) {
         _user = user;
-        debugPrint('User update -> name:${_user?.displayName ?? 'No name'} email: ${_user?.email ?? 'No email'}');
+        debugPrint('AuthenticationService: User update -> name:${_user?.displayName ?? 'No name'} email: ${_user?.email ?? 'No email'}');
         notifyListeners(); // Only notify listeners if relevant fields have changed
       }
       else {

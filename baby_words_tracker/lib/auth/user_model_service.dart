@@ -59,11 +59,15 @@ class UserModelService extends ChangeNotifier {
       // debugPrint all of these and their comparison: _getCurrentModelEmail() != _authenticationService.userEmail || _getCurrentUserModelName() != _authenticationService.userName
       debugPrint("UserModelService: ${_userType.name} user authenticated, but not synchronized");
 
-      
       await _fetchUserModelByEmail(_authenticationService.userEmail);
 
       if (_userType == UserType.unauthenticated) {
         // debugPrint("UserModelService: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
+
+        if (_authenticationService.userEmail == null) {
+          debugPrint("Error: UserModelService: _synchronizeUser called with null email");
+          return;
+        }
 
         Pair<dynamic, UserType> user = await _generalUserService.createUser(
           _authenticationService.userEmail!, 
