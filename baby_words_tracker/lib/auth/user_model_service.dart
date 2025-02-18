@@ -84,7 +84,7 @@ class UserModelService extends ChangeNotifier {
           setUserResearcher(user.first);
           debugPrint("UserModelService: new Researcher created");
         } else {
-          debugPrint("Error: Failed to create user in UserModelService");
+          debugPrint("Error: UserModelService: Failed to create user");
         }
       }
       else {
