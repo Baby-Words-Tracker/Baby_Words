@@ -116,19 +116,20 @@ class FirestoreRepository {
     }
   }
 
-  //TODO: fix this. It is extremely inefficient and very incorrect
   Future<List<DataWithId>> readAllFromSubcollection(String parentCollection, String parentId, String subCollection) async {
     try {
-      CollectionReference subCollectionRef = database.collection(parentCollection).doc(parentId).collection(subCollection);
-      QuerySnapshot snapshot = await subCollectionRef.get();
-      List<DataWithId> documents = List.empty(growable: true);
-      documents.addAll(
-        snapshot.docs.map((d) => DataWithId.fromFirestore(d)).toList()
-      );
+      // Reference to the subcollection
+      CollectionReference subCollectionRef = 
+          database.collection(parentCollection).doc(parentId).collection(subCollection);
 
-      for (final d in snapshot.docs) {
-        documents.add(DataWithId.fromFirestore(d));
-      }
+      // Get the snapshot of the subcollection
+      QuerySnapshot snapshot = await subCollectionRef.get();
+
+      // Map the snapshot to a list of DataWithId objects
+      List<DataWithId> documents = snapshot.docs
+          .map((d) => DataWithId.fromFirestore(d))
+          .toList();
+
       return documents;
     } catch (e) {
       debugPrint("Error reading all documents from subcollection in $parentCollection/$parentId/$subCollection: $e");
