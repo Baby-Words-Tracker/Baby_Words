@@ -1,4 +1,3 @@
-import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/repositories/FirestoreRepository.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
@@ -11,9 +10,9 @@ class WordDataService extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //word services
-  Future<Word> createWord(String word_name, List<LanguageCode> LanguageCodes, PartOfSpeech PartOfSpeech, String Definition) async {
-    final object = Word(word: word_name, languageCodes : LanguageCodes, partOfSpeech: PartOfSpeech, definition: Definition);
-    String? returnId = await fireRepo.createWithId("Word", word_name, object.toMap());
+  Future<Word> createWord(String wordName, List<LanguageCode> languageCodes, PartOfSpeech partOfSpeech, String definition) async {
+    final object = Word(word: wordName, languageCodes : languageCodes, partOfSpeech: partOfSpeech, definition: definition);
+    String? returnId = await fireRepo.createWithId("Word", wordName, object.toMap());
     notifyListeners();
 
     // TODO: update this so it returns null if the creation fails

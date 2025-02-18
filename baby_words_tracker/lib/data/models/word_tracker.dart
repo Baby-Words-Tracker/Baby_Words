@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 import 'package:baby_words_tracker/util/time_utils.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class WordTracker {
@@ -41,7 +41,7 @@ class WordTracker {
     return WordTracker(
       id: map['id'] as String?,
       firstUtterance: map['firstUtterance'] != null ? convertToDateTime(map['firstUtterance']) : DateTime.fromMillisecondsSinceEpoch(0),
-      videoID: map['videoID'] != null ? map['videoID'] as String : null,
+      videoID: map['videoID'] as String?,
     );
   }
 

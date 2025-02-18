@@ -43,7 +43,6 @@ class Researcher {
     };
   }
 
-  // TODO: make this 
   factory Researcher.fromMap(Map<String, dynamic> map) {
     return Researcher(
       id: map['id'] as String?,

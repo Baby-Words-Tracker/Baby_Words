@@ -1,4 +1,3 @@
-import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 
@@ -9,8 +8,8 @@ import 'package:flutter/foundation.dart';
 
 class GeneralUserService {
 
-  ParentDataService _parentDataService;
-  ResearcherDataService _researcherDataService;
+  final ParentDataService _parentDataService;
+  final ResearcherDataService _researcherDataService;
 
   GeneralUserService({
     required ParentDataService parentDataService, 

@@ -13,10 +13,10 @@ import 'package:flutter/material.dart';
 class UserModelService extends ChangeNotifier {
   UserType _userType = UserType.unauthenticated;
 
-  ParentDataService _parentDataService;
-  ResearcherDataService _researcherDataService;
-  AuthenticationService _authenticationService;
-  GeneralUserService _generalUserService;
+  final ParentDataService _parentDataService;
+  final ResearcherDataService _researcherDataService;
+  final AuthenticationService _authenticationService;
+  final GeneralUserService _generalUserService;
 
   Parent? _parent;
   Researcher? _researcher;
