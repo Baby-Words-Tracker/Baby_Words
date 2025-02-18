@@ -47,9 +47,12 @@ class Word {
   factory Word.fromMap(Map<String, dynamic> map, String id) {
     return Word(
       word: id,
-      languageCodes: List<LanguageCode>.from((map['languageCodes'] as List<String>).map<LanguageCode>((x) => LanguageCode.values.byName(x))),
-      partOfSpeech: PartOfSpeech.values.byName(map['partOfSpeech'] as String),
-      definition: map['definition'] as String,
+      languageCodes: (map['languageCodes'] as List<dynamic>?)
+        ?.whereType<String>()
+        .map((i) => LanguageCode.values.byName(i))
+        .toList() ?? [],
+      partOfSpeech: (map['partOfSpeech'] as String?) != null ? PartOfSpeech.values.byName(map['partOfSpeech'] as String) : PartOfSpeech.unknown,
+      definition: (map['definition'] as String?) ?? '',
     );
   }
 

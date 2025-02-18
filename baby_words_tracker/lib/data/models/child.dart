@@ -52,7 +52,9 @@ class Child {
       birthday: map['birthday'] != null ? convertToDateTime(map['birthday']) : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
       wordCount: (map['wordCount'] ?? 0) as int,
-      parentIDs: (map['parentIDs'] != null && map['parentIDs'] is List) ?  List<String>.from(map['parentIDs'].map.whereType<String>()) : [], // TODO: fix this conversion, it will erro
+      parentIDs: (map['languageCodes'] as List<dynamic>?)
+        ?.whereType<String>()
+        .toList() ?? [],
     );
   }
 
