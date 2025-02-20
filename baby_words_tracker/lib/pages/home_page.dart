@@ -42,15 +42,10 @@ class HomePage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-          IconButton(
-            icon: const Icon(
-                Icons.home,
-                color: Colors.white,
-                size: 40.0,
-                ),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/');
-                  },
+          const Icon(
+              Icons.home,
+              color: Colors.white,
+              size: 40.0,
           ),
           IconButton(
             icon: const Icon(
