@@ -127,8 +127,8 @@ class _AddTextPageState extends State<AddTextPage> {
 
                 for (var word in parsedWords){
                   totalWords++;
-                  Word? result = await checkAndUpdateWords(word);
-                  if(result != null){
+                  bool? result = await checkAndUpdateWords(word);
+                  if(result != null && result){
                     addWordToChild(word, childDataService, wordDataService, wordTrackerDataService);
                     correctWords++;
                   }

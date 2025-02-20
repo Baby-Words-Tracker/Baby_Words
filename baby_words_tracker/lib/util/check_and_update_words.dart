@@ -7,10 +7,10 @@ import 'package:baby_words_tracker/data/models/word.dart';
 import 'dart:convert';
 
 //basic spellcheck that checks if a word exists in our word bank or in the englsh dictionary
-Future<Word?> checkAndUpdateWords(String word, {LanguageCode language = LanguageCode.en}) async {
+Future<bool?> checkAndUpdateWords(String word, {LanguageCode language = LanguageCode.en}) async {
   final word_service = WordDataService();
   Word? wordTest = await word_service.getWord(word); 
-  if(wordTest != null) return wordTest;
+  if(wordTest != null) return true;
 
   String url = "";
   //check dictionary for word, choose dictionary with switch
@@ -19,7 +19,7 @@ Future<Word?> checkAndUpdateWords(String word, {LanguageCode language = Language
       url = "https://api.dictionaryapi.dev/api/v2/entries/en/$word";
       break;
     default:
-    return null; //no dictionary for this language, just accept it LMAO
+    return false; //no dictionary for this language
   }
   final http.Response response = await http.get(Uri.parse(url)); 
   
@@ -36,10 +36,11 @@ Future<Word?> checkAndUpdateWords(String word, {LanguageCode language = Language
 
     List<LanguageCode> languages = [language];
 
-    final Word newWord = await word_service.createWord(wordResponse, languages, partOfSpeech, wordMeaning); 
-
-    return newWord;
+    final Word? newWord = await word_service.createWord(wordResponse, languages, partOfSpeech, wordMeaning); 
+    if (newWord == null) return null;
+    
+    return true;
   }
 
-  return null; 
+  return false; 
 }
