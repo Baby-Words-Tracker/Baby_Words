@@ -81,7 +81,6 @@ class GeneralUserService {
       if (expectedResult.first != null) {
         return expectedResult;
       }
-      expectedType = null;
 
       debugPrint("GeneralUserService: getUser() expected type not found, running query for other types");
       if (expectedType != UserType.parent) {
