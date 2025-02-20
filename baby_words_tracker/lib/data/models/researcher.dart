@@ -3,18 +3,20 @@ import 'dart:convert';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Researcher {
-  final String? id;
-  final String email;
-  final String name;
-  final String institution;
+  static String collectionName = 'Researcher'; 
+
+  final String id;
+  final String? email;
+  final String? name;
+  final String? institution;
   final String? phoneNumber;
 
 
   Researcher({
-    this.id,
-    required this.email,
-    required this.name,
-    required this.institution,
+    required this.id,
+    this.email,
+    this.name,
+    this.institution,
     this.phoneNumber,
   });
 
@@ -45,10 +47,10 @@ class Researcher {
 
   factory Researcher.fromMap(Map<String, dynamic> map) {
     return Researcher(
-      id: map['id'] as String?,
-      email: map['email'] as String,
-      name: map['name'] as String? ?? '',
-      institution: map['institution'] as String? ?? '',
+      id: map['id'] as String,
+      email: map['email'] as String?,
+      name: map['name'] as String?,
+      institution: map['institution'] as String?,
       phoneNumber: map['phoneNumber'] as String?,
     );
   }
@@ -61,6 +63,15 @@ class Researcher {
     Map<String, dynamic> data = source.data;
     data['id'] = source.id;
     return Researcher.fromMap(data); 
+  }
+
+  static Map<String, dynamic> createUpdateMap({String? email, String? name, String? institution, String? phoneNumber}) {
+    Map<String, dynamic> updateData = <String, dynamic>{};
+    if (email != null) updateData['email'] = email;
+    if (name != null) updateData['name'] = name;
+    if (institution != null) updateData['institution'] = institution;
+    if (phoneNumber != null) updateData['phoneNumber'] = phoneNumber;
+    return updateData;
   }
 
   @override

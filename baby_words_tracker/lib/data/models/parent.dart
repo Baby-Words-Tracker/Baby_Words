@@ -6,17 +6,19 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 
 class Parent {
-  final String? id;
-  final String email;
-  final String name;
+  static String collectionName = 'Parent';
+
+  final String id;
+  final String? email;
+  final String? name;
   final List<String> childIDs;
   
   Parent({
-    this.id,
-    required this.email,
-    required this.name,
-    required this.childIDs,
-  });
+    required this.id,
+    this.email,
+    this.name,
+    List<String>? childIDs,
+  }) : childIDs = childIDs ?? [];
 
 
   Parent copyWith({
@@ -43,9 +45,9 @@ class Parent {
 
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
-      id: map['id'] as String?,
-      email: map['email'] as String,
-      name: map['name'] as String? ?? '',
+      id: map['id'] as String,
+      email: map['email'] as String?,
+      name: map['name'] as String?,
       childIDs: (map['childIDs'] != null && map['childIDs'] is List) ? List<String>.from(map['childIDs'].whereType<String>()) : [],
     );
   }
@@ -58,6 +60,18 @@ class Parent {
     Map<String, dynamic> data = source.data;
     data['id'] = source.id;
     return Parent.fromMap(data); 
+  }
+
+  static Map<String, dynamic> createUpdateMap({
+    String? email,
+    String? name,
+    List<String>? childIDs,
+  }) {
+    Map<String, dynamic> map = {};
+    if (email != null) map['email'] = email;
+    if (name != null) map['name'] = name;
+    if (childIDs != null) map['childIDs'] = childIDs;
+    return map;
   }
 
   @override

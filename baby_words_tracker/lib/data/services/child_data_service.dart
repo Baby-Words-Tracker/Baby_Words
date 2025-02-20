@@ -11,7 +11,7 @@ class ChildDataService extends ChangeNotifier {
   //child services
   Future<Child?> createChild(DateTime cBirthDay, String cName, int cWordCount, List<String> cParentIDs) async {
     final object = Child(birthday: cBirthDay, name: cName, wordCount: cWordCount, parentIDs: cParentIDs);
-    String? returnId = await firebaseRepo.create("Child", object.toMap());
+    String? returnId = await firebaseRepo.create(Child.collectionName, object.toMap());
     
     if (returnId == null) {
       return null;
@@ -22,13 +22,13 @@ class ChildDataService extends ChangeNotifier {
   }
 
   Future<Child?> getChild(String id) async {
-    final child = await firebaseRepo.read("Child", id);
+    final child = await firebaseRepo.read(Child.collectionName, id);
     if (child == null) return null;
     return Child.fromDataWithId(child);
   }
 
   Future<int> getNumWords(String id) async {
-    final object = await firebaseRepo.read("Child", id); 
+    final object = await firebaseRepo.read(Child.collectionName, id); 
     if (object == null) return 0; 
     
     final child = Child.fromDataWithId(object);
@@ -36,7 +36,7 @@ class ChildDataService extends ChangeNotifier {
   }
 
   Future<List<WordTracker>> getAllKnownWords(String id) async {
-    final List<DataWithId> docs = await firebaseRepo.readAllFromSubcollection("Child", id, "WordTracker");
+    final List<DataWithId> docs = await firebaseRepo.readAllFromSubcollection(Child.collectionName, id, WordTracker.collectionName);
 
     List<WordTracker> words = List.empty(growable: true);
     for (DataWithId doc in docs) {

@@ -11,12 +11,13 @@ class AuthenticationService extends ChangeNotifier {
       debugPrint("AuthenticationService: User change detected");
 
       if ((_user == null && user != null) ||
-          (_user != null && user == null) || 
+          (_user != null && user == null) ||
+          _user?.uid != user?.uid ||
           _user?.displayName != user?.displayName || 
           _user?.email != user?.email || 
           _user?.photoURL != user?.photoURL) {
         _user = user;
-        debugPrint('AuthenticationService: User update -> name:${_user?.displayName ?? 'No name'} email: ${_user?.email ?? 'No email'}');
+        debugPrint('AuthenticationService: User update -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
         notifyListeners(); // Only notify listeners if relevant fields have changed
       }
       else {
@@ -27,6 +28,7 @@ class AuthenticationService extends ChangeNotifier {
 
   User? get user => _user;
 
+  String? get userId => _user?.uid;
   String? get userName => _user?.displayName;
   String? get userEmail => _user?.email;
 

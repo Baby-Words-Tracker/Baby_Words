@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
@@ -10,7 +11,7 @@ class WordTrackerDataService  extends ChangeNotifier{
   Future<WordTracker?> createWordTracker(String childId, String wordID, DateTime firstUtterance, [String? videoID]) async {
     final object = WordTracker(id: wordID, firstUtterance: firstUtterance, videoID: videoID);
 
-    final String? result = await fireRepo.addWordTracker("Child", childId, wordID, object.toMap());
+    final String? result = await fireRepo.addWordTracker(Child.collectionName, childId, WordTracker.collectionName, wordID, object.toMap());
     
     if (result == null) {
       return null;
@@ -21,13 +22,13 @@ class WordTrackerDataService  extends ChangeNotifier{
   }
 
   Future<WordTracker?> getWordTracker(String childId, String id) async {
-    final word = await fireRepo.readSubcollection("Child", childId, "Word", id);
+    final word = await fireRepo.readSubcollection(Child.collectionName, childId, WordTracker.collectionName, id);
     if (word == null) return null;
     return WordTracker.fromDataWithId(word);
   }
 
   Future<List<WordTracker>> getWordsFromTime(String childId, DateTime time) async {
-    final List<DataWithId> data = await fireRepo.subFieldGreaterThan("Child", childId, "WordTracker", "firstUtterance", time);
+    final List<DataWithId> data = await fireRepo.subFieldGreaterThan(Child.collectionName, childId, WordTracker.collectionName, "firstUtterance", time);
     
     List<WordTracker> words = List.empty(growable: true);
     for(DataWithId word in data) {
@@ -43,7 +44,7 @@ class WordTrackerDataService  extends ChangeNotifier{
   DateTime endOfDay = startOfDay.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
 
   final List<DataWithId> data = await fireRepo.subQueryByDateRange(
-    "Child", childId, "WordTracker", "firstUtterance", startOfDay, endOfDay
+    Child.collectionName, childId, WordTracker.collectionName, "firstUtterance", startOfDay, endOfDay
   );
   
   List<WordTracker> words = data.map((word) => WordTracker.fromDataWithId(word)).toList();

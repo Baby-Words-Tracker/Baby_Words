@@ -61,6 +61,7 @@ class FirestoreRepository {
       final docRef = database.collection(collectionName).doc(docId);
       final doc = await docRef.get();
       if (!doc.exists) {
+        debugPrint("FirebaseRepository: Document $collectionName/$docId does not exist");
         return null;
       }
       return DataWithId(id: doc.id, data: doc.data() as Map<String, dynamic>);
@@ -301,10 +302,10 @@ class FirestoreRepository {
   }
 
   /// Helper function to create workd tracker. This is specialized so that it cannot be used elsewhere because it should not be
-  Future<String?> addWordTracker(String collectionName, String childID, String wordID, Map<String, dynamic> data) async {
+  Future<String?> addWordTracker(String collectionName, String childID, String subcollectionName, String wordID, Map<String, dynamic> data) async {
     try {
       final docRef = database.collection(collectionName).doc(childID);
-      final subDocRef = docRef.collection("WordTracker").doc(wordID);
+      final subDocRef = docRef.collection(subcollectionName).doc(wordID);
 
       return database.runTransaction((transaction)  async {
         final snapshot = await transaction.get(docRef);

@@ -9,39 +9,15 @@ class ParentDataService  extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //Parent services
-  Future<Parent?> createParent(String parEmail, String parName, List<String> parChildIDs) async {
-    final par = Parent(email: parEmail, name : parName, childIDs : parChildIDs); 
-    String? returnId = await fireRepo.create("Parent", par.toMap());
+  Future<Parent?> createParent(Parent parent) async {
+    String? returnId = await fireRepo.createWithId("Parent", parent.id, parent.toMap());
     
     if (returnId == null) {
       return null;
     }
 
-    notifyListeners();
-    return par.copyWith(id: returnId);
-  }
-
-  Future<Parent?> updateParent(String id, String email, String name, List<String> childIDs) async {
-    final parent = Parent(id: id, email: email, name: name, childIDs: childIDs);
-    bool success = await fireRepo.update("Parent", id, parent.toMap());
-
-    if (!success) {
-      return null;
-    }
-
-    notifyListeners();
-    return parent;
-  }
-
-  Future<Parent?> updateParentFromModel(Parent parent) async {
-    if (parent.id == null) {
-      debugPrint("Error: updateParentFromModel called with parent object that has null ID");
-      return null;
-    }
-
-    bool success = await fireRepo.update("Parent", parent.id!, parent.toMap());
-
-    if (!success) {
+    if (returnId != parent.id) {
+      debugPrint("Error: ParentDataService.createParent returned ID does not match input ID");
       return null;
     }
 
@@ -52,6 +28,7 @@ class ParentDataService  extends ChangeNotifier{
   Future<Parent?> getParent(String id) async {
     final parent = await fireRepo.read("Parent", id);
     if (parent == null) {
+      debugPrint("ParentDataService: Failed to get parent by ID");
       return null;
     }
     return Parent.fromDataWithId(parent);
@@ -60,24 +37,48 @@ class ParentDataService  extends ChangeNotifier{
   Future<Parent?> getParentByEmail(String email) async {
     final parentList = await fireRepo.queryByField("Parent", "email", email, limit: 1);
     if (parentList.isEmpty) {
+      debugPrint("ParentDataService: Failed to get parent by email");
       return null;
     }
     return Parent.fromDataWithId(parentList.first);
   }
 
-  void addChildToParent(String parentId, String childId) async {
-    await fireRepo.appendToArrayField("Parent", parentId, "childIDs", childId);
-    await fireRepo.appendToArrayField("Child", childId, "parentIDs", parentId);
+  Future<bool> updateParent(String id, {String? email, String? name, List<String>? childIDs}) async {
+    final updateData = Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
+    bool success = await fireRepo.update("Parent", id, updateData);
+
+    if (!success) {
+      return false;
+    }
+
+    notifyListeners();
+    return success;
+  }
+
+  // TODO: we need this to delete/edit children as well
+  // Future<bool> deleteParent(String id) async {
+  //   bool success = await fireRepo.delete("Parent", id);
+  //   if (!success) {
+  //     return false;
+  //   }
+  //   notifyListeners();
+  //   return true;
+  // }
+
+  Future<void> addChildToParent(String parentId, String childId) async {
+    await fireRepo.appendToArrayField(Parent.collectionName, parentId, "childIDs", childId);
+    await fireRepo.appendToArrayField(Child.collectionName, childId, "parentIDs", parentId);
     notifyListeners();
   }
 
+
   Future<List<Child>> getChildList(String id) async {
-    final object = await fireRepo.read("Parent", id);
+    final object = await fireRepo.read(Parent.collectionName, id);
     List<Child> children = List.empty(growable: true);
     if(object == null) return children;
 
     final parent = Parent.fromDataWithId(object);
-    final List<DataWithId> data= await fireRepo.readMultiple("Child", parent.childIDs);
+    final List<DataWithId> data= await fireRepo.readMultiple(Child.collectionName, parent.childIDs);
 
     for(DataWithId child in data) {
       children.add(Child.fromDataWithId(child)); 
