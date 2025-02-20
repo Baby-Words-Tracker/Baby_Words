@@ -16,6 +16,7 @@ import 'firebase_options.dart';
 import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
+import 'pages/upload_video.dart';
 
 void main() async {
   try {
@@ -85,6 +86,7 @@ class MyApp extends StatelessWidget {
         '/stats': (context) => const StatsPage(),
         '/addtext': (context) => const AddTextPage(title: "Add Text",),
         '/authgate': (context) => const AuthGate(),
+        '/uploadvideo': (context) => const UploadVideoPage(),
       },
     );
   }
