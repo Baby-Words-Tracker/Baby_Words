@@ -7,7 +7,6 @@ import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 
@@ -235,7 +234,7 @@ class UserModelService extends ChangeNotifier {
 
   Future<void> _refreshResearcher() async {
     if (_researcherChanged && _researcher != null) {
-      final newResearcher = await _researcherDataService.getResearcher(_researcher!.id!);
+      final newResearcher = await _researcherDataService.getResearcher(_researcher!.id);
       if (newResearcher != null) {
         _researcher = newResearcher;
       } else {

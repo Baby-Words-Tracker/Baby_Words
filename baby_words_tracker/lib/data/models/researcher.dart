@@ -93,7 +93,7 @@ class Researcher {
 
   @override
   int get hashCode {
-    return (id?.hashCode ?? 0) ^
+    return id.hashCode ^
       email.hashCode ^
       name.hashCode ^
       institution.hashCode ^
