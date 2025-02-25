@@ -8,6 +8,7 @@ import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Word {
+  static String collectionName = 'Word';
 
   final String word;
   final List<LanguageCode> languageCodes;

@@ -7,6 +7,8 @@ import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Child {
+  static String collectionName = 'Child'; 
+
   final String? id;
   final DateTime birthday;
   final String name;

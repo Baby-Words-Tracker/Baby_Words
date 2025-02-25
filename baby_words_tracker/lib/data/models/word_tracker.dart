@@ -6,6 +6,8 @@ import 'package:baby_words_tracker/util/time_utils.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class WordTracker {
+  static String collectionName = 'WordTracker';
+
   final String? id;
   final DateTime firstUtterance;
   final String? videoID;
