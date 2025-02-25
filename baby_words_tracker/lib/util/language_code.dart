@@ -38,6 +38,7 @@ extension LanguageCodeExtension on LanguageCode {
         return "Arabic";
       case LanguageCode.ru:
         return "Russian";
+      // ignore: unreachable_switch_default
       default:
         return "Unknown";
     }

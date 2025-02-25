@@ -12,7 +12,7 @@ class WordDataService extends ChangeNotifier{
   //word services
   Future<Word?> createWord(String wordName, List<LanguageCode> languageCodes, PartOfSpeech partOfSpeech, String definition) async {
     final object = Word(word: wordName, languageCodes : languageCodes, partOfSpeech: partOfSpeech, definition: definition);
-    String? returnId = await fireRepo.createWithId("Word", wordName, object.toMap());
+    String? returnId = await fireRepo.createWithId(Word.collectionName, wordName, object.toMap());
 
     if (returnId == null) {
       debugPrint("Error: create word failed.");
@@ -24,7 +24,7 @@ class WordDataService extends ChangeNotifier{
   }
 
   Future<Word?> getWord(String id) async {
-    final word = await fireRepo.read("Word", id);
+    final word = await fireRepo.read(Word.collectionName, id);
     if (word == null) return null;
     
     return Word.fromDataWithId(word);

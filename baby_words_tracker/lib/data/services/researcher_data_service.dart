@@ -7,39 +7,15 @@ class ResearcherDataService extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //Reseacher services
-   Future<Researcher?> createResearcher(String email, String name, String institution, [String? phoneNumber]) async {
-    final object = Researcher(email: email, name: name, institution: institution, phoneNumber: phoneNumber);
-    String? returnId = await fireRepo.create("Researcher", object.toMap());
+   Future<Researcher?> createResearcher(Researcher researcher) async {
+    String? returnId = await fireRepo.createWithId(Researcher.collectionName, researcher.id, researcher.toMap());
 
     if (returnId == null) {
       return null;
     }
 
-    notifyListeners();
-    return object.copyWith(id: returnId);
-  }
-
-  Future<Researcher?> updateResearcher(String id, String email, String name, String institution, [String? phoneNumber]) async {
-    final object = Researcher(id: id, email: email, name: name, institution: institution, phoneNumber: phoneNumber);
-    bool success = await fireRepo.update("Researcher", id, object.toMap());
-
-    if (!success) {
-      return null;
-    }
-
-    notifyListeners();
-    return object;
-  }
-
-  Future<Researcher?> updateResearcherFromModel(Researcher researcher) async {
-    if (researcher.id == null) {
-      debugPrint("Error: updateResearcherFromModel called with researcher object that has null ID");
-      return null;
-    }
-
-    bool success = await fireRepo.update("Researcher", researcher.id!, researcher.toMap());
-
-    if (!success) {
+    if (returnId != researcher.id) {
+      debugPrint("Error: ResearcherDataService: createResearcher returned ID does not match input ID");
       return null;
     }
 
@@ -48,17 +24,44 @@ class ResearcherDataService extends ChangeNotifier{
   }
 
   Future<Researcher?> getResearcher(String id) async {
-    final researcher = await fireRepo.read("Researcher", id);
-    if (researcher == null) return null;
+    final researcher = await fireRepo.read(Researcher.collectionName, id);
+    if (researcher == null) {
+      debugPrint("ResearcherDataService: Failed to get researcher by ID");
+      return null;
+    }
     return Researcher.fromDataWithId(researcher);
   }
 
   Future<Researcher?> getResearcherByEmail(String email) async {
-    final researcherList = await fireRepo.queryByField("Researcher", "email", email, limit: 1);
+    final researcherList = await fireRepo.queryByField(Researcher.collectionName, "email", email, limit: 1);
     if (researcherList.isEmpty) {
       return null;
     }
     return Researcher.fromDataWithId(researcherList.first);
   }
+
+  Future<bool> updateResearcher(String id, {String? email, String? name, String? institution, String? phoneNumber}) async {
+    final updateData = Researcher.createUpdateMap(email: email, name: name, institution: institution, phoneNumber: phoneNumber);
+    bool success = await fireRepo.update(Researcher.collectionName, id, updateData);
+
+    if (!success) {
+      return false;
+    }
+
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> deleteResearcher(String id) async {
+    bool success = await fireRepo.delete(Researcher.collectionName, id);
+
+    if (!success) {
+      return false;
+    }
+
+    notifyListeners();
+    return true;
+  }
+
 
 }
