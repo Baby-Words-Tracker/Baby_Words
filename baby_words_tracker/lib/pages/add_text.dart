@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
 import 'package:flutter/material.dart';
 import 'package:csv/csv.dart';
@@ -49,14 +50,7 @@ class _AddTextPageState extends State<AddTextPage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: const Color(0xFF828A8F),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text('Baby Word Tracker', style: TextStyle(color: Color(0xFF9E1B32), 
-                                                         fontSize: 24,        
-                                                         fontWeight: FontWeight.bold, 
-                                                        ),
-                    ),
-      ),
+      appBar: topBar(context, 'Baby Word Tracker'),
       bottomNavigationBar: const BottomAppBar(
         color: Color(0xFF9E1B32),
         child: Padding(

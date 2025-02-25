@@ -8,6 +8,7 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 
 import 'package:baby_words_tracker/pages/auth_gate.dart';
+import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -85,6 +86,7 @@ class MyApp extends StatelessWidget {
         '/stats': (context) => const StatsPage(),
         '/addtext': (context) => const AddTextPage(title: "Add Text",),
         '/authgate': (context) => const AuthGate(),
+        '/profilepage': (context) => const ProfilePage(),
       },
     );
   }
