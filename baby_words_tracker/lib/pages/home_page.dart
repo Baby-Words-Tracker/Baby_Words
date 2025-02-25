@@ -1,4 +1,4 @@
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:flutter/material.dart';
 
 
@@ -9,36 +9,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Baby Word Tracker', style: TextStyle(color: Color(0xFF9E1B32), 
-                                                         fontSize: 24,        
-                                                         fontWeight: FontWeight.bold, 
-                                                        ),
-                          ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<ProfileScreen>(
-                  builder: (context) =>  ProfileScreen(
-                    appBar: AppBar(
-                        title: const Text('User Profile'),
-                    ),
-                    actions: [
-                      SignedOutAction((context) {
-                        Navigator.of(context).pop();
-                      })
-                    ],
-                  ),
-                ),
-              );
-            },
-          )
-        ],
-        automaticallyImplyLeading: false,
-      ),
+      appBar: topBar(context, "Home Page"),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(

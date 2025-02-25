@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -77,7 +78,7 @@ class _StatsPageState extends State<StatsPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Learning Summary")),
+      appBar: topBar(context, "Learning Summary"),
       body: Center(
         child: Consumer<WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
           builder: (context, trackerService, child) {
@@ -141,9 +142,9 @@ Widget graphSwitcher(GraphType type, ChildDataService childService, WordDataServ
 {
   switch (type) {
     case GraphType.newWordsPerDay:
-      return newWordsPerDayGraph(childService, trackerService, days, cache, id: id);
+      return newWordsPerDayGraph(childService, trackerService, days, cache, /*id: id*/);
     case GraphType.wordsByPartOfSpeech:
-      return wordsByPartOfSpeechGraph(childService, wordService, cache, id: id);
+      return wordsByPartOfSpeechGraph(childService, wordService, cache, /*id: id*/);
     default:
       return const Text("Graph Switch Failed.");
   }

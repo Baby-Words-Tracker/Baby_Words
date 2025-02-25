@@ -44,7 +44,21 @@ class WordTrackerDataService  extends ChangeNotifier{
   DateTime endOfDay = startOfDay.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
 
   final List<DataWithId> data = await fireRepo.subQueryByDateRange(
-    Child.collectionName, childId, WordTracker.collectionName, "firstUtterance", startOfDay, endOfDay
+    "Child", childId, "WordTracker", "firstUtterance", startOfDay, endOfDay
+  );
+  
+  List<WordTracker> words = data.map((word) => WordTracker.fromDataWithId(word)).toList();
+  
+  return words;
+}
+
+  Future<List<WordTracker>> getWordsFromDateRange(String childId, DateTime date, int range) async {
+  // Calculate start and end of the day for the given date
+  DateTime startOfDateRange = DateTime(date.year, date.month, date.day);
+  DateTime endOfDateRange = startOfDateRange.add(Duration(days: range)).subtract(const Duration(seconds: 1));
+
+  final List<DataWithId> data = await fireRepo.subQueryByDateRange(
+    "Child", childId, "WordTracker", "firstUtterance", startOfDateRange, endOfDateRange
   );
   
   List<WordTracker> words = data.map((word) => WordTracker.fromDataWithId(word)).toList();
