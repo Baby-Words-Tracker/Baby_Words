@@ -1,6 +1,6 @@
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -9,7 +9,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: topBar(context, "Home Page"),
+      appBar: TopBar(pageName: "Home Page"),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(

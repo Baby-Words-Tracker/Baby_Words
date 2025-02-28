@@ -1,5 +1,7 @@
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
+import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:flutter/material.dart';
 import 'package:csv/csv.dart';
 import 'package:provider/provider.dart';
@@ -21,9 +23,8 @@ import 'package:baby_words_tracker/util/part_of_speech.dart';
 
 
 class AddTextPage extends StatefulWidget {
-  const AddTextPage({super.key, required this.title});
+  const AddTextPage({super.key});
 
-  final String title;
 
   @override
   State<AddTextPage> createState() => _AddTextPageState();
@@ -50,7 +51,7 @@ class _AddTextPageState extends State<AddTextPage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: const Color(0xFF828A8F),
-      appBar: topBar(context, 'Baby Word Tracker'),
+      appBar: TopBar(pageName: "Add Words"),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(
@@ -123,6 +124,12 @@ class _AddTextPageState extends State<AddTextPage> {
                 final childDataService = context.read<ChildDataService>();
                 final wordDataService = context.read<WordDataService>();
                 final wordTrackerDataService = context.read<WordTrackerDataService>();
+                Parent? currParent = getCurrentParent(context);
+                String? currChildID = "";
+                if (currParent != null){
+                  currChildID = getCurrentChildIDSingleInstance(context, currParent);
+                }
+                
 
                 _parseWords();
 
@@ -132,8 +139,8 @@ class _AddTextPageState extends State<AddTextPage> {
                 for (var word in parsedWords){
                   totalWords++;
                   bool? result = await checkAndUpdateWords(word);
-                  if(result != null && result){
-                    addWordToChild(word, childDataService, wordDataService, wordTrackerDataService);
+                  if(result != null && result && currChildID != null){
+                    addWordToChild(word, childDataService, wordDataService, wordTrackerDataService, id: currChildID);
                     correctWords++;
                   }
                   else{
