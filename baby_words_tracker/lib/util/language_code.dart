@@ -43,5 +43,32 @@ extension LanguageCodeExtension on LanguageCode {
         return "Unknown";
     }
   }
+  String get displayCode {
+    switch(this) {
+      case LanguageCode.en:
+        return "en";
+      case LanguageCode.es:
+        return "es";
+      case LanguageCode.fr:
+        return "fr";
+      case LanguageCode.de:
+        return "de";
+      case LanguageCode.it:
+        return "it";
+      case LanguageCode.zh:
+        return "zh";
+      case LanguageCode.ja:
+        return "js";
+      case LanguageCode.ko:
+        return "ko";
+      case LanguageCode.ar:
+        return "ar";
+      case LanguageCode.ru:
+        return "ru";
+      // ignore: unreachable_switch_default
+      default:
+        return "Unknown";
+    }
+  }
 }
 
