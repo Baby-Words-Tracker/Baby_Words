@@ -90,7 +90,7 @@ class MyApp extends StatelessWidget {
         '/addtext': (context) => const AddTextPage(),
         '/authgate': (context) => const AuthGate(),
         '/uploadvideo': (context) => const UploadVideoPage(),
-        '/profilepage': (context) => const ProfilePage(),
+        '/profilepage': (context) => ProfilePage(),
         
       },
     );

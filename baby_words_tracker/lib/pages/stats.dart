@@ -360,42 +360,6 @@ DropdownButton<String> graphTypeSelectDropdown(GraphType currType, void Function
 // ---------------------
 
 
-OutlinedButton addTestChildButton(BuildContext context) {
-  return OutlinedButton(
-    onPressed: () {
-      addTestChild(context);
-    },
-    style: OutlinedButton.styleFrom(
-      backgroundColor: const Color(0xFF828A8F), 
-      foregroundColor: Colors.white,        
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20), 
-      ),
-      side: const BorderSide(color: Colors.white, width: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0), 
-    ),
-    child: const Text('Add The Test Child', style: TextStyle(fontSize: 18)),
-  );
-}
-
-
-Future<void> addTestChild(BuildContext context) async{
-  Child? child = await context.read<ChildDataService>().createChild(DateTime.now(), "RobsTestChild2", 0, ["52LgnslKjOeMaXJzd6fLJJ22Qpl1"]);
-  context.read<ParentDataService>().addChildToParent("52LgnslKjOeMaXJzd6fLJJ22Qpl1", child?.id ?? "aaaa");
-}
-
-
-//testing child id: gz1Qe32xJcF0oRGmhw7f
-Future<void> addWordToChild(String word, ChildDataService childService, WordDataService wordService, WordTrackerDataService trackerService, {String id = "gz1Qe32xJcF0oRGmhw7f"})
-async {
-  if (await childService.getChild(id) == null)
-  {
-    return;
-  }
-  //FIXME: implement language, part of speech, defn, spellcheck
-  /*Word wordObject =*/ await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
-  trackerService.createWordTracker(id, word, DateTime.now());
-}
 
 
 Future<void> addThisManyDaysWorthOfExampleDataToTestChildInALinearIncreasingFormat(int n, WordTrackerDataService trackerService) //testing function FIXME:remove
@@ -411,54 +375,5 @@ async {
 
 
 // below this is the testing word adding functionality
-Column wordAddingFeature(BuildContext context, TextEditingController wordTextController, TextEditingController idController, WordTrackerDataService trackerService){
-  return Column(
-    children: [
-      TextField(
-        controller: wordTextController,
-        decoration: const InputDecoration(
-          //border: OutlineInputBorder(),
-          hintText: 'Add this word to..',
-          hintStyle: TextStyle(color: Colors.white),
-          filled: true,  
-          fillColor: Color(0xFF9E1B32),
-        ),
-      ),
-      TextField(
-        controller: idController,
-        decoration: const InputDecoration(
-          //border: OutlineInputBorder(),
-          hintText: 'child with id.. [or leave empty for testing child]',
-          hintStyle: TextStyle(color: Colors.white),
-          filled: true,  
-          fillColor: Color(0xFF9E1B32),
-        ),
-      ),
-      Center(
-        child: OutlinedButton(
-          onPressed: () {
-            if (idController.text != "") //add the word to the child with the id, or the default testing child if no input
-            {
-              addWordToChild(wordTextController.text, context.read<ChildDataService>(), context.read<WordDataService>(),  trackerService, id: idController.text);
-            } else {
-              addWordToChild(wordTextController.text, context.read<ChildDataService>(), context.read<WordDataService>(),  trackerService);
-            }
-            wordTextController.clear();
-            idController.clear();
-          },
-          style: OutlinedButton.styleFrom(
-            backgroundColor: const Color(0xFF828A8F), 
-            foregroundColor: Colors.white,        
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20), 
-            ),
-            side: const BorderSide(color: Colors.white, width: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0), 
-          ),
-          child: const Text('Submit', style: TextStyle(fontSize: 18)),
-        )
-      ),
-    ],
-  );
-}
+
 
