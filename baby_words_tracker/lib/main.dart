@@ -9,6 +9,7 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
+import 'package:baby_words_tracker/util/config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,6 +39,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
+          ChangeNotifierProvider(create: (_) => Config()),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService: Provider.of<ParentDataService>(context, listen: false),
@@ -85,10 +87,11 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomePage(),
         '/stats': (context) => const StatsPage(),
-        '/addtext': (context) => const AddTextPage(title: "Add Text",),
+        '/addtext': (context) => const AddTextPage(),
         '/authgate': (context) => const AuthGate(),
         '/uploadvideo': (context) => const UploadVideoPage(),
         '/profilepage': (context) => const ProfilePage(),
+        
       },
     );
   }

@@ -13,7 +13,7 @@ class Word {
   final String word;
   final List<LanguageCode> languageCodes;
   final PartOfSpeech partOfSpeech;
-  final String definition;
+  final String? definition;
 
 
   Word({
