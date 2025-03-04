@@ -1,12 +1,2 @@
-
-# Ignore Python virtual environment
-venv/
-.env
-
-# Ignore Python cache files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
+node_modules/
 *.local
