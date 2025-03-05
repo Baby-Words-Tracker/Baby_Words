@@ -10,7 +10,7 @@ class WordDataService extends ChangeNotifier{
   static final fireRepo = FirestoreRepository();
 
   //word services
-  Future<Word?> createWord(String wordName, List<LanguageCode> languageCodes, PartOfSpeech partOfSpeech, String definition) async {
+  Future<Word?> createWord(String wordName, List<LanguageCode> languageCodes, PartOfSpeech partOfSpeech, String? definition) async {
     final object = Word(word: wordName, languageCodes : languageCodes, partOfSpeech: partOfSpeech, definition: definition);
     String? returnId = await fireRepo.createWithId(Word.collectionName, wordName, object.toMap());
 
