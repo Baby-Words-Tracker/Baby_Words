@@ -10,7 +10,9 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/util/config.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_functions/firebase_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +31,16 @@ void main() async {
     );
   } catch (e) {
     debugPrint("Error initializing Firebase: $e");
+  }
+
+  if (FirebaseAuth.instance.app.name == '[DEFAULT]') {
+    FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    debugPrint("Using Auth emulator");
+  }
+
+  if (FirebaseFirestore.instance.app.name == '[DEFAULT]') {
+    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+    debugPrint("Using Firestore emulator");
   }
 
   runApp(
