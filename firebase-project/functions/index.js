@@ -7,6 +7,8 @@ const {logger} = require("firebase-functions");
 const {initializeApp} = require("firebase-admin/app");
 // const {getFirestore} = require("firebase-admin/firestore");
 
+// change for lineendings
+
 const {getAuth} = require("firebase-admin/auth");
 
 const {functions} = require("firebase-functions/v1/");
