@@ -54,7 +54,7 @@ class Child {
       birthday: map['birthday'] != null ? convertToDateTime(map['birthday']) : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
       wordCount: (map['wordCount'] ?? 0) as int,
-      parentIDs: (map['languageCodes'] as List<dynamic>?)
+      parentIDs: (map['parentIDs'] as List<dynamic>?)
         ?.whereType<String>()
         .toList() ?? [],
     );
