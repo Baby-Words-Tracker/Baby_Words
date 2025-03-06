@@ -153,8 +153,8 @@ async {
   List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
   for (var tracker in allWordsFromChild)
   {
-    Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ?? Word(word: "Invalid Word", languageCodes: List<LanguageCode>.empty(), partOfSpeech: PartOfSpeech.noun, definition: "Invalid Word");
-    data[currWord.partOfSpeech] = (data[currWord.partOfSpeech] ?? 0) + 1; //increment or set to 1 depending on if it already existed
+    Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ?? Word(word: "Invalid Word", languageCodes: List<LanguageCode>.empty(), partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},  definition: {LanguageCode.en : null});
+    data[currWord.partOfSpeech[LanguageCode.en]!] = (data[currWord.partOfSpeech[LanguageCode.en]] ?? 0) + 1; //increment or set to 1 depending on if it already existed
   }
   List<MapEntry<PartOfSpeech, int>> entries = data.entries.toList();
   List<(int, PartOfSpeech)> listData = List.empty(growable: true);
@@ -393,7 +393,7 @@ async {
     return;
   }
   //FIXME: implement language, part of speech, defn, spellcheck
-  /*Word wordObject =*/ await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
+  /*Word wordObject =*/ await wordService.createWord(word, [LanguageCode.en], {LanguageCode.en : PartOfSpeech.noun}, {LanguageCode.en: null});
   trackerService.createWordTracker(id, word, DateTime.now());
 }
 
