@@ -45,4 +45,9 @@ class ChildDataService extends ChangeNotifier {
     return words;
   }
 
+  Future<List<Child>> getMultipleChildren(List<String> ids) async {
+    List<DataWithId> docs = await firebaseRepo.readMultiple(Child.collectionName, ids);
+    return docs.map((doc) => Child.fromDataWithId(doc)).toList();
+  }
+
 }
