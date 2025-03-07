@@ -10,7 +10,7 @@ class ParentDataService  extends ChangeNotifier{
 
   //Parent services
   Future<Parent?> createParent(Parent parent) async {
-    String? returnId = await fireRepo.createWithId("Parent", parent.id, parent.toMap());
+    String? returnId = await fireRepo.createWithId(Parent.collectionName, parent.id, parent.toMap());
     
     if (returnId == null) {
       return null;
@@ -26,7 +26,7 @@ class ParentDataService  extends ChangeNotifier{
   }
 
   Future<Parent?> getParent(String id) async {
-    final parent = await fireRepo.read("Parent", id);
+    final parent = await fireRepo.read(Parent.collectionName, id);
     if (parent == null) {
       debugPrint("ParentDataService: Failed to get parent by ID");
       return null;
@@ -35,7 +35,7 @@ class ParentDataService  extends ChangeNotifier{
   }
 
   Future<Parent?> getParentByEmail(String email) async {
-    final parentList = await fireRepo.queryByField("Parent", "email", email, limit: 1);
+    final parentList = await fireRepo.queryByField(Parent.collectionName, "email", email, limit: 1);
     if (parentList.isEmpty) {
       debugPrint("ParentDataService: Failed to get parent by email");
       return null;
@@ -43,9 +43,15 @@ class ParentDataService  extends ChangeNotifier{
     return Parent.fromDataWithId(parentList.first);
   }
 
+  Future<List<Parent>> getMultipleParents(List<String> ids) async {
+    return (await fireRepo.readMultiple(Parent.collectionName, ids))
+        .map((doc) => Parent.fromDataWithId(doc))
+        .toList();
+  }
+
   Future<bool> updateParent(String id, {String? email, String? name, List<String>? childIDs}) async {
     final updateData = Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
-    bool success = await fireRepo.update("Parent", id, updateData);
+    bool success = await fireRepo.update(Parent.collectionName, id, updateData);
 
     if (!success) {
       return false;
@@ -57,7 +63,7 @@ class ParentDataService  extends ChangeNotifier{
 
   // TODO: we need this to delete/edit children as well
   // Future<bool> deleteParent(String id) async {
-  //   bool success = await fireRepo.delete("Parent", id);
+  //   bool success = await fireRepo.delete(Parent.collectionName, id);
   //   if (!success) {
   //     return false;
   //   }

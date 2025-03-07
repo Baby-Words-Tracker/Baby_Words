@@ -30,4 +30,8 @@ class WordDataService extends ChangeNotifier{
     return Word.fromDataWithId(word);
   }
 
+  Future<List<Word>> getMultipleWords(List<String> ids) async {
+    return (await fireRepo.readMultiple(Word.collectionName, ids)).map((doc) => Word.fromDataWithId(doc)).toList();
+  }
+
 }

@@ -27,6 +27,12 @@ class ChildDataService extends ChangeNotifier {
     return Child.fromDataWithId(child);
   }
 
+  Future<List<Child>> getMultipleChildren(List<String> ids) async {
+    return (await firebaseRepo.readMultiple(Child.collectionName, ids))
+        .map((doc) => Child.fromDataWithId(doc))
+        .toList();
+  }
+
   Future<int> getNumWords(String id) async {
     final object = await firebaseRepo.read(Child.collectionName, id); 
     if (object == null) return 0; 
@@ -43,11 +49,6 @@ class ChildDataService extends ChangeNotifier {
       words.add(WordTracker.fromDataWithId(doc));
     }
     return words;
-  }
-
-  Future<List<Child>> getMultipleChildren(List<String> ids) async {
-    List<DataWithId> docs = await firebaseRepo.readMultiple(Child.collectionName, ids);
-    return docs.map((doc) => Child.fromDataWithId(doc)).toList();
   }
 
 }

@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -38,6 +39,10 @@ class ResearcherDataService extends ChangeNotifier{
       return null;
     }
     return Researcher.fromDataWithId(researcherList.first);
+  }
+
+  Future<List<Researcher>> getMultipleResearchers(List<String> ids) async {
+    return (await fireRepo.readMultiple(Researcher.collectionName, ids)).map((doc) => Researcher.fromDataWithId(doc)).toList();
   }
 
   Future<bool> updateResearcher(String id, {String? email, String? name, String? institution, String? phoneNumber}) async {
