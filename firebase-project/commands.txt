@@ -1,0 +1,11 @@
+run emulators:
+firebase emulators:start --import ./emulator-sources
+
+run emulators with automatic export:
+firebase emulators:start --export-on-exit ./emulator-sources --import ./emulator-sources
+
+
+
+to save changes to sources (while the emulators are running):
+firebase emulators:export ./emulator-sources
+ 
