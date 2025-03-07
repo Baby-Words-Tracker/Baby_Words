@@ -41,17 +41,6 @@ void main() async {
     await setupFirebaseEmulators();
   }
 
-
-  // if (FirebaseAuth.instance.app.name == '[DEFAULT]') {
-  //   FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-  //   debugPrint("Using Auth emulator");
-  // }
-
-  // if (FirebaseFirestore.instance.app.name == '[DEFAULT]') {
-  //   FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-  //   debugPrint("Using Firestore emulator");
-  // }
-
   runApp(
     MultiProvider(
         providers: [
