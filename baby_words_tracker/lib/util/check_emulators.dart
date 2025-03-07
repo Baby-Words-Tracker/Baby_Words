@@ -19,6 +19,7 @@ Future<dynamic> getEmulators() async {
     }
   } catch (e) {
     debugPrint("Error getting emulators: $e");
+    throw Exception('Failed to get emulators');
     // Error occurred, emulator is likely not running
   }
   return false;
@@ -31,7 +32,13 @@ bool isEmulatorRunning(dynamic emulators, EmulatorType emulatorName) {
 Future<void> setupFirebaseEmulators() async {
   if (!kDebugMode) return; // Only run in debug mode
   const localhost = 'localhost';
-  final emulatorData = await getEmulators();
+  final dynamic emulatorData;
+  try{
+    emulatorData = await getEmulators();
+  } catch(e) {
+    debugPrint('Failure to get emulator data likely indicates that no emulators are running: ${e.toString()}');
+    return;
+  }
 
   debugPrint(emulatorData.toString());
 
