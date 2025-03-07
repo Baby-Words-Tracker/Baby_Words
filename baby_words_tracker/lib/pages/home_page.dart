@@ -1,6 +1,6 @@
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -40,6 +40,17 @@ class HomePage extends StatelessWidget {
             ),
             onPressed: () {
                   Navigator.pushNamed(context, '/stats');
+                  },
+          ),
+          //TODO: remove this button when the admin page is implemented correctly
+          IconButton(
+            icon: const Icon(
+                Icons.admin_panel_settings_outlined,
+                color: Colors.white,
+                size: 40.0,
+            ),
+            onPressed: () {
+                  Navigator.pushNamed(context, AdminFirebasePage.routeName);
                   },
           ),
   ],

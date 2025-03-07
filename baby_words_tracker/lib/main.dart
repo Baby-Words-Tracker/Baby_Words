@@ -113,6 +113,7 @@ class MyApp extends StatelessWidget {
         '/authgate': (context) => const AuthGate(),
         '/uploadvideo': (context) => const UploadVideoPage(),
         '/profilepage': (context) => ProfilePage(),
+        AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
         
       },
     );
