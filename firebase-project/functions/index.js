@@ -59,7 +59,7 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
   checkUID(targetUid);
 
   // Assign the 'researcher' role to the target user
-  giveClaim(Role.Researcher, Role.Researcher, targetUid, context);
+  giveClaim(Role.Researcher, Role.Admin, targetUid, context);
 
   return {
     message: `User ${targetUid} has been assigned the` +
@@ -82,7 +82,7 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
   checkUID(targetUid);
 
   // Remove the 'researcher' role from the target user
-  removeClaim(Role.Researcher, Role.Researcher, targetUid, context);
+  removeClaim(Role.Researcher, Role.Admin, targetUid, context);
 
   return {
     message: `User ${targetUid} has been removed from the` +
@@ -106,7 +106,7 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
   checkUID(targetUid);
 
   // Assign the 'parent' role to the target user
-  giveClaim(Role.Parent, Role.Parent, targetUid, context);
+  giveClaim(Role.Parent, Role.Admin, targetUid, context);
 
   return {
     message: `User ${targetUid} has been assigned the` +
@@ -129,7 +129,7 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
   checkUID(targetUid);
 
   // Remove the 'parent' role from the target user
-  removeClaim(Role.Parent, Role.Parent, targetUid, context);
+  removeClaim(Role.Parent, Role.Admin, targetUid, context);
 
   return {
     message: `User ${targetUid} has been removed from the` +
