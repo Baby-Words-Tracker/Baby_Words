@@ -18,12 +18,6 @@ const https = require("firebase-functions/v2/https");
 
 initializeApp();
 
-// Optional: Use the emulator for Firebase Authentication
-if (process.env.FUNCTIONS_EMULATOR === "true") {
-  console.log("Running in emulator");
-  getAuth().useEmulator("http://localhost:9099");
-}
-
 /**
  * Adds the Parent claim to the user when they are created
  * @param {auth.UserRecord} user the user object
