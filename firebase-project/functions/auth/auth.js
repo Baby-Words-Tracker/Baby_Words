@@ -2,7 +2,7 @@
 const https = require("firebase-functions/v2/https");
 
 // Role enum
-const Role = require("./roles").Role;
+const {getRoleFromToken} = require("./roles").Role;
 
 /**
  * checks if the user is authenticated
@@ -22,23 +22,6 @@ function checkAuthentication(context) {
   if (!isAuthenticated(context)) {
     throw new https.HttpsError(
         "unauthenticated", "User must be authenticated");
-  }
-}
-
-/**
- * Gets the user's Role object from the token
- * @param {unknown} token the token object (context.auth.token)
- * @return {Role} the user's corresponding Role object
- */
-function getRoleFromToken(token) {
-  if (token.admin === true) {
-    return Role.Admin;
-  } else if (token.parent === true) {
-    return Role.Parent;
-  } else if (token.researcher === true) {
-    return Role.Researcher;
-  } else {
-    return Role.Unauthenticated;
   }
 }
 
@@ -75,7 +58,6 @@ function checkIsAtLeast(context, minimumRole) {
 module.exports = {
   isAuthenticated,
   checkAuthentication,
-  getRoleFromToken,
   isAtLeast,
   checkIsAtLeast,
 };

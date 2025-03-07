@@ -1,5 +1,3 @@
-
-
 /**
  * A role object to model authentication
  * @typedef {Object} Role
@@ -12,13 +10,12 @@
  */
 const Role = Object.freeze({
   Admin: {value: Symbol("Admin"), order: 0},
-  Researcher: {value: Symbol("Researcher"), order: 1},
-  Parent: {value: Symbol("Parent"), order: 2},
+  Researcher: {value: Symbol("Researcher"), order: 3},
+  Parent: {value: Symbol("Parent"), order: 5},
   // DO NOT CHECK THE UNAUTHENTICATED VALUE DIRECTLY!
   // It can change in the future and is only used for comparison.
   Unauthenticated: {value: Symbol("Unauthenticated"), order: 100},
 });
-
 
 /**
  * Gets the user's Role object from the token
@@ -28,6 +25,8 @@ const Role = Object.freeze({
 function getRoleFromToken(token) {
   if (token.admin === true) {
     return Role.Admin;
+  } else if (token.roleManager === true) {
+    return Role.RoleManager;
   } else if (token.parent === true) {
     return Role.Parent;
   } else if (token.researcher === true) {
