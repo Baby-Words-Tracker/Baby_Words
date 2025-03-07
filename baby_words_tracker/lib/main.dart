@@ -12,7 +12,7 @@ import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/util/config.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:firebase_functions/firebase_functions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +21,10 @@ import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
+
+import 'package:baby_words_tracker/util/check_emulators.dart';
+
+import 'dart:io';
 
 void main() async {
   try {
@@ -33,15 +37,20 @@ void main() async {
     debugPrint("Error initializing Firebase: $e");
   }
 
-  if (FirebaseAuth.instance.app.name == '[DEFAULT]') {
-    FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    debugPrint("Using Auth emulator");
+  if (kDebugMode) {
+    await setupFirebaseEmulators();
   }
 
-  if (FirebaseFirestore.instance.app.name == '[DEFAULT]') {
-    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-    debugPrint("Using Firestore emulator");
-  }
+
+  // if (FirebaseAuth.instance.app.name == '[DEFAULT]') {
+  //   FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  //   debugPrint("Using Auth emulator");
+  // }
+
+  // if (FirebaseFirestore.instance.app.name == '[DEFAULT]') {
+  //   FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+  //   debugPrint("Using Firestore emulator");
+  // }
 
   runApp(
     MultiProvider(
