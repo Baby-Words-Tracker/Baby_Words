@@ -1,30 +1,42 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
+// Data
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+
+// Auth
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 
+// Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
-import 'package:baby_words_tracker/util/config.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
-import 'firebase_options.dart';
+import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
 
+// Util
+import 'package:baby_words_tracker/util/config.dart';
 import 'package:baby_words_tracker/util/check_emulators.dart';
 
-import 'dart:io';
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+// Flutter
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+// Provider
+import 'package:provider/provider.dart';
+
+// Firebase Options
+import 'firebase_options.dart';
+
 
 void main() async {
   try {
