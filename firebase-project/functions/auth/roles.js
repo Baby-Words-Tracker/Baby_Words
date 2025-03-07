@@ -3,18 +3,18 @@
  * @typedef {Object} Role
  * @property {Symbol} value the role value
  * @property {number} order the order of the role
- * @property {Role} Admin the admin role
- * @property {Role} Researcher the researcher role
- * @property {Role} Parent the parent role
- * @property {Role} Unauthenticated the unauthenticated role
+ * @property {Role} admin the admin role
+ * @property {Role} researcher the researcher role
+ * @property {Role} parent the parent role
+ * @property {Role} unauthenticated the unauthenticated role
  */
 const Role = Object.freeze({
-  Admin: {value: Symbol("Admin"), order: 0},
-  Researcher: {value: Symbol("Researcher"), order: 3},
-  Parent: {value: Symbol("Parent"), order: 5},
+  admin: {value: Symbol("admin"), order: 0},
+  researcher: {value: Symbol("researcher"), order: 3},
+  parent: {value: Symbol("parent"), order: 5},
   // DO NOT CHECK THE UNAUTHENTICATED VALUE DIRECTLY!
   // It can change in the future and is only used for comparison.
-  Unauthenticated: {value: Symbol("Unauthenticated"), order: 100},
+  unauthenticated: {value: Symbol("unauthenticated"), order: 100},
 });
 
 /**
@@ -23,16 +23,14 @@ const Role = Object.freeze({
  * @return {Role} the user's corresponding Role object
  */
 function getRoleFromToken(token) {
-  if (token.admin === true) {
-    return Role.Admin;
-  } else if (token.roleManager === true) {
-    return Role.RoleManager;
-  } else if (token.parent === true) {
-    return Role.Parent;
-  } else if (token.researcher === true) {
-    return Role.Researcher;
+  if (token[Role.admin.value.description] === true) {
+    return Role.admin;
+  } else if (token[Role.parent.value.description] === true) {
+    return Role.parent;
+  } else if (token[Role.researcher.value.description] === true) {
+    return Role.researcher;
   } else {
-    return Role.Unauthenticated;
+    return Role.unauthenticated;
   }
 }
 
