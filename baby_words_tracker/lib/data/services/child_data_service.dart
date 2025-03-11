@@ -3,14 +3,15 @@ import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 
 class ChildDataService extends ChangeNotifier {
 
   static final firebaseRepo = FirestoreRepository();
 
   //child services
-  Future<Child?> createChild(DateTime cBirthDay, String cName, int cWordCount, List<String> cParentIDs) async {
-    final object = Child(birthday: cBirthDay, name: cName, wordCount: cWordCount, parentIDs: cParentIDs);
+  Future<Child?> createChild(DateTime cBirthDay, String cName, List<LanguageCode> language, int cWordCount, List<String> cParentIDs) async {
+    final object = Child(birthday: cBirthDay, name: cName, language: language, wordCount: cWordCount, parentIDs: cParentIDs);
     String? returnId = await firebaseRepo.create(Child.collectionName, object.toMap());
     
     if (returnId == null) {
@@ -33,6 +34,14 @@ class ChildDataService extends ChangeNotifier {
     
     final child = Child.fromDataWithId(object);
     return child.wordCount; 
+  }
+
+  Future<List<LanguageCode>?> getLanguages(String id) async {
+    final object = await firebaseRepo.read(Child.collectionName, id); 
+    if (object == null) return null; 
+    
+    final child = Child.fromDataWithId(object);
+    return child.language; 
   }
 
   Future<List<WordTracker>> getAllKnownWords(String id) async {

@@ -380,7 +380,7 @@ OutlinedButton addTestChildButton(BuildContext context) {
 
 
 Future<void> addTestChild(BuildContext context) async{
-  Child? child = await context.read<ChildDataService>().createChild(DateTime.now(), "RobsTestChild2", 0, ["52LgnslKjOeMaXJzd6fLJJ22Qpl1"]);
+  Child? child = await context.read<ChildDataService>().createChild(DateTime.now(), "RobsTestChild2", [LanguageCode.en], 0, ["52LgnslKjOeMaXJzd6fLJJ22Qpl1"]);
   context.read<ParentDataService>().addChildToParent("52LgnslKjOeMaXJzd6fLJJ22Qpl1", child?.id ?? "aaaa");
 }
 

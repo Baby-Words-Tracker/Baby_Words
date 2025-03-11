@@ -70,5 +70,9 @@ extension LanguageCodeExtension on LanguageCode {
         return "Unknown";
     }
   }
+
+  static LanguageCode fromString(String value) {
+    return LanguageCode.values.firstWhere((e) => e.toString().split('.').last == value);
+  }
 }
 
