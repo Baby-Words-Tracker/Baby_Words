@@ -8,7 +8,7 @@ const {getAuth} = require("firebase-admin/auth");
 // Import our auth module
 const {Role} = require("./auth/roles");
 const {giveClaim, removeClaim} = require("./auth/claims");
-const {checkAuthentication} = require("./auth/auth.js");
+const {checkAuthentication, checkIsAtLeast} = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -41,11 +41,12 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
 /**
  * Checks if the uid value is set and thows an exception if not
  * @param {string} variable The UID of the user to assign the role to
+ * @param {string} variableName The name to display if the variable is empty
  */
-function checkEmpty(variable) {
+function checkEmpty(variable, variableName) {
   if (!variable) {
     throw new https.HttpsError(
-        "invalid-argument", "Target user UID is required");
+        "invalid-argument", `Target user ${variableName} is required`);
   }
 }
 
@@ -60,7 +61,7 @@ function checkEmpty(variable) {
  */
 exports.giveResearcherClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   // Assign the 'researcher' role to the target user
   try {
@@ -90,7 +91,7 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
  */
 exports.removeResearcherClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     removeClaim(Role.researcher, Role.researcher, targetUid, data);
@@ -119,7 +120,7 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
  */
 exports.giveParentClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     giveClaim(Role.parent, Role.researcher, targetUid, data);
@@ -148,7 +149,7 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
  */
 exports.removeParentClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     removeClaim(Role.parent, Role.researcher, targetUid, data);
@@ -177,7 +178,7 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
  */
 exports.giveAdminClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     giveClaim(Role.admin, Role.admin, targetUid, data);
@@ -206,7 +207,7 @@ exports.giveAdminClaim = https.onCall(async (data, context) => {
  */
 exports.removeAdminClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     removeClaim(Role.admin, Role.admin, targetUid, data);
@@ -225,12 +226,14 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
 });
 
 
+// TODO: this is extremely insecure.
+//       we need to check if the user is a parent of the child
 exports.addChildToOtherParent = https.onCall(async (data, context) => {
   const targetEmail = data.data.targetEmail;
   const childUid = data.data.childUid;
 
-  checkEmpty(targetEmail);
-  checkEmpty(childUid);
+  checkEmpty(targetEmail, "targetEmail");
+  checkEmpty(childUid, "childUid");
 
   try {
     checkAuthentication(data);
@@ -240,21 +243,30 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
     const targetCollection = db.collection("Parent");
 
-    const targetSnapshot = await targetCollection
-        .where("email", "==", targetEmail)
-        .get();
+    const userSnaphot = await targetCollection.doc(data.auth.uid).get();
 
-    if (targetSnapshot.empty) {
+    if (userSnaphot.exists && userSnaphot.data().childIDs.includes(childUid)) {
+      const targetSnapshot = await targetCollection
+          .where("email", "==", targetEmail)
+          .get();
+
+      if (targetSnapshot.exists) {
+        throw new https.HttpsError(
+            "not-found", "Parent with email not found");
+      }
+
+      const parentRef = targetSnapshot.docs[0].ref;
+
+      // Use arrayUnion to append the child UID to the children array
+      await parentRef.update({
+        children: admin.firestore.FieldValue.arrayUnion(childUid),
+      });
+    } else {
       throw new https.HttpsError(
-          "not-found", "Parent with email not found");
+          "permission-denied",
+          "You do must be a parent of a child to assign them to another parent",
+      );
     }
-
-    const parentRef = targetSnapshot.docs[0].ref;
-
-    // Use arrayUnion to append the child UID to the children array
-    await parentRef.update({
-      children: admin.firestore.FieldValue.arrayUnion(childUid),
-    });
   } catch (error) {
     logger.error(`Failed to assign child to other parent: ${error}`);
     return {
@@ -266,4 +278,30 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
   return {
     message: `User ${targetEmail} has been given child ${childUid}.`,
   };
+});
+
+
+exports.getUserCustomClaims = https.onCall(async (data, context) => {
+  const targetUid = data.data.targetUid;
+
+  checkEmpty(targetUid, "targetUid");
+
+  try {
+    checkAuthentication(data);
+
+    checkIsAtLeast(data, Role.admin);
+
+    // Fetch the custom claims of the selected user
+    const selectedUser = await admin.auth().getUser(targetUid);
+
+    // Return the user's custom claims
+    return {
+      customClaims: selectedUser.customClaims || {},
+    };
+  } catch (error) {
+    console.error("Error fetching user custom claims:", error);
+    return {
+      message: `Failed to fetch user custom claims error: ${error}`,
+    };
+  }
 });
