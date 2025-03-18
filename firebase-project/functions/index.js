@@ -26,7 +26,6 @@ initializeApp();
  */
 exports.addDefaultClaim = auth.user().onCreate(async (user) => {
   try {
-
     // Set the custom claim 'parent' to true
     await getAuth().setCustomUserClaims(user.uid, {parent: true});
 

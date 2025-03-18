@@ -3,7 +3,7 @@ const {getAuth} = require("firebase-admin/auth");
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
-const {logger} = require("firebase-functions");
+// const {logger} = require("firebase-functions");
 
 // authentication functions
 const {checkAuthentication, checkIsAtLeast} = require("./auth");
