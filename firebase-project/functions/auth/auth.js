@@ -52,7 +52,7 @@ function checkIsAtLeast(data, minimumRole) {
   if (!isAtLeast(data, minimumRole)) {
     throw new https.HttpsError(
         "permission-denied",
-        "You do not have permission to assign role ",
+        "You do not have correct permissions ",
     );
   }
 }

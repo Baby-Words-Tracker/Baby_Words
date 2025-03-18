@@ -2,12 +2,13 @@
 const {logger} = require("firebase-functions");
 
 // The Firebase Admin SDK to access Firestore.
-const {initializeApp} = require("firebase-admin/app");
+const admin = require("firebase-admin");
 const {getAuth} = require("firebase-admin/auth");
 
 // Import our auth module
 const {Role} = require("./auth/roles");
 const {giveClaim, removeClaim} = require("./auth/claims");
+const {checkAuthentication} = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -16,7 +17,9 @@ const auth = require("firebase-functions/v1/auth");
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
-initializeApp();
+admin.initializeApp();
+
+const db = admin.firestore();
 
 // TODO: make these functions more generic/concise
 
@@ -37,10 +40,10 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
 
 /**
  * Checks if the uid value is set and thows an exception if not
- * @param {string} uid The UID of the user to assign the role to
+ * @param {string} variable The UID of the user to assign the role to
  */
-function checkUID(uid) {
-  if (!uid) {
+function checkEmpty(variable) {
+  if (!variable) {
     throw new https.HttpsError(
         "invalid-argument", "Target user UID is required");
   }
@@ -57,7 +60,7 @@ function checkUID(uid) {
  */
 exports.giveResearcherClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkUID(targetUid);
+  checkEmpty(targetUid);
 
   // Assign the 'researcher' role to the target user
   try {
@@ -87,7 +90,7 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
  */
 exports.removeResearcherClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkUID(targetUid);
+  checkEmpty(targetUid);
 
   try {
     removeClaim(Role.researcher, Role.researcher, targetUid, data);
@@ -116,7 +119,7 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
  */
 exports.giveParentClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkUID(targetUid);
+  checkEmpty(targetUid);
 
   try {
     giveClaim(Role.parent, Role.researcher, targetUid, data);
@@ -145,7 +148,7 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
  */
 exports.removeParentClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkUID(targetUid);
+  checkEmpty(targetUid);
 
   try {
     removeClaim(Role.parent, Role.researcher, targetUid, data);
@@ -174,7 +177,7 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
  */
 exports.giveAdminClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkUID(targetUid);
+  checkEmpty(targetUid);
 
   try {
     giveClaim(Role.admin, Role.admin, targetUid, data);
@@ -203,7 +206,7 @@ exports.giveAdminClaim = https.onCall(async (data, context) => {
  */
 exports.removeAdminClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkUID(targetUid);
+  checkEmpty(targetUid);
 
   try {
     removeClaim(Role.admin, Role.admin, targetUid, data);
@@ -218,5 +221,49 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
   return {
     message: `User ${targetUid} has been removed from the` +
     ` ${Role.admin.value.description} role.`,
+  };
+});
+
+
+exports.addChildToOtherParent = https.onCall(async (data, context) => {
+  const targetEmail = data.data.targetEmail;
+  const childUid = data.data.childUid;
+
+  checkEmpty(targetEmail);
+  checkEmpty(childUid);
+
+  try {
+    checkAuthentication(data);
+
+    // TODO: fix this
+    // checkIsAtLeast(data, Role.parent);
+
+    const targetCollection = db.collection("Parent");
+
+    const targetSnapshot = await targetCollection
+        .where("email", "==", targetEmail)
+        .get();
+
+    if (targetSnapshot.empty) {
+      throw new https.HttpsError(
+          "not-found", "Parent with email not found");
+    }
+
+    const parentRef = targetSnapshot.docs[0].ref;
+
+    // Use arrayUnion to append the child UID to the children array
+    await parentRef.update({
+      children: admin.firestore.FieldValue.arrayUnion(childUid),
+    });
+  } catch (error) {
+    logger.error(`Failed to assign child to other parent: ${error}`);
+    return {
+      message: `Failed to assign child: ${childUid}` +
+      ` to parent with email: ${targetEmail} because of error: ${error}`,
+    };
+  }
+
+  return {
+    message: `User ${targetEmail} has been given child ${childUid}.`,
   };
 });
