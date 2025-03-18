@@ -125,8 +125,10 @@ Future<void> addChildToCurrParent(BuildContext context, String name, DateTime bd
 
 Column childAddingFeature(BuildContext context, TextEditingController nameController, TextEditingController dateController){
   return Column(
+    crossAxisAlignment : CrossAxisAlignment.start,
     children: [
-      const Text("Add a Child:"), //FIXME: ugly
+      //const Text("Add a Child:"), //FIXME: ugly
+      const Text('Add a Child:', style: TextStyle(fontSize: 22.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
       TextField(
         controller: nameController,
         decoration: const InputDecoration(

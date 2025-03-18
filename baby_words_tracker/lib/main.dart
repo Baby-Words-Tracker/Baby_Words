@@ -37,6 +37,7 @@ import 'package:provider/provider.dart';
 // Firebase Options
 import 'firebase_options.dart';
 
+import 'pages/settings.dart';
 
 void main() async {
   try {
@@ -113,6 +114,7 @@ class MyApp extends StatelessWidget {
         '/authgate': (context) => const AuthGate(),
         '/uploadvideo': (context) => const UploadVideoPage(),
         '/profilepage': (context) => ProfilePage(),
+        '/settings' : (context) => Settings(),
         AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
         
       },
