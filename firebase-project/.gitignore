@@ -1,3 +1,6 @@
+# ignore database backup folder
+emulator-sources/*
+
 # Logs
 logs
 *.log
