@@ -79,6 +79,42 @@ class _StatsPageState extends State<StatsPage> {
 
     return Scaffold(
       appBar: TopBar(pageName: "Learning Summary"),
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFF9E1B32),
+        child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+          IconButton(
+            icon: const Icon(
+                Icons.home,
+                color: Colors.white,
+                size: 40.0,
+            ),
+            onPressed: () {
+                  Navigator.pushNamed(context, '/');
+                  },
+          ),
+          IconButton(
+            icon: const Icon(
+                Icons.chat_bubble_outlined,
+                color: Colors.white,
+                size: 40.0,
+            ),
+            onPressed: () {
+                  Navigator.pushNamed(context, '/addtext');
+                  },
+          ),
+          const Icon(
+              Icons.bar_chart_outlined,
+              color: Colors.white,
+              size: 40.0,
+          ),
+  ],
+)
+  ),
+),
       body: Center(
         child: Consumer<WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
           builder: (context, trackerService, child) {
