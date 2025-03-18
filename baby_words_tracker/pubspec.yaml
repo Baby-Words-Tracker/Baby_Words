@@ -49,6 +49,7 @@ dependencies:
   google_sign_in: ^6.2.2
   firebase_ui_oauth_google: ^1.4.1
   collection: ^1.19.0
+  cloud_functions: ^5.3.4
 
 dev_dependencies:
   flutter_test:

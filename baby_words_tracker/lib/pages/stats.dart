@@ -1,6 +1,7 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/config.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
@@ -64,6 +65,7 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    addCurrentChildToOtherParent(context, "fakeemail2@email.com");
     //Get the current Parent
     Parent? currParent = getCurrentParent(context);
     if (currParent == null)
