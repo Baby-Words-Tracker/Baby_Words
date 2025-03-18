@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/util/build_word_bank.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -133,7 +134,6 @@ class HomePage extends StatelessWidget {
               ],
             ),
             ),
-               
           ],
         ),
         

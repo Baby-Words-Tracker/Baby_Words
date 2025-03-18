@@ -20,7 +20,7 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
   if(response.statusCode == 200) {
     Map<LanguageCode, String?> wordDefs = {};
     Map<LanguageCode, PartOfSpeech> partsOfSpeech = {};
-    List<LanguageCode> usedLanguage = [];
+    Set<LanguageCode> usedLanguage = {};
 
 
     final Map<String, dynamic> responseBody = jsonDecode(response.body); // get body
@@ -45,8 +45,8 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
 
         final String id = item['id'];
         debugPrint("Current word id: $id");
-
-        final PartOfSpeech partOfSpeech = PartOfSpeech.values.byName(item['description'].split(' ')[1] as String);
+        List<String> desc = item['description'].split(' ');
+        final PartOfSpeech partOfSpeech = desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
         partsOfSpeech[matchLang] = partOfSpeech; 
 
         final idUrl = "https://www.wikidata.org/wiki/Special:EntityData/$id.json";
@@ -57,7 +57,7 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
           final Map<String, dynamic> entity = body['entities'];
           final Map<String, dynamic> code = entity[id];
           final List<dynamic> senses = code['senses'];
-          final Map<String, dynamic> glosses = senses[0]['glosses'];
+          final Map<String, dynamic> glosses = senses.length != 0 ? senses[0]['glosses'] : {};
           final String? definition = glosses['en']?['value'];
 
           debugPrint("Current definition: $definition"); 
@@ -68,18 +68,17 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
           usedLanguage.add(matchLang);
 
         }
-        if(usedLanguage != []) {
-          debugPrint("Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
-          final Word? newWord = await word_service.createWord(word, usedLanguage, partsOfSpeech, wordDefs); 
-          if (newWord == null) return null;
-
-          return true;
-        }
-        return false;
       }
     }
     debugPrint("$usedLanguage");
     debugPrint("was unable to match language code: $languages");
+    if(usedLanguage != []) {
+          debugPrint("Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
+          final Word? newWord = await word_service.createWord(word, usedLanguage.toList(), partsOfSpeech, wordDefs); 
+          if (newWord == null) return null;
+
+          return true;
+        }
     return false;
   }
   else {

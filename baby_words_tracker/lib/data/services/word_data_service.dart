@@ -23,6 +23,13 @@ class WordDataService extends ChangeNotifier{
     return object.copyWith(word: returnId);
   }
 
+  Future<Word?> updateWord(String wordName, List<LanguageCode> languageCodes, Map<LanguageCode, PartOfSpeech> partOfSpeech, Map<LanguageCode, String?> defs) async {
+    final object = Word(word: wordName, languageCodes : languageCodes, partOfSpeech: partOfSpeech, definition: defs);
+    bool updated = await fireRepo.update(Word.collectionName, wordName, object.toMap());
+    if(updated) return object;
+    return null;
+  }
+
   Future<Word?> getWord(String id) async {
     final word = await fireRepo.read(Word.collectionName, id);
     if (word == null) return null;

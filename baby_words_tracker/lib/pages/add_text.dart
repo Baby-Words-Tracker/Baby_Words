@@ -129,6 +129,7 @@ class _AddTextPageState extends State<AddTextPage> {
                 if (currParent != null){
                   currChildID = getCurrentChildIDSingleInstance(context, currParent);
                 }
+                List<LanguageCode>? languages = currChildID != null ? await childDataService.getLanguages(currChildID) : [LanguageCode.en]; 
                 
 
                 _parseWords();
@@ -138,7 +139,7 @@ class _AddTextPageState extends State<AddTextPage> {
 
                 for (var word in parsedWords){
                   totalWords++;
-                  bool? result = await checkAndUpdateWords(word);
+                  bool? result = languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
                   if(result != null && result && currChildID != null){
                     addWordToChild(word, childDataService, wordDataService, wordTrackerDataService, id: currChildID);
                     correctWords++;

@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 
 class ParentDataService  extends ChangeNotifier{
 
@@ -43,7 +44,7 @@ class ParentDataService  extends ChangeNotifier{
     return Parent.fromDataWithId(parentList.first);
   }
 
-  Future<bool> updateParent(String id, {String? email, String? name, List<String>? childIDs}) async {
+  Future<bool> updateParent(String id, {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
     final updateData = Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
     bool success = await fireRepo.update("Parent", id, updateData);
 
