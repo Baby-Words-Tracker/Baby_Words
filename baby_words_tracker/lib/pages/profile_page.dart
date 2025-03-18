@@ -3,10 +3,7 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
-  ProfilePage({super.key});
-
-  //final TextEditingController textcontroller1 = TextEditingController(); 
-  //final TextEditingController textcontroller2 = TextEditingController(); 
+  ProfilePage({super.key}); 
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +16,6 @@ class ProfilePage extends StatelessWidget {
         SignedOutAction((context) {
           Navigator.of(context).pop();
         })
-      ],
-      children: [
-        //childAddingFeature(context, textcontroller1, textcontroller2)
       ],
     );
   }
