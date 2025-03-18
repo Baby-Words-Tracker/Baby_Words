@@ -9,7 +9,7 @@ class Localization {
 
   Future<void> load() async {
     final jsonString =
-        await rootBundle.loadString('translations.json');
+        await rootBundle.loadString('assets/translation.json');
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
     _localizedStrings =
         jsonMap[locale]?.cast<String, String>() ?? {};

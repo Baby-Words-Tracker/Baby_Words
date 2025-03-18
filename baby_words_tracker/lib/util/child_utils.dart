@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 Future<void> addChildToCurrParent(BuildContext context, String name, DateTime bday) async{
   Parent? currParent = getCurrentParent(context);
   if (currParent != null){
-    Child? child = await context.read<ChildDataService>().createChild(DateTime.now(), name, 0, [currParent.id]);
+    Child? child = await context.read<ChildDataService>().createChild(DateTime.now(), name, [LanguageCode.en], 0, [currParent.id]);
     context.read<ParentDataService>().addChildToParent(currParent.id, child?.id ?? "aaaa");
   }
 }
@@ -86,7 +86,7 @@ async {
     return;
   }
   //FIXME: implement language, part of speech, defn, spellcheck
-  /*Word wordObject =*/ await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
+  /*Word wordObject =*/ await wordService.createWord(word, [LanguageCode.en], {LanguageCode.en : PartOfSpeech.noun}, {LanguageCode.en : "testWord"});
   trackerService.createWordTracker(id, word, DateTime.now());
 }
 

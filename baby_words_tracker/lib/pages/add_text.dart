@@ -20,10 +20,13 @@ import 'package:baby_words_tracker/data/models/parent.dart';
 
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:baby_words_tracker/l10n/localization.dart';
 
 
 class AddTextPage extends StatefulWidget {
-  const AddTextPage({super.key});
+  final Localization localization;
+
+  const AddTextPage({super.key, required this.localization});
 
 
   @override
@@ -33,6 +36,15 @@ class AddTextPage extends StatefulWidget {
 class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController _controller = TextEditingController();
   List<String> parsedWords = [];
+
+  late Localization localization;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the localization object using the widget property
+    localization = widget.localization;
+  }
 
   void _parseWords() {
     String text = _controller.text;
@@ -51,7 +63,7 @@ class _AddTextPageState extends State<AddTextPage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: const Color(0xFF828A8F),
-      appBar: TopBar(pageName: "Add Words"),
+      appBar: TopBar(pageName: localization.translate("add_words")),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(
@@ -96,23 +108,23 @@ class _AddTextPageState extends State<AddTextPage> {
           const SizedBox(
             height : 120,
           ),
-          const Center(
+           Center(
             child: Text(
-              'Add Words',
+              localization.translate("add_words"),
               style: TextStyle(color: Colors.white, fontSize: 50, fontWeight: FontWeight.bold)
             ),
           ),
           const SizedBox(
             height : 80,
             ),
-          const Text(
-            'My Child Said...',
+          Text(
+            localization.translate("child_said"),
             style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)
           ),
           TextField(
             controller: _controller,
-            decoration: const InputDecoration(
-            hintText: 'Enter word or sentence',
+            decoration: InputDecoration(
+            hintText: localization.translate("child_said"),
             hintStyle: TextStyle(color: Colors.white),
             filled: true,  
             fillColor: Color(0xFF9E1B32),
@@ -139,7 +151,7 @@ class _AddTextPageState extends State<AddTextPage> {
 
                 for (var word in parsedWords){
                   totalWords++;
-                  bool? result = languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
+                  bool? result = await checkAndUpdateWords(word);//languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
                   if(result != null && result && currChildID != null){
                     addWordToChild(word, childDataService, wordDataService, wordTrackerDataService, id: currChildID);
                     correctWords++;
@@ -150,8 +162,8 @@ class _AddTextPageState extends State<AddTextPage> {
                     context: context,
                     builder: (BuildContext context) {
                     return AlertDialog(
-                      title: const Text('Error'),
-                      content: Text('$word not found in dictionary, please try again'),
+                      title: Text(localization.translate("error")),
+                      content: Text(word + localization.translate("words_error")),
                       actions: <Widget>[
                     TextButton(
                       child: const Text('OK'),
@@ -173,8 +185,8 @@ class _AddTextPageState extends State<AddTextPage> {
                     context: context,
                     builder: (BuildContext context) {
                     return AlertDialog(
-                      title: const Text('Success'),
-                      content: const Text('Words successfully submitted'),
+                      title: Text(localization.translate("success")),
+                      content: Text(localization.translate("word_success")),
                       actions: <Widget>[
                     TextButton(
                     child: const Text('OK'),
@@ -198,7 +210,7 @@ class _AddTextPageState extends State<AddTextPage> {
             side: const BorderSide(color: Colors.white, width: 2),
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0), 
             ),
-            child: const Text('Submit', style: TextStyle(fontSize: 18)),
+            child: Text(localization.translate("submit"), style: TextStyle(fontSize: 18)),
 )
             ),
           ],

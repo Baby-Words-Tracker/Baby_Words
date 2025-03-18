@@ -1,16 +1,19 @@
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/build_word_bank.dart';
+import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final Localization localization;
+
+  const HomePage({super.key, required this.localization});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: TopBar(pageName: "Home Page"),
+      appBar: TopBar(pageName: localization.translate("home_page")),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(
@@ -53,7 +56,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(
             height : 70,
           ),
-            const Text('Hello, User!', style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
+            Text(localization.translate("hello"), style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
             const SizedBox(
             height : 60,
           ),
@@ -72,13 +75,13 @@ class HomePage extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30), 
               ), 
-              child: const Column(
+              child: Column(
               mainAxisSize: MainAxisSize.min, // To keep the button size minimal
               children: [
                 Icon(Icons.chat_bubble_outlined, color: Colors.white,
                 size: 80.0,),
                 SizedBox(height: 5), // Spacer between icon and text
-                Text('Add Words', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                Text(localization.translate("add_words"), style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
               ],
             ),
             ),
@@ -97,13 +100,13 @@ class HomePage extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30), 
               ), 
-              child: const Column(
+              child: Column(
               mainAxisSize: MainAxisSize.min, // To keep the button size minimal
               children: [
                 Icon(Icons.video_camera_front, color: Colors.white,
                 size: 80.0,),
                 SizedBox(height: 5), // Spacer between icon and text
-                Text('Upload Video', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                Text(localization.translate("upload_video"), style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
               ],
             ),
             ),
@@ -124,13 +127,13 @@ class HomePage extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30), 
               ), 
-              child: const Column(
+              child: Column(
               mainAxisSize: MainAxisSize.min, // To keep the button size minimal
               children: [
                 Icon(Icons.bar_chart_outlined, color: Colors.white,
                 size: 80.0,),
                 SizedBox(height: 5), // Spacer between icon and text
-                Text('View Stats', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                Text(localization.translate("view_stats"), style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
               ],
             ),
             ),

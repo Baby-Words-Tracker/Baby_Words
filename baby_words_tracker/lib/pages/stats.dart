@@ -24,11 +24,14 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/l10n/localization.dart';
 
 final List<GraphType> graphsWithLength = [GraphType.newWordsPerDay]; // List of GraphTypes that have a length parameter
 
 class StatsPage extends StatefulWidget {
-  const StatsPage({super.key});
+  final Localization localization;
+
+  const StatsPage({super.key, required this.localization});
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -39,6 +42,15 @@ class _StatsPageState extends State<StatsPage> {
   int graphLength = 7;
   GraphType graphType = GraphType.newWordsPerDay; // Use the enum GraphType to determine what graph should be displayed
   
+  late Localization localization;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the localization object using the widget property
+    localization = widget.localization;
+  }
+
   //Allow children to change graph state
   void updateLength(int length) {
     setState(() {
@@ -68,17 +80,17 @@ class _StatsPageState extends State<StatsPage> {
     Parent? currParent = getCurrentParent(context);
     if (currParent == null)
     {
-      return Text("Invalid User Type");
+      return const Text("Invalid User Type");
     }
 
     String? currChildId = getCurrentChildIDListening(context, currParent);
     if (currChildId == null)
     {
-      return Text("Invalid Child Index");
+      return const Text("Invalid Child Index");
     }
 
     return Scaffold(
-      appBar: TopBar(pageName: "Learning Summary"),
+      appBar: TopBar(pageName: localization.translate("learning_summary")),
       body: Center(
         child: Consumer<WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
           builder: (context, trackerService, child) {
@@ -93,7 +105,7 @@ class _StatsPageState extends State<StatsPage> {
                 //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
                 lengthChangeFeature(context, graphType, textcontroller1, updateLength),
 
-                const Text("Select Graph Type:"),
+                Text(localization.translate("learning_summary")),
 
                 graphTypeSelectDropdown(graphType, updateType),
               ],

@@ -6,6 +6,7 @@ import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/l10n/localization.dart'; 
 
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
@@ -27,11 +28,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (e) {
-    debugPrint("Error initializing Firebase: $e");
-  }
-
-  runApp(
+    final localization = Localization('es'); // Replace 'en' with default locale
+    await localization.load();
+    runApp(
     MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ChildDataService()),
@@ -63,13 +62,19 @@ void main() async {
               ),
           ),
         ],
-        child: const MyApp(),
+        child: MyApp(localization: localization),
       ),
     );
+  } catch (e) {
+    debugPrint("Error initializing Firebase: $e");
+  }
+
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Localization localization;
+
+  const MyApp({super.key, required this.localization});
 
   // This widget is the root of your application.
   @override
@@ -85,12 +90,12 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/authgate',
       routes: {
-        '/': (context) => const HomePage(),
-        '/stats': (context) => const StatsPage(),
-        '/addtext': (context) => const AddTextPage(),
-        '/authgate': (context) => const AuthGate(),
-        '/uploadvideo': (context) => const UploadVideoPage(),
-        '/profilepage': (context) => ProfilePage(),
+        '/': (context) => HomePage(localization: localization),
+        '/stats': (context) => StatsPage(localization: localization),
+        '/addtext': (context) => AddTextPage(localization: localization),
+        '/authgate': (context) => AuthGate(localization: localization),
+        '/uploadvideo': (context) => UploadVideoPage(localization: localization),
+        '/profilepage': (context) => ProfilePage(localization: localization),
         
       },
     );
