@@ -5,20 +5,21 @@ import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
-class ParentDataService  extends ChangeNotifier{
-
+class ParentDataService extends ChangeNotifier {
   static final fireRepo = FirestoreRepository();
 
   //Parent services
   Future<Parent?> createParent(Parent parent) async {
-    String? returnId = await fireRepo.createWithId("Parent", parent.id, parent.toMap());
-    
+    String? returnId = await fireRepo.createWithId(
+        Parent.collectionName, parent.id, parent.toMap());
+
     if (returnId == null) {
       return null;
     }
 
     if (returnId != parent.id) {
-      debugPrint("Error: ParentDataService.createParent returned ID does not match input ID");
+      debugPrint(
+          "Error: ParentDataService.createParent returned ID does not match input ID");
       return null;
     }
 
@@ -27,7 +28,7 @@ class ParentDataService  extends ChangeNotifier{
   }
 
   Future<Parent?> getParent(String id) async {
-    final parent = await fireRepo.read("Parent", id);
+    final parent = await fireRepo.read(Parent.collectionName, id);
     if (parent == null) {
       debugPrint("ParentDataService: Failed to get parent by ID");
       return null;
@@ -36,7 +37,8 @@ class ParentDataService  extends ChangeNotifier{
   }
 
   Future<Parent?> getParentByEmail(String email) async {
-    final parentList = await fireRepo.queryByField("Parent", "email", email, limit: 1);
+    final parentList = await fireRepo
+        .queryByField(Parent.collectionName, "email", email, limit: 1);
     if (parentList.isEmpty) {
       debugPrint("ParentDataService: Failed to get parent by email");
       return null;
@@ -44,9 +46,17 @@ class ParentDataService  extends ChangeNotifier{
     return Parent.fromDataWithId(parentList.first);
   }
 
-  Future<bool> updateParent(String id, {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
-    final updateData = Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
-    bool success = await fireRepo.update("Parent", id, updateData);
+  Future<List<Parent>> getMultipleParents(List<String> ids) async {
+    return (await fireRepo.readMultiple(Parent.collectionName, ids))
+        .map((doc) => Parent.fromDataWithId(doc))
+        .toList();
+  }
+
+  Future<bool> updateParent(String id,
+      {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
+    final updateData =
+        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
+    bool success = await fireRepo.update(Parent.collectionName, id, updateData);
 
     if (!success) {
       return false;
@@ -58,7 +68,7 @@ class ParentDataService  extends ChangeNotifier{
 
   // TODO: we need this to delete/edit children as well
   // Future<bool> deleteParent(String id) async {
-  //   bool success = await fireRepo.delete("Parent", id);
+  //   bool success = await fireRepo.delete(Parent.collectionName, id);
   //   if (!success) {
   //     return false;
   //   }
@@ -67,25 +77,25 @@ class ParentDataService  extends ChangeNotifier{
   // }
 
   Future<void> addChildToParent(String parentId, String childId) async {
-    await fireRepo.appendToArrayField(Parent.collectionName, parentId, "childIDs", childId);
-    await fireRepo.appendToArrayField(Child.collectionName, childId, "parentIDs", parentId);
+    await fireRepo.appendToArrayField(
+        Parent.collectionName, parentId, "childIDs", childId);
+    await fireRepo.appendToArrayField(
+        Child.collectionName, childId, "parentIDs", parentId);
     notifyListeners();
   }
-
 
   Future<List<Child>> getChildList(String id) async {
     final object = await fireRepo.read(Parent.collectionName, id);
     List<Child> children = List.empty(growable: true);
-    if(object == null) return children;
+    if (object == null) return children;
 
     final parent = Parent.fromDataWithId(object);
-    final List<DataWithId> data= await fireRepo.readMultiple(Child.collectionName, parent.childIDs);
+    final List<DataWithId> data =
+        await fireRepo.readMultiple(Child.collectionName, parent.childIDs);
 
-    for(DataWithId child in data) {
-      children.add(Child.fromDataWithId(child)); 
+    for (DataWithId child in data) {
+      children.add(Child.fromDataWithId(child));
     }
-    return children; 
+    return children;
   }
-
-  
 }

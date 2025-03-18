@@ -1,21 +1,23 @@
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
-class ResearcherDataService extends ChangeNotifier{
-
+class ResearcherDataService extends ChangeNotifier {
   static final fireRepo = FirestoreRepository();
 
   //Reseacher services
-   Future<Researcher?> createResearcher(Researcher researcher) async {
-    String? returnId = await fireRepo.createWithId(Researcher.collectionName, researcher.id, researcher.toMap());
+  Future<Researcher?> createResearcher(Researcher researcher) async {
+    String? returnId = await fireRepo.createWithId(
+        Researcher.collectionName, researcher.id, researcher.toMap());
 
     if (returnId == null) {
       return null;
     }
 
     if (returnId != researcher.id) {
-      debugPrint("Error: ResearcherDataService: createResearcher returned ID does not match input ID");
+      debugPrint(
+          "Error: ResearcherDataService: createResearcher returned ID does not match input ID");
       return null;
     }
 
@@ -33,16 +35,32 @@ class ResearcherDataService extends ChangeNotifier{
   }
 
   Future<Researcher?> getResearcherByEmail(String email) async {
-    final researcherList = await fireRepo.queryByField(Researcher.collectionName, "email", email, limit: 1);
+    final researcherList = await fireRepo
+        .queryByField(Researcher.collectionName, "email", email, limit: 1);
     if (researcherList.isEmpty) {
       return null;
     }
     return Researcher.fromDataWithId(researcherList.first);
   }
 
-  Future<bool> updateResearcher(String id, {String? email, String? name, String? institution, String? phoneNumber}) async {
-    final updateData = Researcher.createUpdateMap(email: email, name: name, institution: institution, phoneNumber: phoneNumber);
-    bool success = await fireRepo.update(Researcher.collectionName, id, updateData);
+  Future<List<Researcher>> getMultipleResearchers(List<String> ids) async {
+    return (await fireRepo.readMultiple(Researcher.collectionName, ids))
+        .map((doc) => Researcher.fromDataWithId(doc))
+        .toList();
+  }
+
+  Future<bool> updateResearcher(String id,
+      {String? email,
+      String? name,
+      String? institution,
+      String? phoneNumber}) async {
+    final updateData = Researcher.createUpdateMap(
+        email: email,
+        name: name,
+        institution: institution,
+        phoneNumber: phoneNumber);
+    bool success =
+        await fireRepo.update(Researcher.collectionName, id, updateData);
 
     if (!success) {
       return false;
@@ -62,6 +80,4 @@ class ResearcherDataService extends ChangeNotifier{
     notifyListeners();
     return true;
   }
-
-
 }

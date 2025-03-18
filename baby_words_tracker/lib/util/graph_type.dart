@@ -14,6 +14,7 @@ extension GraphTypeExtension on GraphType {
         return "Unknown";
     }
   }
+  
   String get optionName {
     switch (this) {
       case GraphType.newWordsPerDay:

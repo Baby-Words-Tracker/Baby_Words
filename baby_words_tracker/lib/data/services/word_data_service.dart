@@ -4,9 +4,7 @@ import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:flutter/foundation.dart';
 
-
-class WordDataService extends ChangeNotifier{
-
+class WordDataService extends ChangeNotifier {
   static final fireRepo = FirestoreRepository();
 
   //word services
@@ -33,8 +31,13 @@ class WordDataService extends ChangeNotifier{
   Future<Word?> getWord(String id) async {
     final word = await fireRepo.read(Word.collectionName, id);
     if (word == null) return null;
-    
+
     return Word.fromDataWithId(word);
   }
 
+  Future<List<Word>> getMultipleWords(List<String> ids) async {
+    return (await fireRepo.readMultiple(Word.collectionName, ids))
+        .map((doc) => Word.fromDataWithId(doc))
+        .toList();
+  }
 }
