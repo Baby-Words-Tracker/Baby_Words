@@ -19,6 +19,7 @@ import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
+import 'pages/settings.dart';
 
 void main() async {
   try {
@@ -91,6 +92,7 @@ class MyApp extends StatelessWidget {
         '/authgate': (context) => const AuthGate(),
         '/uploadvideo': (context) => const UploadVideoPage(),
         '/profilepage': (context) => ProfilePage(),
+        '/settings' : (context) => Settings(),
         
       },
     );

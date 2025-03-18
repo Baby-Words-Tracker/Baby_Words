@@ -1,16 +1,19 @@
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:baby_words_tracker/util/child_utils.dart';
 
 
-class UploadVideoPage extends StatelessWidget {
-  const UploadVideoPage({super.key});
+class Settings extends StatelessWidget {
+  Settings({super.key});
+
+  final TextEditingController textcontroller1 = TextEditingController(); 
+  final TextEditingController textcontroller2 = TextEditingController(); 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Upload Video"),
+        title: const Text("Settings"),
       ),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
@@ -39,11 +42,16 @@ class UploadVideoPage extends StatelessWidget {
                   Navigator.pushNamed(context, '/addtext');
                   },
           ),
-          const Icon(
+          IconButton(
+            icon: const Icon(
               Icons.video_camera_front,
               color: Colors.white,
               size: 40.0,
-              ),
+                ),
+            onPressed: () {
+                Navigator.pushNamed(context, '/uploadvideo');
+                }
+          ),
           IconButton(
             icon: const Icon(
                 Icons.bar_chart_outlined,
@@ -54,30 +62,26 @@ class UploadVideoPage extends StatelessWidget {
                   Navigator.pushNamed(context, '/stats');
                   },
           ),
-          IconButton(
-            icon: const Icon(
+          const Icon(
               Icons.settings_rounded,
               color: Colors.white,
               size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-                },
-              ),
+              ),     
   ],
 )
   ),
 ),
-      body: const Center(
+      body: Center(
         child: Column(
           children: [
-            SizedBox(
+            const SizedBox(
             height : 70,
           ),
-            Text('Upload Videos', style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
-            SizedBox(
+            const Text('Settings', style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
+            const SizedBox(
             height : 60,
           ),
+          childAddingFeature(context, textcontroller1, textcontroller2)
           ],
         ),
       ),

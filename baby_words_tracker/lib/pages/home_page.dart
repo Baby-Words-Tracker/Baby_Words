@@ -34,6 +34,16 @@ class HomePage extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(
+              Icons.video_camera_front,
+              color: Colors.white,
+              size: 40.0,
+                ),
+            onPressed: () {
+                Navigator.pushNamed(context, '/uploadvideo');
+                }
+          ),
+          IconButton(
+            icon: const Icon(
                 Icons.bar_chart_outlined,
                 color: Colors.white,
                 size: 40.0,
@@ -42,6 +52,16 @@ class HomePage extends StatelessWidget {
                   Navigator.pushNamed(context, '/stats');
                   },
           ),
+          IconButton(
+            icon: const Icon(
+              Icons.settings_rounded,
+              color: Colors.white,
+              size: 40.0,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+                },
+              ),
   ],
 )
   ),
@@ -54,7 +74,7 @@ class HomePage extends StatelessWidget {
           ),
             const Text('Hello, User!', style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
             const SizedBox(
-            height : 60,
+            height : 40,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -69,7 +89,7 @@ class HomePage extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30), 
+              padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 40), 
               ), 
               child: const Column(
               mainAxisSize: MainAxisSize.min, // To keep the button size minimal
@@ -94,7 +114,7 @@ class HomePage extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30), 
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 40), 
               ), 
               child: const Column(
               mainAxisSize: MainAxisSize.min, // To keep the button size minimal
@@ -109,8 +129,11 @@ class HomePage extends StatelessWidget {
             ]
           ),
           const SizedBox(
-            height : 60,
+            height : 40,
           ),
+          Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             ElevatedButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/stats');
@@ -121,7 +144,7 @@ class HomePage extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30), 
+              padding: const EdgeInsets.symmetric(horizontal: 37, vertical: 40), 
               ), 
               child: const Column(
               mainAxisSize: MainAxisSize.min, // To keep the button size minimal
@@ -132,6 +155,33 @@ class HomePage extends StatelessWidget {
                 Text('View Stats', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
               ],
             ),
+            ),
+            const SizedBox(
+            width : 60,
+          ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+              style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF828A8F), 
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 55, vertical: 40), 
+              ), 
+              child: const Column(
+              mainAxisSize: MainAxisSize.min, // To keep the button size minimal
+              children: [
+                Icon(Icons.settings_rounded, color: Colors.white,
+                size: 80.0,),
+                SizedBox(height: 5), // Spacer between icon and text
+                Text('Settings', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+              ],
+              ),
+            ),
+            ],
             ),
                
           ],

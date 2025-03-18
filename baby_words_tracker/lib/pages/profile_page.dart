@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
 
-  final TextEditingController textcontroller1 = TextEditingController(); 
-  final TextEditingController textcontroller2 = TextEditingController(); 
+  //final TextEditingController textcontroller1 = TextEditingController(); 
+  //final TextEditingController textcontroller2 = TextEditingController(); 
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class ProfilePage extends StatelessWidget {
         })
       ],
       children: [
-        childAddingFeature(context, textcontroller1, textcontroller2)
+        //childAddingFeature(context, textcontroller1, textcontroller2)
       ],
     );
   }

@@ -76,6 +76,16 @@ class _AddTextPageState extends State<AddTextPage> {
           ),
           IconButton(
             icon: const Icon(
+              Icons.video_camera_front,
+              color: Colors.white,
+              size: 40.0,
+                ),
+            onPressed: () {
+                Navigator.pushNamed(context, '/uploadvideo');
+                }
+          ),
+          IconButton(
+            icon: const Icon(
                 Icons.bar_chart_outlined,
                 color: Colors.white,
                 size: 40.0,
@@ -84,6 +94,16 @@ class _AddTextPageState extends State<AddTextPage> {
                   Navigator.pushNamed(context, '/stats');
                   },
           ),
+          IconButton(
+            icon: const Icon(
+              Icons.settings_rounded,
+              color: Colors.white,
+              size: 40.0,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+                },
+              ),
   ],
 )
   ),
