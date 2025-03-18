@@ -23,9 +23,6 @@ class ProfilePage extends StatelessWidget {
           Navigator.of(context).pop();
         })
       ],
-      children: [
-        childAddingFeature(context, textcontroller1, textcontroller2)
-      ],
     );
   }
 }

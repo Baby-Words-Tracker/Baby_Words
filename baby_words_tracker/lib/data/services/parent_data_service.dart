@@ -46,6 +46,11 @@ class ParentDataService extends ChangeNotifier {
     return Parent.fromDataWithId(parentList.first);
   }
 
+  //FIXME: DO with a firebase cloud function, right now just returns some random parent ID for testing purposes
+  Future<String?> getParentIDByEmail(String email) async {
+    return "bLmmF69VlLaCgggoi9Z8YVI0DrK2";
+  }
+
   Future<List<Parent>> getMultipleParents(List<String> ids) async {
     return (await fireRepo.readMultiple(Parent.collectionName, ids))
         .map((doc) => Parent.fromDataWithId(doc))

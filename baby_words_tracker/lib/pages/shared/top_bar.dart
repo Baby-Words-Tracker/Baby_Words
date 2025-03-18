@@ -1,4 +1,3 @@
-
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
@@ -7,14 +6,12 @@ import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
- 
 class TopBar extends StatefulWidget implements PreferredSizeWidget {
-   final String pageName;
+  final String pageName;
 
-   TopBar({super.key, required this.pageName});
+  const TopBar({super.key, required this.pageName});
 
-   @override
+  @override
   _TopBarState createState() => _TopBarState();
 
   @override
@@ -28,21 +25,23 @@ class _TopBarState extends State<TopBar> {
   bool _isloadingChildren = true;
 
   @override
-  void didChangeDependencies() { // use didChangeDependencies instead of initState because we depend on an inherited provider for our behavior
+  void didChangeDependencies() {
+    // use didChangeDependencies instead of initState because we depend on an inherited provider for our behavior
     super.didChangeDependencies();
     _loadParentAndChildren(context);
   }
 
   Future<void> _loadParentAndChildren(BuildContext context) async {
-    if (_childNames.isNotEmpty){ // ensure we init only once, idk if this is buggy or not we'll see
+    if (_childNames.isNotEmpty) {
+      // ensure we init only once, idk if this is buggy or not we'll see
       return;
     }
     // load parent
     Parent? currParent;
-    if (context.watch<UserModelService>().userType == UserType.parent)
-    {
-      currParent = context.read<UserModelService>().parent!; 
-    } else { // if it is not a parent acccessing the page, short circuit and say invalid state
+    if (context.watch<UserModelService>().userType == UserType.parent) {
+      currParent = context.read<UserModelService>().parent!;
+    } else {
+      // if it is not a parent acccessing the page, short circuit and say invalid state
       setState(() {
         _isInvalidUserType = true; // handle invalid user type with this bool
       });
@@ -50,24 +49,23 @@ class _TopBarState extends State<TopBar> {
     }
     //load children
     ChildDataService childService = context.read<ChildDataService>();
-    List<PopupMenuEntry<int>> childNames = List.empty(growable: true);
-    int currIndex = 0;
-    for (String childID in currParent.childIDs ?? []) {
-      String currChildName = ((await childService.getChild(childID))?.name ?? "Failed to fetch child name");
-      childNames.add(
-        PopupMenuItem(
-          value: currIndex,
-          child: Text(currChildName),
-        )
-      );
-      currIndex++;
-    }
+
+    List<PopupMenuEntry<int>> childNames =
+        (await childService.getMultipleChildren(currParent.childIDs))
+            .asMap()
+            .entries
+            .map((entry) => PopupMenuItem<int>(
+                  value: entry.key,
+                  child: Text(entry.value.name),
+                ))
+            .toList();
+
     setState(() {
-        _currParent = currParent;
-        _childNames = childNames;
-        _isInvalidUserType = false;
-        _isloadingChildren = false;
-      });
+      _currParent = currParent;
+      _childNames = childNames;
+      _isInvalidUserType = false;
+      _isloadingChildren = false;
+    });
   }
 
   @override
@@ -83,23 +81,21 @@ class _TopBarState extends State<TopBar> {
       actions: [
         PopupMenuButton<int>(
           onSelected: (value) {
-            if (value > -1 && value < (_currParent?.childIDs.length ?? -1))
-            {
+            if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
               context.read<Config>().switchChild(value);
             }
           },
           itemBuilder: (BuildContext context) {
             if (_childNames.isEmpty) {
               return [
-              const PopupMenuItem(
-                value: -1,
-                child: Text("Loading Children..."),
-              ),
-            ];
+                const PopupMenuItem(
+                  value: -1,
+                  child: Text("Loading Children..."),
+                ),
+              ];
             } else {
               return _childNames;
             }
-            
           },
         ),
         IconButton(
@@ -113,10 +109,6 @@ class _TopBarState extends State<TopBar> {
     );
   }
 }
-
-
-
-    
 
 //   return AppBar(
 //         title: Text(pageName),

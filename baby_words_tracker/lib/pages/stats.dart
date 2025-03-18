@@ -1,6 +1,7 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/config.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
@@ -76,6 +77,7 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    addCurrentChildToOtherParent(context, "fakeemail2@email.com");
     //Get the current Parent
     Parent? currParent = getCurrentParent(context);
     if (currParent == null)
@@ -91,6 +93,62 @@ class _StatsPageState extends State<StatsPage> {
 
     return Scaffold(
       appBar: TopBar(pageName: localization.translate("learning_summary")),
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFF9E1B32),
+        child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+          IconButton(
+            icon: const Icon(
+              Icons.home,
+              color: Colors.white,
+              size: 40.0,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/');
+                },
+              ),
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outlined,
+              color: Colors.white,
+              size: 40.0,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/addtext');
+                },
+              ),
+          IconButton(
+            icon: const Icon(
+              Icons.video_camera_front,
+              color: Colors.white,
+              size: 40.0,
+                ),
+            onPressed: () {
+                Navigator.pushNamed(context, '/uploadvideo');
+                }
+          ),
+          const Icon(
+              Icons.bar_chart_outlined,
+              color: Colors.white,
+              size: 40.0,
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.settings_rounded,
+              color: Colors.white,
+              size: 40.0,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+                },
+              ),
+  ],
+)
+  ),
+),
       body: Center(
         child: Consumer<WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
           builder: (context, trackerService, child) {
