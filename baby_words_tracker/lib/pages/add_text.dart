@@ -21,12 +21,12 @@ import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 
 class AddTextPage extends StatefulWidget {
-  final Localization localization;
 
-  const AddTextPage({super.key, required this.localization});
+  const AddTextPage({super.key});
 
 
   @override
@@ -37,14 +37,6 @@ class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController _controller = TextEditingController();
   List<String> parsedWords = [];
 
-  late Localization localization;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize the localization object using the widget property
-    localization = widget.localization;
-  }
 
   void _parseWords() {
     String text = _controller.text;
@@ -61,6 +53,9 @@ class _AddTextPageState extends State<AddTextPage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    final localizationService = context.read<LocalizationService>();
+    var localization = localizationService.localization; 
+    
     return Scaffold(
       backgroundColor: const Color(0xFF828A8F),
       appBar: TopBar(pageName: localization.translate("add_words")),

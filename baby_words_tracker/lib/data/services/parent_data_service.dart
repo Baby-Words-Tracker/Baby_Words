@@ -103,4 +103,15 @@ class ParentDataService extends ChangeNotifier {
     }
     return children;
   }
+
+  Future<LanguageCode?> getLanguage(String id) async {
+    final object = await fireRepo.read(Parent.collectionName, id);
+    
+    if (object == null) {
+      debugPrint("unable to get parent language");      
+      return null;
+    }
+
+    return Parent.fromDataWithId(object).language; 
+  }
 }

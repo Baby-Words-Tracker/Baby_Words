@@ -1,15 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
+import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/data/models/parent.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/user_getters.dart';
+import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 
-class Settings extends StatelessWidget {
-  Settings({super.key});
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _AddSettingsPage();
+}
+class _AddSettingsPage extends State<SettingsPage> {
 
   final TextEditingController textcontroller1 = TextEditingController(); 
   final TextEditingController textcontroller2 = TextEditingController(); 
 
+
+
   @override
   Widget build(BuildContext context) {
+    Parent? currParent = getCurrentParent(context);
+    if (currParent == null)
+    {
+      return const Text("Invalid User Type");
+    }
+
+    final localizationService = context.read<LocalizationService>();
+    var localization = localizationService.localization; 
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

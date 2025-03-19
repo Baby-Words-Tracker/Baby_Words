@@ -4,6 +4,8 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/l10n/localization_util.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' as io;  // For checking platform
@@ -11,9 +13,8 @@ import 'dart:io' as io;  // For checking platform
 import 'home_page.dart';
 
 class AuthGate extends StatelessWidget {
-  final Localization localization;
 
-  const AuthGate({super.key, required this.localization});
+  const AuthGate({super.key});
 
   String _getPlatformKey() {
     if(kIsWeb) {
@@ -90,12 +91,13 @@ class AuthGate extends StatelessWidget {
 
         // Add user to database on first login
         User? user = snapshot.data;
+        //matchParentLanguage(context);
         
         if (user == null) {
           throw Exception('User is null in auth_gate');
         }
         
-        return HomePage(localization: localization);
+        return const HomePage();
       },
     );
   }

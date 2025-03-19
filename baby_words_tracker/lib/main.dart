@@ -9,7 +9,11 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 // Auth
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+
+//L10n
 import 'package:baby_words_tracker/l10n/localization.dart'; 
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 
 // Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
@@ -47,7 +51,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    final localization = Localization('es'); // Replace 'en' with default locale
+    //can probably remove this once adding the change notifyers
+    final localization = Localization(LanguageCode.en); // Replace 'en' with default locale
     await localization.load();
     runApp(
     MultiProvider(
@@ -58,6 +63,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
           ChangeNotifierProvider(create: (_) => Config()),
+          ChangeNotifierProvider(create: (_) => LocalizationService()),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService: Provider.of<ParentDataService>(context, listen: false),
@@ -77,11 +83,11 @@ void main() async {
               parentDataService: Provider.of<ParentDataService>(context, listen:false), 
               researcherDataService: Provider.of<ResearcherDataService>(context, listen:false), 
               authenticationService: Provider.of<AuthenticationService>(context, listen:false),
-              generalUserService: Provider.of<GeneralUserService>(context, listen:false),
+              generalUserService: Provider.of<GeneralUserService>(context, listen:false)
               ),
           ),
         ],
-        child: MyApp(localization: localization),
+        child: MyApp(),
       ),
     );
   } catch (e) {
@@ -91,9 +97,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final Localization localization;
 
-  const MyApp({super.key, required this.localization});
+  const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -109,13 +114,13 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/authgate',
       routes: {
-        '/': (context) => HomePage(localization: localization),
-        '/stats': (context) => StatsPage(localization: localization),
-        '/addtext': (context) => AddTextPage(localization: localization),
-        '/authgate': (context) => AuthGate(localization: localization),
-        '/uploadvideo': (context) => UploadVideoPage(localization: localization),
-        '/profilepage': (context) => ProfilePage(localization: localization),
-        '/settings' : (context) => Settings(),
+        '/': (context) => const HomePage(),
+        '/stats': (context) => const StatsPage(),
+        '/addtext': (context) => const AddTextPage(),
+        '/authgate': (context) => const AuthGate(),
+        '/uploadvideo': (context) => const UploadVideoPage(),
+        '/profilepage': (context) => const ProfilePage(),
+        '/settings' : (context) => const SettingsPage(),
         AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
         
       },

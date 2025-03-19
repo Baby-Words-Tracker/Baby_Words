@@ -1,15 +1,18 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:provider/provider.dart';
 
 
 class UploadVideoPage extends StatelessWidget {
-  final Localization localization;
-
-  const UploadVideoPage({super.key, required this.localization});
+  const UploadVideoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localizationService = context.read<LocalizationService>();
+    var localization = localizationService.localization; 
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

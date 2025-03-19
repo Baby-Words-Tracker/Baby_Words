@@ -2,15 +2,17 @@ import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:baby_words_tracker/util/build_word_bank.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
-  final Localization localization;
-
-  const HomePage({super.key, required this.localization});
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localization = context.read<LocalizationService>().localization; 
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: TopBar(pageName: localization.translate("home_page")),
