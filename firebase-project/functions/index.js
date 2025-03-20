@@ -238,35 +238,54 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
   try {
     checkAuthentication(data);
 
-    // TODO: fix this
+    // TODO: add this back once roles work
     // checkIsAtLeast(data, Role.parent);
 
-    const targetCollection = db.collection("Parent");
+    const parentCollection = db.collection("Parent");
 
-    const userSnaphot = await targetCollection.doc(data.auth.uid).get();
+    const parentQuerySnapshot = await parentCollection
+        .where("email", "==", targetEmail)
+        .get();
 
-    if (userSnaphot.exists && userSnaphot.data().childIDs.includes(childUid)) {
-      const targetSnapshot = await targetCollection
-          .where("email", "==", targetEmail)
-          .get();
+    if (parentQuerySnapshot.empty) {
+      throw new https.HttpsError("not-found", "Parent with email not found");
+    }
 
-      if (targetSnapshot.exists) {
+    await db.runTransaction(async (transaction) => {
+      const userRef = parentCollection.doc(data.auth.uid);
+      const userSnaphot = await transaction.get(userRef);
+
+      if (!userSnaphot.exists ||
+          !userSnaphot.data().childIDs.includes(childUid)) {
         throw new https.HttpsError(
-            "not-found", "Parent with email not found");
+            "permission-denied",
+            // eslint-disable-next-line max-len
+            "You do must be a parent of the child to assign them to another parent",
+        );
       }
 
-      const parentRef = targetSnapshot.docs[0].ref;
+      const parentRef = parentQuerySnapshot.docs[0].ref;
+      const parentUID = parentRef.id;
 
-      // Use arrayUnion to append the child UID to the children array
-      await parentRef.update({
+      const childCollection = db.collection("Child");
+      const childRef = childCollection.doc(childUid);
+      const childSnapshot = await transaction.get(childRef);
+
+      if (!childSnapshot.exists) {
+        throw new https.HttpsError(
+            "not-found",
+            "Child document not found",
+        );
+      }
+
+      transaction.update(parentRef, {
         childIDs: admin.firestore.FieldValue.arrayUnion(childUid),
       });
-    } else {
-      throw new https.HttpsError(
-          "permission-denied",
-          "You do must be a parent of a child to assign them to another parent",
-      );
-    }
+
+      transaction.update(childRef, {
+        parentIDs: admin.firestore.FieldValue.arrayUnion(parentUID),
+      });
+    });
   } catch (error) {
     logger.error(`Failed to assign child to other parent: ${error}`);
     return {
