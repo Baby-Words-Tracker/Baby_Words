@@ -259,7 +259,7 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
       // Use arrayUnion to append the child UID to the children array
       await parentRef.update({
-        children: admin.firestore.FieldValue.arrayUnion(childUid),
+        childIDs: admin.firestore.FieldValue.arrayUnion(childUid),
       });
     } else {
       throw new https.HttpsError(
