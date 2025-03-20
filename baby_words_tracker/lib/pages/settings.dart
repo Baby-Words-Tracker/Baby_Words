@@ -1,3 +1,5 @@
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
 
@@ -7,70 +9,14 @@ class Settings extends StatelessWidget {
 
   final TextEditingController textcontroller1 = TextEditingController(); 
   final TextEditingController textcontroller2 = TextEditingController(); 
+  final TextEditingController textcontroller3 = TextEditingController(); 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("Settings"),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF9E1B32),
-        child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-                },
-              ),
-          IconButton(
-            icon: const Icon(
-                Icons.chat_bubble_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/addtext');
-                  },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.video_camera_front,
-              color: Colors.white,
-              size: 40.0,
-                ),
-            onPressed: () {
-                Navigator.pushNamed(context, '/uploadvideo');
-                }
-          ),
-          IconButton(
-            icon: const Icon(
-                Icons.bar_chart_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/stats');
-                  },
-          ),
-          const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
-              size: 40.0,
-              ),     
-  ],
-)
-  ),
-),
+      appBar: TopBar(pageName: "Settings"),
+      bottomNavigationBar: bottomBar(context, "settings"),
       body: Center(
         child: Column(
           children: [
@@ -81,7 +27,9 @@ class Settings extends StatelessWidget {
             const SizedBox(
             height : 60,
           ),
-          childAddingFeature(context, textcontroller1, textcontroller2)
+          childAddingFeature(context, textcontroller1, textcontroller2),
+          
+          addCurrentChildToOtherParentFeature(context, textcontroller3),
           ],
         ),
       ),

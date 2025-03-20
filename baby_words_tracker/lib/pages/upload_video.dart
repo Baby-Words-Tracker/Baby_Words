@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -12,62 +13,7 @@ class UploadVideoPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Upload Video"),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF9E1B32),
-        child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-                },
-              ),
-          IconButton(
-            icon: const Icon(
-                Icons.chat_bubble_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/addtext');
-                  },
-          ),
-          const Icon(
-              Icons.video_camera_front,
-              color: Colors.white,
-              size: 40.0,
-              ),
-          IconButton(
-            icon: const Icon(
-                Icons.bar_chart_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/stats');
-                  },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-                },
-              ),
-  ],
-)
-  ),
-),
+      bottomNavigationBar: bottomBar(context, "uploadvideo"),
       body: const Center(
         child: Column(
           children: [

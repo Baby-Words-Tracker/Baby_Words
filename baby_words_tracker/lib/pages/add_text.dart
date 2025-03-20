@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
 import 'package:baby_words_tracker/util/config.dart';
@@ -52,62 +53,7 @@ class _AddTextPageState extends State<AddTextPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF828A8F),
       appBar: TopBar(pageName: "Add Words"),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF9E1B32),
-        child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-                },
-              ),
-          const Icon(
-              Icons.chat_bubble_outlined,
-              color: Colors.white,
-              size: 40.0,
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.video_camera_front,
-              color: Colors.white,
-              size: 40.0,
-                ),
-            onPressed: () {
-                Navigator.pushNamed(context, '/uploadvideo');
-                }
-          ),
-          IconButton(
-            icon: const Icon(
-                Icons.bar_chart_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/stats');
-                  },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-                },
-              ),
-  ],
-)
-  ),
-),
+      bottomNavigationBar: bottomBar(context, "addtext"),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

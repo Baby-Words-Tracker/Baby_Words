@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:flutter/material.dart';
@@ -10,73 +11,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: TopBar(pageName: "Home Page"),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF9E1B32),
-        child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-          const Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-          ),
-          IconButton(
-            icon: const Icon(
-                Icons.chat_bubble_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/addtext');
-                  },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.video_camera_front,
-              color: Colors.white,
-              size: 40.0,
-                ),
-            onPressed: () {
-                Navigator.pushNamed(context, '/uploadvideo');
-                }
-          ),
-          IconButton(
-            icon: const Icon(
-                Icons.bar_chart_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/stats');
-                  },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-                },
-              ),
-          //TODO: remove this button when the admin page is implemented correctly
-          IconButton(
-            icon: const Icon(
-                Icons.admin_panel_settings_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, AdminFirebasePage.routeName);
-                  },
-          ),
-  ],
-)
-  ),
-),
+      bottomNavigationBar: bottomBar(context, "home"),
       body: Center(
         child: Column(
           children: [
