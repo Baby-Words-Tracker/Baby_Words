@@ -1,6 +1,13 @@
 import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
+import 'package:baby_words_tracker/data/models/parent.dart';
+import 'package:baby_words_tracker/data/services/parent_data_service.dart';
+
+import 'package:baby_words_tracker/util/user_getters.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
@@ -21,7 +28,9 @@ class LocalizationService with ChangeNotifier {
 
   Future<void> changeLocale(LanguageCode locale) async {
     _localization = Localization(locale);
-    await _loadTranslations();
+    await _localization.load();
+    notifyListeners();
+    //await _loadTranslations();
   }
 
 }

@@ -9,11 +9,10 @@ class Localization {
   Localization(this.locale);
 
   Future<void> load() async {
-    final jsonString =
-        await rootBundle.loadString('assets/translation.json');
+    final jsonString = await rootBundle.loadString('assets/translation.json');
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-    _localizedStrings =
-        jsonMap[locale.displayCode]?.cast<String, String>() ?? {};
+
+    _localizedStrings = jsonMap[locale.displayCode]?.cast<String, String>() ?? {};
   }
 
   String translate(String key) {

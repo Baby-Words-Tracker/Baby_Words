@@ -21,7 +21,8 @@
         "word_success" : "Words successfully submited!",
         "error" : "Error!",
         "words_error" : "not found in dictionary, please try again!",
-        "loading" : "Loading..."
+        "loading" : "Loading...",
+        "Settings" : "Settings"
     },
     "es" :
     {
@@ -45,6 +46,7 @@
         "word_success": "¡Palabras enviadas con éxito!",
         "error": "¡Error!",
         "words_error": "No se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
-        "loading": "Cargando..."
+        "loading": "Cargando...",
+        "settings" : "Configuración"
     }
 }

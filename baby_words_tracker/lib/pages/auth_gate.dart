@@ -91,6 +91,7 @@ class AuthGate extends StatelessWidget {
 
         // Add user to database on first login
         User? user = snapshot.data;
+        //context.read<LocalizationService>().matchParentLanguage(context);
         //matchParentLanguage(context);
         
         if (user == null) {

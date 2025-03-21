@@ -60,7 +60,7 @@ class ParentDataService extends ChangeNotifier {
   Future<bool> updateParent(String id,
       {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
     final updateData =
-        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
+        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs, language: language);
     bool success = await fireRepo.update(Parent.collectionName, id, updateData);
 
     if (!success) {

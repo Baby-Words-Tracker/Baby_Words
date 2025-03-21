@@ -72,11 +72,13 @@ class Parent {
     String? email,
     String? name,
     List<String>? childIDs,
+    LanguageCode? language
   }) {
     Map<String, dynamic> map = {};
     if (email != null) map['email'] = email;
     if (name != null) map['name'] = name;
     if (childIDs != null) map['childIDs'] = childIDs;
+    if (language != null) map['language'] = language.displayCode; 
     return map;
   }
 
