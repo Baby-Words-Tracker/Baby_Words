@@ -25,52 +25,66 @@ class HomePage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [ 
-              ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/addtext');
-              },
-              style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF828A8F), 
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
+              SizedBox(
+                width: 150,
+                height: 150,
+                child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/addtext');
+                },
+                style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF828A8F), 
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0), 
+                ), 
+                ), 
+                child: const Column(
+                mainAxisSize: MainAxisSize.min, 
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.chat_bubble_outlined, color: Colors.white,
+                  size: 80.0,),
+                  SizedBox(height: 5), 
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Add Words', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+                            ),
+                            ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 40), 
-              ), 
-              child: const Column(
-              mainAxisSize: MainAxisSize.min, // To keep the button size minimal
-              children: [
-                Icon(Icons.chat_bubble_outlined, color: Colors.white,
-                size: 80.0,),
-                SizedBox(height: 5), // Spacer between icon and text
-                Text('Add Words', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            ),
             const SizedBox(
             width : 60,
           ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/uploadvideo');
-              },
-              style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF828A8F), 
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
+            SizedBox(
+              width: 150,
+              height: 150,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/uploadvideo');
+                },
+                style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF828A8F), 
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                ), 
+                child: const Column(
+                mainAxisSize: MainAxisSize.min, 
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.video_camera_front, color: Colors.white,
+                  size: 80.0,),
+                  SizedBox(height: 5),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Upload Video', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 40), 
-              ), 
-              child: const Column(
-              mainAxisSize: MainAxisSize.min, // To keep the button size minimal
-              children: [
-                Icon(Icons.video_camera_front, color: Colors.white,
-                size: 80.0,),
-                SizedBox(height: 5), // Spacer between icon and text
-                Text('Upload Video', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-              ],
-            ),
+              ),
             ),
             ]
           ),
@@ -80,51 +94,65 @@ class HomePage extends StatelessWidget {
           Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/stats');
-              },
-              style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF828A8F), 
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
+            SizedBox(
+              height: 150,
+              width: 150,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/stats');
+                },
+                style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF828A8F), 
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ), 
+                ), 
+                child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_outlined, color: Colors.white,
+                  size: 80.0,),
+                  SizedBox(height: 5),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('View Stats', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 37, vertical: 40), 
-              ), 
-              child: const Column(
-              mainAxisSize: MainAxisSize.min, // To keep the button size minimal
-              children: [
-                Icon(Icons.bar_chart_outlined, color: Colors.white,
-                size: 80.0,),
-                SizedBox(height: 5), // Spacer between icon and text
-                Text('View Stats', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-              ],
-            ),
+              ),
             ),
             const SizedBox(
             width : 60,
           ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-              style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF828A8F), 
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0), // Change the value to adjust the roundness
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 55, vertical: 40), 
-              ), 
-              child: const Column(
-              mainAxisSize: MainAxisSize.min, // To keep the button size minimal
-              children: [
-                Icon(Icons.settings_rounded, color: Colors.white,
-                size: 80.0,),
-                SizedBox(height: 5), // Spacer between icon and text
-                Text('Settings', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-              ],
+            SizedBox(
+              height: 150,
+              width: 150,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/settings');
+                },
+                style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF828A8F), 
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                ), 
+                child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.settings_rounded, color: Colors.white,
+                  size: 80.0,),
+                  SizedBox(height: 5),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Settings', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+                ),
               ),
             ),
             ],
