@@ -20,9 +20,11 @@ class HomePage extends StatelessWidget {
       Provider.of<LocalizationService>(context, listen : false).changeLocale(parent.language);
     }
 
-    return Scaffold(
+    return Consumer<LocalizationService>(
+          builder: (context, localizationService, child) { 
+            return Scaffold(
       backgroundColor: Colors.white,
-      appBar: TopBar(pageName: "Home Page"),
+      appBar: TopBar(pageName: localizationService.translate("home_page")),
       bottomNavigationBar: bottomBar(context, "home"),
       body: Center(
         child: Column(
@@ -30,7 +32,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(
             height : 70,
           ),
-            const Text('Hello, User!', style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
+            Text(localizationService.translate("hello"), style: const TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
             const SizedBox(
             height : 40,
           ),
@@ -51,16 +53,16 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30.0), 
                 ), 
                 ), 
-                child: const Column(
+                child: Column(
                 mainAxisSize: MainAxisSize.min, 
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.chat_bubble_outlined, color: Colors.white,
+                  const Icon(Icons.chat_bubble_outlined, color: Colors.white,
                   size: 80.0,),
-                  SizedBox(height: 5), 
+                  const SizedBox(height: 5), 
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('Add Words', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                    child: Text(localizationService.translate("add_words"), style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
                   ),
                 ],
                             ),
@@ -83,16 +85,16 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30.0),
                 ),
                 ), 
-                child: const Column(
+                child: Column(
                 mainAxisSize: MainAxisSize.min, 
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.video_camera_front, color: Colors.white,
+                  const Icon(Icons.video_camera_front, color: Colors.white,
                   size: 80.0,),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('Upload Video', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                    child: Text(localizationService.translate("upload_video"), style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -120,16 +122,16 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30.0),
                 ), 
                 ), 
-                child: const Column(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.bar_chart_outlined, color: Colors.white,
+                  const Icon(Icons.bar_chart_outlined, color: Colors.white,
                   size: 80.0,),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('View Stats', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                    child: Text(localizationService.translate("view_stats"), style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -152,16 +154,16 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30.0),
                 ),
                 ), 
-                child: const Column(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.settings_rounded, color: Colors.white,
+                  const Icon(Icons.settings_rounded, color: Colors.white,
                   size: 80.0,),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('Settings', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
+                    child: Text(localizationService.translate("settings"), style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
                   ),
                 ],
                 ),
@@ -175,5 +177,6 @@ class HomePage extends StatelessWidget {
         
       ),
     );
-  }
+  });
+}
 }

@@ -86,19 +86,21 @@ Future<void> addCurrentChildToOtherParent(
   return;
 }
 
-Column addCurrentChildToOtherParentFeature(
+Consumer addCurrentChildToOtherParentFeature(
     BuildContext context, TextEditingController otherParentEmailController) {
-  return Column(
+  return Consumer<LocalizationService>(
+          builder: (context, localizationService, child) { 
+            return Column(
     children: [
-      const Text('Give another Parent Access To Current Child:', style: TextStyle(fontSize: 22.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
+      Text(localizationService.translate("child_to_new_parent"), style: const TextStyle(fontSize: 22.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
       TextField(
         controller: otherParentEmailController,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           //border: OutlineInputBorder(),
-          hintText: 'Choose Email..',
-          hintStyle: TextStyle(color: Colors.white),
+          hintText: localizationService.translate("choose_email"),
+          hintStyle: const TextStyle(color: Colors.white),
           filled: true,
-          fillColor: Color(0xFF9E1B32),
+          fillColor: const Color(0xFF9E1B32),
         ),
       ),
       Center(
@@ -112,8 +114,8 @@ Column addCurrentChildToOtherParentFeature(
                 context, otherParentEmailController.text);
           } else {
             //failed to add indicator //FIXME: better error checking
-            showAlertMessage(context, "Child Add Failed",
-                "Please give some input for the email field.");
+            showAlertMessage(context, localizationService.translate("child_not_added"),
+                localizationService.translate("no_email"));
           }
           otherParentEmailController.clear();
         },
@@ -126,9 +128,11 @@ Column addCurrentChildToOtherParentFeature(
           side: const BorderSide(color: Colors.white, width: 2),
           padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
         ),
-        child: const Text('Submit', style: TextStyle(fontSize: 18)),
+        child: Text(localizationService.translate("submit"), style: TextStyle(fontSize: 18)),
       )),
     ],
+  );
+  }
   );
 }
 

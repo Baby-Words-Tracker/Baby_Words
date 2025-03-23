@@ -41,7 +41,11 @@
         "Words Learned / Day" : "Words Learned / Day",
         "All Words / Part of Speech" : "All Words / Part of Speech",
         "New Words Per Day" : "New Words Per Day",
-        "Total Number of Words by Part of Speech" : "Total Number of Words by Part of Speech"
+        "Total Number of Words by Part of Speech" : "Total Number of Words by Part of Speech",
+
+        "child_to_new_parent" : "Give another Parent Access To Current Child:",
+        "choose_email" : "Choose Email...",
+        "no_email" : "Please give some input for the email field."
 
     },
     "es" :
@@ -84,7 +88,11 @@
         "Words Learned / Day": "Palabras aprendidas / Día",
         "All Words / Part of Speech": "Todas las palabras / Parte de la oración",
         "New Words Per Day": "Nuevas palabras por día",
-        "Total Number of Words by Part of Speech": "Número total de palabras por parte de la oración"
+        "Total Number of Words by Part of Speech": "Número total de palabras por parte de la oración",
+
+        "child_to_new_parent": "Dar acceso a otro padre para el hijo actual:",
+        "choose_email": "Elegir correo electrónico...",
+        "no_email": "Por favor, ingrese un valor en el campo de correo electrónico."
 
     }
 }

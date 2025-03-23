@@ -71,7 +71,7 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) { 
-    addCurrentChildToOtherParent(context, "fakeemail2@email.com");
+    //addCurrentChildToOtherParent(context, "fakeemail2@email.com");
     //Get the current Parent
     Parent? currParent = getCurrentParent(context);
     if (currParent == null)
@@ -161,11 +161,18 @@ async {
   Map<PartOfSpeech, int> data = <PartOfSpeech,int>{};
   //for the number of days, grab the amount of words learned
   List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
-  //TODO: change this to scan for words from the correct langauge based on the childs selected tracking languages
   for (var tracker in allWordsFromChild)
   {
     Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ?? Word(word: "Invalid Word", languageCodes: List<LanguageCode>.empty(), partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},  definition: {LanguageCode.en : null});
-    data[currWord.partOfSpeech[LanguageCode.en]!] = (data[currWord.partOfSpeech[LanguageCode.en]] ?? 0) + 1; //increment or set to 1 depending on if it already existed
+    
+    List<LanguageCode> languages = [LanguageCode.en, LanguageCode.es]; //possible language for a word to be
+
+    for (LanguageCode language in  languages) {
+      if (currWord.partOfSpeech[language] != null) {
+        data[currWord.partOfSpeech[language]!] = (data[currWord.partOfSpeech[language]] ?? 0) + 1;
+      } //increment or set to 1 depending on if it already existed
+    }
+    //data[currWord.partOfSpeech[LanguageCode.en]!] = (data[currWord.partOfSpeech[LanguageCode.en]] ?? 0) + 1; //increment or set to 1 depending on if it already existed
   }
   List<MapEntry<PartOfSpeech, int>> entries = data.entries.toList();
   List<(int, PartOfSpeech)> listData = List.empty(growable: true);

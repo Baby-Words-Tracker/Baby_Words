@@ -20,73 +20,22 @@ class SettingsPage extends StatefulWidget {
 class _AddSettingsPage extends State<SettingsPage> {
   final TextEditingController textcontroller1 = TextEditingController();
   final TextEditingController textcontroller2 = TextEditingController();
-  final TextEditingController textcontroller3 = TextEditingController(); 
+  final TextEditingController textcontroller3 = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: TopBar(
-          pageName: context.read<LocalizationService>().translate("settings"),
-        ),
-        bottomNavigationBar: BottomAppBar(
-          color: const Color(0xFF9E1B32),
-          child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  IconButton(
-                    icon: const Icon(
-                      Icons.home,
-                      color: Colors.white,
-                      size: 40.0,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/');
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.chat_bubble_outlined,
-                      color: Colors.white,
-                      size: 40.0,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/addtext');
-                    },
-                  ),
-                  IconButton(
-                      icon: const Icon(
-                        Icons.video_camera_front,
-                        color: Colors.white,
-                        size: 40.0,
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/uploadvideo');
-                      }),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.bar_chart_outlined,
-                      color: Colors.white,
-                      size: 40.0,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/stats');
-                    },
-                  ),
-                  const Icon(
-                    Icons.settings_rounded,
-                    color: Colors.white,
-                    size: 40.0,
-                  ),
-                ],
-              )),
-        ),
-        body: Consumer<LocalizationService>(
-          builder: (context, localizationService, child) {
-            bool _isSpanish = localizationService.getLocaleCode() == LanguageCode.es;
-            return Center(
+    return Consumer<LocalizationService>(
+      builder: (context, localizationService, child) {
+        bool _isSpanish =
+            localizationService.getLocaleCode() == LanguageCode.es;
+        return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: TopBar(
+              pageName:
+                  localizationService.translate("settings"),
+            ),
+            bottomNavigationBar: bottomBar(context, "settings"),
+            body: Center(
               child: Column(
                 children: [
                   const SizedBox(
@@ -101,7 +50,9 @@ class _AddSettingsPage extends State<SettingsPage> {
                     height: 60,
                   ),
                   childAddingFeature(context, textcontroller1, textcontroller2),
+                  addCurrentChildToOtherParentFeature(context, textcontroller3),
                   Row(
+                    //change language switch
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
@@ -136,11 +87,11 @@ class _AddSettingsPage extends State<SettingsPage> {
                         style: TextStyle(fontSize: 16),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
-            );
-          },
-        ));
+            ));
+      },
+    );
   }
 }
