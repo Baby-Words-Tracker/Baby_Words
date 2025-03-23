@@ -90,7 +90,7 @@ Column addCurrentChildToOtherParentFeature(
     BuildContext context, TextEditingController otherParentEmailController) {
   return Column(
     children: [
-      const Text("Give another Parent Access To Current Child:"), //FIXME: ugly
+      const Text('Give another Parent Access To Current Child:', style: TextStyle(fontSize: 22.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
       TextField(
         controller: otherParentEmailController,
         decoration: const InputDecoration(

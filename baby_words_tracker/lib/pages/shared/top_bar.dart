@@ -71,10 +71,8 @@ class _TopBarState extends State<TopBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isInvalidUserType) {
-      return AppBar(title: const Text("Invalid user Type"));
-    } else if (_isloadingChildren) {
-      return AppBar(title: const Text("Loading..."));
+    if (_isInvalidUserType || _isloadingChildren) {
+      return AppBar(title: const Text("Loading..."), automaticallyImplyLeading: false, leading: null);
     }
 
     return AppBar(
@@ -110,7 +108,8 @@ class _TopBarState extends State<TopBar> {
           },
         )
       ],
-      automaticallyImplyLeading: true,
+      automaticallyImplyLeading: false,
+      leading: null,
     );
   }
 }

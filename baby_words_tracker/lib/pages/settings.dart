@@ -1,3 +1,5 @@
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class SettingsPage extends StatefulWidget {
 class _AddSettingsPage extends State<SettingsPage> {
   final TextEditingController textcontroller1 = TextEditingController();
   final TextEditingController textcontroller2 = TextEditingController();
+  final TextEditingController textcontroller3 = TextEditingController(); 
 
   @override
   Widget build(BuildContext context) {
