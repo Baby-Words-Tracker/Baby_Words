@@ -14,6 +14,8 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/l10n/localization.dart'; 
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 
 // Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
@@ -36,6 +38,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+
 // Provider
 import 'package:provider/provider.dart';
 
@@ -52,8 +55,6 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     //can probably remove this once adding the change notifyers
-    final localization = Localization(LanguageCode.en); // Replace 'en' with default locale
-    await localization.load();
     runApp(
     MultiProvider(
         providers: [
@@ -124,6 +125,16 @@ class MyApp extends StatelessWidget {
         AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
         
       },
+      locale: Provider.of<LocalizationService>(context, listen : true).getLocale(),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        FirebaseUILocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('es'),
+      ]
     );
   }
 }

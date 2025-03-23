@@ -2,8 +2,6 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/util/build_word_bank.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,15 +12,17 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
+    //intialize localization to the parents word preferance on first visit
+    //TODO: add loading screen so the whole thing doesn't glitch when parent is loaded
     Parent? parent = Provider.of<UserModelService>(context, listen: true).parent;
-    if (parent != null && Provider.of<LocalizationService>(context, listen : true).localization.locale != parent.language) {
+    if (parent != null && Provider.of<LocalizationService>(context, listen : true).getLocaleCode() != parent.language) {
       Provider.of<LocalizationService>(context, listen : false).changeLocale(parent.language);
     }
 
     return Scaffold(
         backgroundColor: Colors.white,
-        appBar: const TopBar(
-            pageName: "home_page"),
+        appBar: TopBar(
+            pageName: context.read<LocalizationService>().translate("home_page")),
         bottomNavigationBar: BottomAppBar(
           color: const Color(0xFF9E1B32),
           child: Padding(
@@ -97,8 +97,7 @@ class HomePage extends StatelessWidget {
                   height: 70,
                 ),
                 Text(
-                    localizationService.localization
-                        .translate("hello"),
+                    localizationService.translate("hello"),
                     style: const TextStyle(
                         fontSize: 32.0,
                         color: Color(0xFF9E1B32),
@@ -131,7 +130,7 @@ class HomePage extends StatelessWidget {
                           size: 80.0,
                         ),
                         SizedBox(height: 5), // Spacer between icon and text
-                        Text(localizationService.localization.translate("add_words"),
+                        Text(localizationService.translate("add_words"),
                             style: const TextStyle(
                                 fontSize: 24.0, fontWeight: FontWeight.bold)),
                       ],
@@ -164,7 +163,7 @@ class HomePage extends StatelessWidget {
                           size: 80.0,
                         ),
                         const SizedBox(height: 5), // Spacer between icon and text
-                        Text(localizationService.localization.translate("upload_video"),
+                        Text(localizationService.translate("upload_video"),
                             style: const TextStyle(
                                 fontSize: 24.0, fontWeight: FontWeight.bold)),
                       ],
@@ -201,7 +200,7 @@ class HomePage extends StatelessWidget {
                             size: 80.0,
                           ),
                           const SizedBox(height: 5), // Spacer between icon and text
-                          Text(localizationService.localization.translate("view_stats"),
+                          Text(localizationService.translate("view_stats"),
                               style: const TextStyle(
                                   fontSize: 24.0, fontWeight: FontWeight.bold)),
                         ],
@@ -224,18 +223,18 @@ class HomePage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 55, vertical: 40),
                       ),
-                      child: const Column(
+                      child: Column(
                         mainAxisSize:
                             MainAxisSize.min, // To keep the button size minimal
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.settings_rounded,
                             color: Colors.white,
                             size: 80.0,
                           ),
                           SizedBox(height: 5), // Spacer between icon and text
-                          Text('Settings',
-                              style: TextStyle(
+                          Text(localizationService.translate("settings"),
+                              style: const TextStyle(
                                   fontSize: 24.0, fontWeight: FontWeight.bold)),
                         ],
                       ),

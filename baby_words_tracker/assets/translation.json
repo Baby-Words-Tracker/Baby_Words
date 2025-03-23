@@ -22,7 +22,27 @@
         "error" : "Error!",
         "words_error" : "not found in dictionary, please try again!",
         "loading" : "Loading...",
-        "Settings" : "Settings"
+        "settings" : "Settings",
+        "add_child" : "Add Child",
+        "choose_name" : "Choose Name...",
+        "choose_birthday" : "Tap to choose birthday...",
+        "child_added" : "Child Added!",
+        "add_child_success" : "Child Added!",
+        "child_not_added" : "Failed to Add Child",
+        "add_child_failed" : "Failed to add your child, please try again.",
+        "invalid_type" : "Invalid Type",
+        
+        "welcome_sign_in" : "Welcome to BabyWordsTracker, please sign in!",
+        "welcome_sign_up" : "Welcome to BabyWordsTracker, please sign up!",
+        "terms_and_conditions" : "By signing in, you agree to our terms and conditions.",
+
+        "over_num_days" : "Over how many days...",
+        "select_option" : "select an option",
+        "Words Learned / Day" : "Words Learned / Day",
+        "All Words / Part of Speech" : "All Words / Part of Speech",
+        "New Words Per Day" : "New Words Per Day",
+        "Total Number of Words by Part of Speech" : "Total Number of Words by Part of Speech"
+
     },
     "es" :
     {
@@ -47,6 +67,24 @@
         "error": "¡Error!",
         "words_error": "No se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
         "loading": "Cargando...",
-        "settings" : "Configuración"
+        "settings" : "Configuración",
+        "add_child": "Agregar hijo",
+        "choose_name": "Elegir nombre...",
+        "choose_birthday": "Toca para elegir la fecha de cumpleaños...",
+        "child_added": "¡Hijo agregado!",
+        "add_child_success": "¡Hijo agregado!",
+        "child_not_added": "No se pudo agregar al hijo",
+        "add_child_failed": "No se pudo agregar a su hijo, por favor intente de nuevo.",
+        "invalid_type": "Tipo inválido",
+        "welcome_sign_in": "¡Bienvenido a BabyWordsTracker, por favor inicia sesión!",
+        "welcome_sign_up": "¡Bienvenido a BabyWordsTracker, por favor regístrate!",
+        "terms_and_conditions": "Al iniciar sesión, aceptas nuestros términos y condiciones.",
+        "over_num_days": "¿Durante cuántos días...",
+        "select_option": "selecciona una opción",
+        "Words Learned / Day": "Palabras aprendidas / Día",
+        "All Words / Part of Speech": "Todas las palabras / Parte de la oración",
+        "New Words Per Day": "Nuevas palabras por día",
+        "Total Number of Words by Part of Speech": "Número total de palabras por parte de la oración"
+
     }
 }

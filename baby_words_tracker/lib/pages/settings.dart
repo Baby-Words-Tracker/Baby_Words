@@ -3,13 +3,10 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/config.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -26,8 +23,8 @@ class _AddSettingsPage extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text("Settings"),
+        appBar: TopBar(
+          pageName: context.read<LocalizationService>().translate("settings"),
         ),
         bottomNavigationBar: BottomAppBar(
           color: const Color(0xFF9E1B32),
@@ -85,15 +82,14 @@ class _AddSettingsPage extends State<SettingsPage> {
         ),
         body: Consumer<LocalizationService>(
           builder: (context, localizationService, child) {
-            var localization = localizationService.localization;
-            bool _isSpanish = localization.locale == LanguageCode.es;
+            bool _isSpanish = localizationService.getLocaleCode() == LanguageCode.es;
             return Center(
               child: Column(
                 children: [
                   const SizedBox(
                     height: 70,
                   ),
-                  Text(localization.translate("settings"),
+                  Text(localizationService.translate("settings"),
                       style: const TextStyle(
                           fontSize: 32.0,
                           color: Color(0xFF9E1B32),
@@ -128,6 +124,7 @@ class _AddSettingsPage extends State<SettingsPage> {
                                 .updateParent(parent.id, language: newLanguage);
 
                             ///localizationService.changeLocale(newLanguage);
+                            _isSpanish = !_isSpanish;
                           });
                         },
                       ),

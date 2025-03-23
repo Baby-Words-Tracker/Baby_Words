@@ -17,7 +17,7 @@ class LocalizationService with ChangeNotifier {
   Localization get localization => _localization;
 
   LocalizationService() {
-    _localization = Localization(LanguageCode.es); //initially set to english changes based on user
+    _localization = Localization(LanguageCode.en, const Locale('en')); //initially set to english changes based on user
     _loadTranslations();
   }
 
@@ -27,10 +27,20 @@ class LocalizationService with ChangeNotifier {
   }
 
   Future<void> changeLocale(LanguageCode locale) async {
-    _localization = Localization(locale);
+    _localization = Localization(locale, Locale(locale.displayCode));
     await _localization.load();
     notifyListeners();
-    //await _loadTranslations();
   }
 
+  String translate(String key) {
+    return _localization.translate(key);
+  }
+
+  LanguageCode getLocaleCode() {
+    return _localization.localeCode; 
+  }
+
+  Locale getLocale() {
+    return _localization.locale;
+  }
 }

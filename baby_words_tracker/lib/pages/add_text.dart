@@ -23,11 +23,8 @@ import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
-
 class AddTextPage extends StatefulWidget {
-
   const AddTextPage({super.key});
-
 
   @override
   State<AddTextPage> createState() => _AddTextPageState();
@@ -37,14 +34,14 @@ class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController _controller = TextEditingController();
   List<String> parsedWords = [];
 
-
   void _parseWords() {
     String text = _controller.text;
-    String cleanedText = text.replaceAll(RegExp(r'[^\w\s]'), ''); // Remove punctuation
-    parsedWords = cleanedText.split(' ');   
+    String cleanedText =
+        text.replaceAll(RegExp(r'[^\w\s]'), ''); // Remove punctuation
+    parsedWords = cleanedText.split(' ');
     setState(() {});
   }
-  
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -53,197 +50,211 @@ class _AddTextPageState extends State<AddTextPage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    final localizationService = context.read<LocalizationService>();
-    var localization = localizationService.localization; 
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFF828A8F),
-      appBar: TopBar(pageName: localization.translate("add_words")),
+      appBar: TopBar(pageName: context.read<LocalizationService>().translate("add_words")),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-                },
-              ),
-          const Icon(
-              Icons.chat_bubble_outlined,
-              color: Colors.white,
-              size: 40.0,
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.video_camera_front,
-              color: Colors.white,
-              size: 40.0,
-                ),
-            onPressed: () {
-                Navigator.pushNamed(context, '/uploadvideo');
-                }
-          ),
-          IconButton(
-            icon: const Icon(
-                Icons.bar_chart_outlined,
-                color: Colors.white,
-                size: 40.0,
-            ),
-            onPressed: () {
-                  Navigator.pushNamed(context, '/stats');
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                IconButton(
+                  icon: const Icon(
+                    Icons.home,
+                    color: Colors.white,
+                    size: 40.0,
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/');
                   },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-                },
-              ),
-  ],
-)
-  ),
-),
+                ),
+                const Icon(
+                  Icons.chat_bubble_outlined,
+                  color: Colors.white,
+                  size: 40.0,
+                ),
+                IconButton(
+                    icon: const Icon(
+                      Icons.video_camera_front,
+                      color: Colors.white,
+                      size: 40.0,
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/uploadvideo');
+                    }),
+                IconButton(
+                  icon: const Icon(
+                    Icons.bar_chart_outlined,
+                    color: Colors.white,
+                    size: 40.0,
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/stats');
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.settings_rounded,
+                    color: Colors.white,
+                    size: 40.0,
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/settings');
+                  },
+                ),
+              ],
+            )),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-          const SizedBox(
-            height : 120,
-          ),
-           Center(
-            child: Text(
-              localization.translate("add_words"),
-              style: TextStyle(color: Colors.white, fontSize: 50, fontWeight: FontWeight.bold)
-            ),
-          ),
-          const SizedBox(
-            height : 80,
-            ),
-          Text(
-            localization.translate("child_said"),
-            style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)
-          ),
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-            hintText: localization.translate("child_said"),
-            hintStyle: TextStyle(color: Colors.white),
-            filled: true,  
-            fillColor: Color(0xFF9E1B32),
-            ),
-          ),
-            Center(
-              child: OutlinedButton(
-                onPressed: () async {  
-                final childDataService = context.read<ChildDataService>();
-                final wordDataService = context.read<WordDataService>();
-                final wordTrackerDataService = context.read<WordTrackerDataService>();
-                Parent? currParent = getCurrentParent(context);
-                String? currChildID = "";
-                if (currParent != null){
-                  currChildID = getCurrentChildIDSingleInstance(context, currParent);
-                }
-                List<LanguageCode>? languages = currChildID != null ? await childDataService.getLanguages(currChildID) : [LanguageCode.en]; 
-                
+        child: Consumer<LocalizationService>(
+          builder: (context, localizationService, child) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const SizedBox(
+                  height: 120,
+                ),
+                Center(
+                  child: Text(localizationService.translate("add_words"),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 50,
+                          fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(
+                  height: 80,
+                ),
+                Text(localizationService.translate("child_said"),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold)),
+                TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    hintText: localizationService.translate("child_said"),
+                    hintStyle: const TextStyle(color: Colors.white),
+                    filled: true,
+                    fillColor: const Color(0xFF9E1B32),
+                  ),
+                ),
+                Center(
+                    child: OutlinedButton(
+                  onPressed: () async {
+                    final childDataService = context.read<ChildDataService>();
+                    final wordDataService = context.read<WordDataService>();
+                    final wordTrackerDataService =
+                        context.read<WordTrackerDataService>();
+                    Parent? currParent = getCurrentParent(context);
+                    String? currChildID = "";
+                    if (currParent != null) {
+                      currChildID =
+                          getCurrentChildIDSingleInstance(context, currParent);
+                    }
+                    List<LanguageCode>? maybeLanguages = currChildID != null
+                        ? await childDataService.getLanguages(currChildID)
+                        : [LanguageCode.en];
+                    
+                    List<LanguageCode> langauges = maybeLanguages ?? [LanguageCode.en];
 
-                _parseWords();
+                    _parseWords();
 
-                var correctWords = 0;
-                var totalWords = 0;
+                    var correctWords = 0;
+                    var totalWords = 0;
 
-                for (var word in parsedWords){
-                  totalWords++;
-                  bool? result = await checkAndUpdateWords(word);//languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
-                  if(result != null && result && currChildID != null){
-                    addWordToChild(word, childDataService, wordDataService, wordTrackerDataService, id: currChildID);
-                    correctWords++;
-                  }
-                  else{
+                    for (var word in parsedWords) {
+                      totalWords++;
+                      bool? result = await checkAndUpdateWords(
+                          word, languages: langauges); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
+                      if (result != null && result && currChildID != null) {
+                        addWordToChild(word, childDataService, wordDataService,
+                            wordTrackerDataService,
+                            id: currChildID);
+                        correctWords++;
+                      } else {
+                        if (!context.mounted) return;
+                        await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text(localizationService.translate("error")),
+                              content: Text(
+                                  word + localizationService.translate("words_error")),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
+                                    _controller.clear();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        break;
+                      }
+                    }
                     if (!context.mounted) return;
-                    await showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text(localization.translate("error")),
-                      content: Text(word + localization.translate("words_error")),
-                      actions: <Widget>[
-                    TextButton(
-                      child: const Text('OK'),
-                      onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
+                    if (totalWords == correctWords) {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text(localizationService.translate("success")),
+                            content:
+                                Text(localizationService.translate("word_success")),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context)
+                                      .pop(); // Close the dialog
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
                       _controller.clear();
-                          },
-                        ),
-                      ],
-                    );
+                    }
                   },
-                );
-                break;
-                }
-                }
-                if (!context.mounted) return;
-                if(totalWords == correctWords){
-                    await showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text(localization.translate("success")),
-                      content: Text(localization.translate("word_success")),
-                      actions: <Widget>[
-                    TextButton(
-                    child: const Text('OK'),
-                    onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-                _controller.clear();
-                }
-                },
-                style: OutlinedButton.styleFrom(
-                backgroundColor: const Color(0xFF828A8F), 
-                foregroundColor: Colors.white,        
-                shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),  
-            ),
-            side: const BorderSide(color: Colors.white, width: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0), 
-            ),
-            child: Text(localization.translate("submit"), style: TextStyle(fontSize: 18)),
-)
-            ),
-          ],
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: const Color(0xFF828A8F),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    side: const BorderSide(color: Colors.white, width: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
+                  ),
+                  child: Text(localizationService.translate("submit"),
+                      style: const TextStyle(fontSize: 18)),
+                )),
+              ],
+            );
+          },
         ),
       ),
-      
     );
   }
 }
 
-Future<void> addWordToChild(String word, ChildDataService childService, WordDataService wordService, WordTrackerDataService trackerService, {String id = "gz1Qe32xJcF0oRGmhw7f"})
-async {
+Future<void> addWordToChild(String word, ChildDataService childService,
+    WordDataService wordService, WordTrackerDataService trackerService,
+    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
   //FIXME: implement language, part of speech, defn, spellcheck
   //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
-  if (await trackerService.createWordTracker(id, word, DateTime.now()) == null) {
+  if (await trackerService.createWordTracker(id, word, DateTime.now()) ==
+      null) {
     debugPrint("AddText: Error adding word to child");
-  }
-  else {
+  } else {
     debugPrint("AddText: Word added to child");
   }
 }

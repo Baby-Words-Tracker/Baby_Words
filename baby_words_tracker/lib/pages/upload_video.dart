@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 
 
 class UploadVideoPage extends StatelessWidget {
@@ -10,14 +11,10 @@ class UploadVideoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localizationService = context.read<LocalizationService>();
-    var localization = localizationService.localization; 
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(localization.translate("upload_video")),
-      ),
+      appBar: TopBar(pageName: context.read<LocalizationService>().translate("upload_video")),
       bottomNavigationBar: BottomAppBar(
         color: const Color(0xFF9E1B32),
         child: Padding(
@@ -75,18 +72,22 @@ class UploadVideoPage extends StatelessWidget {
   ),
 ),
       body: Center(
-        child: Column(
+        child: Consumer<LocalizationService>(
+          builder: (context, localizationService, child) {
+            return Column(
           children: [
-            SizedBox(
+            const SizedBox(
             height : 70,
           ),
-            Text(localization.translate("upload_video"), style: TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
-            SizedBox(
+            Text(localizationService.translate("upload_video"), style: const TextStyle(fontSize: 32.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
+            const SizedBox(
             height : 60,
           ),
           ],
-        ),
+        );
+        },
       ),
+    )
     );
   }
 }
