@@ -11,11 +11,15 @@ Future<Map<String, dynamic>?> callFunction(
   try {
     debugPrint('Calling function $functionName with arguments $arguments');
     final response = await function.call(arguments);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(response.data['message'])));
+    if (response.data['message'] != null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(response.data['message'])));
+      } else {
+        debugPrint(response.data['message']);
+      }
     } else {
-      debugPrint(response.data['message']);
+      debugPrint('Function $functionName returned: $response');
     }
     return response.data;
   } catch (error) {
@@ -27,5 +31,4 @@ Future<Map<String, dynamic>?> callFunction(
     }
     return null;
   }
-  return {};
 }

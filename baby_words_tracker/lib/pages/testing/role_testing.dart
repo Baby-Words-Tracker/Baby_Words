@@ -116,7 +116,7 @@ class _AdminFirebasePageState extends State<AdminFirebasePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(" User Rolls: "),
+                  const Text(" User Roles: "),
                   FutureBuilder<Map<String, dynamic>?>(
                     key: UniqueKey(),
                     future: callFunction(
