@@ -16,9 +16,11 @@ class ProfilePage extends StatelessWidget {
         ),
         actions: [
           SignedOutAction((context) {
-            Navigator.of(context).pop();
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil("/auth_gate", (route) => false);
           })
         ],
+        showDeleteConfirmationDialog: true,
       );
     });
   }
