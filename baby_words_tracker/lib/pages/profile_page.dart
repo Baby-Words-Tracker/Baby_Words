@@ -17,7 +17,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           SignedOutAction((context) {
             Navigator.of(context)
-                .pushNamedAndRemoveUntil("/auth_gate", (route) => false);
+                .pushNamedAndRemoveUntil("/authgate", (route) => false);
           })
         ],
         showDeleteConfirmationDialog: true,
