@@ -89,67 +89,81 @@ Future<void> addCurrentChildToOtherParent(
 Consumer addCurrentChildToOtherParentFeature(
     BuildContext context, TextEditingController otherParentEmailController) {
   return Consumer<LocalizationService>(
-          builder: (context, localizationService, child) { 
-            return Column(
-    children: [
-      Text(localizationService.translate("child_to_new_parent"), style: const TextStyle(fontSize: 22.0, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
-      TextField(
-        controller: otherParentEmailController,
-        decoration: InputDecoration(
-          //border: OutlineInputBorder(),
-          hintText: localizationService.translate("choose_email"),
-          hintStyle: const TextStyle(color: Colors.white),
-          filled: true,
-          fillColor: const Color(0xFF9E1B32),
-        ),
-      ),
-      Center(
-          child: OutlinedButton(
-        onPressed: () {
-          if (otherParentEmailController.text !=
-              "") //add the word to the child with the id, or the default testing child if no input
-          {
-            //add child
-            addCurrentChildToOtherParent(
-                context, otherParentEmailController.text);
-          } else {
-            //failed to add indicator //FIXME: better error checking
-            showAlertMessage(context, localizationService.translate("child_not_added"),
-                localizationService.translate("no_email"));
-          }
-          otherParentEmailController.clear();
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: const Color(0xFF828A8F),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+      builder: (context, localizationService, child) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(localizationService.translate("child_to_new_parent"),
+            style: const TextStyle(
+                fontSize: 27.0,
+                color: Color(0xFF9E1B32),
+                fontWeight: FontWeight.bold)),
+        const SizedBox(height: 20.0),
+        TextField(
+          controller: otherParentEmailController,
+          decoration: InputDecoration(
+            //border: OutlineInputBorder(),
+            hintText: localizationService.translate("choose_email"),
+            hintStyle: const TextStyle(color: Colors.white),
+            filled: true,
+            fillColor: const Color(0xFF9E1B32),
           ),
-          side: const BorderSide(color: Colors.white, width: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
         ),
-        child: Text(localizationService.translate("submit"), style: TextStyle(fontSize: 18)),
-      )),
-    ],
-  );
-  }
-  );
+        const SizedBox(height: 20.0),
+        Center(
+            child: OutlinedButton(
+          onPressed: () {
+            if (otherParentEmailController.text !=
+                "") //add the word to the child with the id, or the default testing child if no input
+            {
+              //add child
+              addCurrentChildToOtherParent(
+                  context, otherParentEmailController.text);
+            } else {
+              //failed to add indicator //FIXME: better error checking
+              showAlertMessage(
+                  context,
+                  localizationService.translate("child_not_added"),
+                  localizationService.translate("no_email"));
+            }
+            otherParentEmailController.clear();
+          },
+          style: OutlinedButton.styleFrom(
+            backgroundColor: const Color(0xFF828A8F),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            side: const BorderSide(color: Colors.white, width: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
+          ),
+          child: Text(localizationService.translate("submit"),
+              style: TextStyle(fontSize: 18)),
+        )),
+      ],
+    );
+  });
 }
 
-Future<void> addChildToCurrParent(
-    BuildContext context, String name, DateTime bday) async {
+Future<void> addChildToCurrParent(BuildContext context, String name,
+    DateTime bday, List<LanguageCode> langauges) async {
   Parent? currParent = getCurrentParent(context);
   if (currParent != null) {
-    Child? child = await context.read<ChildDataService>().createChild(
-        DateTime.now(), name, [LanguageCode.en], 0, [currParent.id]);
+    Child? child = await context
+        .read<ChildDataService>()
+        .createChild(DateTime.now(), name, langauges, 0, [currParent.id]);
     context
         .read<ParentDataService>()
         .addChildToParent(currParent.id, child?.id ?? "aaaa");
   }
 }
 
-Consumer childAddingFeature( BuildContext context, TextEditingController nameController, TextEditingController dateController) {
-  return Consumer<LocalizationService>(builder: (context, localizationService, child) {
+Consumer childAddingFeature(
+    BuildContext context,
+    TextEditingController nameController,
+    TextEditingController dateController) {
+  return Consumer<LocalizationService>(
+      builder: (context, localizationService, child) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -163,7 +177,8 @@ Consumer childAddingFeature( BuildContext context, TextEditingController nameCon
           controller: nameController,
           decoration: InputDecoration(
             //border: OutlineInputBorder(),
-            hintText: localizationService.translate("choose_name"), //'Choose Name..',
+            hintText:
+                localizationService.translate("choose_name"), //'Choose Name..',
             hintStyle: const TextStyle(color: Colors.white),
             filled: true,
             fillColor: const Color(0xFF9E1B32),
@@ -175,7 +190,8 @@ Consumer childAddingFeature( BuildContext context, TextEditingController nameCon
           readOnly: true,
           decoration: InputDecoration(
             //border: OutlineInputBorder(),
-            hintText: localizationService.translate("choose_birthday"), //'Tap to Choose Birthday..',
+            hintText: localizationService
+                .translate("choose_birthday"), //'Tap to Choose Birthday..',
             hintStyle: const TextStyle(color: Colors.white),
             filled: true,
             fillColor: const Color(0xFF9E1B32),
@@ -190,15 +206,21 @@ Consumer childAddingFeature( BuildContext context, TextEditingController nameCon
             {
               //add child
               addChildToCurrParent(context, nameController.text,
-                  DateTime.parse(dateController.text));
+                  DateTime.parse(dateController.text), [LanguageCode.en]);
               //added indicator
               showAlertMessage(
-                  context, localizationService.translate("child_added"), 
-                  localizationService.translate("add_child_success"));//"Child Added!", "Successfully added your child!");
+                  context,
+                  localizationService.translate("child_added"),
+                  localizationService.translate(
+                      "add_child_success")); //"Child Added!", "Successfully added your child!");
             } else {
               //failed to add indicator //FIXME: better error checking
-              showAlertMessage(context, localizationService.translate("child_not_added"), //"Child Add Failed",
-                  localizationService.translate("add_child_failed")); //"Failed to add yoour child, please try again.");
+              showAlertMessage(
+                  context,
+                  localizationService
+                      .translate("child_not_added"), //"Child Add Failed",
+                  localizationService.translate(
+                      "add_child_failed")); //"Failed to add yoour child, please try again.");
             }
             nameController.clear();
             dateController.clear();
@@ -212,12 +234,12 @@ Consumer childAddingFeature( BuildContext context, TextEditingController nameCon
             side: const BorderSide(color: Colors.white, width: 2),
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
           ),
-          child: Text(localizationService.translate("submit"), style: const TextStyle(fontSize: 18)),
+          child: Text(localizationService.translate("submit"),
+              style: const TextStyle(fontSize: 18)),
         )),
       ],
     );
-  }
-  );
+  });
 }
 
 //testing child id: gz1Qe32xJcF0oRGmhw7f
