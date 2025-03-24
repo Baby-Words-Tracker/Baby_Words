@@ -21,12 +21,12 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
       selectedField = field;
       selectedEntry = entry;
     });
-     //print("Filter updated: Field -> $selectedField, Entry -> $selectedEntry");
+     debugPrint("Filter updated: Field -> $selectedField, Entry -> $selectedEntry");
   }
 
   void updateWordInstances(List<WordInstance> instances) {
     setState(() {
-      wordInstances = instances; // Update stored data when WordTrackerTable fetches data
+      wordInstances = instances; 
     });
   }
 
@@ -137,44 +137,47 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
   Widget build(BuildContext context) {
     final rows = _dataSource.getFilteredData();
     return SingleChildScrollView(
-        child: DataTable(
-          sortColumnIndex: _sortColumnIndex,
-          sortAscending: _isAscending,
-          columns: [
-            DataColumn(
-              label: const Text("Child"),
-              onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.childName, columnIndex, ascending),
-            ),
-            DataColumn(
-              label: const Text("Age"),
-              onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.childAge, columnIndex, ascending),
-            ),
-            DataColumn(
-              label: const Text("Word"),
-              onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.id, columnIndex, ascending),
-            ),
-            DataColumn(
-              label: const Text("First Utterance"),
-              numeric: true,
-              onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.firstUtterance, columnIndex, ascending),
-            ),
-            DataColumn(
-              label: const Text("Video ID"),
-              numeric: true,
-              onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.videoID, columnIndex, ascending),
-            ),
-          ],
-          rows: rows.map((wordInstance) => DataRow(
-            cells: [
-              DataCell(Text(wordInstance.childName)),
-              DataCell(Text(wordInstance.childAge.toString())),
-              DataCell(Text(wordInstance.id)),
-              DataCell(Text(wordInstance.firstUtterance)),
-              DataCell(Text(wordInstance.videoID.toString())),
+      scrollDirection: Axis.horizontal,
+      child: SingleChildScrollView(
+          child: DataTable(
+            sortColumnIndex: _sortColumnIndex,
+            sortAscending: _isAscending,
+            columns: [
+              DataColumn(
+                label: const Text("Child"),
+                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.childName, columnIndex, ascending),
+              ),
+              DataColumn(
+                label: const Text("Age"),
+                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.childAge, columnIndex, ascending),
+              ),
+              DataColumn(
+                label: const Text("Word"),
+                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.id, columnIndex, ascending),
+              ),
+              DataColumn(
+                label: const Text("First Utterance"),
+                numeric: true,
+                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.firstUtterance, columnIndex, ascending),
+              ),
+              DataColumn(
+                label: const Text("Video ID"),
+                numeric: true,
+                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.videoID, columnIndex, ascending),
+              ),
             ],
-          )).toList(),
+            rows: rows.map((wordInstance) => DataRow(
+              cells: [
+                DataCell(Text(wordInstance.childName)),
+                DataCell(Text(wordInstance.childAge.toString())),
+                DataCell(Text(wordInstance.id)),
+                DataCell(Text(wordInstance.firstUtterance)),
+                DataCell(Text(wordInstance.videoID.toString())),
+              ],
+            )).toList(),
+          ),
         ),
-      );
+    );
   }
 }
 
@@ -188,11 +191,13 @@ class FirestoreDataTableSource extends DataTableSource {
   if(_isDataFetched) return;
   
   try {
+
+    debugPrint('querying');
     List<WordInstance> wordInstances = [];
-    // Get all Child documents
+    
     QuerySnapshot childSnapshot = await FirebaseFirestore.instance.collection('Child').get();
     
-    // Iterate through each Child document
+    
     for (var childDoc in childSnapshot.docs) {
       try {
         String childName = childDoc['name'];
@@ -202,10 +207,10 @@ class FirestoreDataTableSource extends DataTableSource {
         if((childBirthday.month > currentTime.month) || (childBirthday.month == currentTime.month && childBirthday.day > currentTime.day)){
           childAge--;
         }
-        // Get the WordTracker subcollection of the current Child document
+        
         QuerySnapshot wordTrackerSnapshot = await childDoc.reference.collection('WordTracker').get();
         
-        // Map the WordTracker documents to WordTracker objects and add to the list
+        
         wordInstances.addAll(wordTrackerSnapshot.docs.map((doc) {
           return WordInstance(
             childName: childName,
@@ -256,7 +261,7 @@ class FirestoreDataTableSource extends DataTableSource {
       final bValue = getField(b);
       return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
     });
-    notifyListeners(); // Refresh table after sorting
+    notifyListeners(); 
   }
 
   List<WordInstance> getFilteredData() => _filteredInstances;
@@ -285,16 +290,6 @@ class FirestoreDataTableSource extends DataTableSource {
   int get selectedRowCount => 0;
 }
 
-class WordInstance {
-  final String childName;
-  final int childAge;
-  final String id;
-  final String firstUtterance;
-  final int videoID;
-
-  WordInstance({required this.childName, required this.childAge, required this.id, required this.firstUtterance, required this.videoID});
-}
-
 
 class FilterMenu extends StatefulWidget {
   final void Function(FieldLabel? field, String? value) onFilterChanged;
@@ -307,8 +302,9 @@ class FilterMenu extends StatefulWidget {
 }
 
 class _FilterMenuState extends State<FilterMenu> {
-  final TextEditingController fieldController = TextEditingController();
-  final TextEditingController entryController = TextEditingController();
+  TextEditingController fieldController = TextEditingController();
+  TextEditingController entryController = TextEditingController();
+  
   FieldLabel? selectedField;
   String selectedEntry = '';
   List<String> suggestions = [];
@@ -361,7 +357,7 @@ class _FilterMenuState extends State<FilterMenu> {
                     });
                   },
                   fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-                    entryController.text = controller.text;
+                    entryController = controller;
                     return TextField(
                       controller: controller,
                       focusNode: focusNode,
@@ -423,7 +419,6 @@ class _FilterMenuState extends State<FilterMenu> {
 
   debugPrint("Updating suggestions for field: ${selectedField?.label}");
 
-  // Ensure there is data available
   if (widget.dataSource.isEmpty) {
     debugPrint("No data available for suggestions.");
     setState(() => suggestions = []);
@@ -450,6 +445,15 @@ class _FilterMenuState extends State<FilterMenu> {
 }
 }
 
+class WordInstance {
+  final String childName;
+  final int childAge;
+  final String id;
+  final String firstUtterance;
+  final int videoID;
+
+  WordInstance({required this.childName, required this.childAge, required this.id, required this.firstUtterance, required this.videoID});
+}
 
 typedef FieldEntry = DropdownMenuEntry<FieldLabel>;
 
