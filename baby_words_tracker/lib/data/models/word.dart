@@ -12,8 +12,8 @@ class Word {
 
   final String word;
   final List<LanguageCode> languageCodes;
-  final PartOfSpeech partOfSpeech;
-  final String? definition;
+  final Map<LanguageCode, PartOfSpeech> partOfSpeech;
+  final Map<LanguageCode,String?> definition;
 
 
   Word({
@@ -26,8 +26,8 @@ class Word {
   Word copyWith({
     String? word,
     List<LanguageCode>? languageCodes,
-    PartOfSpeech? partOfSpeech,
-    String? definition,
+    Map<LanguageCode, PartOfSpeech>? partOfSpeech,
+    Map<LanguageCode,String?>? definition,
   }) {
     return Word(
       word: word ?? this.word,
@@ -40,8 +40,8 @@ class Word {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'languageCodes': languageCodes.map((x) => x.name).toList(),
-      'partOfSpeech': partOfSpeech.name,
-      'definition': definition,
+      'partOfSpeech': partOfSpeech.map((key, value) => MapEntry(key.displayCode, value.name)),// partOfSpeech.name,
+      'definition': definition.map((key, value) => MapEntry(key.displayCode, value)),
     };
   }
 
@@ -52,8 +52,10 @@ class Word {
         ?.whereType<String>()
         .map((i) => LanguageCode.values.byName(i))
         .toList() ?? [],
-      partOfSpeech: (map['partOfSpeech'] as String?) != null ? PartOfSpeech.values.byName(map['partOfSpeech'] as String) : PartOfSpeech.unknown,
-      definition: (map['definition'] as String?) ?? '',
+      partOfSpeech: (map['partOfSpeech'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(LanguageCode.values.firstWhere((e) => e.name == key), PartOfSpeech.values.byName(value))),
+      definition: (map['definition'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(LanguageCode.values.firstWhere((e) => e.name == key), value)),//(map['definition'] as String?) ?? '',
     );
   }
 

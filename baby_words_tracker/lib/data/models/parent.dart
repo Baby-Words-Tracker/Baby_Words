@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
-
+import 'package:baby_words_tracker/util/language_code.dart';
 
 class Parent {
   static String collectionName = 'Parent';
@@ -11,26 +11,30 @@ class Parent {
   final String id;
   final String? email;
   final String? name;
+  final LanguageCode language; 
   final List<String> childIDs;
   
   Parent({
     required this.id,
     this.email,
     this.name,
+    LanguageCode? language,
     List<String>? childIDs,
-  }) : childIDs = childIDs ?? [];
+  }) : childIDs = childIDs ?? [], language = language ?? LanguageCode.en;
 
 
   Parent copyWith({
     String? id,
     String? email,
     String? name,
+    LanguageCode? language,
     List<String>? childIDs,
   }) {
     return Parent(
       id: id ?? this.id,
       email: email ?? this.email,
       name: name ?? this.name,
+      language: language ?? this.language,
       childIDs: childIDs ?? this.childIDs,
     );
   }
@@ -39,6 +43,7 @@ class Parent {
     return <String, dynamic>{
       'email': email,
       'name': name,
+      'language' : language.displayCode,
       'childIDs': childIDs,
     };
   }
@@ -48,6 +53,7 @@ class Parent {
       id: map['id'] as String,
       email: map['email'] as String?,
       name: map['name'] as String?,
+      language: (LanguageCode.values.firstWhere((e) => e.name == map['language'])),
       childIDs: (map['childIDs'] != null && map['childIDs'] is List) ? List<String>.from(map['childIDs'].whereType<String>()) : [],
     );
   }
@@ -66,11 +72,13 @@ class Parent {
     String? email,
     String? name,
     List<String>? childIDs,
+    LanguageCode? language
   }) {
     Map<String, dynamic> map = {};
     if (email != null) map['email'] = email;
     if (name != null) map['name'] = name;
     if (childIDs != null) map['childIDs'] = childIDs;
+    if (language != null) map['language'] = language.displayCode; 
     return map;
   }
 

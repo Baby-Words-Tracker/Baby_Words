@@ -1,24 +1,51 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
+// Data
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+
+// Auth
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 
+//L10n
+import 'package:baby_words_tracker/l10n/localization.dart'; 
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
+
+// Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
-import 'package:baby_words_tracker/util/config.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
-import 'firebase_options.dart';
+import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
+
+// Util
+import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/check_emulators.dart';
+
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+// Flutter
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+
+// Provider
+import 'package:provider/provider.dart';
+
+// Firebase Options
+import 'firebase_options.dart';
+
+import 'pages/settings.dart';
 
 void main() async {
   try {
@@ -27,11 +54,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (e) {
-    debugPrint("Error initializing Firebase: $e");
-  }
-
-  runApp(
+    //can probably remove this once adding the change notifyers
+    runApp(
     MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ChildDataService()),
@@ -40,6 +64,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
           ChangeNotifierProvider(create: (_) => Config()),
+          ChangeNotifierProvider(create: (_) => LocalizationService()),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService: Provider.of<ParentDataService>(context, listen: false),
@@ -59,16 +84,21 @@ void main() async {
               parentDataService: Provider.of<ParentDataService>(context, listen:false), 
               researcherDataService: Provider.of<ResearcherDataService>(context, listen:false), 
               authenticationService: Provider.of<AuthenticationService>(context, listen:false),
-              generalUserService: Provider.of<GeneralUserService>(context, listen:false),
+              generalUserService: Provider.of<GeneralUserService>(context, listen:false)
               ),
           ),
         ],
-        child: const MyApp(),
+        child: MyApp(),
       ),
     );
+  } catch (e) {
+    debugPrint("Error initializing Firebase: $e");
+  }
+
 }
 
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -90,9 +120,21 @@ class MyApp extends StatelessWidget {
         '/addtext': (context) => const AddTextPage(),
         '/authgate': (context) => const AuthGate(),
         '/uploadvideo': (context) => const UploadVideoPage(),
-        '/profilepage': (context) => ProfilePage(),
+        '/profilepage': (context) => const ProfilePage(),
+        '/settings' : (context) => const SettingsPage(),
+        AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
         
       },
+      locale: Provider.of<LocalizationService>(context, listen : true).getLocale(),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        FirebaseUILocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('es'),
+      ]
     );
   }
 }

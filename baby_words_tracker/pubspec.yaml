@@ -49,6 +49,9 @@ dependencies:
   google_sign_in: ^6.2.2
   firebase_ui_oauth_google: ^1.4.1
   collection: ^1.19.0
+  cloud_functions: ^5.3.4
+  firebase_ui_localizations: ^1.2.0
+  flutter_localization: ^0.3.1
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +79,7 @@ flutter:
   assets:
     - assets/data.csv
     - assets/LECS_mascot_filled.png
+    - assets/translation.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

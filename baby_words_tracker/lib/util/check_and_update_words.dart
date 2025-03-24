@@ -18,6 +18,11 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
   final http.Response response = await http.get(Uri.parse(url), headers: {'User-Agent': 'Dart/Flutter'},); 
   
   if(response.statusCode == 200) {
+    Map<LanguageCode, String?> wordDefs = {};
+    Map<LanguageCode, PartOfSpeech> partsOfSpeech = {};
+    Set<LanguageCode> usedLanguage = {};
+
+
     final Map<String, dynamic> responseBody = jsonDecode(response.body); // get body
     final List<dynamic> searchList = responseBody['search'];
 
@@ -30,14 +35,19 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
       final Map<String, dynamic> match = item['match'];
       final List<String> stringLang = languages.map((lang) => lang.displayCode).toList(); 
 
-      if (stringLang.contains(match['language'])) { //this check may or may not work def needs to be tested
+      if (stringLang.contains(match['language'])) { 
+        stringLang.removeWhere((item) => item == match['langauge']);
+    
         final LanguageCode matchLang = LanguageCode.values.firstWhere(
                                     (lang) => lang.name == match['language'],
                                     orElse: () => throw ArgumentError('Invalid language:' + match['language']), //error should never be reached
                                     );
+
         final String id = item['id'];
         debugPrint("Current word id: $id");
-        final PartOfSpeech partOfSpeech = PartOfSpeech.values.byName(item['description'].split(' ')[1] as String);
+        List<String> desc = item['description'].split(' ');
+        final PartOfSpeech partOfSpeech = desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
+        partsOfSpeech[matchLang] = partOfSpeech; 
 
         final idUrl = "https://www.wikidata.org/wiki/Special:EntityData/$id.json";
         final http.Response idResponse = await http.get(Uri.parse(idUrl));
@@ -47,25 +57,28 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
           final Map<String, dynamic> entity = body['entities'];
           final Map<String, dynamic> code = entity[id];
           final List<dynamic> senses = code['senses'];
-          final Map<String, dynamic> glosses = senses[0]['glosses'];
+          final Map<String, dynamic> glosses = senses.length != 0 ? senses[0]['glosses'] : {};
           final String? definition = glosses['en']?['value'];
 
           debugPrint("Current definition: $definition"); 
 
           //if (definition == null) return null;
+          wordDefs[matchLang] = definition;
 
-          List<LanguageCode> language = [matchLang];
+          usedLanguage.add(matchLang);
 
-          final Word? newWord = await word_service.createWord(word, language, partOfSpeech, definition); 
+        }
+      }
+    }
+    debugPrint("$usedLanguage");
+    debugPrint("was unable to match language code: $languages");
+    if(usedLanguage != []) {
+          debugPrint("Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
+          final Word? newWord = await word_service.createWord(word, usedLanguage.toList(), partsOfSpeech, wordDefs); 
           if (newWord == null) return null;
 
           return true;
-
         }
-        return false;
-      }
-    }
-    debugPrint("was unable to match language code: $languages");
     return false;
   }
   else {
