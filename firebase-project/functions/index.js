@@ -228,6 +228,17 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
 
 // TODO: this is extremely insecure.
 //       we need to check if the user is a parent of the child
+// TODO: test if a parent can add a child they don't own to someone else
+/**
+ * Assigns a child to another parent
+ * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} context the context object
+ * @return {Promise<{message: string}>} the success message
+ * @throws {https.HttpsError} if the target email or child UID is not provided,
+ * if the user is not authenticated,
+ * if the is not already a parent of the child,
+ * or if the user does not have the minimum role
+ */
 exports.addChildToOtherParent = https.onCall(async (data, context) => {
   const targetEmail = data.data.targetEmail;
   const childUid = data.data.childUid;
@@ -238,8 +249,8 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
   try {
     checkAuthentication(data);
 
-    // TODO: add this back once roles work
-    // checkIsAtLeast(data, Role.parent);
+    // TODO: is this necessary?
+    checkIsAtLeast(data, Role.parent);
 
     const parentCollection = db.collection("Parent");
 
@@ -289,13 +300,13 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
   } catch (error) {
     logger.error(`Failed to assign child to other parent: ${error}`);
     return {
-      message: `Failed to assign child: ${childUid}` +
+      message: `Failed to assign child` +
       ` to parent with email: ${targetEmail} because of error: ${error}`,
     };
   }
 
   return {
-    message: `User ${targetEmail} has been given child ${childUid}.`,
+    message: `User ${targetEmail} has been given the child.`,
   };
 });
 
@@ -314,9 +325,7 @@ exports.getUserCustomClaims = https.onCall(async (data, context) => {
     const selectedUser = await admin.auth().getUser(targetUid);
 
     // Return the user's custom claims
-    return {
-      customClaims: selectedUser.customClaims || {},
-    };
+    return selectedUser.customClaims != null ? selectedUser.customClaims : {};
   } catch (error) {
     console.error("Error fetching user custom claims:", error);
     return {
