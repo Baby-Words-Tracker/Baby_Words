@@ -26,6 +26,7 @@ class _TopBarState extends State<TopBar> {
   List<PopupMenuEntry<int>> _childNames = List.empty(growable: true);
   bool _isInvalidUserType = false;
   bool _isloadingChildren = true;
+  String _currName = "Unable to find current child";
 
   @override
   void didChangeDependencies() {
@@ -47,6 +48,7 @@ class _TopBarState extends State<TopBar> {
       // if it is not a parent acccessing the page, short circuit and say invalid state
       setState(() {
         _isInvalidUserType = true; // handle invalid user type with this bool
+        _currName = "Unable to find current child";
       });
       return;
     }
@@ -63,12 +65,19 @@ class _TopBarState extends State<TopBar> {
           i++;
         }
       }
+    
 
     setState(() {
       _currParent = currParent;
       _childNames = childNames;
       _isInvalidUserType = false;
       _isloadingChildren = false;
+      if (_childNames.isNotEmpty){
+        _currName = ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+      } else { //_childNames is empty
+        _currName = "\t\t\t\t\t\t\t\t\t\tNo children,\n add a child in settings"; //FIXME: insane thing to do
+      }
+      
     });
   }
 
@@ -81,11 +90,12 @@ class _TopBarState extends State<TopBar> {
     return AppBar(
       title: Text(widget.pageName),
       actions: [
-        Text( ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!, style: TextStyle(color: Colors.grey),),
+        Text( _currName, style: TextStyle(color: Colors.grey),),
         PopupMenuButton<int>(
           onSelected: (value) {
             if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
               context.read<Config>().switchChild(value);
+                  setState(() {});
             }
           },
           itemBuilder: (BuildContext context) {
