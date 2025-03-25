@@ -4,6 +4,7 @@ import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/csv_functions.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:collection/collection.dart';
@@ -29,7 +30,7 @@ import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
-final List<GraphType> graphsWithLength = [GraphType.newWordsPerDay]; // List of GraphTypes that have a length parameter
+final List<StatType> graphsWithLength = [StatType.newWordsPerDay]; // List of graphs that have a length parameter
 
 class StatsPage extends StatefulWidget {
 
@@ -42,9 +43,7 @@ class StatsPage extends StatefulWidget {
 class _StatsPageState extends State<StatsPage> {
   //Default graph setup
   int graphLength = 7;
-  GraphType graphType = GraphType.newWordsPerDay; // Use the enum GraphType to determine what graph should be displayed
-  
-  
+  StatType statType = StatType.newWordsPerDay; // Use the enum StatType to determine what graph should be displayed  
 
   //Allow children to change graph state
   void updateLength(int length) {
@@ -52,9 +51,9 @@ class _StatsPageState extends State<StatsPage> {
       graphLength = length;
     });
   }
-  void updateType(GraphType type) {
+  void updateType(StatType type) {
     setState(() {
-      graphType = type;
+      statType = type;
     });
   }
 
@@ -63,13 +62,14 @@ class _StatsPageState extends State<StatsPage> {
 
   //Initialize Graph Cache
   // If we get a request for a graph with a repeat type, length, and childID, use the one from the cache
-  Map<(GraphType, int, String), dynamic> graphCache = {};
+  Map<(StatType, int, String), dynamic> statCache = {};
 
   //controllers for two editable text boxes, allowing for reading of user inputs
   final TextEditingController textcontroller1 = TextEditingController(); 
   final TextEditingController textcontroller2 = TextEditingController(); 
 
   @override
+
   Widget build(BuildContext context) { 
     //addCurrentChildToOtherParent(context, "fakeemail2@email.com");
     //Get the current Parent
@@ -93,18 +93,18 @@ class _StatsPageState extends State<StatsPage> {
           builder: (context, localizationService, trackerService, child) {
             return Column(
               children: [
-                
-                Text(localizationService.translate(graphHeader(graphType, graphLength))),
-                
-                //Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
-                graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId),
 
-                //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
-                lengthChangeFeature(context, graphType, textcontroller1, updateLength),
+                Text(localizationService.translate(graphHeader(statType, graphLength))),
+                
+                //Displays the correct graph depending on the current statType and graphLength, all the other parameters are for the graph constructors within.
+                graphSwitcher(statType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, statCache, id: currChildId),
+
+                //Allows the user to change the length of those graphs with a time horizon. If statType is one that does not need length adjustment, does not display.
+                lengthChangeFeature(context, statType, textcontroller1, updateLength),
 
                 Text(localizationService.translate("learning_summary")),
 
-                graphTypeSelectDropdown(graphType, updateType),
+                statTypeSelectDropdown(statType, updateType),
               ],
             );
           }
@@ -128,7 +128,7 @@ async {
 }
 
 //Displays the correct graph title based on the graph parameters
-String graphHeader(GraphType type, int days)
+String graphHeader(StatType type, int days)
 {
   /* if (graphsWithLength.contains(type))
   {
@@ -141,12 +141,12 @@ String graphHeader(GraphType type, int days)
 }
 
 //Simple switch statement to allow for differen graphs in 1 widget
-Widget graphSwitcher(GraphType type, ChildDataService childService, WordDataService wordService, WordTrackerDataService trackerService, int days,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}) // switch statement to decide what graph to display
+Widget graphSwitcher(StatType type, ChildDataService childService, WordDataService wordService, WordTrackerDataService trackerService, int days,   Map<(StatType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}) // switch statement to decide what graph to display
 {
   switch (type) {
-    case GraphType.newWordsPerDay:
+    case StatType.newWordsPerDay:
       return newWordsPerDayGraph(childService, trackerService, days, cache, id: id);
-    case GraphType.wordsByPartOfSpeech:
+    case StatType.wordsByPartOfSpeech:
       return wordsByPartOfSpeechGraph(childService, wordService, cache, id: id);
     default:
       return const Text("Graph Switch Failed.");
@@ -155,9 +155,9 @@ Widget graphSwitcher(GraphType type, ChildDataService childService, WordDataServ
 
 //Get the number of words of each part of a speech a child has learned
 //Integrates with cache to prevent over querying. Data will only update upon reloading the page
-Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(ChildDataService childService, WordDataService wordService,  Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
+Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(ChildDataService childService, WordDataService wordService,  Map<(StatType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
 async {
-  if (cache.containsKey((GraphType.wordsByPartOfSpeech, -1, id))) return cache[(GraphType.wordsByPartOfSpeech, -1, id)];
+  if (cache.containsKey((StatType.wordsByPartOfSpeech, -1, id))) return cache[(StatType.wordsByPartOfSpeech, -1, id)];
   Map<PartOfSpeech, int> data = <PartOfSpeech,int>{};
   //for the number of days, grab the amount of words learned
   List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
@@ -181,12 +181,12 @@ async {
     listData.add((entry.value, entry.key));
   }
   listData.sort((a, b) => a.$2.displayName.compareTo(b.$2.displayName));
-  cache[(GraphType.wordsByPartOfSpeech, -1, id)] = listData;
+  cache[(StatType.wordsByPartOfSpeech, -1, id)] = listData;
   return listData;
 }
 
 //Turns the info from the past `days` days into a chart showing the amount of words learned per day
-FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataService childService, WordDataService wordService,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}){
+FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataService childService, WordDataService wordService,   Map<(StatType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}){
   return FutureBuilder<List<(int, PartOfSpeech)>>(
     future: getPartOfSpeechNumWords(childService, wordService, cache, id: id), // Call async function
     builder: (context, snapshot) {
@@ -230,9 +230,9 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataServi
 }
 
 //Queries the database and returns the number of new words learned over the past `days` days as time series data
-Future<List<(int, DateTime)>> getTimeSeriesNumNewWords(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
+Future<List<(int, DateTime)>> getTimeSeriesNumNewWords(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(StatType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
 async {
-  if (cache.containsKey((GraphType.newWordsPerDay, days, id))) return cache[(GraphType.newWordsPerDay, days, id)];
+  if (cache.containsKey((StatType.newWordsPerDay, days, id))) return cache[(StatType.newWordsPerDay, days, id)];
   DateTime now = DateTime.now();
   List<(int, DateTime)> data = List.empty(growable: true);
   //for the number of days, grab the amount of words learned
@@ -242,14 +242,14 @@ async {
     int numOnTargetDay = wordsFromTargetDay.length; //count the amount of words learned that day
     data.add((numOnTargetDay, targetDay)); //add the tuple of that info to the list
   }
-  cache[(GraphType.newWordsPerDay, days, id)] = data;
+  cache[(StatType.newWordsPerDay, days, id)] = data;
   return data;
 }
 
 //Queries the database and returns the number of new words learned over the past `days` days as time series data
-Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
+Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(StatType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
 async {
-    if (cache.containsKey((GraphType.newWordsPerDay, days, id))) return cache[(GraphType.newWordsPerDay, days, id)];
+    if (cache.containsKey((StatType.newWordsPerDay, days, id))) return cache[(StatType.newWordsPerDay, days, id)];
   DateTime now = DateTime.now();
   //for the number of days, grab the amount of words learned
   DateTime startDay = DateTime(now.year, now.month, now.day - (days - 1)); //get the day i days before today
@@ -264,12 +264,12 @@ async {
     data.add((countByDay[date] ?? 0, date));
   }
 
-  cache[(GraphType.newWordsPerDay, days, id)] = data;
+  cache[(StatType.newWordsPerDay, days, id)] = data;
   return data;
 }
 
 //Turns the info from the past `days` days into a chart showing the amount of words learned per day
-FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}){
+FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(StatType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"}){
   return FutureBuilder<List<(int, DateTime)>>(
     future: getTimeSeriesNumNewWordsDateRange(childService, trackerService, days, cache, id: id), // Call async function
     builder: (context, snapshot) {
@@ -310,7 +310,7 @@ FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(ChildDataService childS
 }
 
 
-Widget lengthChangeFeature(BuildContext context, GraphType type, TextEditingController inputController, void Function(int length) changeParentLength){
+Widget lengthChangeFeature(BuildContext context, StatType type, TextEditingController inputController, void Function(int length) changeParentLength){
   if (!graphsWithLength.contains(type)) return const SizedBox();
   return Consumer<LocalizationService>(
     builder: (context, localizationService, child) {
@@ -356,11 +356,12 @@ Widget lengthChangeFeature(BuildContext context, GraphType type, TextEditingCont
 }
 
 
-Consumer graphTypeSelectDropdown(GraphType currType, void Function(GraphType type) changeParentGraphType)
+
+Consumer statTypeSelectDropdown(StatType currType, void Function(StatType type) changeParentStatType)
 {
   List<String> options = List.empty(growable: true);
-  for (var graphType in GraphType.values) { //generate a list of all the string names of the graph types
-    options.add(graphType.optionName);
+  for (var statType in StatType.values) { //generate a list of all the string names of the graph types
+    options.add(statType.optionName);
   }
   return Consumer<LocalizationService>(
     builder: (context, localizationService, child) {
@@ -369,7 +370,7 @@ Consumer graphTypeSelectDropdown(GraphType currType, void Function(GraphType typ
     hint: Text(localizationService.translate("select_option")),
     icon: const Icon(Icons.arrow_downward),
     onChanged: (String? newValue) {
-        changeParentGraphType(GraphTypeExtension.fromOptionName(newValue ?? ""));
+        changeParentStatType(StatTypeExtension.fromOptionName(newValue ?? ""));
     },
     items: options.map<DropdownMenuItem<String>>((String value) {
       return DropdownMenuItem<String>(
@@ -381,6 +382,31 @@ Consumer graphTypeSelectDropdown(GraphType currType, void Function(GraphType typ
   }
   );
 }
+
+//uhhh something to do with common words
+// # of top 3000 most common words known?
+// let's just see how laggy this is
+Future<int> getNumWordsInTop3000(BuildContext context, String currChildID, Map<(StatType, int, String), dynamic> cache)
+async {
+  if (cache.containsKey((StatType.numWordsInTop3000, -1, currChildID))) return cache[(StatType.numWordsInTop3000, -1, currChildID)];
+  if ()
+
+  List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
+  for (var tracker in allWordsFromChild)
+  {
+    Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ?? Word(word: "Invalid Word", languageCodes: List<LanguageCode>.empty(), partOfSpeech: PartOfSpeech.noun, definition: "Invalid Word");
+    data[currWord.partOfSpeech] = (data[currWord.partOfSpeech] ?? 0) + 1; //increment or set to 1 depending on if it already existed
+  }
+  return 0;
+}
+
+
+
+
+// # of top 500 most common words known?
+// Most common word?
+// Rarest word? (not possible probably)
+//Waterfall of recently learned words
 
 
 
@@ -402,8 +428,3 @@ async {
     }
   }
 }
-
-
-// below this is the testing word adding functionality
-
-

@@ -1,15 +1,18 @@
-enum GraphType {
+enum StatType {
   newWordsPerDay,
   wordsByPartOfSpeech,
+  numWordsInTop3000
 }
 
-extension GraphTypeExtension on GraphType {
+extension StatTypeExtension on StatType {
   String get displayName {
     switch (this) {
-      case GraphType.newWordsPerDay:
+      case StatType.newWordsPerDay:
         return "New Words Per Day";
-      case GraphType.wordsByPartOfSpeech:
+      case StatType.wordsByPartOfSpeech:
         return "Total Number of Words by Part of Speech";
+      case StatType.numWordsInTop3000:
+        return "Number of Top 3000 Most Common English Words Learned";
       default:
         return "Unknown";
     }
@@ -17,30 +20,32 @@ extension GraphTypeExtension on GraphType {
   
   String get optionName {
     switch (this) {
-      case GraphType.newWordsPerDay:
+      case StatType.newWordsPerDay:
         return "Words Learned / Day";
-      case GraphType.wordsByPartOfSpeech:
+      case StatType.wordsByPartOfSpeech:
         return "All Words / Part of Speech";
+      case StatType.numWordsInTop3000:
+        return "Number of Top 300 Words";
       default:
         return "Unknown";
     }
   }
 
-  static GraphType fromDisplayName(String text){
-    for (var graphType in GraphType.values) {
-      if (text == graphType.displayName) {
-        return graphType;
+  static StatType fromDisplayName(String text){
+    for (var statType in StatType.values) {
+      if (text == statType.displayName) {
+        return statType;
       }
     }
-    return GraphType.newWordsPerDay;
+    return StatType.newWordsPerDay;
   }
 
-  static GraphType fromOptionName(String text){
-    for (var graphType in GraphType.values) {
-      if (text == graphType.optionName) {
-        return graphType;
+  static StatType fromOptionName(String text){
+    for (var statType in StatType.values) {
+      if (text == statType.optionName) {
+        return statType;
       }
     }
-    return GraphType.newWordsPerDay;
+    return StatType.newWordsPerDay;
   }
 }
