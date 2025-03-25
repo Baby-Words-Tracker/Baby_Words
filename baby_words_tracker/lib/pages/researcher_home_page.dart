@@ -15,19 +15,28 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   FieldLabel? selectedField;
   String? selectedEntry;
   List<WordInstance> wordInstances = [];
+  final FirestoreDataTableSource _dataSource = FirestoreDataTableSource();
+
+    @override
+  void initState() {
+    super.initState();
+    _fetchWordTrackers();
+  }
+
+  void _fetchWordTrackers() async {
+    await _dataSource.fetchData();
+    setState(() {
+      wordInstances = _dataSource.getAllData();
+    });
+  }
 
   void updateFilter(FieldLabel? field, String? entry) {
     setState(() {
       selectedField = field;
       selectedEntry = entry;
+      _dataSource.filterData(field, entry);
     });
      debugPrint("Filter updated: Field -> $selectedField, Entry -> $selectedEntry");
-  }
-
-  void updateWordInstances(List<WordInstance> instances) {
-    setState(() {
-      wordInstances = instances; 
-    });
   }
 
   @override
@@ -78,10 +87,7 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                   ),
                 Expanded(
                   flex: 3,
-                  child: WordTrackerTable(key: ValueKey('$selectedField-$selectedEntry'),
-                                          selectedField: selectedField,  
-                                          selectedEntry: selectedEntry,
-                                          onDataFetched: updateWordInstances)
+                  child: WordTrackerTable(dataSource: _dataSource)
                 )
                 ]),
         ),
@@ -91,11 +97,9 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
 class WordTrackerTable extends StatefulWidget{
 
-  final FieldLabel? selectedField;
-  final String? selectedEntry;
-  final void Function(List<WordInstance>) onDataFetched;
+  final FirestoreDataTableSource dataSource;
 
-  const WordTrackerTable({super.key, this.selectedField, this.selectedEntry, required this.onDataFetched});
+  const WordTrackerTable({super.key, required this.dataSource});
 
   @override
   State<WordTrackerTable> createState() => _WordTrackerTableState();
@@ -103,39 +107,20 @@ class WordTrackerTable extends StatefulWidget{
 
 class _WordTrackerTableState extends State<WordTrackerTable> {
 
-  late FirestoreDataTableSource _dataSource;
   bool _isAscending = true;
   int _sortColumnIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _dataSource = FirestoreDataTableSource();
-    _fetchWordTrackers();
-  }
-
-  void _fetchWordTrackers() async {
-    await _dataSource.fetchData();
-    widget.onDataFetched(_dataSource._wordInstances);
-    _applyFilter();
-  }
-
-  void _applyFilter() {
-    _dataSource.filterData(widget.selectedField, widget.selectedEntry);
-    setState(() {});
-  }
 
   void _sort<T>(Comparable<T> Function(WordInstance wordInstance) getField, int columnIndex, bool ascending) {
     setState(() {
       _sortColumnIndex = columnIndex;
       _isAscending = ascending;
-      _dataSource.sort(getField, ascending);
+      widget.dataSource.sort(getField, ascending);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final rows = _dataSource.getFilteredData();
+    final rows = widget.dataSource.getFilteredData();
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SingleChildScrollView(
@@ -184,11 +169,8 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
 class FirestoreDataTableSource extends DataTableSource {
   List<WordInstance> _wordInstances = [];
   List<WordInstance> _filteredInstances = [];
-  bool _isDataFetched = false;
 
   Future<void> fetchData() async {
-
-  if(_isDataFetched) return;
   
   try {
 
@@ -228,7 +210,6 @@ class FirestoreDataTableSource extends DataTableSource {
     }
     _wordInstances = wordInstances;
     _filteredInstances = List.from(_wordInstances);
-    _isDataFetched = true;
     notifyListeners();
   } catch (e) {
     debugPrint('Error fetching Child documents: $e');
@@ -247,8 +228,6 @@ class FirestoreDataTableSource extends DataTableSource {
             return word.id == selectedEntry;
           case FieldLabel.age:
             return word.childAge.toString() == selectedEntry;
-          default:
-            return false;
         }
       }).toList();
     }
@@ -307,7 +286,9 @@ class _FilterMenuState extends State<FilterMenu> {
   
   FieldLabel? selectedField;
   String selectedEntry = '';
+
   List<String> suggestions = [];
+
   String filterMessage = '';
 
   @override
@@ -319,97 +300,98 @@ class _FilterMenuState extends State<FilterMenu> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SafeArea(
-          child: Column(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    DropdownMenu<FieldLabel>(
-                      initialSelection: null,
-                      controller: fieldController,
-                      requestFocusOnTap: true,
-                      label: const Text('Field'),
-                      onSelected: (FieldLabel? field) {
-                        setState(() {
-                          selectedField = field;
-                          _updateSuggestions();
-                        });
-                      },
-                      dropdownMenuEntries: FieldLabel.entries,
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                child: Autocomplete<String>(
-                  optionsBuilder: (TextEditingValue textEditingValue) {
-                    if (textEditingValue.text.isEmpty) {
-                      return suggestions;
-                    }
-                    return suggestions.where((option) =>
-                        option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
-                  },
-                  onSelected: (String value) {
-                    setState(() {
-                      selectedEntry = value;
-                      entryController.text = value;
-                    });
-                  },
-                  fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-                    entryController = controller;
-                    return TextField(
-                      controller: controller,
-                      focusNode: focusNode,
-                      decoration: const InputDecoration(
-                        labelText: 'Entry',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (String value) {
-                        selectedEntry = value;
-                      },
-                    );
-                  },
-                ),
-              ),
-                  ],
-                ),
-              ),
-              Row(
+      backgroundColor: Colors.white,
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState((){
-                        filterMessage = 'Filtering by ${selectedField?.label} "$selectedEntry"';
+                  DropdownMenu<FieldLabel>(
+                    initialSelection: null,
+                    controller: fieldController,
+                    requestFocusOnTap: true,
+                    label: const Text('Field'),
+                    onSelected: (FieldLabel? field) {
+                      setState(() {
+                        selectedField = field;
+                        _updateSuggestions();
                       });
-                        widget.onFilterChanged(selectedField, selectedEntry);
-                        },
-                  child: const Text('Filter'),
-                              ),
-                  const SizedBox(
-                    width: 20
-                  ),
-                  ElevatedButton(
-                onPressed: () {
-                    setState((){
-                      selectedField = null;
-                      fieldController.clear();
-                      entryController.clear();
-                      filterMessage = '';
-                    });
-                    widget.onFilterChanged(null, null);
                     },
-              child: const Text('Clear Filter'),
-            )
+                    dropdownMenuEntries: FieldLabel.entries,
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+              child: Autocomplete<String>(
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  if (textEditingValue.text.isEmpty) {
+                    return suggestions;
+                  }
+                  return suggestions.where((option) =>
+                      option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+                },
+                onSelected: (String value) {
+                  setState(() {
+                    selectedEntry = value;
+                    entryController.text = value;
+                  });
+                },
+                fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                  entryController = controller;
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(
+                      labelText: 'Entry',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (String value) {
+                      selectedEntry = value;
+                    },
+                  );
+                },
+              ),
+            ),
                 ],
               ),
-              if (filterMessage.isNotEmpty)
-                Text(filterMessage, style: const TextStyle(fontSize: 16)),
-              
-            ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState((){
+                      filterMessage = 'Filtering by ${selectedField?.label} "$selectedEntry"';
+                    });
+                      widget.onFilterChanged(selectedField, selectedEntry);
+                      },
+                child: const Text('Filter'),
+                            ),
+                const SizedBox(
+                  width: 20
+                ),
+                ElevatedButton(
+              onPressed: () {
+                  setState((){
+                    selectedField = null;
+                    fieldController.clear();
+                    entryController.clear();
+                    filterMessage = '';
+                  });
+                  widget.onFilterChanged(null, null);
+                  },
+            child: const Text('Clear Filter'),
+          )
+              ],
+            ),
+            const SizedBox(
+              height: 5),
+            if (filterMessage.isNotEmpty)
+              Text(filterMessage, style: const TextStyle(fontSize: 16)),
             
-          ),
+          ],
+          
         ),
       );
   }
@@ -461,8 +443,6 @@ enum FieldLabel {
   child('Child'),
   age('Age'),
   word('Word');
-  //firstUtterance('First Utterance'),
-  //videoID('Video ID');
 
   const FieldLabel(this.label);
   final String label;
