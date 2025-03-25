@@ -18,17 +18,11 @@ class LocalizationService with ChangeNotifier {
 
   LocalizationService() {
     _localization = Localization(LanguageCode.en, const Locale('en')); //initially set to english changes based on user
-    _loadTranslations();
-  }
-
-  Future<void> _loadTranslations() async {
-    await _localization.load();
     notifyListeners();
   }
 
   Future<void> changeLocale(LanguageCode locale) async {
-    _localization = Localization(locale, Locale(locale.displayCode));
-    await _localization.load();
+    await _localization.setLocale(locale);
     notifyListeners();
   }
 

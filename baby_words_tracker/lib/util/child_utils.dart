@@ -23,11 +23,12 @@ Future<void> callAddChildToOtherParentCloudFunction(
         'Calling function addChildToOtherParent with childID $childID and otherParentEmail $otherParentEmail');
     final response = await function
         .call({'childUid': childID, 'targetEmail': otherParentEmail});
+        
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(response.data['message'])));
+        .showSnackBar(SnackBar(content: Text(context.read<LocalizationService>().translate(response.data['message']))));
   } catch (error) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Error: $error')));
+        .showSnackBar(SnackBar(content: Text(context.read<LocalizationService>().translate('Error: $error'))));
   }
 }
 
@@ -55,34 +56,38 @@ Future<void> addCurrentChildToOtherParent(
   showDialog(
     context: context,
     builder: (BuildContext context) {
+      return Consumer<LocalizationService>(
+          builder: (context, localizationService, child) {
       return AlertDialog(
-        title: const Text("Confirbim Action"),
+        title: Text(localizationService.translate("Confirm Action")),
         content: Text(
-            "Are you sure you want to give parent with email $otherParentEmail access to your child $currChildName?"),
+            localizationService.translate("grant_permission") + otherParentEmail + localizationService.translate("access_child") + currChildName),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(false); // User pressed No
             },
-            child: const Text("No"),
+            child: Text(localizationService.translate("No")),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(true); // User pressed Yes
             },
-            child: const Text("Yes"),
+            child: Text(localizationService.translate("Yes")),
           ),
         ],
       );
     },
-  ).then((confirmed) {
+  );
+  }).then((confirmed) {
     if (confirmed != null && confirmed) {
       callAddChildToOtherParentCloudFunction(
           context, currChildID, otherParentEmail);
     } else {
       return;
+    };
     }
-  });
+  );
   return;
 }
 

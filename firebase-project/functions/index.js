@@ -5,6 +5,8 @@ const {logger} = require("firebase-functions");
 const admin = require("firebase-admin");
 const {getAuth} = require("firebase-admin/auth");
 
+const { Storage } = require('google-cloud/storage');
+
 // Import our auth module
 const {Role} = require("./auth/roles");
 const {giveClaim, removeClaim} = require("./auth/claims");
@@ -20,6 +22,7 @@ const https = require("firebase-functions/v2/https");
 admin.initializeApp();
 
 const db = admin.firestore();
+const storage = new Storage();
 
 // TODO: make these functions more generic/concise
 
@@ -266,4 +269,36 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
   return {
     message: `User ${targetEmail} has been given child ${childUid}.`,
   };
+});
+
+//get signed url - idk if this will even come close to working
+exports.generateSignedUrl = functions.https.onRequest(async (req, res) => {
+  const authToken = req.headers.authorization?.split('Bearer ')[1]; // Extract the token
+
+  if (!authToken) {
+    return res.status(401).send({ error: 'Unauthorized: Missing token' });
+  }
+
+  try {
+    // Verify the token
+    const decodedToken = await admin.auth().verifyIdToken(authToken);
+
+    // Proceed with signed URL generation
+    const bucketName = 'baby-words-tracker-media';
+    const fileName = req.body.fileName;
+    const options = {
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+    };
+
+    const [url] = await storage
+      .bucket(bucketName)
+      .file(fileName)
+      .getSignedUrl(options);
+
+    res.status(200).send({ url });
+  } catch (error) {
+    res.status(401).send({ error: 'Unauthorized: Invalid token' });
+  }
 });
