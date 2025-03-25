@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/util/config.dart';
@@ -49,17 +50,27 @@ class _TopBarState extends State<TopBar> {
       return;
     }
     //load children
-    ChildDataService childService = context.read<ChildDataService>();
 
-    List<PopupMenuEntry<int>> childNames =
-        (await childService.getMultipleChildren(currParent.childIDs))
-            .asMap()
-            .entries
-            .map((entry) => PopupMenuItem<int>(
-                  value: entry.key,
-                  child: Text(entry.value.name),
-                ))
-            .toList();
+    List<PopupMenuEntry<int>> childNames = List.empty(growable: true);
+      int i = 0;
+      for (var childID in currParent.childIDs) {
+        Child? currChild = await context.read<ChildDataService>().getChild(childID);
+        if (currChild != null)
+        {
+          PopupMenuItem<int> currEntry = PopupMenuItem<int>(value: i, child: Text(currChild.name));
+          childNames.add(currEntry);
+          i++;
+        }
+      }
+
+        // (await childService.getMultipleChildren(currParent.childIDs))
+        //     .asMap()
+        //     .entries
+        //     .map((entry) => PopupMenuItem<int>(
+        //           value: entry.key,
+        //           child: Text(entry.value.name),
+        //         ))
+        //     .toList();
 
     setState(() {
       _currParent = currParent;
