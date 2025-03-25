@@ -7,16 +7,16 @@ import "package:baby_words_tracker/util/cloud_function_utils.dart";
 
 enum UserType { parent, researcher, unauthenticated }
 
-class AdminFirebasePage extends StatefulWidget {
-  static const routeName = '/admin-firebase';
+class RoleTesting extends StatefulWidget {
+  static const routeName = '/roletesting';
 
-  const AdminFirebasePage({super.key});
+  const RoleTesting({super.key});
 
   @override
-  _AdminFirebasePageState createState() => _AdminFirebasePageState();
+  _RoleTestingState createState() => _RoleTestingState();
 }
 
-class _AdminFirebasePageState extends State<AdminFirebasePage> {
+class _RoleTestingState extends State<RoleTesting> {
   UserType _selectedUserType = UserType.parent;
   TextEditingController _searchController = TextEditingController();
   String? _selectedUserId;
