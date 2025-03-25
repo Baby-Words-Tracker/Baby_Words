@@ -52,11 +52,9 @@ class _TopBarState extends State<TopBar> {
       });
       return;
     }
-    
-
-
     //load children
     List<PopupMenuEntry<int>> childNames = List.empty(growable: true);
+    if (currParent.childIDs.isNotEmpty){
       int i = 0;
       for (var childID in currParent.childIDs) {
         Child? currChild = await context.read<ChildDataService>().getChild(childID);
@@ -67,13 +65,15 @@ class _TopBarState extends State<TopBar> {
           i++;
         }
       }
+    }
+    
     
 
     setState(() {
       _currParent = currParent;
-      if (_childNames.isNotEmpty){
-        _currName = ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
-        _childNames = childNames;
+      if (childNames.isNotEmpty){
+        _currName = ((childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+        _childNames = childNames; 
       } else { //_childNames is empty
         _currName = "\t\t\t\t\t\t\t\t\t\tNo children,\n add a child in settings"; //FIXME: insane thing to do
       }
