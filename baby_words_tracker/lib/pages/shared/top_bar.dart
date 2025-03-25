@@ -95,7 +95,9 @@ class _TopBarState extends State<TopBar> {
           onSelected: (value) {
             if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
               context.read<Config>().switchChild(value);
-                  setState(() {});
+                  setState(() {
+                    _currName = ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+                  });
             }
           },
           itemBuilder: (BuildContext context) {
