@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -63,15 +64,6 @@ class _TopBarState extends State<TopBar> {
         }
       }
 
-        // (await childService.getMultipleChildren(currParent.childIDs))
-        //     .asMap()
-        //     .entries
-        //     .map((entry) => PopupMenuItem<int>(
-        //           value: entry.key,
-        //           child: Text(entry.value.name),
-        //         ))
-        //     .toList();
-
     setState(() {
       _currParent = currParent;
       _childNames = childNames;
@@ -89,6 +81,7 @@ class _TopBarState extends State<TopBar> {
     return AppBar(
       title: Text(widget.pageName),
       actions: [
+        Text( ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!, style: TextStyle(color: Colors.grey),),
         PopupMenuButton<int>(
           onSelected: (value) {
             if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
