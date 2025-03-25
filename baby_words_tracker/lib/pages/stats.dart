@@ -82,7 +82,11 @@ class _StatsPageState extends State<StatsPage> {
     String? currChildId = getCurrentChildIDListening(context, currParent);
     if (currChildId == null)
     {
-      return const Text("Invalid Child Index");
+      return Scaffold(
+        appBar: TopBar(pageName: context.read<LocalizationService>().translate("learning_summary")),
+        body: const Text("Please create a child before viewing stats"),
+        bottomNavigationBar: bottomBar(context, "stats"),
+      );
     }
 
     return Scaffold(
