@@ -11,7 +11,7 @@ import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 
 //L10n
-import 'package:baby_words_tracker/l10n/localization.dart'; 
+import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -38,7 +38,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-
 // Provider
 import 'package:provider/provider.dart';
 
@@ -56,7 +55,7 @@ void main() async {
     );
     //can probably remove this once adding the change notifyers
     runApp(
-    MultiProvider(
+      MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ChildDataService()),
           ChangeNotifierProvider(create: (_) => ParentDataService()),
@@ -64,11 +63,13 @@ void main() async {
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
           ChangeNotifierProvider(create: (_) => Config()),
-          ChangeNotifierProvider(create: (_) => LocalizationService()),
+          ChangeNotifierProvider(create: (_) => LocalizationService(), lazy: false),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
-              parentDataService: Provider.of<ParentDataService>(context, listen: false),
-              researcherDataService: Provider.of<ResearcherDataService>(context, listen: false),
+              parentDataService:
+                  Provider.of<ParentDataService>(context, listen: false),
+              researcherDataService:
+                  Provider.of<ResearcherDataService>(context, listen: false),
             ),
           ),
           Provider<FirebaseAuth>(
@@ -76,16 +77,18 @@ void main() async {
           ),
           ChangeNotifierProvider<AuthenticationService>(
             create: (context) => AuthenticationService(
-              Provider.of<FirebaseAuth>(context, listen: false)
-            ),
+                Provider.of<FirebaseAuth>(context, listen: false)),
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
-              parentDataService: Provider.of<ParentDataService>(context, listen:false), 
-              researcherDataService: Provider.of<ResearcherDataService>(context, listen:false), 
-              authenticationService: Provider.of<AuthenticationService>(context, listen:false),
-              generalUserService: Provider.of<GeneralUserService>(context, listen:false)
-              ),
+                parentDataService:
+                    Provider.of<ParentDataService>(context, listen: false),
+                researcherDataService:
+                    Provider.of<ResearcherDataService>(context, listen: false),
+                authenticationService:
+                    Provider.of<AuthenticationService>(context, listen: false),
+                generalUserService:
+                    Provider.of<GeneralUserService>(context, listen: false)),
           ),
         ],
         child: MyApp(),
@@ -94,11 +97,9 @@ void main() async {
   } catch (e) {
     debugPrint("Error initializing Firebase: $e");
   }
-
 }
 
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -106,37 +107,33 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<UserModelService>(context, listen: false);
 
-    
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
-        useMaterial3: true,
-      ),
-      initialRoute: '/authgate',
-      routes: {
-        '/': (context) => const HomePage(),
-        '/stats': (context) => const StatsPage(),
-        '/addtext': (context) => const AddTextPage(),
-        '/authgate': (context) => const AuthGate(),
-        '/uploadvideo': (context) => const UploadVideoPage(),
-        '/profilepage': (context) => const ProfilePage(),
-        '/settings' : (context) => const SettingsPage(),
-        AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
-        
-      },
-      locale: Provider.of<LocalizationService>(context, listen : true).getLocale(),
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        FirebaseUILocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', 'US'),
-        Locale('es'),
-      ]
-    );
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+          useMaterial3: true,
+        ),
+        initialRoute: '/authgate',
+        routes: {
+          '/': (context) => const HomePage(),
+          '/stats': (context) => const StatsPage(),
+          '/addtext': (context) => const AddTextPage(),
+          '/authgate': (context) => const AuthGate(),
+          '/uploadvideo': (context) => const UploadVideoPage(),
+          '/profilepage': (context) => const ProfilePage(),
+          '/settings': (context) => const SettingsPage(),
+          AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
+        },
+        locale:
+            Provider.of<LocalizationService>(context, listen: true).getLocale(),
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          FirebaseUILocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en', 'US'),
+          Locale('es'),
+        ]);
   }
 }
-
-

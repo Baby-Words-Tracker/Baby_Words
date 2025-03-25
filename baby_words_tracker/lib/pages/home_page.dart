@@ -4,6 +4,7 @@ import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,11 +14,15 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    //intialize localization to the parents word preferance on first visit
-    //TODO: add loading screen so the whole thing doesn't glitch when parent is loaded
+    //intialize localization to the parents word preferance on first visit and display loading screen until parent is received
     Parent? parent = Provider.of<UserModelService>(context, listen: true).parent;
-    if (parent != null && Provider.of<LocalizationService>(context, listen : true).getLocaleCode() != parent.language) {
+    LanguageCode language = Provider.of<LocalizationService>(context, listen : true).getLocaleCode();
+    if (parent != null && language != parent.language) {
       Provider.of<LocalizationService>(context, listen : false).changeLocale(parent.language);
+      return const Center(child: CircularProgressIndicator());
+    }
+    else if (parent == null) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Consumer<LocalizationService>(

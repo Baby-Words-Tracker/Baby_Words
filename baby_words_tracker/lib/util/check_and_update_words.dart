@@ -11,7 +11,7 @@ import 'dart:convert';
 Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = const [LanguageCode.en, LanguageCode.es]}) async {
   final word_service = WordDataService();
   Word? wordTest = await word_service.getWord(word); 
-  if(wordTest != null) return true;
+  if(wordTest != null && wordTest.languageCodes == languages) return true; //word is the exact same word as requested
 
   String url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json"; //get wikidata pages associated with word (will return pages from all languages that have that word)
   
@@ -46,7 +46,11 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
         final String id = item['id'];
         debugPrint("Current word id: $id");
         List<String> desc = item['description'].split(' ');
-        final PartOfSpeech partOfSpeech = desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
+        final String pOSString = desc.length == 2 ? item['description'].split(' ')[1] as String : "";
+        final PartOfSpeech partOfSpeech = PartOfSpeech.values.firstWhere(
+                                          (e) => e.displayName == pOSString,
+                                          orElse: () => PartOfSpeech.unknown,
+                                          );//desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
         partsOfSpeech[matchLang] = partOfSpeech; 
 
         final idUrl = "https://www.wikidata.org/wiki/Special:EntityData/$id.json";
@@ -72,7 +76,7 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
     }
     debugPrint("$usedLanguage");
     debugPrint("was unable to match language code: $languages");
-    if(usedLanguage != []) {
+    if(usedLanguage.isNotEmpty) {
           debugPrint("Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
           final Word? newWord = await word_service.createWord(word, usedLanguage.toList(), partsOfSpeech, wordDefs); 
           if (newWord == null) return null;

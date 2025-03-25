@@ -69,7 +69,7 @@ class _AddSettingsPage extends State<SettingsPage> {
                             color: Color(0xFF9E1B32),
                             fontWeight: FontWeight.bold,
                           )),
-                      const SizedBox(width: 100.0),
+                      const SizedBox(width: 50.0),
                       const Text(
                         'English',
                         style: TextStyle(fontSize: 16),
