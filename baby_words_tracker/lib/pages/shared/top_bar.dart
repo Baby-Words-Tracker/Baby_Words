@@ -1,7 +1,9 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +26,7 @@ class _TopBarState extends State<TopBar> {
   List<PopupMenuEntry<int>> _childNames = List.empty(growable: true);
   bool _isInvalidUserType = false;
   bool _isloadingChildren = true;
+  String _currName = "Unable to find current child";
 
   @override
   void didChangeDependencies() {
@@ -45,27 +48,39 @@ class _TopBarState extends State<TopBar> {
       // if it is not a parent acccessing the page, short circuit and say invalid state
       setState(() {
         _isInvalidUserType = true; // handle invalid user type with this bool
+        _currName = "Unable to find current child";
       });
       return;
     }
     //load children
-    ChildDataService childService = context.read<ChildDataService>();
-
-    List<PopupMenuEntry<int>> childNames =
-        (await childService.getMultipleChildren(currParent.childIDs))
-            .asMap()
-            .entries
-            .map((entry) => PopupMenuItem<int>(
-                  value: entry.key,
-                  child: Text(entry.value.name),
-                ))
-            .toList();
+    List<PopupMenuEntry<int>> childNames = List.empty(growable: true);
+    if (currParent.childIDs.isNotEmpty){
+      int i = 0;
+      for (var childID in currParent.childIDs) {
+        Child? currChild = await context.read<ChildDataService>().getChild(childID);
+        if (currChild != null)
+        {
+          PopupMenuItem<int> currEntry = PopupMenuItem<int>(value: i, child: Text(currChild.name));
+          childNames.add(currEntry);
+          i++;
+        }
+      }
+    }
+    
+    
 
     setState(() {
       _currParent = currParent;
-      _childNames = childNames;
+      if (childNames.isNotEmpty){
+        _currName = ((childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+        _childNames = childNames; 
+      } else { //_childNames is empty
+        _currName = "\t\t\t\t\t\t\t\t\t\tNo children,\n add a child in settings"; //FIXME: insane thing to do
+      }
       _isInvalidUserType = false;
       _isloadingChildren = false;
+      
+      
     });
   }
 
@@ -78,10 +93,14 @@ class _TopBarState extends State<TopBar> {
     return AppBar(
       title: Text(widget.pageName),
       actions: [
+        Text( _currName, style: TextStyle(color: Colors.grey),),
         PopupMenuButton<int>(
           onSelected: (value) {
             if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
               context.read<Config>().switchChild(value);
+                  setState(() {
+                    _currName = ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+                  });
             }
           },
           itemBuilder: (BuildContext context) {
