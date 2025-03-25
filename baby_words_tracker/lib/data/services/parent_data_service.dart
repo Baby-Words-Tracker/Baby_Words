@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 
 class ParentDataService extends ChangeNotifier {
   static final fireRepo = FirestoreRepository();
@@ -57,9 +58,9 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<bool> updateParent(String id,
-      {String? email, String? name, List<String>? childIDs}) async {
+      {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
     final updateData =
-        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs);
+        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs, language: language);
     bool success = await fireRepo.update(Parent.collectionName, id, updateData);
 
     if (!success) {
@@ -101,5 +102,16 @@ class ParentDataService extends ChangeNotifier {
       children.add(Child.fromDataWithId(child));
     }
     return children;
+  }
+
+  Future<LanguageCode?> getLanguage(String id) async {
+    final object = await fireRepo.read(Parent.collectionName, id);
+    
+    if (object == null) {
+      debugPrint("unable to get parent language");      
+      return null;
+    }
+
+    return Parent.fromDataWithId(object).language; 
   }
 }

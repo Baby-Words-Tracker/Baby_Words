@@ -5,6 +5,7 @@ import 'package:baby_words_tracker/util/config.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 class TopBar extends StatefulWidget implements PreferredSizeWidget {
   final String pageName;
@@ -70,10 +71,8 @@ class _TopBarState extends State<TopBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isInvalidUserType) {
-      return AppBar(title: const Text("Invalid user Type"));
-    } else if (_isloadingChildren) {
-      return AppBar(title: const Text("Loading..."));
+    if (_isInvalidUserType || _isloadingChildren) {
+      return AppBar(title: const Text("Loading..."), automaticallyImplyLeading: false, leading: null);
     }
 
     return AppBar(
@@ -88,10 +87,14 @@ class _TopBarState extends State<TopBar> {
           itemBuilder: (BuildContext context) {
             if (_childNames.isEmpty) {
               return [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: -1,
-                  child: Text("Loading Children..."),
-                ),
+                  child: Consumer<LocalizationService>(
+                    builder: (context, localizationService, child) {
+                      return Text(localizationService.translate("loading"));
+            }
+            )
+            ),
               ];
             } else {
               return _childNames;
@@ -105,7 +108,8 @@ class _TopBarState extends State<TopBar> {
           },
         )
       ],
-      automaticallyImplyLeading: true,
+      automaticallyImplyLeading: false,
+      leading: null,
     );
   }
 }

@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 import 'package:baby_words_tracker/util/time_utils.dart';
-
+import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
@@ -12,6 +12,7 @@ class Child {
   final String? id;
   final DateTime birthday;
   final String name;
+  final List<LanguageCode> language; 
   final int wordCount;
   final List<String> parentIDs;
   
@@ -19,6 +20,7 @@ class Child {
     this.id,
     required this.birthday,
     required this.name,
+    required this.language,
     required this.wordCount,
     required this.parentIDs,
   });
@@ -27,6 +29,7 @@ class Child {
     String? id,
     DateTime? birthday,
     String? name,
+    List<LanguageCode>? language,
     int? wordCount,
     List<String>? parentIDs,
   }) {
@@ -34,6 +37,7 @@ class Child {
       id: id ?? this.id,
       birthday: birthday ?? this.birthday,
       name: name ?? this.name,
+      language: language ?? this.language,
       wordCount: wordCount ?? this.wordCount,
       parentIDs: parentIDs ?? this.parentIDs,
     );
@@ -43,6 +47,7 @@ class Child {
     return <String, dynamic>{
       'birthday': birthday,
       'name': name,
+      'language' : language.map((i) => i.displayCode).toList(),
       'wordCount': wordCount,
       'parentIDs': parentIDs as List<dynamic>,
     };
@@ -53,8 +58,12 @@ class Child {
       id: map['id'] as String?,
       birthday: map['birthday'] != null ? convertToDateTime(map['birthday']) : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
+      language : (map['languageCodes'] as List<dynamic>?)
+        ?.whereType<String>()
+        .map((i) => LanguageCode.values.byName(i))
+        .toList() ?? [],
       wordCount: (map['wordCount'] ?? 0) as int,
-      parentIDs: (map['languageCodes'] as List<dynamic>?)
+      parentIDs: (map['parentIDS'] as List<dynamic>?)
         ?.whereType<String>()
         .toList() ?? [],
     );

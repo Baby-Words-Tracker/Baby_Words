@@ -8,15 +8,9 @@ class WordDataService extends ChangeNotifier {
   static final fireRepo = FirestoreRepository();
 
   //word services
-  Future<Word?> createWord(String wordName, List<LanguageCode> languageCodes,
-      PartOfSpeech partOfSpeech, String? definition) async {
-    final object = Word(
-        word: wordName,
-        languageCodes: languageCodes,
-        partOfSpeech: partOfSpeech,
-        definition: definition);
-    String? returnId = await fireRepo.createWithId(
-        Word.collectionName, wordName, object.toMap());
+  Future<Word?> createWord(String wordName, List<LanguageCode> languageCodes, Map<LanguageCode, PartOfSpeech> partOfSpeech, Map<LanguageCode, String?> definition) async {
+    final object = Word(word: wordName, languageCodes : languageCodes, partOfSpeech: partOfSpeech, definition: definition);
+    String? returnId = await fireRepo.createWithId(Word.collectionName, wordName, object.toMap());
 
     if (returnId == null) {
       debugPrint("Error: create word failed.");
@@ -25,6 +19,13 @@ class WordDataService extends ChangeNotifier {
 
     notifyListeners();
     return object.copyWith(word: returnId);
+  }
+
+  Future<Word?> updateWord(String wordName, List<LanguageCode> languageCodes, Map<LanguageCode, PartOfSpeech> partOfSpeech, Map<LanguageCode, String?> defs) async {
+    final object = Word(word: wordName, languageCodes : languageCodes, partOfSpeech: partOfSpeech, definition: defs);
+    bool updated = await fireRepo.update(Word.collectionName, wordName, object.toMap());
+    if(updated) return object;
+    return null;
   }
 
   Future<Word?> getWord(String id) async {

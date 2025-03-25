@@ -12,3 +12,4 @@
 
 # ignore log files
 *.log
+.vs/

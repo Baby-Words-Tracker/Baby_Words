@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/config.dart';
@@ -25,10 +26,13 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/l10n/localization.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 final List<GraphType> graphsWithLength = [GraphType.newWordsPerDay]; // List of GraphTypes that have a length parameter
 
 class StatsPage extends StatefulWidget {
+
   const StatsPage({super.key});
 
   @override
@@ -40,6 +44,8 @@ class _StatsPageState extends State<StatsPage> {
   int graphLength = 7;
   GraphType graphType = GraphType.newWordsPerDay; // Use the enum GraphType to determine what graph should be displayed
   
+  
+
   //Allow children to change graph state
   void updateLength(int length) {
     setState(() {
@@ -64,86 +70,31 @@ class _StatsPageState extends State<StatsPage> {
   final TextEditingController textcontroller2 = TextEditingController(); 
 
   @override
-  Widget build(BuildContext context) {
-    addCurrentChildToOtherParent(context, "fakeemail2@email.com");
+  Widget build(BuildContext context) { 
+    //addCurrentChildToOtherParent(context, "fakeemail2@email.com");
     //Get the current Parent
     Parent? currParent = getCurrentParent(context);
     if (currParent == null)
     {
-      return Text("Invalid User Type");
+      return const Text("Invalid User Type");
     }
 
     String? currChildId = getCurrentChildIDListening(context, currParent);
     if (currChildId == null)
     {
-      return Text("Invalid Child Index");
+      return const Text("Invalid Child Index");
     }
 
     return Scaffold(
-      appBar: TopBar(pageName: "Learning Summary"),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF9E1B32),
-        child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.home,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-                },
-              ),
-          IconButton(
-            icon: const Icon(
-              Icons.chat_bubble_outlined,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/addtext');
-                },
-              ),
-          IconButton(
-            icon: const Icon(
-              Icons.video_camera_front,
-              color: Colors.white,
-              size: 40.0,
-                ),
-            onPressed: () {
-                Navigator.pushNamed(context, '/uploadvideo');
-                }
-          ),
-          const Icon(
-              Icons.bar_chart_outlined,
-              color: Colors.white,
-              size: 40.0,
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
-              size: 40.0,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-                },
-              ),
-  ],
-)
-  ),
-),
+      appBar: TopBar(pageName: context.read<LocalizationService>().translate("learning_summary")),
+      bottomNavigationBar: bottomBar(context, "stats"),
       body: Center(
-        child: Consumer<WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
-          builder: (context, trackerService, child) {
+        child: Consumer2<LocalizationService, WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
+          builder: (context, localizationService, trackerService, child) {
             return Column(
               children: [
                 
-                graphHeader(graphType, graphLength),
+                Text(localizationService.translate(graphHeader(graphType, graphLength))),
                 
                 //Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
                 graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId),
@@ -151,7 +102,7 @@ class _StatsPageState extends State<StatsPage> {
                 //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
                 lengthChangeFeature(context, graphType, textcontroller1, updateLength),
 
-                const Text("Select Graph Type:"),
+                Text(localizationService.translate("learning_summary")),
 
                 graphTypeSelectDropdown(graphType, updateType),
               ],
@@ -177,15 +128,16 @@ async {
 }
 
 //Displays the correct graph title based on the graph parameters
-Text graphHeader(GraphType type, int days)
+String graphHeader(GraphType type, int days)
 {
-  if (graphsWithLength.contains(type))
+  /* if (graphsWithLength.contains(type))
   {
-    return Text("${type.displayName} for the Past ${numDaysToAmountOfTimeName(days)}:");
+    return "${type.displayName} for the Past ${numDaysToAmountOfTimeName(days)}:"; //how do we feel about removing this???
   }
   else {
-    return Text("${type.displayName}");
-  }
+    return type.displayName;
+  } */
+ return type.displayName;
 }
 
 //Simple switch statement to allow for differen graphs in 1 widget
@@ -211,8 +163,16 @@ async {
   List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
   for (var tracker in allWordsFromChild)
   {
-    Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ?? Word(word: "Invalid Word", languageCodes: List<LanguageCode>.empty(), partOfSpeech: PartOfSpeech.noun, definition: "Invalid Word");
-    data[currWord.partOfSpeech] = (data[currWord.partOfSpeech] ?? 0) + 1; //increment or set to 1 depending on if it already existed
+    Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ?? Word(word: "Invalid Word", languageCodes: List<LanguageCode>.empty(), partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},  definition: {LanguageCode.en : null});
+    
+    List<LanguageCode> languages = [LanguageCode.en, LanguageCode.es]; //possible language for a word to be
+
+    for (LanguageCode language in  languages) {
+      if (currWord.partOfSpeech[language] != null) {
+        data[currWord.partOfSpeech[language]!] = (data[currWord.partOfSpeech[language]] ?? 0) + 1;
+      } //increment or set to 1 depending on if it already existed
+    }
+    //data[currWord.partOfSpeech[LanguageCode.en]!] = (data[currWord.partOfSpeech[LanguageCode.en]] ?? 0) + 1; //increment or set to 1 depending on if it already existed
   }
   List<MapEntry<PartOfSpeech, int>> entries = data.entries.toList();
   List<(int, PartOfSpeech)> listData = List.empty(growable: true);
@@ -240,7 +200,9 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataServi
 
       final partOfSpeechCounts = snapshot.data!;
 
-      return Container(
+      return Consumer<LocalizationService>(
+          builder: (context, localizationService, child) {
+          return Container(
         child: SfCartesianChart(
           backgroundColor: Colors.white,
           plotAreaBackgroundColor: Colors.white,
@@ -253,7 +215,7 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataServi
           series: [
             ColumnSeries<(int,PartOfSpeech), String>(
                 dataSource: partOfSpeechCounts,
-                xValueMapper: ((int,PartOfSpeech) data, _) => data.$2.displayName,
+                xValueMapper: ((int,PartOfSpeech) data, _) => localizationService.translate(data.$2.displayName),
                 yValueMapper: ((int,PartOfSpeech) data, _) => data.$1,
                 // borderColor: const Color.fromARGB(255, 0, 0, 0),
                 // borderWidth: 2, // Capstone Gray
@@ -263,6 +225,8 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataServi
       );
     }
   );
+}
+);
 }
 
 //Queries the database and returns the number of new words learned over the past `days` days as time series data
@@ -332,6 +296,7 @@ FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(ChildDataService childS
           series: [
             ColumnSeries<(int,DateTime), String>(
                 dataSource: timeSeriesData.toList(),// use the first 10 elements for the chart
+                //TODO: change this to use DD/MM when locale is es
                 xValueMapper: ((int,DateTime) data, _) => "${data.$2.month.toString().padLeft(2, '0')}/${data.$2.day.toString().padLeft(2, '0')}", //messed up one liner to convert to MM/DD format
                 yValueMapper: ((int,DateTime) data, _) => data.$1,
                 // borderColor: const Color.fromARGB(255, 0, 0, 0),
@@ -347,7 +312,9 @@ FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(ChildDataService childS
 
 Widget lengthChangeFeature(BuildContext context, GraphType type, TextEditingController inputController, void Function(int length) changeParentLength){
   if (!graphsWithLength.contains(type)) return const SizedBox();
-  return Column(
+  return Consumer<LocalizationService>(
+    builder: (context, localizationService, child) {
+    return Column(
     children: [
       TextField(
         controller: inputController,
@@ -355,12 +322,12 @@ Widget lengthChangeFeature(BuildContext context, GraphType type, TextEditingCont
         inputFormatters: <TextInputFormatter>[
           FilteringTextInputFormatter.digitsOnly // Only allows digits (0-9)
         ],
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           //border: OutlineInputBorder(),
-          hintText: 'Over how many days...',
-          hintStyle: TextStyle(color: Colors.white),
+          hintText: localizationService.translate("over_num_days"),//'Over how many days...',
+          hintStyle: const TextStyle(color: Colors.white),
           filled: true,  
-          fillColor: Color(0xFF9E1B32),
+          fillColor: const Color(0xFF9E1B32),
         ),
       ),
       Center(
@@ -380,23 +347,26 @@ Widget lengthChangeFeature(BuildContext context, GraphType type, TextEditingCont
             side: const BorderSide(color: Colors.white, width: 2),
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0), 
           ),
-          child: const Text('Submit', style: TextStyle(fontSize: 18)),
+          child: Text(localizationService.translate("submit"), style: TextStyle(fontSize: 18)),
         )
       ),
     ],
+  );}
   );
 }
 
 
-DropdownButton<String> graphTypeSelectDropdown(GraphType currType, void Function(GraphType type) changeParentGraphType)
+Consumer graphTypeSelectDropdown(GraphType currType, void Function(GraphType type) changeParentGraphType)
 {
   List<String> options = List.empty(growable: true);
   for (var graphType in GraphType.values) { //generate a list of all the string names of the graph types
     options.add(graphType.optionName);
   }
-  return DropdownButton<String>(
+  return Consumer<LocalizationService>(
+    builder: (context, localizationService, child) {
+    return DropdownButton<String>(
     value: currType.optionName,
-    hint: const Text('Select an option'),
+    hint: Text(localizationService.translate("select_option")),
     icon: const Icon(Icons.arrow_downward),
     onChanged: (String? newValue) {
         changeParentGraphType(GraphTypeExtension.fromOptionName(newValue ?? ""));
@@ -404,9 +374,11 @@ DropdownButton<String> graphTypeSelectDropdown(GraphType currType, void Function
     items: options.map<DropdownMenuItem<String>>((String value) {
       return DropdownMenuItem<String>(
         value: value,
-        child: Text(value),
+        child: Text(localizationService.translate(value)),
       );
     }).toList(),
+  );
+  }
   );
 }
 
