@@ -1,7 +1,7 @@
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
-import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:flutter/material.dart';
 import 'package:csv/csv.dart';

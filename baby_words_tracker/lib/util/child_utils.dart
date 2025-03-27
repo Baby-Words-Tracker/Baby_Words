@@ -4,6 +4,7 @@ import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
@@ -40,7 +41,7 @@ Future<void> addCurrentChildToOtherParent(
         context, "Child Add Failed", "You're somehow not a parent?????");
     return;
   }
-  String? currChildID = getCurrentChildIDSingleInstance(context, currParent);
+  String? currChildID = context.read<CurrentChildService>().childID;
   if (currChildID == null) {
     showAlertMessage(context, "Child Add Failed",
         "Child selection invalid, please try again.");

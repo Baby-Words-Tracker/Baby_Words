@@ -2,9 +2,10 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -22,8 +23,7 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TopBarState extends State<TopBar> {
-  Parent? _currParent;
-  List<PopupMenuEntry<int>> _childNames = List.empty(growable: true);
+  List<PopupMenuEntry<String>> _childNamesToChildIDs = List.empty(growable: true);
   bool _isInvalidUserType = false;
   bool _isloadingChildren = true;
   String _currName = "Unable to find current child";
@@ -36,46 +36,48 @@ class _TopBarState extends State<TopBar> {
   }
 
   Future<void> _loadParentAndChildren(BuildContext context) async {
-    if (_childNames.isNotEmpty) {
+    if (_childNamesToChildIDs.isNotEmpty) {
       // ensure we init only once, idk if this is buggy or not we'll see
       return;
     }
-    // load parent
-    Parent? currParent;
-    if (context.watch<UserModelService>().userType == UserType.parent) {
-      currParent = context.read<UserModelService>().parent!;
-    } else {
-      // if it is not a parent acccessing the page, short circuit and say invalid state
-      setState(() {
-        _isInvalidUserType = true; // handle invalid user type with this bool
-        _currName = "Unable to find current child";
-      });
-      return;
-    }
+
+    // load parent (night not even be necessary anymore)
+    // // Parent? currParent;
+    // // if (context.watch<UserModelService>().userType == UserType.parent) {
+    // //   currParent = context.read<UserModelService>().parent!;
+    // // } else {
+    // //   // if it is not a parent acccessing the page, short circuit and say invalid state
+    // //   setState(() {
+    // //     _isInvalidUserType = true; // handle invalid user type with this bool
+    // //     _currName = "Unable to find current child";
+    // //   });
+    // //   return;
+    // // }
+
     //load children
-    List<PopupMenuEntry<int>> childNames = List.empty(growable: true);
-    if (currParent.childIDs.isNotEmpty){
-      int i = 0;
-      for (var childID in currParent.childIDs) {
-        Child? currChild = await context.read<ChildDataService>().getChild(childID);
-        if (currChild != null)
-        {
-          PopupMenuItem<int> currEntry = PopupMenuItem<int>(value: i, child: Text(currChild.name));
-          childNames.add(currEntry);
-          i++;
-        }
-      }
+    List<PopupMenuEntry<String>> childNamesToChildIDs = List.empty(growable: true);
+    List<Child>? children = context.watch<CurrentChildrenService>().getCurrChildren(context);
+    if (children != null)
+    {
+      childNamesToChildIDs = children.map((entry) => PopupMenuItem<String>(
+        value: entry.id,
+        child: Text(entry.name),
+      ))
+      .toList();
     }
-    
-    
+
+    // all i need to do is get the name of the current child the above code makes the menu fine in 1 query
+    // so im thinking of decoupling getting the children from generating the popupmenuitems, so that i can grab the current childs name,
+
+    //load current child name
+
 
     setState(() {
-      _currParent = currParent;
-      if (childNames.isNotEmpty){
-        _currName = ((childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
-        _childNames = childNames; 
-      } else { //_childNames is empty
-        _currName = "\t\t\t\t\t\t\t\t\t\tNo children,\n add a child in settings"; //FIXME: insane thing to do
+      if (childNamesToChildIDs.isNotEmpty){
+        _childNamesToChildIDs = childNamesToChildIDs; 
+        _currName = children[context.read<CurrentChildrenService>().getChildIndex()];
+      } else {
+        // do nothing
       }
       _isInvalidUserType = false;
       _isloadingChildren = false;
@@ -94,20 +96,20 @@ class _TopBarState extends State<TopBar> {
       title: Text(widget.pageName),
       actions: [
         Text( _currName, style: TextStyle(color: Colors.grey),),
-        PopupMenuButton<int>(
+        PopupMenuButton<String>(
           onSelected: (value) {
-            if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
-              context.read<Config>().switchChild(value);
+            if (value != "") {
+              context.read<CurrentChildrenService>().switchChild(value);
                   setState(() {
-                    _currName = ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+                    _currName = ((_childNamesToChildIDs[context.read<CurrentChildService>().childIndex] as PopupMenuItem<int>).child as Text).data!;
                   });
             }
           },
           itemBuilder: (BuildContext context) {
-            if (_childNames.isEmpty) {
+            if (_childNamesToChildIDs.isEmpty) {
               return [
                 PopupMenuItem(
-                  value: -1,
+                  value: "",
                   child: Consumer<LocalizationService>(
                     builder: (context, localizationService, child) {
                       return Text(localizationService.translate("loading"));
@@ -116,7 +118,7 @@ class _TopBarState extends State<TopBar> {
             ),
               ];
             } else {
-              return _childNames;
+              return _childNamesToChildIDs;
             }
           },
         ),
