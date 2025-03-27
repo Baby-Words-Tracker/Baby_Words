@@ -63,7 +63,8 @@ void main() async {
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
           ChangeNotifierProvider(create: (_) => Config()),
-          ChangeNotifierProvider(create: (_) => LocalizationService(), lazy: false),
+          ChangeNotifierProvider(
+              create: (_) => LocalizationService(), lazy: false),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService:
@@ -91,7 +92,7 @@ void main() async {
                     Provider.of<GeneralUserService>(context, listen: false)),
           ),
         ],
-        child: MyApp(),
+        child: const MyApp(),
       ),
     );
   } catch (e) {
@@ -122,7 +123,7 @@ class MyApp extends StatelessWidget {
           '/uploadvideo': (context) => const UploadVideoPage(),
           '/profilepage': (context) => const ProfilePage(),
           '/settings': (context) => const SettingsPage(),
-          AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
+          RoleTesting.routeName: (context) => const RoleTesting(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),

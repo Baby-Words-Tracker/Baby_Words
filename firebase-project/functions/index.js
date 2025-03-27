@@ -5,12 +5,13 @@ const {logger} = require("firebase-functions");
 const admin = require("firebase-admin");
 const {getAuth} = require("firebase-admin/auth");
 
-const { Storage } = require('google-cloud/storage');
+const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
 const {Role} = require("./auth/roles");
 const {giveClaim, removeClaim} = require("./auth/claims");
-const {checkAuthentication} = require("./auth/auth.js");
+// eslint-disable-next-line max-len
+const {checkAuthentication, checkIsAtLeast, isAuthenticated} = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -44,11 +45,12 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
 /**
  * Checks if the uid value is set and thows an exception if not
  * @param {string} variable The UID of the user to assign the role to
+ * @param {string} variableName The name to display if the variable is empty
  */
-function checkEmpty(variable) {
+function checkEmpty(variable, variableName) {
   if (!variable) {
     throw new https.HttpsError(
-        "invalid-argument", "Target user UID is required");
+        "invalid-argument", `Target user ${variableName} is required`);
   }
 }
 
@@ -63,11 +65,11 @@ function checkEmpty(variable) {
  */
 exports.giveResearcherClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   // Assign the 'researcher' role to the target user
   try {
-    giveClaim(Role.researcher, Role.researcher, targetUid, data);
+    giveClaim(Role.researcher, Role.admin, targetUid, data);
   } catch (error) {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
@@ -93,10 +95,10 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
  */
 exports.removeResearcherClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.researcher, Role.researcher, targetUid, data);
+    removeClaim(Role.researcher, Role.admin, targetUid, data);
   } catch (error) {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
@@ -122,7 +124,7 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
  */
 exports.giveParentClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     giveClaim(Role.parent, Role.researcher, targetUid, data);
@@ -151,10 +153,10 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
  */
 exports.removeParentClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.parent, Role.researcher, targetUid, data);
+    removeClaim(Role.parent, Role.admin, targetUid, data);
   } catch (error) {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
@@ -180,7 +182,7 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
  */
 exports.giveAdminClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     giveClaim(Role.admin, Role.admin, targetUid, data);
@@ -209,7 +211,7 @@ exports.giveAdminClaim = https.onCall(async (data, context) => {
  */
 exports.removeAdminClaim = https.onCall(async (data, context) => {
   const targetUid = data.data.targetUid;
-  checkEmpty(targetUid);
+  checkEmpty(targetUid, "targetUid");
 
   try {
     removeClaim(Role.admin, Role.admin, targetUid, data);
@@ -228,77 +230,145 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
 });
 
 
+// TODO: this is extremely insecure.
+//       we need to check if the user is a parent of the child
+// TODO: test if a parent can add a child they don't own to someone else
+/**
+ * Assigns a child to another parent
+ * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} context the context object
+ * @return {Promise<{message: string}>} the success message
+ * @throws {https.HttpsError} if the target email or child UID is not provided,
+ * if the user is not authenticated,
+ * if the is not already a parent of the child,
+ * or if the user does not have the minimum role
+ */
 exports.addChildToOtherParent = https.onCall(async (data, context) => {
   const targetEmail = data.data.targetEmail;
   const childUid = data.data.childUid;
 
-  checkEmpty(targetEmail);
-  checkEmpty(childUid);
+  checkEmpty(targetEmail, "targetEmail");
+  checkEmpty(childUid, "childUid");
 
   try {
     checkAuthentication(data);
 
-    // TODO: fix this
-    // checkIsAtLeast(data, Role.parent);
+    // TODO: is this necessary?
+    checkIsAtLeast(data, Role.parent);
 
-    const targetCollection = db.collection("Parent");
+    const parentCollection = db.collection("Parent");
 
-    const targetSnapshot = await targetCollection
+    const parentQuerySnapshot = await parentCollection
         .where("email", "==", targetEmail)
         .get();
 
-    if (targetSnapshot.empty) {
-      throw new https.HttpsError(
-          "not-found", "Parent with email not found");
+    if (parentQuerySnapshot.empty) {
+      throw new https.HttpsError("not-found", "Parent with email not found");
     }
 
-    const parentRef = targetSnapshot.docs[0].ref;
+    await db.runTransaction(async (transaction) => {
+      const userRef = parentCollection.doc(data.auth.uid);
+      const userSnaphot = await transaction.get(userRef);
 
-    // Use arrayUnion to append the child UID to the children array
-    await parentRef.update({
-      children: admin.firestore.FieldValue.arrayUnion(childUid),
+      if (!userSnaphot.exists ||
+          !userSnaphot.data().childIDs.includes(childUid)) {
+        throw new https.HttpsError(
+            "permission-denied",
+            // eslint-disable-next-line max-len
+            "You do must be a parent of the child to assign them to another parent",
+        );
+      }
+
+      const parentRef = parentQuerySnapshot.docs[0].ref;
+      const parentUID = parentRef.id;
+
+      const childCollection = db.collection("Child");
+      const childRef = childCollection.doc(childUid);
+      const childSnapshot = await transaction.get(childRef);
+
+      if (!childSnapshot.exists) {
+        throw new https.HttpsError(
+            "not-found",
+            "Child document not found",
+        );
+      }
+
+      transaction.update(parentRef, {
+        childIDs: admin.firestore.FieldValue.arrayUnion(childUid),
+      });
+
+      transaction.update(childRef, {
+        parentIDs: admin.firestore.FieldValue.arrayUnion(parentUID),
+      });
     });
   } catch (error) {
     logger.error(`Failed to assign child to other parent: ${error}`);
     return {
-      message: `Failed to assign child: ${childUid}` +
+      message: `Failed to assign child` +
       ` to parent with email: ${targetEmail} because of error: ${error}`,
     };
   }
 
   return {
-    message: `User ${targetEmail} has been given child ${childUid}.`,
+    message: `User ${targetEmail} has been given the child.`,
   };
 });
 
-//get signed url - idk if this will even come close to working
-exports.generateSignedUrl = functions.https.onRequest(async (req, res) => {
-  const authToken = req.headers.authorization?.split('Bearer ')[1]; // Extract the token
 
-  if (!authToken) {
-    return res.status(401).send({ error: 'Unauthorized: Missing token' });
+exports.getUserCustomClaims = https.onCall(async (data, context) => {
+  const targetUid = data.data.targetUid;
+
+  checkEmpty(targetUid, "targetUid");
+
+  try {
+    checkAuthentication(data);
+
+    checkIsAtLeast(data, Role.admin);
+
+    // Fetch the custom claims of the selected user
+    const selectedUser = await admin.auth().getUser(targetUid);
+
+    // Return the user's custom claims
+    return selectedUser.customClaims != null ? selectedUser.customClaims : {};
+  } catch (error) {
+    console.error("Error fetching user custom claims:", error);
+    return {
+      message: `Failed to fetch user custom claims error: ${error}`,
+    };
   }
+});
+
+// get signed url - idk if this will even come close to working
+exports.generateSignedUrl = https.onRequest(async (req, res) => {
+  // const authToken = req.headers.authorization?.split('Bearer ')[1];
+
+  // if (!authToken) {
+  //   return res.status(401).send({ error: 'Unauthorized: Missing token' });
+  // }
+
+  isAuthenticated(req);
 
   try {
     // Verify the token
-    const decodedToken = await admin.auth().verifyIdToken(authToken);
+    // TODO: is this right? i dont think so
+    await admin.auth().verifyIdToken(req.auth);
 
     // Proceed with signed URL generation
-    const bucketName = 'baby-words-tracker-media';
+    const bucketName = "baby-words-tracker-media";
     const fileName = req.body.fileName;
     const options = {
-      version: 'v4',
-      action: 'write',
+      version: "v4",
+      action: "write",
       expires: Date.now() + 5 * 60 * 1000, // 5 minutes
     };
 
     const [url] = await storage
-      .bucket(bucketName)
-      .file(fileName)
-      .getSignedUrl(options);
+        .bucket(bucketName)
+        .file(fileName)
+        .getSignedUrl(options);
 
-    res.status(200).send({ url });
+    res.status(200).send({url});
   } catch (error) {
-    res.status(401).send({ error: 'Unauthorized: Invalid token' });
+    res.status(401).send({error: "Unauthorized: Invalid token"});
   }
 });

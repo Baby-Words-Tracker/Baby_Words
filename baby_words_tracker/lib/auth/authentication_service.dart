@@ -1,32 +1,63 @@
-
+import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthenticationService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuthInstance;
+  late final SafeSynchonizer _safeSynchonizer;
+
   User? _user;
+  Map<String, dynamic>? _customClaims;
 
   AuthenticationService(this._firebaseAuthInstance) {
+    _safeSynchonizer = SafeSynchonizer(_fetchCustomClaims);
+
     _firebaseAuthInstance.userChanges().listen((User? user) {
       debugPrint("AuthenticationService: User change detected");
+
+      _user = user;
 
       if ((_user == null && user != null) ||
           (_user != null && user == null) ||
           _user?.uid != user?.uid ||
-          _user?.displayName != user?.displayName || 
-          _user?.email != user?.email || 
+          _user?.displayName != user?.displayName ||
+          _user?.email != user?.email ||
           _user?.photoURL != user?.photoURL) {
-        _user = user;
-        debugPrint('AuthenticationService: User update -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
+        debugPrint(
+            'AuthenticationService: User update -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
         notifyListeners(); // Only notify listeners if relevant fields have changed
       }
-      else {
-        _user = user;
-      }
+
+      _safeSynchonizer.safeSynchronize();
     });
   }
 
+  Future<void> _fetchCustomClaims([bool forceRefresh = false]) async {
+    if (_user != null) {
+      try {
+        final idTokenResult = await _user!.getIdTokenResult(forceRefresh);
+        _customClaims = idTokenResult.claims;
+        notifyListeners();
+      } catch (e) {
+        debugPrint('Error fetching custom claims: $e');
+      }
+    } else {
+      _customClaims = null;
+    }
+  }
+
+  // forces a refresh of the user's custom claims
+  Future<void> refreshUserClaims() async {
+    await _fetchCustomClaims(true);
+  }
+
   User? get user => _user;
+  Map<String, dynamic>? get customClaims => _customClaims;
+
+  List<UserRole> get roles {
+    return getUserRolesFromClaims(_customClaims ?? {});
+  }
 
   String? get userId => _user?.uid;
   String? get userName => _user?.displayName;

@@ -111,7 +111,7 @@ class AuthGate extends StatelessWidget {
         } 
         else if (userType == UserType.researcher) {
           return const ResearcherHomePage();
-        } 
+        }
         else {
           throw Exception('Unexpected user state occured');
         }

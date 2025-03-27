@@ -9,11 +9,11 @@
  * @property {Role} unauthenticated the unauthenticated role
  */
 const Role = Object.freeze({
+  // DO NOT CHECK ORDER VALUES DIRECTLY!
+  // They can change in the future and are only used for comparison.
   admin: {value: Symbol("admin"), order: 0},
   researcher: {value: Symbol("researcher"), order: 3},
   parent: {value: Symbol("parent"), order: 5},
-  // DO NOT CHECK THE UNAUTHENTICATED VALUE DIRECTLY!
-  // It can change in the future and is only used for comparison.
   unauthenticated: {value: Symbol("unauthenticated"), order: 100},
 });
 
@@ -25,10 +25,10 @@ const Role = Object.freeze({
 function getRoleFromToken(token) {
   if (token[Role.admin.value.description] === true) {
     return Role.admin;
-  } else if (token[Role.parent.value.description] === true) {
-    return Role.parent;
   } else if (token[Role.researcher.value.description] === true) {
     return Role.researcher;
+  } else if (token[Role.parent.value.description] === true) {
+    return Role.parent;
   } else {
     return Role.unauthenticated;
   }
