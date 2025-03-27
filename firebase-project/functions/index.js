@@ -5,11 +5,12 @@ const {logger} = require("firebase-functions");
 const admin = require("firebase-admin");
 const {getAuth} = require("firebase-admin/auth");
 
-const {Storage} = require("google-cloud/storage");
+const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
 const {Role} = require("./auth/roles");
 const {giveClaim, removeClaim} = require("./auth/claims");
+// eslint-disable-next-line max-len
 const {checkAuthentication, checkIsAtLeast, isAuthenticated} = require("./auth/auth.js");
 
 // functions
@@ -68,7 +69,7 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
 
   // Assign the 'researcher' role to the target user
   try {
-    giveClaim(Role.researcher, Role.researcher, targetUid, data);
+    giveClaim(Role.researcher, Role.admin, targetUid, data);
   } catch (error) {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
@@ -97,7 +98,7 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
   checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.researcher, Role.researcher, targetUid, data);
+    removeClaim(Role.researcher, Role.admin, targetUid, data);
   } catch (error) {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
@@ -155,7 +156,7 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
   checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.parent, Role.researcher, targetUid, data);
+    removeClaim(Role.parent, Role.admin, targetUid, data);
   } catch (error) {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
