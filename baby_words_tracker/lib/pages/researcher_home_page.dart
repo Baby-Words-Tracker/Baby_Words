@@ -2,6 +2,9 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 
 
 class ResearcherHomePage extends StatefulWidget {
@@ -45,6 +48,10 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    if(Provider.of<LocalizationService>(context, listen : false).getLocaleCode() != LanguageCode.en) {
+      Provider.of<LocalizationService>(context, listen :false).changeLocale(LanguageCode.en);
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

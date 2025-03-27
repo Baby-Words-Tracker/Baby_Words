@@ -6,27 +6,43 @@ class AllLocalizations {
 
   static final Map<String, Map<String, String>> localizedStrings = {
     'en': {
+
+      //home page
       "add_words": "Add Words",
       "upload_video": "Upload Video",
       "view_stats": "View Stats",
       "hello": "Hello!",
       "home_page": "Home Page",
+
+      //profile
       "profile": "User Profile",
       "sign_out": "Sign Out",
       "delete_account": "Delete Account",
+
+      //add words
       "child_said": "My Child Said...",
       "enter_text": "Enter word or sentence",
       "submit": "submit",
+      "success": "Success!",
+      "word_success": "Words successfully submitted!",
+      "error": "Error!",
+      "words_error": "not found in dictionary, please try again!",
+
+      //stats page
       "learning_summary": "Learning Summary",
       "num_days": "Over how many days...",
       "words_per_day": "New Words Per Day",
       "select_graph": "Select Graph Type",
       "words_per_pos": "All Words Per Part of Speech",
-      "success": "Success!",
-      "word_success": "Words successfully submitted!",
-      "error": "Error!",
-      "words_error": "not found in dictionary, please try again!",
       "loading": "Loading...",
+      "over_num_days": "Over how many days...",
+      "select_option": "select an option",
+      "Words Learned / Day": "Words Learned / Day",
+      "All Words / Part of Speech": "All Words / Part of Speech",
+      "New Words Per Day": "New Words Per Day",
+      "Total Number of Words by Part of Speech":"Total Number of Words by Part of Speech",
+
+      //settings
       "settings": "Settings",
       "parent_settings": "Parent Settings",
       "add_child": "Add Child",
@@ -42,15 +58,11 @@ class AllLocalizations {
       "grant_permission": "Are you sure you want to give parent with email",
       "No": "No",
       "Yes": "Yes",
+
+      //sign in
       "welcome_sign_in": "Welcome to BabyWordsTracker, please sign in!",
       "welcome_sign_up": "Welcome to BabyWordsTracker, please sign up!",
       "terms_and_conditions": "By signing in, you agree to our terms and conditions.",
-      "over_num_days": "Over how many days...",
-      "select_option": "select an option",
-      "Words Learned / Day": "Words Learned / Day",
-      "All Words / Part of Speech": "All Words / Part of Speech",
-      "New Words Per Day": "New Words Per Day",
-      "Total Number of Words by Part of Speech":"Total Number of Words by Part of Speech",
       "child_to_new_parent": "Give another Parent Access To Current Child:",
       "choose_email": "Choose Email...",
       "no_email": "Please give some input for the email field."
