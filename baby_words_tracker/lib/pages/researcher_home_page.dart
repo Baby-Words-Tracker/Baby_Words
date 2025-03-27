@@ -17,6 +17,8 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   List<WordInstance> wordInstances = [];
   final FirestoreDataTableSource _dataSource = FirestoreDataTableSource();
 
+  bool _isLoading = true;
+
     @override
   void initState() {
     super.initState();
@@ -24,9 +26,11 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   }
 
   void _fetchWordTrackers() async {
+    setState(() => _isLoading = true);
     await _dataSource.fetchData();
     setState(() {
       wordInstances = _dataSource.getAllData();
+      _isLoading = false;
     });
   }
 
@@ -83,11 +87,13 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                                                          fontWeight: FontWeight.bold,)),
                 Expanded(
                   flex: 1,
-                  child: FilterMenu(onFilterChanged: updateFilter, dataSource: wordInstances, fetchData: _fetchWordTrackers)
+                  child: FilterMenu(onFilterChanged: updateFilter, dataSource: wordInstances)
                   ),
                 Expanded(
                   flex: 3,
-                  child: WordTrackerTable(dataSource: _dataSource)
+                  child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : WordTrackerTable(dataSource: _dataSource),
                 )
                 ]),
         ),
@@ -209,7 +215,7 @@ class FirestoreDataTableSource extends DataTableSource {
       }
     }
     _wordInstances = wordInstances;
-    //_filteredInstances = List.from(_wordInstances);
+    if(_filteredInstances.isEmpty) _filteredInstances = List.from(_wordInstances);
     notifyListeners();
   } catch (e) {
     debugPrint('Error fetching Child documents: $e');
@@ -273,9 +279,8 @@ class FirestoreDataTableSource extends DataTableSource {
 class FilterMenu extends StatefulWidget {
   final void Function(FieldLabel? field, String? value) onFilterChanged;
   final List<WordInstance> dataSource;
-  final void Function() fetchData;
 
-  const FilterMenu({super.key, required this.onFilterChanged, required this.dataSource, required this.fetchData});
+  const FilterMenu({super.key, required this.onFilterChanged, required this.dataSource});
 
   @override
   State<FilterMenu> createState() => _FilterMenuState();
@@ -401,8 +406,6 @@ class _FilterMenuState extends State<FilterMenu> {
   if (selectedField == null) return;
 
   debugPrint("Updating suggestions for field: ${selectedField?.label}");
-
-  widget.fetchData();
 
   if (widget.dataSource.isEmpty) {
     debugPrint("No data available for suggestions.");
