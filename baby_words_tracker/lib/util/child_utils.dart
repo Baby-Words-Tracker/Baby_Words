@@ -41,14 +41,18 @@ Future<void> addCurrentChildToOtherParent(
         context, "Child Add Failed", "You're somehow not a parent?????");
     return;
   }
-  String? currChildID = context.read<CurrentChildService>().childID;
+  Child? currChild = context.watch<CurrentChildrenService>().getCurrChild(context);
+  String? currChildID;
+  String? currChildName;
+  if (currChild != null) {
+    currChildID = currChild.id;
+    currChildName = currChild.name;
+  }
   if (currChildID == null) {
     showAlertMessage(context, "Child Add Failed",
         "Child selection invalid, please try again.");
     return;
   }
-  String? currChildName =
-      ((await context.read<ChildDataService>().getChild(currChildID))?.name);
   if (currChildName == null) {
     showAlertMessage(context, "Child Add Failed",
         "Failed to find your child's name, please try again.");
@@ -62,7 +66,7 @@ Future<void> addCurrentChildToOtherParent(
       return AlertDialog(
         title: Text(localizationService.translate("Confirm Action")),
         content: Text(
-            localizationService.translate("grant_permission") + otherParentEmail + localizationService.translate("access_child") + currChildName),
+            localizationService.translate("grant_permission") + otherParentEmail + localizationService.translate("access_child") + currChildName!),
         actions: [
           TextButton(
             onPressed: () {
@@ -83,7 +87,7 @@ Future<void> addCurrentChildToOtherParent(
   }).then((confirmed) {
     if (confirmed != null && confirmed) {
       callAddChildToOtherParentCloudFunction(
-          context, currChildID, otherParentEmail);
+          context, currChildID!, otherParentEmail);
     } else {
       return;
     };

@@ -26,7 +26,7 @@ class CurrentChildrenService extends ChangeNotifier {
     }
     if (_children.isEmpty) // if its still empty after an update, tell them to make a child
     {
-      showAlertMessage(context, "No Children", "Please add a child in Settings."); // idfk if this is good practice man
+      //showAlertMessage(context, "No Children", "Please add a child in Settings."); // idfk if this is good practice man
       return null;
     }
     return _children;
@@ -74,8 +74,10 @@ class CurrentChildrenService extends ChangeNotifier {
     for (var child in _children) {
       if (child.id == newChildID){
         _childIndex = i;
+        notifyListeners();
         return;
       }
+      i++;
     }
     notifyListeners();
   }

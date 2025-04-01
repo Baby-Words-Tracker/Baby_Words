@@ -79,7 +79,12 @@ class _StatsPageState extends State<StatsPage> {
       return const Text("Invalid User Type");
     }
 
-    String? currChildId = getCurrentChildIDListening(context, currParent);
+    Child? currChild = context.watch<CurrentChildrenService>().getCurrChild(context);
+    String? currChildId;
+    if (currChild != null) {
+      currChildId = currChild.id;
+    }
+
     if (currChildId == null)
     {
       return Scaffold(
@@ -87,8 +92,7 @@ class _StatsPageState extends State<StatsPage> {
         body: const Text("Please create a child before viewing stats"),
         bottomNavigationBar: bottomBar(context, "stats"),
       );
-    }
-
+    } 
     return Scaffold(
       appBar: TopBar(pageName: context.read<LocalizationService>().translate("learning_summary")),
       bottomNavigationBar: bottomBar(context, "stats"),
@@ -101,7 +105,7 @@ class _StatsPageState extends State<StatsPage> {
                 Text(localizationService.translate(graphHeader(graphType, graphLength))),
                 
                 //Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
-                graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId),
+                graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId!),
 
                 //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
                 lengthChangeFeature(context, graphType, textcontroller1, updateLength),

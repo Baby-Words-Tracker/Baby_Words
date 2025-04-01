@@ -26,7 +26,7 @@ class _TopBarState extends State<TopBar> {
   List<PopupMenuEntry<String>> _childNamesToChildIDs = List.empty(growable: true);
   bool _isInvalidUserType = false;
   bool _isloadingChildren = true;
-  String _currName = "Unable to find current child";
+  String _currName = "Loading..";
 
   @override
   void didChangeDependencies() {
@@ -36,10 +36,7 @@ class _TopBarState extends State<TopBar> {
   }
 
   Future<void> _loadParentAndChildren(BuildContext context) async {
-    if (_childNamesToChildIDs.isNotEmpty) {
-      // ensure we init only once, idk if this is buggy or not we'll see
-      return;
-    }
+    
 
     // load parent (night not even be necessary anymore)
     // // Parent? currParent;
@@ -53,37 +50,42 @@ class _TopBarState extends State<TopBar> {
     // //   });
     // //   return;
     // // }
-
-    //load children
-    List<PopupMenuEntry<String>> childNamesToChildIDs = List.empty(growable: true);
     List<Child>? children = context.watch<CurrentChildrenService>().getCurrChildren(context);
-    if (children != null)
-    {
-      childNamesToChildIDs = children.map((entry) => PopupMenuItem<String>(
-        value: entry.id,
-        child: Text(entry.name),
-      ))
-      .toList();
+    if (_childNamesToChildIDs.isEmpty) {
+    List<PopupMenuEntry<String>> childNamesToChildIDs = List.empty(growable: true);
+      if (children != null)
+      {
+        childNamesToChildIDs = children.map((entry) => PopupMenuItem<String>(
+          value: entry.id,
+          child: Text(entry.name),
+        ))
+        .toList();
+      }
+      if (childNamesToChildIDs.isNotEmpty && children != null){
+        setState(() {
+          _childNamesToChildIDs = childNamesToChildIDs; 
+          _currName = children[context.read<CurrentChildrenService>().getChildIndex()].name;
+          _isInvalidUserType = false;
+          _isloadingChildren = false;
+        });
+        return;
+      } else {
+        setState(() {
+          _isloadingChildren = true;
+          return;
+        });
+      }
+    } else {
+      if (children != null){
+        setState(() {
+          _currName = children[context.read<CurrentChildrenService>().getChildIndex()].name;
+        });
+      }
     }
-
     // all i need to do is get the name of the current child the above code makes the menu fine in 1 query
     // so im thinking of decoupling getting the children from generating the popupmenuitems, so that i can grab the current childs name,
 
     //load current child name
-
-
-    setState(() {
-      if (childNamesToChildIDs.isNotEmpty){
-        _childNamesToChildIDs = childNamesToChildIDs; 
-        _currName = children[context.read<CurrentChildrenService>().getChildIndex()];
-      } else {
-        // do nothing
-      }
-      _isInvalidUserType = false;
-      _isloadingChildren = false;
-      
-      
-    });
   }
 
   @override
@@ -101,7 +103,15 @@ class _TopBarState extends State<TopBar> {
             if (value != "") {
               context.read<CurrentChildrenService>().switchChild(value);
                   setState(() {
-                    _currName = ((_childNamesToChildIDs[context.read<CurrentChildService>().childIndex] as PopupMenuItem<int>).child as Text).data!;
+                    Child? currChild = context.read<CurrentChildrenService>().getCurrChild(context);
+                    if (currChild != null)
+                    {
+                      _currName = currChild.name;
+                    } else {
+                      _currName = "Unable to find current child";
+                    }
+
+                    
                   });
             }
           },
@@ -118,7 +128,8 @@ class _TopBarState extends State<TopBar> {
             ),
               ];
             } else {
-              return _childNamesToChildIDs;
+              List<PopupMenuEntry<String>> itemList = _childNamesToChildIDs;
+              return itemList;
             }
           },
         ),

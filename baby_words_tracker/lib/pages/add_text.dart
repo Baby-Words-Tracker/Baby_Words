@@ -99,12 +99,13 @@ class _AddTextPageState extends State<AddTextPage> {
                       final wordDataService = context.read<WordDataService>();
                       final wordTrackerDataService =
                           context.read<WordTrackerDataService>();
-                      Parent? currParent = getCurrentParent(context);
-                      String? currChildID = "";
-                      if (currParent != null) {
-                        currChildID = getCurrentChildIDSingleInstance(
-                            context, currParent);
+                      Child? currChild = context.read<CurrentChildrenService>().getCurrChild(context);
+                      String? currChildID;
+                      if (currChild != null)
+                      {
+                        currChildID = currChild.id;
                       }
+                      
                       /* List<LanguageCode>? maybeLanguages = currChildID != null
                           ? await childDataService.getLanguages(currChildID)
                           : [LanguageCode.en];
@@ -202,7 +203,6 @@ class _AddTextPageState extends State<AddTextPage> {
   Future<void> addWordToChild(String word, ChildDataService childService,
       WordDataService wordService, WordTrackerDataService trackerService,
       {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-    //FIXME: implement language, part of speech, defn, spellcheck
     //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
     if (await trackerService.createWordTracker(id, word, DateTime.now()) ==
         null) {
