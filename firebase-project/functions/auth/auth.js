@@ -2,10 +2,10 @@
 const https = require("firebase-functions/v2/https");
 
 // The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const { logger } = require("firebase-functions");
+const {logger} = require("firebase-functions");
 
 // Role enum
-const { getRoleFromToken } = require("./roles");
+const {getRoleFromToken} = require("./roles");
 
 /**
  * checks if the user is authenticated
@@ -24,7 +24,7 @@ function isAuthenticated(data) {
 function checkAuthentication(data) {
   if (!isAuthenticated(data)) {
     throw new https.HttpsError(
-      "unauthenticated", "User must be authenticated");
+        "unauthenticated", "User must be authenticated");
   } else {
     logger.debug("User is authenticated.");
   }
@@ -51,8 +51,8 @@ function isAtLeast(data, minimumRole) {
 function checkIsAtLeast(data, minimumRole) {
   if (!isAtLeast(data, minimumRole)) {
     throw new https.HttpsError(
-      "permission-denied",
-      "You do not have correct permissions.",
+        "permission-denied",
+        "You do not have correct permissions.",
     );
   }
 }

@@ -11,10 +11,10 @@
 const Role = Object.freeze({
   // DO NOT CHECK ORDER VALUES DIRECTLY!
   // They can change in the future and are only used for comparison.
-  admin: { value: Symbol("admin"), order: 0 },
-  researcher: { value: Symbol("researcher"), order: 3 },
-  parent: { value: Symbol("parent"), order: 5 },
-  unauthenticated: { value: Symbol("unauthenticated"), order: 100 },
+  admin: {value: Symbol("admin"), order: 0},
+  researcher: {value: Symbol("researcher"), order: 3},
+  parent: {value: Symbol("parent"), order: 5},
+  unauthenticated: {value: Symbol("unauthenticated"), order: 100},
 });
 
 /**
