@@ -62,8 +62,8 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
-          ChangeNotifierProvider(create: (_) => CurrentChildrenService()),
-          ChangeNotifierProvider(create: (_) => LocalizationService(), lazy: false),
+          ChangeNotifierProvider(
+              create: (_) => LocalizationService(), lazy: false),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService:
@@ -81,10 +81,20 @@ void main() async {
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
-                authenticationService:
-                    Provider.of<AuthenticationService>(context, listen: false),
-                generalUserService:
-                    Provider.of<GeneralUserService>(context, listen: false)),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+              generalUserService:
+                  Provider.of<GeneralUserService>(context, listen: false),
+            ),
+            lazy: false,
+          ),
+          ChangeNotifierProvider(
+            create: (context) => CurrentChildrenService(
+              childService:
+                  Provider.of<ChildDataService>(context, listen: false),
+              userService:
+                  Provider.of<UserModelService>(context, listen: false),
+            ),
           ),
         ],
         child: const MyApp(),

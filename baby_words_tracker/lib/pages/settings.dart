@@ -123,7 +123,7 @@ class _AddSettingsPage extends State<SettingsPage> {
     );
   }
 
-  //needed this to be stateful to select language so moved out of child_util
+  //needed this to be stateful to select language so moved out of child_util //👍
   Consumer childAddingFeature(
       BuildContext context,
       TextEditingController nameController,

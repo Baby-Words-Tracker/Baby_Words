@@ -79,7 +79,7 @@ class _StatsPageState extends State<StatsPage> {
       return const Text("Invalid User Type");
     }
 
-    Child? currChild = context.watch<CurrentChildrenService>().getCurrChild(context);
+    Child? currChild = context.watch<CurrentChildrenService>().getCurrChild();
     String? currChildId;
     if (currChild != null) {
       currChildId = currChild.id;

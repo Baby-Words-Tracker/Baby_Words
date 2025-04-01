@@ -1,78 +1,71 @@
+import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/safe_synchonizer.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
+import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:collection/collection.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class CurrentChildrenService extends ChangeNotifier {
-  Parent? _parent;
+  late final SafeSynchonizer _parentSynchronizer;
+
+  // Parent? _parent;
   List<Child> _children = List.empty(growable: true);
   int _childIndex = 0;
+
+  final UserModelService _userService;
+  final ChildDataService _childService;
 
   int getChildIndex() {
     return _childIndex;
   }
 
-  List<Child>? getCurrChildren(BuildContext context) {
-    if (_children.isEmpty){
-      updateChildren(context);
-    }
-    if (_parent == null){ // if the user isnt a parent yet, just return null
-      return null;
-    }
-    if (_children.isEmpty) // if its still empty after an update, tell them to make a child
-    {
-      //showAlertMessage(context, "No Children", "Please add a child in Settings."); // idfk if this is good practice man
-      return null;
-    }
+  CurrentChildrenService({
+    required UserModelService userService,
+    required ChildDataService childService,
+  })  : _userService = userService,
+        _childService = childService {
+    _parentSynchronizer = SafeSynchonizer(() async {
+      Parent? parent =
+          _userService.userType == UserType.parent ? _userService.parent : null;
+
+      return updateChildren(parent);
+    });
+    _userService.addListener(_parentSynchronizer.safeSynchronize);
+  }
+
+  List<Child>? getCurrChildren() {
     return _children;
   }
 
-  Child? getCurrChild(BuildContext context) {
-    if (_children.isEmpty){
-      updateChildren(context);
-    }
-    if (_parent == null){ // if the user isnt a parent yet, just return null
-      return null;
-    }
-    if (_children.isEmpty) // if its still empty after an update, tell them to make a child
-    {
-      //showAlertMessage(context, "No Children", "Please add a child in Settings."); // idfk if this is good practice man
-      return null;
-    }
+  Child? getCurrChild() {
     return _children[_childIndex];
   }
 
-  void updateParent(BuildContext context) {
-    Parent? currParent = getCurrentParent(context);
-    if (currParent == null) {
-      //handle it being null
-    }
-    _parent = currParent;
-  }
-
-  void updateChildren(BuildContext context) async {
-    if (_parent == null)
+  Future<void> updateChildren(Parent? parent) async {
+    if (parent != null) // it could still be null after an updateparent
     {
-      updateParent(context);
-    }
-    if (_parent != null) // it could still be null after an updateparent
-    {
-      List<Child> children = (await context.read<ChildDataService>().getMultipleChildren(_parent!.childIDs));
+      List<Child> children =
+          (await _childService.getMultipleChildren(parent!.childIDs));
       children.sortBy((child) => child.name);
       _children = children;
-      notifyListeners();
+    } else {
+      _children = List.empty();
     }
+    notifyListeners();
   }
 
   void switchChild(String newChildID) {
     int i = 0;
     for (var child in _children) {
-      if (child.id == newChildID){
+      if (child.id == newChildID) {
         _childIndex = i;
         notifyListeners();
         return;

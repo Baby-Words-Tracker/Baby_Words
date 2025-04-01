@@ -23,101 +23,79 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TopBarState extends State<TopBar> {
-  List<PopupMenuEntry<String>> _childNamesToChildIDs = List.empty(growable: true);
-  bool _isInvalidUserType = false;
-  bool _isloadingChildren = true;
   String _currName = "Loading..";
 
   @override
   void didChangeDependencies() {
     // use didChangeDependencies instead of initState because we depend on an inherited provider for our behavior
     super.didChangeDependencies();
-    _loadParentAndChildren(context);
   }
 
-  Future<void> _loadParentAndChildren(BuildContext context) async {
-    
-    List<Child>? children = context.watch<CurrentChildrenService>().getCurrChildren(context);
-    if (_childNamesToChildIDs.isEmpty) {
-    List<PopupMenuEntry<String>> childNamesToChildIDs = List.empty(growable: true);
-      if (children != null)
-      {
-        childNamesToChildIDs = children.map((entry) => PopupMenuItem<String>(
-          value: entry.id,
-          child: Text(entry.name),
-        ))
-        .toList();
-      }
-      if (childNamesToChildIDs.isNotEmpty && children != null){
-        setState(() {
-          _childNamesToChildIDs = childNamesToChildIDs; 
-          _currName = children[context.read<CurrentChildrenService>().getChildIndex()].name;
-          _isInvalidUserType = false;
-          _isloadingChildren = false;
-        });
-        return;
+  List<PopupMenuEntry<String>> _loadParentAndChildren(
+      CurrentChildrenService currentChildrenService) {
+    List<Child>? children = currentChildrenService.getCurrChildren();
+    List<PopupMenuEntry<String>> childNamesToChildIDs =
+        List.empty(growable: true);
+    if (children != null) {
+      childNamesToChildIDs = children
+          .map((entry) => PopupMenuItem<String>(
+                value: entry.id,
+                child: Text(entry.name),
+              ))
+          .toList();
+      if (childNamesToChildIDs.isNotEmpty && children != null) {
+        return childNamesToChildIDs;
       } else {
-        setState(() {
-          _isloadingChildren = true;
-          return;
-        });
+        return List.empty();
       }
     } else {
-      if (children != null){
-        setState(() {
-          _currName = children[context.read<CurrentChildrenService>().getChildIndex()].name;
-        });
-      }
+      return List.empty();
     }
-    // all i need to do is get the name of the current child the above code makes the menu fine in 1 query
-    // so im thinking of decoupling getting the children from generating the popupmenuitems, so that i can grab the current childs name,
-
-    //load current child name
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isInvalidUserType || _isloadingChildren) {
-      return AppBar(title: const Text("Loading..."), automaticallyImplyLeading: false, leading: null);
-    }
-
     return AppBar(
       title: Text(widget.pageName),
       actions: [
-        Text( _currName, style: TextStyle(color: Colors.grey),),
-        PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value != "") {
-              context.read<CurrentChildrenService>().switchChild(value);
+        Text(
+          _currName,
+          style: TextStyle(color: Colors.grey),
+        ),
+        Consumer<CurrentChildrenService>(
+          builder: (context, currentChildrenService, config) {
+            var childNamesToChildIDs = _loadParentAndChildren(currentChildrenService);
+
+            return PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value != "") {
+                  currentChildrenService.switchChild(value);
                   setState(() {
-                    Child? currChild = context.read<CurrentChildrenService>().getCurrChild(context);
-                    if (currChild != null)
-                    {
+                    Child? currChild = currentChildrenService.getCurrChild();
+                    if (currChild != null) {
                       _currName = currChild.name;
                     } else {
                       _currName = "Unable to find current child";
                     }
-
-                    
                   });
-            }
-          },
-          itemBuilder: (BuildContext context) {
-            if (_childNamesToChildIDs.isEmpty) {
-              return [
-                PopupMenuItem(
-                  value: "",
-                  child: Consumer<LocalizationService>(
-                    builder: (context, localizationService, child) {
-                      return Text(localizationService.translate("loading"));
-            }
-            )
-            ),
-              ];
-            } else {
-              List<PopupMenuEntry<String>> itemList = _childNamesToChildIDs;
-              return itemList;
-            }
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                if (childNamesToChildIDs.isEmpty) {
+                  return [
+                    PopupMenuItem(
+                        value: "",
+                        child: Consumer<LocalizationService>(
+                            builder: (context, localizationService, child) {
+                          return Text(localizationService.translate("loading"));
+                        })),
+                  ];
+                } else {
+                  List<PopupMenuEntry<String>> itemList = childNamesToChildIDs;
+                  return itemList;
+                }
+              },
+            );
           },
         ),
         IconButton(

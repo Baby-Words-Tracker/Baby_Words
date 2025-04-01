@@ -16,28 +16,4 @@ Parent? getCurrentParent (BuildContext context) {
     }
 }
 
-//Returns the current child, or null if the currently selected index is invalid
-//Listens for future updates to childID, and has the tree rebuild
-// String? getCurrentChildIDListening (BuildContext context, Parent currParent) {
-//   int childIndex = context.watch<Config>().childIndex;
-//   if (childIndex >= 0 && currParent.childIDs.length > childIndex)
-//   {
-//     return currParent.childIDs[childIndex];
-//   } else {
-//     return null;
-//   }
-// }
-
-//Returns the current child, or null if the currently selected index is invalid
-// String? getCurrentChildIDSingleInstance (BuildContext context, Parent currParent) {
-//   int childIndex = context.read<Config>().childIndex;
-//   if (childIndex >= 0 && currParent.childIDs.length > childIndex)
-//   {
-//     return currParent.childIDs[childIndex];
-//   } else {
-//     return null;
-//   }
-// }
-
-
     
