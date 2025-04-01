@@ -37,19 +37,6 @@ class _TopBarState extends State<TopBar> {
 
   Future<void> _loadParentAndChildren(BuildContext context) async {
     
-
-    // load parent (night not even be necessary anymore)
-    // // Parent? currParent;
-    // // if (context.watch<UserModelService>().userType == UserType.parent) {
-    // //   currParent = context.read<UserModelService>().parent!;
-    // // } else {
-    // //   // if it is not a parent acccessing the page, short circuit and say invalid state
-    // //   setState(() {
-    // //     _isInvalidUserType = true; // handle invalid user type with this bool
-    // //     _currName = "Unable to find current child";
-    // //   });
-    // //   return;
-    // // }
     List<Child>? children = context.watch<CurrentChildrenService>().getCurrChildren(context);
     if (_childNamesToChildIDs.isEmpty) {
     List<PopupMenuEntry<String>> childNamesToChildIDs = List.empty(growable: true);
