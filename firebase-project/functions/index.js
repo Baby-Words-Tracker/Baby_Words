@@ -1,17 +1,17 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const {logger} = require("firebase-functions");
+const { logger } = require("firebase-functions");
 
 // The Firebase Admin SDK to access Firestore.
 const admin = require("firebase-admin");
-const {getAuth} = require("firebase-admin/auth");
+const { getAuth } = require("firebase-admin/auth");
 
-const {Storage} = require("@google-cloud/storage");
+const { Storage } = require("@google-cloud/storage");
 
 // Import our auth module
-const {Role} = require("./auth/roles");
-const {giveClaim, removeClaim} = require("./auth/claims");
+const { Role } = require("./auth/roles");
+const { giveClaim, removeClaim } = require("./auth/claims");
 // eslint-disable-next-line max-len
-const {checkAuthentication, checkIsAtLeast, isAuthenticated} = require("./auth/auth.js");
+const { checkAuthentication, checkIsAtLeast, isAuthenticated } = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -34,7 +34,7 @@ const storage = new Storage();
 exports.addDefaultClaim = auth.user().onCreate(async (user) => {
   try {
     // Set the custom claim 'parent' to true
-    await getAuth().setCustomUserClaims(user.uid, {parent: true});
+    await getAuth().setCustomUserClaims(user.uid, { parent: true });
 
     logger.log(`Custom claim set for user ${user.uid}`);
   } catch (error) {
@@ -50,7 +50,7 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
 function checkEmpty(variable, variableName) {
   if (!variable) {
     throw new https.HttpsError(
-        "invalid-argument", `Target user ${variableName} is required`);
+      "invalid-argument", `Target user ${variableName} is required`);
   }
 }
 
@@ -74,13 +74,13 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
       message: `Failed to assign the ${Role.researcher.value.description}` +
-      ` role to user with error: ${error}`,
+        ` role to user with error: ${error}`,
     };
   }
 
   return {
     message: `User ${targetUid} has been assigned the` +
-    ` ${Role.researcher.value.description} role.`,
+      ` ${Role.researcher.value.description} role.`,
   };
 });
 
@@ -103,13 +103,13 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
       message: `Failed to remove the ${Role.researcher.value.description}` +
-      ` role from user with error: ${error}`,
+        ` role from user with error: ${error}`,
     };
   }
 
   return {
     message: `User ${targetUid} has been removed from the` +
-    ` ${Role.researcher.value.description} role.`,
+      ` ${Role.researcher.value.description} role.`,
   };
 });
 
@@ -132,13 +132,13 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
     logger.error(`Failed to assign parent role: ${error}`);
     return {
       message: `Failed to assign the ${Role.parent.value.description}` +
-      ` role to user with error: ${error}`,
+        ` role to user with error: ${error}`,
     };
   }
 
   return {
     message: `User ${targetUid} has been assigned the` +
-    ` ${Role.parent.value.description} role.`,
+      ` ${Role.parent.value.description} role.`,
   };
 });
 
@@ -161,13 +161,13 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
       message: `Failed to remove the ${Role.parent.value.description}` +
-      ` role from user with error: ${error}`,
+        ` role from user with error: ${error}`,
     };
   }
 
   return {
     message: `User ${targetUid} has been removed from the` +
-    ` ${Role.parent.value.description} role.`,
+      ` ${Role.parent.value.description} role.`,
   };
 });
 
@@ -190,13 +190,13 @@ exports.giveAdminClaim = https.onCall(async (data, context) => {
     logger.error(`Failed to assign admin role: ${error}`);
     return {
       message: `Failed to assign the ${Role.admin.value.description}` +
-      ` role to user with error: ${error}`,
+        ` role to user with error: ${error}`,
     };
   }
 
   return {
     message: `User ${targetUid} has been assigned the` +
-    ` ${Role.admin.value.description} role.`,
+      ` ${Role.admin.value.description} role.`,
   };
 });
 
@@ -219,13 +219,13 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
     logger.error(`Failed to remove admin role: ${error}`);
     return {
       message: `Failed to remove the ${Role.admin.value.description}` +
-      ` role from user with error: ${error}`,
+        ` role from user with error: ${error}`,
     };
   }
 
   return {
     message: `User ${targetUid} has been removed from the` +
-    ` ${Role.admin.value.description} role.`,
+      ` ${Role.admin.value.description} role.`,
   };
 });
 
@@ -252,34 +252,37 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
   try {
     checkAuthentication(data);
-
-    // TODO: is this necessary?
     checkIsAtLeast(data, Role.parent);
 
     const parentCollection = db.collection("Parent");
 
-    const parentQuerySnapshot = await parentCollection
-        .where("email", "==", targetEmail)
-        .get();
+    // const parentQuerySnapshot = await parentCollection
+    //     .where("email", "==", targetEmail)
+    //     .get();
 
-    if (parentQuerySnapshot.empty) {
+    let targetUid;
+    try {
+      const userRecord = await getAuth().getUserByEmail(targetEmail);
+      targetUid = userRecord.uid;
+    } catch (error) {
       throw new https.HttpsError("not-found", "Parent with email not found");
     }
+
 
     await db.runTransaction(async (transaction) => {
       const userRef = parentCollection.doc(data.auth.uid);
       const userSnaphot = await transaction.get(userRef);
 
       if (!userSnaphot.exists ||
-          !userSnaphot.data().childIDs.includes(childUid)) {
+        !userSnaphot.data().childIDs.includes(childUid)) {
         throw new https.HttpsError(
-            "permission-denied",
-            // eslint-disable-next-line max-len
-            "You do must be a parent of the child to assign them to another parent",
+          "permission-denied",
+          // eslint-disable-next-line max-len
+          "You do must be a parent of the child to assign them to another parent",
         );
       }
 
-      const parentRef = parentQuerySnapshot.docs[0].ref;
+      const parentRef = parentCollection.doc(targetUid);
       const parentUID = parentRef.id;
 
       const childCollection = db.collection("Child");
@@ -288,8 +291,8 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
       if (!childSnapshot.exists) {
         throw new https.HttpsError(
-            "not-found",
-            "Child document not found",
+          "not-found",
+          "Child document not found",
         );
       }
 
@@ -305,7 +308,7 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
     logger.error(`Failed to assign child to other parent: ${error}`);
     return {
       message: `Failed to assign child` +
-      ` to parent with email: ${targetEmail} because of error: ${error}`,
+        ` to parent with email: ${targetEmail} because of error: ${error}`,
     };
   }
 
@@ -363,12 +366,12 @@ exports.generateSignedUrl = https.onRequest(async (req, res) => {
     };
 
     const [url] = await storage
-        .bucket(bucketName)
-        .file(fileName)
-        .getSignedUrl(options);
+      .bucket(bucketName)
+      .file(fileName)
+      .getSignedUrl(options);
 
-    res.status(200).send({url});
+    res.status(200).send({ url });
   } catch (error) {
-    res.status(401).send({error: "Unauthorized: Invalid token"});
+    res.status(401).send({ error: "Unauthorized: Invalid token" });
   }
 });

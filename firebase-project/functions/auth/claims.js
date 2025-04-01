@@ -1,4 +1,4 @@
-const {getAuth} = require("firebase-admin/auth");
+const { getAuth } = require("firebase-admin/auth");
 
 // v2 functions
 const https = require("firebase-functions/v2/https");
@@ -6,7 +6,7 @@ const https = require("firebase-functions/v2/https");
 // const {logger} = require("firebase-functions");
 
 // authentication functions
-const {checkAuthentication, checkIsAtLeast} = require("./auth");
+const { checkAuthentication, checkIsAtLeast } = require("./auth");
 
 /**
  * Assigns a role to a user checking authentication and permissions
@@ -35,7 +35,7 @@ async function giveClaim(newRole, minimumRole, targetUid, data) {
   } catch (error) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(
-        "internal", "Failed to assign " + roleName + " role", error);
+      "internal", "Failed to assign " + roleName + " role", error);
   }
 }
 
@@ -66,7 +66,7 @@ async function removeClaim(role, minimumRole, targetUid, data) {
   } catch (error) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(
-        "internal", "Failed to remove " + roleName + " role", error);
+      "internal", "Failed to remove " + roleName + " role", error);
   }
 }
 
