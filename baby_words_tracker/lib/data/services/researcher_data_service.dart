@@ -1,14 +1,15 @@
+import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class ResearcherDataService extends ChangeNotifier {
-  static final fireRepo = FirestoreRepository();
+  static final _firestoreRepository = FirestoreRepository();
 
   //Reseacher services
   Future<Researcher?> createResearcher(Researcher researcher) async {
-    String? returnId = await fireRepo.createWithId(
+    String? returnId = await _firestoreRepository.createWithId(
         Researcher.collectionName, researcher.id, researcher.toMap());
 
     if (returnId == null) {
@@ -26,7 +27,8 @@ class ResearcherDataService extends ChangeNotifier {
   }
 
   Future<Researcher?> getResearcher(String id) async {
-    final researcher = await fireRepo.read(Researcher.collectionName, id);
+    final researcher =
+        await _firestoreRepository.read(Researcher.collectionName, id);
     if (researcher == null) {
       debugPrint("ResearcherDataService: Failed to get researcher by ID");
       return null;
@@ -35,7 +37,7 @@ class ResearcherDataService extends ChangeNotifier {
   }
 
   Future<Researcher?> getResearcherByEmail(String email) async {
-    final researcherList = await fireRepo
+    final researcherList = await _firestoreRepository
         .queryByField(Researcher.collectionName, "email", email, limit: 1);
     if (researcherList.isEmpty) {
       return null;
@@ -44,7 +46,8 @@ class ResearcherDataService extends ChangeNotifier {
   }
 
   Future<List<Researcher>> getMultipleResearchers(List<String> ids) async {
-    return (await fireRepo.readMultiple(Researcher.collectionName, ids))
+    return (await _firestoreRepository.readMultiple(
+            Researcher.collectionName, ids))
         .map((doc) => Researcher.fromDataWithId(doc))
         .toList();
   }
@@ -59,8 +62,8 @@ class ResearcherDataService extends ChangeNotifier {
         name: name,
         institution: institution,
         phoneNumber: phoneNumber);
-    bool success =
-        await fireRepo.update(Researcher.collectionName, id, updateData);
+    bool success = await _firestoreRepository.update(
+        Researcher.collectionName, id, updateData);
 
     if (!success) {
       return false;
@@ -71,7 +74,8 @@ class ResearcherDataService extends ChangeNotifier {
   }
 
   Future<bool> deleteResearcher(String id) async {
-    bool success = await fireRepo.delete(Researcher.collectionName, id);
+    bool success =
+        await _firestoreRepository.delete(Researcher.collectionName, id);
 
     if (!success) {
       return false;
@@ -79,5 +83,12 @@ class ResearcherDataService extends ChangeNotifier {
 
     notifyListeners();
     return true;
+  }
+
+  IDocumentListener<Researcher> getUserListener(String id) {
+    return _firestoreRepository.getDocumentListener<Researcher>(
+      path: '${Researcher.collectionName}/$id',
+      convertDataWithId: (data) => Researcher.fromDataWithId(data),
+    );
   }
 }

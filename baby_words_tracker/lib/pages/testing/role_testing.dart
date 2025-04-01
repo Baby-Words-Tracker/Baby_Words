@@ -3,27 +3,30 @@ import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import "package:baby_words_tracker/util/cloud_function_utils.dart";
 
 enum UserType { parent, researcher, unauthenticated }
 
-class AdminFirebasePage extends StatefulWidget {
-  static const routeName = '/admin-firebase';
+class RoleTesting extends StatefulWidget {
+  static const routeName = '/roletesting';
 
-  const AdminFirebasePage({super.key});
+  const RoleTesting({super.key});
 
   @override
-  _AdminFirebasePageState createState() => _AdminFirebasePageState();
+  _RoleTestingState createState() => _RoleTestingState();
 }
 
-class _AdminFirebasePageState extends State<AdminFirebasePage> {
+class _RoleTestingState extends State<RoleTesting> {
   UserType _selectedUserType = UserType.parent;
   TextEditingController _searchController = TextEditingController();
   String? _selectedUserId;
 
   Future<List<Map<String, String>>> _searchUsers(String query) async {
     if (query.isEmpty) return [];
-    
-    String collection = _selectedUserType == UserType.parent ? Parent.collectionName : Researcher.collectionName;
+
+    String collection = _selectedUserType == UserType.parent
+        ? Parent.collectionName
+        : Researcher.collectionName;
     var snapshot = await FirebaseFirestore.instance
         .collection(collection)
         .where('email', isGreaterThanOrEqualTo: query)
@@ -31,19 +34,25 @@ class _AdminFirebasePageState extends State<AdminFirebasePage> {
         .limit(5)
         .get();
 
-    return snapshot.docs.map((doc) => {'email': doc['email'] as String, 'uid': doc.id}).toList();
+    return snapshot.docs
+        .map((doc) => {'email': doc['email'] as String, 'uid': doc.id})
+        .toList();
   }
 
   Future<void> _callFunction(String functionName) async {
     if (_selectedUserId == null) return;
-    debugPrint('Getting callable for function $functionName with uid $_selectedUserId');
-    HttpsCallable function = FirebaseFunctions.instance.httpsCallable(functionName);
+    debugPrint(
+        'Getting callable for function $functionName with uid $_selectedUserId');
+    HttpsCallable function =
+        FirebaseFunctions.instance.httpsCallable(functionName);
     try {
       debugPrint('Calling function $functionName with uid $_selectedUserId');
       final response = await function.call({'targetUid': _selectedUserId});
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response.data['message'])));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(response.data['message'])));
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $error')));
     }
   }
 
@@ -80,32 +89,64 @@ class _AdminFirebasePageState extends State<AdminFirebasePage> {
               optionsBuilder: (TextEditingValue textEditingValue) async {
                 return await _searchUsers(textEditingValue.text);
               },
-              displayStringForOption: (Map<String, String> option) => option['email']!,
+              displayStringForOption: (Map<String, String> option) =>
+                  option['email']!,
               onSelected: (Map<String, String> selection) {
                 setState(() {
                   _searchController.text = selection['email']!;
                   _selectedUserId = selection['uid'];
                 });
-                debugPrint('Selected: ${selection['email']} with id ${selection['uid']}');
+                debugPrint(
+                    'Selected: ${selection['email']} with id ${selection['uid']}');
               },
-              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+              fieldViewBuilder:
+                  (context, controller, focusNode, onFieldSubmitted) {
                 _searchController = controller;
                 return TextField(
                   controller: controller,
                   focusNode: focusNode,
-                  decoration: const InputDecoration(labelText: 'Search User by Email'),
+                  decoration:
+                      const InputDecoration(labelText: 'Search User by Email'),
                 );
               },
             ),
             if (_selectedUserId != null) ...[
-              ElevatedButton(
-                onPressed: () => _callFunction('giveParentClaim'), 
-                child: const Text("Assign Parent Role")
+              Text('Selected User ID: $_selectedUserId'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(" User Roles: "),
+                  FutureBuilder<Map<String, dynamic>?>(
+                    key: UniqueKey(),
+                    future: callFunction(
+                      context,
+                      'getUserCustomClaims',
+                      {'targetUid': _selectedUserId},
+                    ),
+                    builder: (context, snapshot) {
+                      final Map<String, dynamic> roles =
+                          snapshot.hasData && snapshot.data != null
+                              ? snapshot.data as Map<String, dynamic>
+                              : {};
+                      return roles.isEmpty
+                          ? const Text('No roles assigned')
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text("$roles, "),
+                              ],
+                            );
+                    },
+                  )
+                ],
               ),
               ElevatedButton(
-                onPressed: () => _callFunction('removeParentClaim'), 
-                child: const Text("Remove Parent Role")
-              ),
+                  onPressed: () => _callFunction('giveParentClaim'),
+                  child: const Text("Assign Parent Role")),
+              ElevatedButton(
+                  onPressed: () => _callFunction('removeParentClaim'),
+                  child: const Text("Remove Parent Role")),
               ElevatedButton(
                 onPressed: () => _callFunction('giveResearcherClaim'),
                 child: const Text('Assign Researcher Role'),

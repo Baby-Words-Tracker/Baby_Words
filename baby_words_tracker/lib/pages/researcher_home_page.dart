@@ -2,6 +2,9 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 
 
 class ResearcherHomePage extends StatefulWidget {
@@ -17,6 +20,8 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   List<WordInstance> wordInstances = [];
   final FirestoreDataTableSource _dataSource = FirestoreDataTableSource();
 
+  bool _isLoading = true;
+
     @override
   void initState() {
     super.initState();
@@ -24,9 +29,11 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   }
 
   void _fetchWordTrackers() async {
+    setState(() => _isLoading = true);
     await _dataSource.fetchData();
     setState(() {
       wordInstances = _dataSource.getAllData();
+      _isLoading = false;
     });
   }
 
@@ -41,6 +48,10 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    if(Provider.of<LocalizationService>(context, listen : false).getLocaleCode() != LanguageCode.en) {
+      Provider.of<LocalizationService>(context, listen :false).changeLocale(LanguageCode.en);
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -83,11 +94,13 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                                                          fontWeight: FontWeight.bold,)),
                 Expanded(
                   flex: 1,
-                  child: FilterMenu(onFilterChanged: updateFilter, dataSource: wordInstances,)
+                  child: FilterMenu(onFilterChanged: updateFilter, dataSource: wordInstances)
                   ),
                 Expanded(
                   flex: 3,
-                  child: WordTrackerTable(dataSource: _dataSource)
+                  child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : WordTrackerTable(dataSource: _dataSource),
                 )
                 ]),
         ),
@@ -209,7 +222,7 @@ class FirestoreDataTableSource extends DataTableSource {
       }
     }
     _wordInstances = wordInstances;
-    _filteredInstances = List.from(_wordInstances);
+    if(_filteredInstances.isEmpty) _filteredInstances = List.from(_wordInstances);
     notifyListeners();
   } catch (e) {
     debugPrint('Error fetching Child documents: $e');

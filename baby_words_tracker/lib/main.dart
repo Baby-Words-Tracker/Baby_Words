@@ -81,17 +81,13 @@ void main() async {
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
-                parentDataService:
-                    Provider.of<ParentDataService>(context, listen: false),
-                researcherDataService:
-                    Provider.of<ResearcherDataService>(context, listen: false),
                 authenticationService:
                     Provider.of<AuthenticationService>(context, listen: false),
                 generalUserService:
                     Provider.of<GeneralUserService>(context, listen: false)),
           ),
         ],
-        child: MyApp(),
+        child: const MyApp(),
       ),
     );
   } catch (e) {
@@ -122,7 +118,7 @@ class MyApp extends StatelessWidget {
           '/uploadvideo': (context) => const UploadVideoPage(),
           '/profilepage': (context) => const ProfilePage(),
           '/settings': (context) => const SettingsPage(),
-          AdminFirebasePage.routeName: (context) => const AdminFirebasePage(),
+          RoleTesting.routeName: (context) => const RoleTesting(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),
