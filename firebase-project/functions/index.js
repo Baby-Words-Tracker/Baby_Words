@@ -265,7 +265,7 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
       const userRecord = await getAuth().getUserByEmail(targetEmail);
       targetUid = userRecord.uid;
     } catch (error) {
-      throw new https.HttpsError("not-found", "Parent with email not found");
+      throw new https.HttpsError("not-found", `Parent was not found: ${error}`);
     }
 
 
