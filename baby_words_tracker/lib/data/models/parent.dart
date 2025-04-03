@@ -9,30 +9,22 @@ class Parent {
   static String collectionName = 'Parent';
 
   final String id;
-  final String? email;
-  final String? name;
   final LanguageCode language;
   final List<String> childIDs;
 
   Parent({
     required this.id,
-    this.email,
-    this.name,
     this.language = LanguageCode.en,
     List<String>? childIDs,
   }) : childIDs = childIDs ?? [];
 
   Parent copyWith({
     String? id,
-    String? email,
-    String? name,
     LanguageCode? language,
     List<String>? childIDs,
   }) {
     return Parent(
       id: id ?? this.id,
-      email: email ?? this.email,
-      name: name ?? this.name,
       language: language ?? this.language,
       childIDs: childIDs ?? this.childIDs,
     );
@@ -40,8 +32,6 @@ class Parent {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'email': email,
-      'name': name,
       'language': language.displayCode,
       'childIDs': childIDs,
     };
@@ -50,8 +40,6 @@ class Parent {
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
       id: map['id'] as String,
-      email: map['email'] as String?,
-      name: map['name'] as String?,
       language: map['language'] == null // TODO: remove this null check later
           ? LanguageCode.en
           : LanguageCode.values.firstWhere((e) => e.name == map['language']),
@@ -73,13 +61,8 @@ class Parent {
   }
 
   static Map<String, dynamic> createUpdateMap(
-      {String? email,
-      String? name,
-      List<String>? childIDs,
-      LanguageCode? language}) {
+      {List<String>? childIDs, LanguageCode? language}) {
     Map<String, dynamic> map = {};
-    if (email != null) map['email'] = email;
-    if (name != null) map['name'] = name;
     if (childIDs != null) map['childIDs'] = childIDs;
     if (language != null) map['language'] = language.displayCode;
     return map;
@@ -87,7 +70,7 @@ class Parent {
 
   @override
   String toString() {
-    return 'Parent(id: $id, email: $email, name: $name, childIDs: $childIDs)';
+    return 'Parent(id: $id, childIDs: $childIDs)';
   }
 
   @override
@@ -95,14 +78,11 @@ class Parent {
     if (identical(this, other)) return true;
     final listEquals = const DeepCollectionEquality().equals;
 
-    return other.id == id &&
-        other.email == email &&
-        other.name == name &&
-        listEquals(other.childIDs, childIDs);
+    return other.id == id && listEquals(other.childIDs, childIDs);
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ email.hashCode ^ name.hashCode ^ childIDs.hashCode;
+    return id.hashCode ^ childIDs.hashCode;
   }
 }
