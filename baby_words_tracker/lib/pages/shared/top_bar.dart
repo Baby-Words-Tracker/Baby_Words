@@ -23,8 +23,6 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TopBarState extends State<TopBar> {
-  String _currName = "Loading..";
-
   @override
   void didChangeDependencies() {
     // use didChangeDependencies instead of initState because we depend on an inherited provider for our behavior
@@ -43,14 +41,11 @@ class _TopBarState extends State<TopBar> {
                 child: Text(entry.name),
               ))
           .toList();
-      if (childNamesToChildIDs.isNotEmpty && children != null) {
+      if (childNamesToChildIDs.isNotEmpty) {
         return childNamesToChildIDs;
-      } else {
-        return List.empty();
       }
-    } else {
-      return List.empty();
     }
+    return List.empty();
   }
 
   @override
@@ -58,43 +53,56 @@ class _TopBarState extends State<TopBar> {
     return AppBar(
       title: Text(widget.pageName),
       actions: [
-        Text(
-          _currName,
-          style: TextStyle(color: Colors.grey),
-        ),
         Consumer<CurrentChildrenService>(
-          builder: (context, currentChildrenService, config) {
-            var childNamesToChildIDs = _loadParentAndChildren(currentChildrenService);
+          builder: (context, currentChildrenService, child) {
+            var childNamesToChildIDs =
+                _loadParentAndChildren(currentChildrenService);
 
-            return PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value != "") {
-                  currentChildrenService.switchChild(value);
-                  setState(() {
-                    Child? currChild = currentChildrenService.getCurrChild();
-                    if (currChild != null) {
-                      _currName = currChild.name;
-                    } else {
-                      _currName = "Unable to find current child";
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "Current child: ",
+                  style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color ??
+                          Colors.grey),
+                ),
+                Builder(builder: (context) {
+                  Child? currChild = currentChildrenService.getCurrChild();
+                  return Text(
+                    currChild != null ? currChild.name : "No children yet",
+                    style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color ??
+                            Colors.grey),
+                  );
+                }),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value != "") {
+                      currentChildrenService.switchChild(value);
                     }
-                  });
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                if (childNamesToChildIDs.isEmpty) {
-                  return [
-                    PopupMenuItem(
-                        value: "",
-                        child: Consumer<LocalizationService>(
-                            builder: (context, localizationService, child) {
-                          return Text(localizationService.translate("loading"));
-                        })),
-                  ];
-                } else {
-                  List<PopupMenuEntry<String>> itemList = childNamesToChildIDs;
-                  return itemList;
-                }
-              },
+                  },
+                  itemBuilder: (BuildContext context) {
+                    if (childNamesToChildIDs.isEmpty) {
+                      return [
+                        PopupMenuItem(
+                            value: "",
+                            child: Consumer<LocalizationService>(
+                                builder: (context, localizationService, child) {
+                              return Text(localizationService
+                                  .translate("No children yet"));
+                            })),
+                      ];
+                    } else {
+                      List<PopupMenuEntry<String>> itemList =
+                          childNamesToChildIDs;
+                      return itemList;
+                    }
+                  },
+                ),
+              ],
             );
           },
         ),

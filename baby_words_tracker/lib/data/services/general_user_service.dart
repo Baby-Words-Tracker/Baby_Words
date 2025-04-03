@@ -119,14 +119,14 @@ class GeneralUserService {
 
   Future<Pair<IDocumentListener?, UserType>> getUserListener(String userId,
       {UserType? expectedType}) async {
-    if (expectedType == UserType.unauthenticated || expectedType == null) {
-      debugPrint("GeneralUserService: getUserListener() expectedType is null");
-      Pair<dynamic, UserType> result =
-          await getUser(userId, expectedType: expectedType);
-      expectedType = result.second;
-      debugPrint(
-          "GeneralUserService: getUserListener() expectedType: $expectedType");
-    }
+    debugPrint(
+        "GeneralUserService: getUserListener() expectedType is ${expectedType?.name ?? "null"}");
+    Pair<dynamic, UserType> result =
+        await getUser(userId, expectedType: expectedType);
+    expectedType = result.second;
+
+    debugPrint(
+        "GeneralUserService: getUserListener() running with expectedType: $expectedType");
 
     switch (expectedType) {
       case UserType.researcher:

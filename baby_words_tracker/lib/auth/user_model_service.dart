@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
@@ -6,13 +8,13 @@ import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 
 import 'package:baby_words_tracker/util/pair.dart';
-import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 
 import 'package:flutter/material.dart';
 
 class UserModelService extends ChangeNotifier {
-  late final SafeSynchonizer _safeSynchonizer;
+  late final SafeSynchronizer _safeSynchronizer;
 
   UserType _userType = UserType.unauthenticated;
   static const UserType _defaultUserType = UserType.parent;
@@ -27,11 +29,14 @@ class UserModelService extends ChangeNotifier {
     required GeneralUserService generalUserService,
   })  : _authenticationService = authenticationService,
         _generalUserService = generalUserService {
-    _safeSynchonizer = SafeSynchonizer(_synchronizeUser);
+    _safeSynchronizer = SafeSynchronizer(_synchronizeUser);
 
-    _authenticationService.addListener(
-      () => _safeSynchonizer.safeSynchronize(),
-    );
+    _authenticationService.addListener(() {
+      _safeSynchronizer.safeSynchronize().catchError((e) {
+        debugPrint(
+            "UserModelService: Error synchronizing user: $e\n${e.stackTrace}");
+      });
+    });
   }
 
   Future<void> _synchronizeUser() async {
@@ -56,6 +61,7 @@ class UserModelService extends ChangeNotifier {
 
         await _updateUserTypeAndListener(_authenticationService.userId!);
 
+        // create a new user if the user is unauthenticated
         if (_userType == UserType.unauthenticated) {
           // debugPrint("UserModelService: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
 
@@ -77,14 +83,19 @@ class UserModelService extends ChangeNotifier {
           } else {
             debugPrint("Error: UserModelService: Failed to create user");
           }
-        } else {
+        }
+        // else if the user is authenticated makke sure its data is valid
+        else {
           if (_getCurrentUserModel() == null) {
             debugPrint(
                 "Error: UserModelService: User model is null when the usertype is not unauthenticated");
           } else {
-            debugPrint("UserModelService: No updated needed");
+            debugPrint("UserModelService: User data synchronized successfully");
           }
         }
+      } else {
+        debugPrint(
+            "UserModelService: User is authenticated and synchronized, no action needed");
       }
     } catch (e, stack) {
       debugPrint("UserModelService: _synchronizeUser failed: $e\n$stack");
@@ -118,6 +129,8 @@ class UserModelService extends ChangeNotifier {
     _listener?.dispose();
     _listener = null;
     _userType = UserType.unauthenticated;
+    debugPrint(
+        "UserModelService: Notifying listeners from unauthenticate user.");
     notifyListeners();
   }
 
@@ -126,7 +139,8 @@ class UserModelService extends ChangeNotifier {
     Pair<IDocumentListener?, UserType> listenerTypePair =
         await _generalUserService.getUserListener(userId,
             expectedType: _userType);
-    debugPrint("UserModelService: ListenerTypePair: $listenerTypePair");
+    debugPrint(
+        "UserModelService: ListenerTypePair: {${listenerTypePair.first} , ${listenerTypePair.second.name}}");
     if (_userType != listenerTypePair.second) {
       await _replaceListener(listenerTypePair.first, listenerTypePair.second);
     } else {
@@ -155,9 +169,12 @@ class UserModelService extends ChangeNotifier {
     _userType = userType;
 
     _listener?.addListener(() {
+      debugPrint(
+          "UserModelService: Notifying listeners from listener callback");
       notifyListeners();
     });
 
+    debugPrint("UserModelService: Notifying listeners from _replaceListener");
     notifyListeners();
   }
 

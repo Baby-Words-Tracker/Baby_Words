@@ -4,7 +4,7 @@ import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class CurrentChildrenService extends ChangeNotifier {
-  late final SafeSynchonizer _parentSynchronizer;
+  late final SafeSynchronizer _parentSynchronizer;
 
   // Parent? _parent;
   List<Child> _children = List.empty(growable: true);
@@ -32,7 +32,7 @@ class CurrentChildrenService extends ChangeNotifier {
     required ChildDataService childService,
   })  : _userService = userService,
         _childService = childService {
-    _parentSynchronizer = SafeSynchonizer(() async {
+    _parentSynchronizer = SafeSynchronizer(() async {
       Parent? parent =
           _userService.userType == UserType.parent ? _userService.parent : null;
 
@@ -46,6 +46,9 @@ class CurrentChildrenService extends ChangeNotifier {
   }
 
   Child? getCurrChild() {
+    if (_children.isEmpty) {
+      return null;
+    }
     return _children[_childIndex];
   }
 
@@ -58,6 +61,7 @@ class CurrentChildrenService extends ChangeNotifier {
       _children = children;
     } else {
       _children = List.empty();
+      _childIndex = 0;
     }
     notifyListeners();
   }

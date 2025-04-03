@@ -95,6 +95,7 @@ void main() async {
               userService:
                   Provider.of<UserModelService>(context, listen: false),
             ),
+            lazy: false,
           ),
         ],
         child: const MyApp(),
