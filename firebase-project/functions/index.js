@@ -342,23 +342,13 @@ exports.getUserCustomClaims = https.onCall(async (data, context) => {
 });
 
 // get signed url - idk if this will even come close to working
-exports.generateSignedUrl = https.onRequest(async (req, res) => {
-  // const authToken = req.headers.authorization?.split('Bearer ')[1];
-
-  // if (!authToken) {
-  //   return res.status(401).send({ error: 'Unauthorized: Missing token' });
-  // }
-
-  isAuthenticated(req);
-
+exports.generateSignedUrl = https.onRequest(async (data, context) => {
   try {
-    // Verify the token
-    // TODO: is this right? i dont think so
-    await admin.auth().verifyIdToken(req.auth);
+    isAuthenticated(data);
 
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
-    const fileName = req.body.fileName;
+    const fileName = data.fileName;
     const options = {
       version: "v4",
       action: "write",
@@ -370,8 +360,10 @@ exports.generateSignedUrl = https.onRequest(async (req, res) => {
         .file(fileName)
         .getSignedUrl(options);
 
-    res.status(200).send({url});
+    //res.status(200).send({url});
+    return { url };
   } catch (error) {
-    res.status(401).send({error: "Unauthorized: Invalid token"});
+    throw new functions.https.HttpsError(
+        'internal', `Error generating signed url: ${error}`);
   }
 });
