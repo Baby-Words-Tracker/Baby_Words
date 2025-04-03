@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
@@ -6,11 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
 class ParentDataService extends ChangeNotifier {
-  static final fireRepo = FirestoreRepository();
+  static final _firestoreRepository = FirestoreRepository();
 
   //Parent services
   Future<Parent?> createParent(Parent parent) async {
-    String? returnId = await fireRepo.createWithId(
+    String? returnId = await _firestoreRepository.createWithId(
         Parent.collectionName, parent.id, parent.toMap());
 
     if (returnId == null) {
@@ -28,7 +29,7 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<Parent?> getParent(String id) async {
-    final parent = await fireRepo.read(Parent.collectionName, id);
+    final parent = await _firestoreRepository.read(Parent.collectionName, id);
     if (parent == null) {
       debugPrint("ParentDataService: Failed to get parent by ID");
       return null;
@@ -37,7 +38,7 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<Parent?> getParentByEmail(String email) async {
-    final parentList = await fireRepo
+    final parentList = await _firestoreRepository
         .queryByField(Parent.collectionName, "email", email, limit: 1);
     if (parentList.isEmpty) {
       debugPrint("ParentDataService: Failed to get parent by email");
@@ -52,7 +53,7 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<List<Parent>> getMultipleParents(List<String> ids) async {
-    return (await fireRepo.readMultiple(Parent.collectionName, ids))
+    return (await _firestoreRepository.readMultiple(Parent.collectionName, ids))
         .map((doc) => Parent.fromDataWithId(doc))
         .toList();
   }
@@ -64,7 +65,8 @@ class ParentDataService extends ChangeNotifier {
       LanguageCode? language}) async {
     final updateData =
         Parent.createUpdateMap(childIDs: childIDs, language: language);
-    bool success = await fireRepo.update(Parent.collectionName, id, updateData);
+    bool success = await _firestoreRepository.update(
+        Parent.collectionName, id, updateData);
 
     if (!success) {
       return false;
@@ -85,21 +87,21 @@ class ParentDataService extends ChangeNotifier {
   // }
 
   Future<void> addChildToParent(String parentId, String childId) async {
-    await fireRepo.appendToArrayField(
+    await _firestoreRepository.appendToArrayField(
         Parent.collectionName, parentId, "childIDs", childId);
-    await fireRepo.appendToArrayField(
+    await _firestoreRepository.appendToArrayField(
         Child.collectionName, childId, "parentIDs", parentId);
     notifyListeners();
   }
 
   Future<List<Child>> getChildList(String id) async {
-    final object = await fireRepo.read(Parent.collectionName, id);
+    final object = await _firestoreRepository.read(Parent.collectionName, id);
     List<Child> children = List.empty(growable: true);
     if (object == null) return children;
 
     final parent = Parent.fromDataWithId(object);
-    final List<DataWithId> data =
-        await fireRepo.readMultiple(Child.collectionName, parent.childIDs);
+    final List<DataWithId> data = await _firestoreRepository.readMultiple(
+        Child.collectionName, parent.childIDs);
 
     for (DataWithId child in data) {
       children.add(Child.fromDataWithId(child));
@@ -108,7 +110,7 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<LanguageCode?> getLanguage(String id) async {
-    final object = await fireRepo.read(Parent.collectionName, id);
+    final object = await _firestoreRepository.read(Parent.collectionName, id);
 
     if (object == null) {
       debugPrint("unable to get parent language");
@@ -116,5 +118,12 @@ class ParentDataService extends ChangeNotifier {
     }
 
     return Parent.fromDataWithId(object).language;
+  }
+
+  IDocumentListener<Parent> getUserListener(String id) {
+    return _firestoreRepository.getDocumentListener<Parent>(
+      path: '${Parent.collectionName}/$id',
+      convertDataWithId: (data) => Parent.fromDataWithId(data),
+    );
   }
 }

@@ -1,63 +1,42 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/util/pair.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
+
+import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
-
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
+
+import 'package:baby_words_tracker/util/pair.dart';
+import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/user_type.dart';
 
 import 'package:flutter/material.dart';
 
 class UserModelService extends ChangeNotifier {
-  UserType _userType = UserType.unauthenticated;
+  late final SafeSynchonizer _safeSynchonizer;
 
-  final ParentDataService _parentDataService;
-  final ResearcherDataService _researcherDataService;
+  UserType _userType = UserType.unauthenticated;
+  static const UserType _defaultUserType = UserType.parent;
+
   final AuthenticationService _authenticationService;
   final GeneralUserService _generalUserService;
 
-  Parent? _parent;
-  Researcher? _researcher;
+  IDocumentListener? _listener;
 
-  bool _parentChanged = false;
-  bool _researcherChanged = false;
-  bool _isSynchronizing = false;
-
-  UserModelService(
-      {required ParentDataService parentDataService,
-      required ResearcherDataService researcherDataService,
-      required AuthenticationService authenticationService,
-      required GeneralUserService generalUserService})
-      : _parentDataService = parentDataService,
-        _researcherDataService = researcherDataService,
-        _authenticationService = authenticationService,
+  UserModelService({
+    required AuthenticationService authenticationService,
+    required GeneralUserService generalUserService,
+  })  : _authenticationService = authenticationService,
         _generalUserService = generalUserService {
-    _parentDataService.addListener(() {
-      _parentChanged = true;
-      if (_userType == UserType.parent) {
-        _refreshParent();
-      }
-      notifyListeners();
-    });
-    _researcherDataService.addListener(() {
-      _researcherChanged = true;
-      if (_userType == UserType.researcher) {
-        _refreshResearcher();
-      }
-      notifyListeners();
-    });
-    _authenticationService.addListener(_synchronizeUser);
+    _safeSynchonizer = SafeSynchonizer(_synchronizeUser);
+
+    _authenticationService.addListener(
+      () => _safeSynchonizer.safeSynchronize(),
+    );
   }
 
   Future<void> _synchronizeUser() async {
     debugPrint(
         "UserModelService: Synchronizing user: ${_authenticationService.userId}");
-    if (_isSynchronizing) {
-      return;
-    }
-    _isSynchronizing = true;
 
     try {
       if (!_authenticationService.isAuthenticated ||
@@ -65,138 +44,65 @@ class UserModelService extends ChangeNotifier {
         _unathenticateUser();
         debugPrint("UserModelService: User unauthenticated");
         return;
-      } else if (_userType == UserType.unauthenticated ||
+      }
+      // else if user is authenticated or the authentication data has changed, synchronize user
+      else if (_userType == UserType.unauthenticated ||
           _getCurrentUserModelId() != _authenticationService.userId ||
-          _getCurrentModelEmail() != _authenticationService.userEmail ||
+          _getCurrentUserModelEmail() != _authenticationService.userEmail ||
           _getCurrentUserModelName() != _authenticationService.userName) {
         // debugPrint all of these and their comparison: _getCurrentModelEmail() != _authenticationService.userEmail || _getCurrentUserModelName() != _authenticationService.userName
         debugPrint(
             "UserModelService: ${_userType.name} user authenticated, but not synchronized");
 
-        await _fetchUserModel(_authenticationService.userId!);
-        _researcherChanged = false;
-        _parentChanged = false;
+        await _updateUserTypeAndListener(_authenticationService.userId!);
 
         if (_userType == UserType.unauthenticated) {
           // debugPrint("UserModelService: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
 
-          if (_authenticationService.userEmail == null) {
-            debugPrint(
-                "Error: UserModelService: _synchronizeUser called with null email");
-          }
-
           Pair<dynamic, UserType> user = await _generalUserService.createUser(
-              userType: UserType.parent,
+              userType: _defaultUserType,
               id: _authenticationService.userId!,
               email: _authenticationService.userEmail,
               name: _authenticationService.userName);
 
           debugPrint(
               "UserModelService: user created -> ${user.first} | ${user.second}");
-
-          switch (user.second) {
-            case UserType.parent:
-              setUserParent(user.first);
-              debugPrint("UserModelService: new Parent created");
-              break;
-            case UserType.researcher:
-              setUserResearcher(user.first);
-              debugPrint("UserModelService: new Researcher created");
-              break;
-            default:
-              debugPrint("Error: UserModelService: Failed to create user");
-              break;
+          if (user.first != null) {
+            debugPrint("UserModelService: new User model created");
+            await _updateUserTypeAndListener(_authenticationService.userId!);
+            if (user.second != _defaultUserType) {
+              debugPrint(
+                  "Error: UserModelService: User type mismatch, expected $_defaultUserType, got ${user.second}");
+            }
+          } else {
+            debugPrint("Error: UserModelService: Failed to create user");
           }
         } else {
-          await _updateUserIfNecessary();
+          if (_getCurrentUserModel() == null) {
+            debugPrint(
+                "Error: UserModelService: User model is null when the usertype is not unauthenticated");
+          } else {
+            debugPrint("UserModelService: No updated needed");
+          }
         }
       }
-    } finally {
-      _isSynchronizing = false;
-    }
-  }
-
-  Future<void> _updateUserIfNecessary() async {
-    switch (_userType) {
-      case UserType.parent:
-        if (_parent != null && _parent!.id != _authenticationService.userId) {
-          final success = await _parentDataService.updateParent(_parent!.id,
-              email: _authenticationService.userEmail,
-              name: _authenticationService.userName);
-
-          if (success) {
-            setUserParent(_parent!.copyWith());
-          } else {
-            debugPrint("Error: Failed to update parent in UserModelService");
-            //TOOD: handle this error
-          }
-        }
-        break;
-      case UserType.researcher:
-        if (_researcher!.email != _authenticationService.userEmail ||
-            _researcher!.name != _authenticationService.userName) {
-          bool success = await _researcherDataService.updateResearcher(
-              _researcher!.id,
-              email: _authenticationService.userEmail,
-              name: _authenticationService.userName);
-
-          if (success) {
-            setUserResearcher(_researcher!.copyWith(
-                email: _authenticationService.userEmail,
-                name: _authenticationService.userName));
-          } else {
-            debugPrint(
-                "Error: Failed to update researcher in UserModelService");
-            //TOOD: handle this error
-          }
-        }
-        break;
-      default:
-        break;
-    }
-  }
-
-  void setUserParent(Parent parent) {
-    if (_parent != parent) {
-      _parent = parent;
-      _userType = UserType.parent;
-      notifyListeners();
-    }
-  }
-
-  void setUserResearcher(Researcher researcher) {
-    if (_researcher != researcher) {
-      _researcher = researcher;
-      _userType = UserType.researcher;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _fetchUserModel(String userId) async {
-    Pair<dynamic, UserType> user =
-        await _generalUserService.getUser(userId, expectedType: _userType);
-
-    if (user.second == UserType.parent) {
-      setUserParent(user.first);
-    } else if (user.second == UserType.researcher) {
-      setUserResearcher(user.first);
-    } else {
-      _unathenticateUser();
+    } catch (e, stack) {
+      debugPrint("UserModelService: _synchronizeUser failed: $e\n$stack");
     }
   }
 
   dynamic _getCurrentUserModel() {
     switch (_userType) {
       case UserType.parent:
-        return _parent;
+        return _listener?.data as Parent?;
       case UserType.researcher:
-        return _researcher;
+        return _listener?.data as Researcher?;
       default:
         return null;
     }
   }
 
-  String? _getCurrentModelEmail() {
+  String? _getCurrentUserModelEmail() {
     return _getCurrentUserModel()?.email;
   }
 
@@ -209,44 +115,67 @@ class UserModelService extends ChangeNotifier {
   }
 
   void _unathenticateUser() {
+    _listener?.dispose();
+    _listener = null;
     _userType = UserType.unauthenticated;
-    _parent = null;
-    _researcher = null;
     notifyListeners();
   }
 
-  Future<void> _refreshParent() async {
-    if (_parentChanged && _parent != null) {
-      final newParent = await _parentDataService.getParent(_parent!.id);
-      if (newParent != null) {
-        _parent = newParent;
-      } else {
-        debugPrint("Error: Failed to refresh parent in UserModelService");
+  Future<void> _updateUserTypeAndListener(String userId) async {
+    debugPrint("UserModelService: Updating user type and listener");
+    Pair<IDocumentListener?, UserType> listenerTypePair =
+        await _generalUserService.getUserListener(userId,
+            expectedType: _userType);
+    debugPrint("UserModelService: ListenerTypePair: $listenerTypePair");
+    if (_userType != listenerTypePair.second) {
+      await _replaceListener(listenerTypePair.first, listenerTypePair.second);
+    } else {
+      final currentUserModel = _getCurrentUserModel();
+      if (listenerTypePair.first?.data?.runtimeType ==
+              currentUserModel?.runtimeType &&
+          listenerTypePair.first?.data != currentUserModel) {
+        _replaceListener(listenerTypePair.first, listenerTypePair.second);
       }
-      _parentChanged = false;
     }
   }
 
-  Future<void> _refreshResearcher() async {
-    if (_researcherChanged && _researcher != null) {
-      final newResearcher =
-          await _researcherDataService.getResearcher(_researcher!.id);
-      if (newResearcher != null) {
-        _researcher = newResearcher;
-      } else {
-        debugPrint("Error: Failed to refresh researcher in UserModelService");
-      }
-      _researcherChanged = false;
+  Future<void> _replaceListener(
+      IDocumentListener? listener, UserType userType) async {
+    debugPrint(
+        "UserModelService: Replacing listener: listener: $listener, userType: $userType");
+
+    if (listener != null) {
+      debugPrint("UserModelService: Waiting for first document");
+      await listener.waitForFirstDocument();
+      debugPrint("UserModelService: First document received: ${listener.data}");
     }
+
+    _listener?.dispose();
+    _listener = listener;
+    _userType = userType;
+
+    _listener?.addListener(() {
+      notifyListeners();
+    });
+
+    notifyListeners();
   }
 
   UserType get userType => _userType;
 
   Parent? get parent {
-    return _parent;
+    if (_userType != UserType.parent) {
+      debugPrint("UserModelService: User is not a parent, returning null");
+      return null;
+    }
+    return _getCurrentUserModel();
   }
 
   Researcher? get researcher {
-    return _researcher;
+    if (_userType != UserType.researcher) {
+      debugPrint("UserModelService: User is not a researcher, returning null");
+      return null;
+    }
+    return _getCurrentUserModel();
   }
 }

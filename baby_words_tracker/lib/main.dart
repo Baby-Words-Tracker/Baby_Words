@@ -82,10 +82,6 @@ void main() async {
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
-                parentDataService:
-                    Provider.of<ParentDataService>(context, listen: false),
-                researcherDataService:
-                    Provider.of<ResearcherDataService>(context, listen: false),
                 authenticationService:
                     Provider.of<AuthenticationService>(context, listen: false),
                 generalUserService:

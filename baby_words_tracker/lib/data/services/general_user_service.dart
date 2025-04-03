@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
@@ -113,5 +114,32 @@ class GeneralUserService {
     debugPrint("GeneralUserService: getUser() no user found");
     return Pair(null,
         UserType.unauthenticated); // if no user found return unauthenticated
+  }
+
+  Future<Pair<IDocumentListener?, UserType>> getUserListener(String userId,
+      {UserType? expectedType}) async {
+    if (expectedType == UserType.unauthenticated || expectedType == null) {
+      debugPrint("GeneralUserService: getUserListener() expectedType is null");
+      Pair<dynamic, UserType> result =
+          await getUser(userId, expectedType: expectedType);
+      expectedType = result.second;
+      debugPrint(
+          "GeneralUserService: getUserListener() expectedType: $expectedType");
+    }
+
+    switch (expectedType) {
+      case UserType.researcher:
+        return Pair(
+          _researcherDataService.getUserListener(userId),
+          UserType.researcher,
+        );
+      case UserType.parent:
+        return Pair(
+          _parentDataService.getUserListener(userId),
+          UserType.parent,
+        );
+      default:
+        return Pair(null, UserType.unauthenticated);
+    }
   }
 }
