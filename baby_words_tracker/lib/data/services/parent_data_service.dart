@@ -58,9 +58,12 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<bool> updateParent(String id,
-      {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
+      {String? email,
+      String? name,
+      List<String>? childIDs,
+      LanguageCode? language}) async {
     final updateData =
-        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs, language: language);
+        Parent.createUpdateMap(childIDs: childIDs, language: language);
     bool success = await fireRepo.update(Parent.collectionName, id, updateData);
 
     if (!success) {
@@ -106,12 +109,12 @@ class ParentDataService extends ChangeNotifier {
 
   Future<LanguageCode?> getLanguage(String id) async {
     final object = await fireRepo.read(Parent.collectionName, id);
-    
+
     if (object == null) {
-      debugPrint("unable to get parent language");      
+      debugPrint("unable to get parent language");
       return null;
     }
 
-    return Parent.fromDataWithId(object).language; 
+    return Parent.fromDataWithId(object).language;
   }
 }

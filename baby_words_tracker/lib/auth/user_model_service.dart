@@ -52,24 +52,26 @@ class UserModelService extends ChangeNotifier {
   }
 
   Future<void> _synchronizeUser() async {
-    debugPrint("UserModelService: Synchronizing user: ${_authenticationService.userId}");
+    debugPrint(
+        "UserModelService: Synchronizing user: ${_authenticationService.userId}");
     if (_isSynchronizing) {
       return;
     }
     _isSynchronizing = true;
-    
+
     try {
-      if (!_authenticationService.isAuthenticated || _authenticationService.userId == null) {
+      if (!_authenticationService.isAuthenticated ||
+          _authenticationService.userId == null) {
         _unathenticateUser();
         debugPrint("UserModelService: User unauthenticated");
         return;
       } else if (_userType == UserType.unauthenticated ||
-                _getCurrentUserModelId() != _authenticationService.userId ||  
-                _getCurrentModelEmail() != _authenticationService.userEmail ||
-                _getCurrentUserModelName() != _authenticationService.userName)
-      {
+          _getCurrentUserModelId() != _authenticationService.userId ||
+          _getCurrentModelEmail() != _authenticationService.userEmail ||
+          _getCurrentUserModelName() != _authenticationService.userName) {
         // debugPrint all of these and their comparison: _getCurrentModelEmail() != _authenticationService.userEmail || _getCurrentUserModelName() != _authenticationService.userName
-        debugPrint("UserModelService: ${_userType.name} user authenticated, but not synchronized");
+        debugPrint(
+            "UserModelService: ${_userType.name} user authenticated, but not synchronized");
 
         await _fetchUserModel(_authenticationService.userId!);
         _researcherChanged = false;
@@ -79,19 +81,20 @@ class UserModelService extends ChangeNotifier {
           // debugPrint("UserModelService: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
 
           if (_authenticationService.userEmail == null) {
-            debugPrint("Error: UserModelService: _synchronizeUser called with null email");
+            debugPrint(
+                "Error: UserModelService: _synchronizeUser called with null email");
           }
 
           Pair<dynamic, UserType> user = await _generalUserService.createUser(
-            userType: UserType.parent,
-            id: _authenticationService.userId!,
-            email: _authenticationService.userEmail,
-            name: _authenticationService.userName
-          );
+              userType: UserType.parent,
+              id: _authenticationService.userId!,
+              email: _authenticationService.userEmail,
+              name: _authenticationService.userName);
 
-          debugPrint("UserModelService: user created -> ${user.first} | ${user.second}");
+          debugPrint(
+              "UserModelService: user created -> ${user.first} | ${user.second}");
 
-          switch(user.second) {
+          switch (user.second) {
             case UserType.parent:
               setUserParent(user.first);
               debugPrint("UserModelService: new Parent created");
@@ -104,8 +107,7 @@ class UserModelService extends ChangeNotifier {
               debugPrint("Error: UserModelService: Failed to create user");
               break;
           }
-        }
-        else {
+        } else {
           await _updateUserIfNecessary();
         }
       }
@@ -117,19 +119,13 @@ class UserModelService extends ChangeNotifier {
   Future<void> _updateUserIfNecessary() async {
     switch (_userType) {
       case UserType.parent:
-        if (_parent != null &&
-            _parent!.id != _authenticationService.userId ||
-            _parent!.email != _authenticationService.userEmail ||
-            _parent!.name != _authenticationService.userName) {
-          final success = await _parentDataService.updateParent(
-              _parent!.id,
+        if (_parent != null && _parent!.id != _authenticationService.userId) {
+          final success = await _parentDataService.updateParent(_parent!.id,
               email: _authenticationService.userEmail,
               name: _authenticationService.userName);
-          
+
           if (success) {
-            setUserParent(_parent!.copyWith(
-                email: _authenticationService.userEmail,
-                name: _authenticationService.userName));
+            setUserParent(_parent!.copyWith());
           } else {
             debugPrint("Error: Failed to update parent in UserModelService");
             //TOOD: handle this error
@@ -142,8 +138,7 @@ class UserModelService extends ChangeNotifier {
           bool success = await _researcherDataService.updateResearcher(
               _researcher!.id,
               email: _authenticationService.userEmail,
-              name: _authenticationService.userName
-          );
+              name: _authenticationService.userName);
 
           if (success) {
             setUserResearcher(_researcher!.copyWith(
@@ -234,7 +229,8 @@ class UserModelService extends ChangeNotifier {
 
   Future<void> _refreshResearcher() async {
     if (_researcherChanged && _researcher != null) {
-      final newResearcher = await _researcherDataService.getResearcher(_researcher!.id);
+      final newResearcher =
+          await _researcherDataService.getResearcher(_researcher!.id);
       if (newResearcher != null) {
         _researcher = newResearcher;
       } else {
