@@ -118,17 +118,17 @@ class GeneralUserService {
   }
 
   Future<Pair<IDocumentListener?, UserType>> getUserListener(String userId,
-      {UserType? expectedType}) async {
-    if (expectedType == UserType.unauthenticated || expectedType == null) {
+      {UserType? listenerType}) async {
+    if (listenerType == UserType.unauthenticated || listenerType == null) {
       debugPrint("GeneralUserService: getUserListener() expectedType is null");
       Pair<dynamic, UserType> result =
-          await getUser(userId, expectedType: expectedType);
-      expectedType = result.second;
+          await getUser(userId, expectedType: listenerType);
+      listenerType = result.second;
       debugPrint(
-          "GeneralUserService: getUserListener() expectedType: $expectedType");
+          "GeneralUserService: getUserListener() expectedType: $listenerType");
     }
 
-    switch (expectedType) {
+    switch (listenerType) {
       case UserType.researcher:
         return Pair(
           _researcherDataService.getUserListener(userId),
