@@ -35,8 +35,11 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   void _fetchWordTrackers() async {
     setState(() => _isLoading = true);
     await _dataSource.fetchData();
+    if (!mounted) return;
+    final newData = _dataSource.getAllData();
+
     setState(() {
-      wordInstances = _dataSource.getAllData();
+      wordInstances = newData;
       _isLoading = false;
     });
   }
@@ -230,6 +233,7 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
       'Child',
       'Age',
       'Word',
+      'Part of Speech',
       'First Utterance',
       'Video ID'
     ];
@@ -262,80 +266,64 @@ class FirestoreDataTableSource extends DataTableSource {
   List<WordInstance> _wordInstances = [];
   List<WordInstance> _filteredInstances = [];
 
-  Future<void> fetchData() async {
-    try {
-      debugPrint('querying');
-      List<WordInstance> wordInstances = [];
-
-      QuerySnapshot childSnapshot =
-          await FirebaseFirestore.instance.collection('Child').get();
-
-      for (var childDoc in childSnapshot.docs) {
+Future<void> fetchData() async {
   try {
-    String childID = childDoc.id;
-    DateTime currentTime = DateTime.now();
-    DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
-    int childAge = currentTime.year - childBirthday.year;
-    if ((childBirthday.month > currentTime.month) ||
-        (childBirthday.month == currentTime.month &&
-            childBirthday.day > currentTime.day)) {
-      childAge--;
+    debugPrint('Querying Firestore...');
+    
+    QuerySnapshot childSnapshot = await FirebaseFirestore.instance.collection('Child').get();
+    List<Future<void>> fetchTasks = [];
+
+    List<WordInstance> tempInstances = [];
+
+    for (var childDoc in childSnapshot.docs) {
+      fetchTasks.add(() async {
+        try {
+          String childID = childDoc.id;
+          DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
+          int childAge = DateTime.now().year - childBirthday.year;
+
+          if (childBirthday.isAfter(DateTime.now().subtract(Duration(days: 365 * childAge)))) {
+            childAge--;
+          }
+
+          QuerySnapshot wordTrackerSnapshot = await childDoc.reference.collection('WordTracker').get();
+          List<Future<void>> wordFetchTasks = [];
+
+          for (var wordDoc in wordTrackerSnapshot.docs) {
+            wordFetchTasks.add(() async {
+              try {
+                DocumentSnapshot posDoc = await FirebaseFirestore.instance.collection('Word').doc(wordDoc.id).get();
+
+                tempInstances.add(WordInstance(
+                  childName: childID,
+                  childAge: childAge,
+                  id: wordDoc.id,
+                  firstUtterance: wordDoc['firstUtterance'] != null
+                      ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
+                      : 'Unknown',
+                  videoID: wordDoc['videoID'] ?? 0,
+                  partOfSpeech: posDoc['partOfSpeech'].toString(),
+                ));
+              } catch (e) {
+                debugPrint('Error fetching Word document ${wordDoc.id}: $e');
+              }
+            }());
+          }
+          await Future.wait(wordFetchTasks);
+        } catch (e) {
+          debugPrint('Error processing Child ${childDoc.id}: $e');
+        }
+      }());
     }
 
-    QuerySnapshot wordTrackerSnapshot =
-        await childDoc.reference.collection('WordTracker').get();
-
-    for (var wordDoc in wordTrackerSnapshot.docs) {
-      try {
-        String wordID = wordDoc.id;
-
-        // Fetch the corresponding word document by WordTracker ID
-        DocumentSnapshot posDoc =
-            await FirebaseFirestore.instance.collection('Word').doc(wordID).get();
-
-String partOfSpeechStr = "unknown";
-
-if (posDoc.exists && posDoc['partOfSpeech'] != null) {
-  final dynamic posField = posDoc['partOfSpeech'];
-
-  if (posField is Map) {
-    final Map<String, dynamic> posMap = Map.from(posField);
-
-    if (posMap.isNotEmpty) {
-      final String languageKey = posMap.keys.first; // For example, "en"
-      final dynamic posValue = posMap[languageKey];
-      partOfSpeechStr = posValue.toString();
-      
-    }
-  }
-}
-        wordInstances.add(WordInstance(
-          childName: childID,
-          childAge: childAge,
-          id: wordID,
-          firstUtterance: wordDoc['firstUtterance'] != null
-              ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
-              : 'Unknown',
-          videoID: wordDoc['videoID'] ?? 0,
-          partOfSpeech: partOfSpeechStr, // Add POS to WordInstance
-        ));
-      } catch (e) {
-        debugPrint('Error fetching Word document with ID ${wordDoc.id}: $e');
-      }
-    }
+    await Future.wait(fetchTasks);
+    _wordInstances = tempInstances;
+    _filteredInstances = List.from(_wordInstances);
+    notifyListeners();
   } catch (e) {
-    debugPrint(
-        'Error fetching WordTracker subcollection for Child document ${childDoc.id}: $e');
+    debugPrint('Error fetching data: $e');
   }
 }
-
-      _wordInstances = wordInstances;
-      if (_filteredInstances.isEmpty) _filteredInstances = List.from(_wordInstances);
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error fetching Child documents: $e');
-    }
-  }
 
   void filterData(FieldLabel? selectedField, String? selectedEntry) {
     if (selectedField == null ||
@@ -351,14 +339,15 @@ if (posDoc.exists && posDoc['partOfSpeech'] != null) {
             return word.id == selectedEntry;
           case FieldLabel.age:
             return word.childAge.toString() == selectedEntry;
+          case FieldLabel.partofspeech:
+            return word.partOfSpeech == selectedEntry;
         }
       }).toList();
     }
     notifyListeners();
   }
 
-  void sort<T>(Comparable<T> Function(WordInstance wordTracker) getField,
-      bool ascending) {
+  void sort<T>(Comparable<T> Function(WordInstance wordTracker) getField,bool ascending) {
     _filteredInstances.sort((a, b) {
       final aValue = getField(a);
       final bValue = getField(b);
@@ -442,6 +431,7 @@ class _FilterMenuState extends State<FilterMenu> {
                   onSelected: (FieldLabel? field) {
                     setState(() {
                       selectedField = field;
+                      entryController.clear();
                       _updateSuggestions();
                     });
                   },
@@ -450,6 +440,7 @@ class _FilterMenuState extends State<FilterMenu> {
                 const SizedBox(width: 24),
                 Expanded(
                   child: Autocomplete<String>(
+                    key: ValueKey(selectedField),
                     optionsBuilder: (TextEditingValue textEditingValue) {
                       if (textEditingValue.text.isEmpty) {
                         return suggestions;
@@ -527,6 +518,7 @@ class _FilterMenuState extends State<FilterMenu> {
 
     if (widget.dataSource.isEmpty) {
       debugPrint("No data available for suggestions.");
+      if (!mounted) return;
       setState(() => suggestions = []);
       return;
     }
@@ -544,11 +536,17 @@ class _FilterMenuState extends State<FilterMenu> {
             .map((word) => word.id)
             .where((e) => e.isNotEmpty)
             .toSet();
+      case FieldLabel.partofspeech:
+        uniqueValues = widget.dataSource
+            .map((word) => word.partOfSpeech)
+            .where((e) => e.isNotEmpty)
+            .toSet();      
         break;
       default:
         uniqueValues = {};
     }
 
+    if (!mounted) return;
     setState(() {
       suggestions = uniqueValues.toList();
     });
@@ -579,7 +577,8 @@ typedef FieldEntry = DropdownMenuEntry<FieldLabel>;
 enum FieldLabel {
   child('Child'),
   age('Age'),
-  word('Word');
+  word('Word'),
+  partofspeech('Part of Speech');
 
   const FieldLabel(this.label);
   final String label;
