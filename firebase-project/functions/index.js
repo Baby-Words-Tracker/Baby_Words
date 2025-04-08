@@ -267,9 +267,11 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
     }
 
     await db.runTransaction(async (transaction) => {
+      // get the users document to berify their ownership of the child
       const userRef = parentCollection.doc(data.auth.uid);
       const userSnaphot = await transaction.get(userRef);
 
+      // If the user is not a parent of the child, exit
       if (!userSnaphot.exists ||
           !userSnaphot.data().childIDs.includes(childUid)) {
         throw new https.HttpsError(
@@ -279,13 +281,16 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
         );
       }
 
+      // get the target parent document
       const parentRef = parentQuerySnapshot.docs[0].ref;
       const parentUID = parentRef.id;
 
+      // get the child document
       const childCollection = db.collection("Child");
       const childRef = childCollection.doc(childUid);
       const childSnapshot = await transaction.get(childRef);
 
+      // If the child document does not exist, exit
       if (!childSnapshot.exists) {
         throw new https.HttpsError(
             "not-found",
@@ -293,10 +298,12 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
         );
       }
 
+      // Update the target parent to own the child
       transaction.update(parentRef, {
         childIDs: admin.firestore.FieldValue.arrayUnion(childUid),
       });
 
+      // Update the child document to be a child of the target parent
       transaction.update(childRef, {
         parentIDs: admin.firestore.FieldValue.arrayUnion(parentUID),
       });
