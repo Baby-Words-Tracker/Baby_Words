@@ -360,10 +360,10 @@ exports.generateSignedUrl = https.onRequest(async (data, context) => {
         .file(fileName)
         .getSignedUrl(options);
 
-    //res.status(200).send({url});
-    return { url };
+    // res.status(200).send({url});
+    return {url};
   } catch (error) {
-    throw new functions.https.HttpsError(
-        'internal', `Error generating signed url: ${error}`);
+    throw new https.HttpsError(
+        "internal", `Error generating signed url: ${error}`);
   }
 });
