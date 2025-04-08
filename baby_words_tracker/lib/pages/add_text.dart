@@ -99,7 +99,7 @@ class _AddTextPageState extends State<AddTextPage> {
                       final wordDataService = context.read<WordDataService>();
                       final wordTrackerDataService =
                           context.read<WordTrackerDataService>();
-                      Child? currChild = context.read<CurrentChildrenService>().getCurrChild(context);
+                      Child? currChild = context.read<CurrentChildrenService>().getCurrChild();
                       String? currChildID;
                       if (currChild != null)
                       {

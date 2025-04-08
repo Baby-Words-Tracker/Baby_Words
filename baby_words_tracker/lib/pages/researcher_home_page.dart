@@ -184,8 +184,10 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
         ),
         DataColumn(
           label: const Text("Part of Speech"),
-          onSort: (columnIndex, ascending) =>
-              _sort((wordInstance) => wordInstance.partOfSpeech, columnIndex, ascending),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.partOfSpeech,
+              columnIndex,
+              ascending),
         ),
         DataColumn(
           label: const Text("First Utterance"),
@@ -271,66 +273,72 @@ class FirestoreDataTableSource extends DataTableSource {
           await FirebaseFirestore.instance.collection('Child').get();
 
       for (var childDoc in childSnapshot.docs) {
-  try {
-    String childID = childDoc.id;
-    DateTime currentTime = DateTime.now();
-    DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
-    int childAge = currentTime.year - childBirthday.year;
-    if ((childBirthday.month > currentTime.month) ||
-        (childBirthday.month == currentTime.month &&
-            childBirthday.day > currentTime.day)) {
-      childAge--;
-    }
+        try {
+          String childID = childDoc.id;
+          DateTime currentTime = DateTime.now();
+          DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
+          int childAge = currentTime.year - childBirthday.year;
+          if ((childBirthday.month > currentTime.month) ||
+              (childBirthday.month == currentTime.month &&
+                  childBirthday.day > currentTime.day)) {
+            childAge--;
+          }
 
-    QuerySnapshot wordTrackerSnapshot =
-        await childDoc.reference.collection('WordTracker').get();
+          QuerySnapshot wordTrackerSnapshot =
+              await childDoc.reference.collection('WordTracker').get();
 
-    for (var wordDoc in wordTrackerSnapshot.docs) {
-      try {
-        String wordID = wordDoc.id;
+          for (var wordDoc in wordTrackerSnapshot.docs) {
+            try {
+              String wordID = wordDoc.id;
 
-        // Fetch the corresponding word document by WordTracker ID
-        DocumentSnapshot posDoc =
-            await FirebaseFirestore.instance.collection('Word').doc(wordID).get();
+              // Fetch the corresponding word document by WordTracker ID
+              DocumentSnapshot posDoc = await FirebaseFirestore.instance
+                  .collection('Word')
+                  .doc(wordID)
+                  .get();
 
-String partOfSpeechStr = "unknown";
+              String partOfSpeechStr = "unknown";
 
-if (posDoc.exists && posDoc['partOfSpeech'] != null) {
-  final dynamic posField = posDoc['partOfSpeech'];
+              if (posDoc.exists && posDoc['partOfSpeech'] != null) {
+                final dynamic posField = posDoc['partOfSpeech'];
 
-  if (posField is Map) {
-    final Map<String, dynamic> posMap = Map.from(posField);
+                if (posField is Map) {
+                  final Map<String, dynamic> posMap = Map.from(posField);
 
-    if (posMap.isNotEmpty) {
-      final String languageKey = posMap.keys.first; // For example, "en"
-      final dynamic posValue = posMap[languageKey];
-      partOfSpeechStr = posValue.toString();
-      
-    }
-  }
-}
-        wordInstances.add(WordInstance(
-          childName: childID,
-          childAge: childAge,
-          id: wordID,
-          firstUtterance: wordDoc['firstUtterance'] != null
-              ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
-              : 'Unknown',
-          videoID: wordDoc['videoID'] ?? 0,
-          partOfSpeech: partOfSpeechStr, // Add POS to WordInstance
-        ));
-      } catch (e) {
-        debugPrint('Error fetching Word document with ID ${wordDoc.id}: $e');
+                  if (posMap.isNotEmpty) {
+                    final String languageKey =
+                        posMap.keys.first; // For example, "en"
+                    final dynamic posValue = posMap[languageKey];
+                    partOfSpeechStr = posValue.toString();
+                  }
+                }
+              }
+              wordInstances.add(WordInstance(
+                childName: childID,
+                childAge: childAge,
+                id: wordID,
+                firstUtterance: wordDoc['firstUtterance'] != null
+                    ? (wordDoc['firstUtterance'] as Timestamp)
+                        .toDate()
+                        .toString()
+                    : 'Unknown',
+                videoID: wordDoc['videoID'] ?? 0,
+                partOfSpeech: partOfSpeechStr, // Add POS to WordInstance
+              ));
+            } catch (e) {
+              debugPrint(
+                  'Error fetching Word document with ID ${wordDoc.id}: $e');
+            }
+          }
+        } catch (e) {
+          debugPrint(
+              'Error fetching WordTracker subcollection for Child document ${childDoc.id}: $e');
+        }
       }
-    }
-  } catch (e) {
-    debugPrint(
-        'Error fetching WordTracker subcollection for Child document ${childDoc.id}: $e');
-  }
-}
 
       _wordInstances = wordInstances;
-      if (_filteredInstances.isEmpty) _filteredInstances = List.from(_wordInstances);
+      if (_filteredInstances.isEmpty)
+        _filteredInstances = List.from(_wordInstances);
       notifyListeners();
     } catch (e) {
       debugPrint('Error fetching Child documents: $e');
