@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 
 class AllLocalizations {
-
   AllLocalizations();
 
   static final Map<String, Map<String, String>> localizedStrings = {
     'en': {
-
       //home page
       "add_words": "Add Words",
       "upload_video": "Upload Video",
@@ -35,12 +33,14 @@ class AllLocalizations {
       "select_graph": "Select Graph Type",
       "words_per_pos": "All Words Per Part of Speech",
       "loading": "Loading...",
+      "No-Children-nl-Yet": "No Children\nYet",
       "over_num_days": "Over how many days...",
       "select_option": "select an option",
       "Words Learned / Day": "Words Learned / Day",
       "All Words / Part of Speech": "All Words / Part of Speech",
       "New Words Per Day": "New Words Per Day",
-      "Total Number of Words by Part of Speech":"Total Number of Words by Part of Speech",
+      "Total Number of Words by Part of Speech":
+          "Total Number of Words by Part of Speech",
 
       //settings
       "settings": "Settings",
@@ -62,7 +62,8 @@ class AllLocalizations {
       //sign in
       "welcome_sign_in": "Welcome to BabyWordsTracker, please sign in!",
       "welcome_sign_up": "Welcome to BabyWordsTracker, please sign up!",
-      "terms_and_conditions": "By signing in, you agree to our terms and conditions.",
+      "terms_and_conditions":
+          "By signing in, you agree to our terms and conditions.",
       "child_to_new_parent": "Give another Parent Access To Current Child:",
       "choose_email": "Choose Email...",
       "no_email": "Please give some input for the email field."
@@ -87,8 +88,10 @@ class AllLocalizations {
       "success": "¡Éxito!",
       "word_success": "¡Palabras enviadas con éxito!",
       "error": "¡Error!",
-      "words_error":"No se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
+      "words_error":
+          "No se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
       "loading": "Cargando...",
+      "No-Children-nl-Yet": "Aún No Hay\nNiños",
       "settings": "Configuración",
       "parent_settings": "Configuración Para Padres",
       "add_child": "Agregar hijo",
@@ -98,24 +101,31 @@ class AllLocalizations {
       "child_added": "¡Hijo agregado!",
       "add_child_success": "¡Hijo agregado!",
       "child_not_added": "No se pudo agregar al hijo",
-      "add_child_failed": "No se pudo agregar a su hijo, por favor intente de nuevo.",
+      "add_child_failed":
+          "No se pudo agregar a su hijo, por favor intente de nuevo.",
       "invalid_type": "Tipo inválido",
       "access_child": "acceso a tu hijo",
-      "grant_permission": "¿Estás seguro de que deseas dar acceso al padre con el correo electrónico",
+      "grant_permission":
+          "¿Estás seguro de que deseas dar acceso al padre con el correo electrónico",
       "No": "No",
       "Yes": "Si",
-      "welcome_sign_in": "¡Bienvenido a BabyWordsTracker, por favor inicia sesión!",
-      "welcome_sign_up": "¡Bienvenido a BabyWordsTracker, por favor regístrate!",
-      "terms_and_conditions": "Al iniciar sesión, aceptas nuestros términos y condiciones.",
+      "welcome_sign_in":
+          "¡Bienvenido a BabyWordsTracker, por favor inicia sesión!",
+      "welcome_sign_up":
+          "¡Bienvenido a BabyWordsTracker, por favor regístrate!",
+      "terms_and_conditions":
+          "Al iniciar sesión, aceptas nuestros términos y condiciones.",
       "over_num_days": "¿Durante cuántos días...",
       "select_option": "selecciona una opción",
       "Words Learned / Day": "Palabras aprendidas / Día",
       "All Words / Part of Speech": "Todas las palabras / Parte de la oración",
       "New Words Per Day": "Nuevas palabras por día",
-      "Total Number of Words by Part of Speech": "Número total de palabras por parte de la oración",
+      "Total Number of Words by Part of Speech":
+          "Número total de palabras por parte de la oración",
       "child_to_new_parent": "Dar acceso a otro padre para el hijo actual:",
       "choose_email": "Elegir correo electrónico...",
-      "no_email": "Por favor, ingrese un valor en el campo de correo electrónico."
+      "no_email":
+          "Por favor, ingrese un valor en el campo de correo electrónico."
     }
   };
 }

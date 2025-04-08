@@ -95,25 +95,21 @@ class AuthGate extends StatelessWidget {
         // Add user to database on first login
         User? user = snapshot.data;
 
-        final userModelService =
-            context.watch<UserModelService>(); // Listen for changes
-        UserType userType = userModelService.userType;
-        //context.read<LocalizationService>().matchParentLanguage(context);
-        //matchParentLanguage(context);
-
-        if (user == null) {
-          throw Exception('User is null in auth_gate');
-        } else if (userType == UserType.unauthenticated) {
-          return const Center(
-              child:
-                  CircularProgressIndicator()); // Wait until the sync is complete
-        } else if (userType == UserType.parent) {
-          return const HomePage();
-        } else if (userType == UserType.researcher) {
-          return const ResearcherHomePage();
-        } else {
-          throw Exception('Unexpected user state occured');
-        }
+        return Consumer<UserModelService>(
+          builder: (context, userModelService, child) {
+            if (user == null) {
+              throw Exception('User is null in auth_gate');
+            } else if (userModelService.userType == UserType.unauthenticated) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (userModelService.userType == UserType.parent) {
+              return const HomePage();
+            } else if (userModelService.userType == UserType.researcher) {
+              return const ResearcherHomePage();
+            } else {
+              throw Exception('Unexpected user state occured');
+            }
+          },
+        );
       },
     );
   }
