@@ -364,6 +364,8 @@ exports.generateSignedUrl = https.onRequest(async (data, context) => {
     return {url};
   } catch (error) {
     throw new https.HttpsError(
-        "not-found", `Error generating signed url: ${error}, filename : ${data.fileName}`);
+        "not-found",
+        `Error generating signed url: ${error}, filename : ${data.fileName}`,
+    );
   }
 });
