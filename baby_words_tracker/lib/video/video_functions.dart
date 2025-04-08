@@ -4,23 +4,49 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
 Future<String?> getSignedUrl(String filename) async {
   HttpsCallable function =
-      FirebaseFunctions.instance.httpsCallable("addChildToOtherParent");
+      FirebaseFunctions.instance.httpsCallable("generateSignedUrl");
 
   try {
+    debugPrint("FileName in getSignedUrl: $filename");
     final response = await function.call({'fileName': filename});
     debugPrint('Signed URL: ${response.data['url']}');
     return response.data['url'];
   } catch (e) {
     debugPrint('Failed to get signed url with error: $e');
+    return null;
   }
+}
+
+Future<String> selectFile(TextEditingController fileTextController) async {
+  FilePickerResult? result = await FilePicker.platform.pickFiles(
+    allowMultiple: false,
+    type: FileType.video,
+  );
+
+  if (result != null && result.files.single.path != null) {
+    File file = File(result.files.single.path!);
+    int fileSizeInBytes = await file.length();
+    double fileSizeMb = fileSizeInBytes / (1024 * 1024);
+
+    if (fileSizeMb > 5) {
+      return "Sorry! That file is to big, consider shortening the video.";
+    }
+    fileTextController.text = result.files.single.path!;
+    return file.path;
+  }
+
+  //the user didnt select a file
+  return "Please select a 'mp4' file.";
 }
 
 Future<void> uploadVideo(String filePath) async {
   try {
+    debugPrint("File for signed url: $filePath");
     var signedUrl = await getSignedUrl(filePath);
     final File file = File(filePath);
 
