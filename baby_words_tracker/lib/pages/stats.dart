@@ -102,7 +102,10 @@ class _StatsPageState extends State<StatsPage> {
             return Column(
               children: [
                 
-                Text(localizationService.translate(graphHeader(graphType, graphLength))),
+                Text(localizationService.translate(graphHeader(graphType, graphLength)), style: const TextStyle(
+                      fontSize: 30.0,
+                      color: Color(0xFF9E1B32),
+                      fontWeight: FontWeight.bold)),
                 
                 //Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
                 graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId!),

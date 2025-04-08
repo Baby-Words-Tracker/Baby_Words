@@ -5,7 +5,6 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -57,7 +56,7 @@ class AuthGate extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Image.asset('assets/LECS_mascot_filled.png'),
+                  child: Image.asset('assets/LECS_mascot.png'),
                 ),
               );
             },
@@ -85,7 +84,7 @@ class AuthGate extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Image.asset('assets/LECS_mascot_filled.png'),
+                  child: Image.asset('assets/LECS_mascot.png'),
                 ),
               );
             },
