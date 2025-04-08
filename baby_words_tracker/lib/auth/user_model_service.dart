@@ -6,13 +6,13 @@ import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 
 import 'package:baby_words_tracker/util/pair.dart';
-import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 
 import 'package:flutter/material.dart';
 
 class UserModelService extends ChangeNotifier {
-  late final SafeSynchonizer _safeSynchonizer;
+  late final SafeSynchronizer _safeSynchronizer;
 
   UserType _userType = UserType.unauthenticated;
   static const UserType _defaultUserType = UserType.parent;
@@ -27,12 +27,12 @@ class UserModelService extends ChangeNotifier {
     required GeneralUserService generalUserService,
   })  : _authenticationService = authenticationService,
         _generalUserService = generalUserService {
-    _safeSynchonizer = SafeSynchonizer(_synchronizeUser);
+    _safeSynchronizer = SafeSynchronizer(_synchronizeUser);
 
     _authenticationService.addListener(() {
       debugPrint(
           "UserModelService: change notification recieved. resync triggered");
-      _safeSynchonizer.safeSynchronize().catchError((e) {
+      _safeSynchronizer.safeSynchronize().catchError((e) {
         debugPrint(
             "UserModelService: Error synchronizing user: $e\n${e.stackTrace}");
       });

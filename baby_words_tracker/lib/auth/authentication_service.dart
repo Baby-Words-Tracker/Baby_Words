@@ -1,17 +1,17 @@
-import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthenticationService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuthInstance;
-  late final SafeSynchonizer _safeSynchonizer;
+  late final SafeSynchronizer _safeSynchronizer;
 
   User? _user;
   Map<String, dynamic>? _customClaims;
 
   AuthenticationService(this._firebaseAuthInstance) {
-    _safeSynchonizer = SafeSynchonizer(_fetchCustomClaims);
+    _safeSynchronizer = SafeSynchronizer(_fetchCustomClaims);
 
     _firebaseAuthInstance.userChanges().listen((User? user) {
       debugPrint("AuthenticationService: User change detected");
@@ -31,7 +31,7 @@ class AuthenticationService extends ChangeNotifier {
         _user = user;
       }
 
-      _safeSynchonizer.safeSynchronize();
+      _safeSynchronizer.safeSynchronize();
     });
   }
 
