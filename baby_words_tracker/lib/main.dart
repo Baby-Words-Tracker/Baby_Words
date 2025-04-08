@@ -27,7 +27,7 @@ import 'pages/stats.dart';
 import 'pages/upload_video.dart';
 
 // Util
-import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/check_emulators.dart';
 
 // Firebase
@@ -62,9 +62,10 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
-          ChangeNotifierProvider(create: (_) => Config()),
           ChangeNotifierProvider(
-              create: (_) => LocalizationService(), lazy: false),
+            create: (_) => LocalizationService(),
+            lazy: false,
+          ),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService:
@@ -82,10 +83,21 @@ void main() async {
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
-                authenticationService:
-                    Provider.of<AuthenticationService>(context, listen: false),
-                generalUserService:
-                    Provider.of<GeneralUserService>(context, listen: false)),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+              generalUserService:
+                  Provider.of<GeneralUserService>(context, listen: false),
+            ),
+            lazy: false,
+          ),
+          ChangeNotifierProvider(
+            create: (context) => CurrentChildrenService(
+              childService:
+                  Provider.of<ChildDataService>(context, listen: false),
+              userService:
+                  Provider.of<UserModelService>(context, listen: false),
+            ),
+            lazy: false,
           ),
         ],
         child: const MyApp(),

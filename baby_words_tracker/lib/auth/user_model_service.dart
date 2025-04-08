@@ -22,6 +22,8 @@ class UserModelService extends ChangeNotifier {
 
   IDocumentListener? _listener;
 
+  int i = 0;
+
   UserModelService({
     required AuthenticationService authenticationService,
     required GeneralUserService generalUserService,
@@ -40,15 +42,18 @@ class UserModelService extends ChangeNotifier {
   }
 
   Future<void> _synchronizeUser() async {
+    int localI = ++i;
     debugPrint(
-        "UserModelService: Synchronizing user: ${_authenticationService.userId}");
-
+        "UserModelService: $localI: Synchronizing user: ${_authenticationService.userId}");
+    await Future.delayed(const Duration(seconds: 3));
+    debugPrint(
+        "UserModelService: $localI: Synchronizing user after sleep: ${_authenticationService.userId} - ${_authenticationService.userEmail} - ${_authenticationService.userName}");
     try {
       if (!_authenticationService.isAuthenticated ||
           _authenticationService.userId == null) {
         _unathenticateUser();
         debugPrint(
-            "UserModelService: User unauthenticated ending synchronization.");
+            "UserModelService: $localI: User unauthenticated ending synchronization.");
         return;
       }
       // else if user is authenticated or the authentication data has changed, synchronize user
@@ -56,12 +61,12 @@ class UserModelService extends ChangeNotifier {
           _getCurrentUserModelId() != _authenticationService.userId) {
         // debugPrint all of these and their comparison: _getCurrentModelEmail() != _authenticationService.userEmail || _getCurrentUserModelName() != _authenticationService.userName
         debugPrint(
-            "UserModelService: ${_userType.name} user authenticated, but not synchronized");
+            "UserModelService: $localI: ${_userType.name} user authenticated, but not synchronized");
 
         await _updateUserTypeAndListener(_authenticationService.userId!);
 
         if (_userType == UserType.unauthenticated) {
-          // debugPrint("UserModelService: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
+          // debugPrint("UserModelService: $localI: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
 
           Pair<dynamic, UserType> user = await _generalUserService.createUser(
               userType: _defaultUserType,
@@ -70,9 +75,9 @@ class UserModelService extends ChangeNotifier {
               name: _authenticationService.userName);
 
           debugPrint(
-              "UserModelService: user created -> ${user.first} | ${user.second}");
+              "UserModelService: $localI: user created -> ${user.first} | ${user.second}");
           if (user.first != null) {
-            debugPrint("UserModelService: new User model created");
+            debugPrint("UserModelService: $localI: new User model created");
             await _updateUserTypeAndListener(_authenticationService.userId!);
             if (user.second != _defaultUserType) {
               debugPrint(
@@ -86,18 +91,18 @@ class UserModelService extends ChangeNotifier {
             debugPrint(
                 "Error: UserModelService: User model is null when the usertype is not unauthenticated");
           } else {
-            debugPrint("UserModelService: User Data synchronized successfully");
+            debugPrint("UserModelService: $localI: User Data synchronized successfully");
           }
         }
       } else {
         debugPrint(
-            "UserModelService: User is already authenticated and synchronized, no action needed");
+            "UserModelService: $localI: User is already authenticated and synchronized, no action needed");
       }
     } catch (e, stack) {
-      debugPrint("UserModelService: _synchronizeUser failed: $e\n$stack");
+      debugPrint("UserModelService: $localI: _synchronizeUser failed: $e\n$stack");
     }
     debugPrint(
-        "UserModelService: Synchronization finished, userType: $_userType");
+        "UserModelService: $localI: Synchronization finished, userType: $_userType");
   }
 
   dynamic _getCurrentUserModel() {

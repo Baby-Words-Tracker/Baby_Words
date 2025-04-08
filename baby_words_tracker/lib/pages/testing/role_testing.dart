@@ -1,11 +1,11 @@
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
+import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
 
-enum UserType { parent, researcher, unauthenticated }
 
 class RoleTesting extends StatefulWidget {
   static const routeName = '/roletesting';

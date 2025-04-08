@@ -1,7 +1,7 @@
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
-import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:flutter/material.dart';
 import 'package:csv/csv.dart';
@@ -99,12 +99,13 @@ class _AddTextPageState extends State<AddTextPage> {
                       final wordDataService = context.read<WordDataService>();
                       final wordTrackerDataService =
                           context.read<WordTrackerDataService>();
-                      Parent? currParent = getCurrentParent(context);
-                      String? currChildID = "";
-                      if (currParent != null) {
-                        currChildID = getCurrentChildIDSingleInstance(
-                            context, currParent);
+                      Child? currChild = context.read<CurrentChildrenService>().getCurrChild();
+                      String? currChildID;
+                      if (currChild != null)
+                      {
+                        currChildID = currChild.id;
                       }
+                      
                       /* List<LanguageCode>? maybeLanguages = currChildID != null
                           ? await childDataService.getLanguages(currChildID)
                           : [LanguageCode.en];
@@ -202,7 +203,6 @@ class _AddTextPageState extends State<AddTextPage> {
   Future<void> addWordToChild(String word, ChildDataService childService,
       WordDataService wordService, WordTrackerDataService trackerService,
       {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-    //FIXME: implement language, part of speech, defn, spellcheck
     //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
     if (await trackerService.createWordTracker(id, word, DateTime.now()) ==
         null) {

@@ -187,8 +187,10 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
         ),
         DataColumn(
           label: const Text("Part of Speech"),
-          onSort: (columnIndex, ascending) =>
-              _sort((wordInstance) => wordInstance.partOfSpeech, columnIndex, ascending),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.partOfSpeech,
+              columnIndex,
+              ascending),
         ),
         DataColumn(
           label: const Text("First Utterance"),
