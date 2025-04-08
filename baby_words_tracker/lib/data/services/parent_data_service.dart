@@ -59,10 +59,14 @@ class ParentDataService extends ChangeNotifier {
   }
 
   Future<bool> updateParent(String id,
-      {String? email, String? name, List<String>? childIDs, LanguageCode? language}) async {
+      {String? email,
+      String? name,
+      List<String>? childIDs,
+      LanguageCode? language}) async {
     final updateData =
-        Parent.createUpdateMap(email: email, name: name, childIDs: childIDs, language: language);
-    bool success = await _firestoreRepository.update(Parent.collectionName, id, updateData);
+        Parent.createUpdateMap(childIDs: childIDs, language: language);
+    bool success = await _firestoreRepository.update(
+        Parent.collectionName, id, updateData);
 
     if (!success) {
       return false;
@@ -96,8 +100,8 @@ class ParentDataService extends ChangeNotifier {
     if (object == null) return children;
 
     final parent = Parent.fromDataWithId(object);
-    final List<DataWithId> data =
-        await _firestoreRepository.readMultiple(Child.collectionName, parent.childIDs);
+    final List<DataWithId> data = await _firestoreRepository.readMultiple(
+        Child.collectionName, parent.childIDs);
 
     for (DataWithId child in data) {
       children.add(Child.fromDataWithId(child));
@@ -107,13 +111,13 @@ class ParentDataService extends ChangeNotifier {
 
   Future<LanguageCode?> getLanguage(String id) async {
     final object = await _firestoreRepository.read(Parent.collectionName, id);
-    
+
     if (object == null) {
-      debugPrint("unable to get parent language");      
+      debugPrint("unable to get parent language");
       return null;
     }
 
-    return Parent.fromDataWithId(object).language; 
+    return Parent.fromDataWithId(object).language;
   }
 
   IDocumentListener<Parent> getUserListener(String id) {

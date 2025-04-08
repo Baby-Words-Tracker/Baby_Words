@@ -24,8 +24,7 @@ class GeneralUserService {
       String? email,
       String? name}) async {
     if (userType == UserType.parent) {
-      final parent = await _parentDataService
-          .createParent(Parent(id: id, email: email, name: name));
+      final parent = await _parentDataService.createParent(Parent(id: id));
       if (parent != null) {
         return Pair(parent, UserType.parent);
       }
