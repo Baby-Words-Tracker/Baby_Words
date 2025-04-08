@@ -1,35 +1,37 @@
-import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthenticationService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuthInstance;
-  late final SafeSynchonizer _safeSynchonizer;
+  late final SafeSynchronizer _safeSynchronizer;
 
   User? _user;
   Map<String, dynamic>? _customClaims;
 
   AuthenticationService(this._firebaseAuthInstance) {
-    _safeSynchonizer = SafeSynchonizer(_fetchCustomClaims);
+    _safeSynchronizer = SafeSynchronizer(_fetchCustomClaims);
 
     _firebaseAuthInstance.userChanges().listen((User? user) {
       debugPrint("AuthenticationService: User change detected");
 
-      _user = user;
-
       if ((_user == null && user != null) ||
           (_user != null && user == null) ||
           _user?.uid != user?.uid ||
-          _user?.displayName != user?.displayName ||
-          _user?.email != user?.email ||
-          _user?.photoURL != user?.photoURL) {
+          _user?.email != user?.email) {
         debugPrint(
             'AuthenticationService: User update -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
+
+        _user = user;
         notifyListeners(); // Only notify listeners if relevant fields have changed
+      } else {
+        debugPrint(
+            'AuthenticationService: No Change -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
+        _user = user;
       }
 
-      _safeSynchonizer.safeSynchronize();
+      _safeSynchronizer.safeSynchronize();
     });
   }
 
@@ -41,9 +43,13 @@ class AuthenticationService extends ChangeNotifier {
         notifyListeners();
       } catch (e) {
         debugPrint('Error fetching custom claims: $e');
+        _customClaims = null;
+        notifyListeners();
       }
     } else {
       _customClaims = null;
+      notifyListeners();
+      debugPrint('User is null, cannot fetch custom claims');
     }
   }
 
