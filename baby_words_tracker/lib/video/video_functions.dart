@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:path/path.dart' as path;
 
 Future<String?> getSignedUrl(String filename) async {
   HttpsCallable function =
@@ -37,6 +38,8 @@ Future<String> selectFile(TextEditingController fileTextController) async {
       return "Sorry! That file is to big, consider shortening the video.";
     }
     fileTextController.text = result.files.single.path!;
+
+    debugPrint("File picked: $fileTextController.text");
     return file.path;
   }
 
@@ -47,7 +50,7 @@ Future<String> selectFile(TextEditingController fileTextController) async {
 Future<void> uploadVideo(String filePath) async {
   try {
     debugPrint("File for signed url: $filePath");
-    var signedUrl = await getSignedUrl(filePath);
+    var signedUrl = await getSignedUrl(path.basename(filePath));
     final File file = File(filePath);
 
     if (signedUrl != null) {
