@@ -1,17 +1,17 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const { logger } = require("firebase-functions");
+const {logger} = require("firebase-functions");
 
 // The Firebase Admin SDK to access Firestore.
 const admin = require("firebase-admin");
-const { getAuth } = require("firebase-admin/auth");
+const {getAuth} = require("firebase-admin/auth");
 
-const { Storage } = require("@google-cloud/storage");
+const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
-const { Role } = require("./auth/roles");
-const { giveClaim, removeClaim } = require("./auth/claims");
+const {Role} = require("./auth/roles");
+const {giveClaim, removeClaim} = require("./auth/claims");
 // eslint-disable-next-line max-len
-const { checkAuthentication, checkIsAtLeast } = require("./auth/auth.js");
+const {checkAuthentication, checkIsAtLeast} = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -34,7 +34,7 @@ const storage = new Storage();
 exports.addDefaultClaim = auth.user().onCreate(async (user) => {
   try {
     // Set the custom claim 'parent' to true
-    await getAuth().setCustomUserClaims(user.uid, { parent: true });
+    await getAuth().setCustomUserClaims(user.uid, {parent: true});
 
     logger.log(`Custom claim set for user ${user.uid}`);
   } catch (error) {
@@ -50,7 +50,7 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
 function checkEmpty(variable, variableName) {
   if (!variable) {
     throw new https.HttpsError(
-      "invalid-argument", `Target user ${variableName} is required`);
+        "invalid-argument", `Target user ${variableName} is required`);
   }
 }
 
@@ -276,9 +276,9 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
       if (!userSnaphot.exists ||
         !userSnaphot.data().childIDs.includes(childUid)) {
         throw new https.HttpsError(
-          "permission-denied",
-          // eslint-disable-next-line max-len
-          "You do must be a parent of the child to assign them to another parent",
+            "permission-denied",
+            // eslint-disable-next-line max-len
+            "You do must be a parent of the child to assign them to another parent",
         );
       }
 
@@ -291,8 +291,8 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
       if (!childSnapshot.exists) {
         throw new https.HttpsError(
-          "not-found",
-          "Child document not found",
+            "not-found",
+            "Child document not found",
         );
       }
 
@@ -356,17 +356,17 @@ exports.generateSignedUrl = https.onCall(async (req, res) => {
     };
 
     const [url] = await storage
-      .bucket(bucketName)
-      .file(fileName)
-      .getSignedUrl(options);
+        .bucket(bucketName)
+        .file(fileName)
+        .getSignedUrl(options);
 
     // res.status(200).send({url});
-    return { url };
+    return {url};
   } catch (error) {
     throw new https.HttpsError(
-      "not-found",
-      // eslint-disable-next-line max-len
-      `Error generating signed url: ${error}, filename : ${req.body.fileName}`,
+        "not-found",
+        // eslint-disable-next-line max-len
+        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
     );
   }
 });
