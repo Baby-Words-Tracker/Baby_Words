@@ -9,7 +9,7 @@ const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
 const {Role} = require("./auth/roles");
-const {giveClaim, removeClaim} = require("./auth/claims");
+const {giveClaimByEmail, removeClaimByEmail} = require("./auth/claims");
 // eslint-disable-next-line max-len
 const {checkIsAtLeast} = require("./auth/auth.js");
 
@@ -56,7 +56,7 @@ function checkEmpty(variable, variableName) {
 
 /**
  * Assigns the 'researcher' role to the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
@@ -64,12 +64,12 @@ function checkEmpty(variable, variableName) {
  * or if the user does not have the minimum role
  */
 exports.giveResearcherClaim = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   // Assign the 'researcher' role to the target user
   try {
-    giveClaim(Role.researcher, Role.admin, targetUid, req);
+    giveClaimByEmail(Role.researcher, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
@@ -79,14 +79,14 @@ exports.giveResearcherClaim = https.onCall(async (req, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been assigned the` +
+    message: `User ${targetEmail} has been assigned the` +
       ` ${Role.researcher.value.description} role.`,
   };
 });
 
 /**
  * Removes the 'researcher' role from the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
@@ -94,11 +94,11 @@ exports.giveResearcherClaim = https.onCall(async (req, context) => {
  * or if the user does not have the minimum role
  */
 exports.removeResearcherClaim = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    removeClaim(Role.researcher, Role.admin, targetUid, req);
+    removeClaimByEmail(Role.researcher, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
@@ -108,14 +108,14 @@ exports.removeResearcherClaim = https.onCall(async (req, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been removed from the` +
+    message: `User ${targetEmail} has been removed from the` +
       ` ${Role.researcher.value.description} role.`,
   };
 });
 
 /**
  * Assigns the 'parent' role to the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
@@ -123,11 +123,11 @@ exports.removeResearcherClaim = https.onCall(async (req, context) => {
  * or if the user does not have the minimum role
  */
 exports.giveParentClaim = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    giveClaim(Role.parent, Role.researcher, targetUid, req);
+    giveClaimByEmail(Role.parent, Role.researcher, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign parent role: ${error}`);
     return {
@@ -137,14 +137,14 @@ exports.giveParentClaim = https.onCall(async (req, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been assigned the` +
+    message: `User ${targetEmail} has been assigned the` +
       ` ${Role.parent.value.description} role.`,
   };
 });
 
 /**
  * Removes the 'parent' role from the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
@@ -152,11 +152,11 @@ exports.giveParentClaim = https.onCall(async (req, context) => {
  * or if the user does not have the minimum role
  */
 exports.removeParentClaim = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    removeClaim(Role.parent, Role.admin, targetUid, req);
+    removeClaimByEmail(Role.parent, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
@@ -166,14 +166,14 @@ exports.removeParentClaim = https.onCall(async (req, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been removed from the` +
+    message: `User ${targetEmail} has been removed from the` +
       ` ${Role.parent.value.description} role.`,
   };
 });
 
 /**
  * Assigns the 'admin' role to the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
@@ -181,11 +181,11 @@ exports.removeParentClaim = https.onCall(async (req, context) => {
  * or if the user does not have the minimum role
  */
 exports.giveAdminClaim = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    giveClaim(Role.admin, Role.admin, targetUid, req);
+    giveClaimByEmail(Role.admin, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign admin role: ${error}`);
     return {
@@ -195,14 +195,14 @@ exports.giveAdminClaim = https.onCall(async (req, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been assigned the` +
+    message: `User ${targetEmail} has been assigned the` +
       ` ${Role.admin.value.description} role.`,
   };
 });
 
 /**
  * Removes the 'admin' role from the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
@@ -210,11 +210,11 @@ exports.giveAdminClaim = https.onCall(async (req, context) => {
  * or if the user does not have the minimum role
  */
 exports.removeAdminClaim = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    removeClaim(Role.admin, Role.admin, targetUid, req);
+    removeClaimByEmail(Role.admin, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to remove admin role: ${error}`);
     return {
@@ -224,7 +224,7 @@ exports.removeAdminClaim = https.onCall(async (req, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been removed from the` +
+    message: `User ${targetEmail} has been removed from the` +
       ` ${Role.admin.value.description} role.`,
   };
 });
@@ -235,7 +235,7 @@ exports.removeAdminClaim = https.onCall(async (req, context) => {
 // TODO: test if a parent can add a child they don't own to someone else
 /**
  * Assigns a child to another parent
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target email or child UID is not provided,
