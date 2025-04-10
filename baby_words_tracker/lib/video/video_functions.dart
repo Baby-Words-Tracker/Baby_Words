@@ -16,7 +16,7 @@ Future<String?> getSignedUrl(String filename) async {
     debugPrint("FileName in getSignedUrl: $filename");
     final response = await function.call({'fileName': filename});
     debugPrint('Signed URL: ${response.data['url']}');
-    return response.data['url'];
+    return response.data["serviceConfig"]!['uri'];
   } catch (e) {
     debugPrint('Failed to get signed url with error: $e');
     return null;
