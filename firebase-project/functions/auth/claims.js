@@ -7,12 +7,11 @@ const https = require("firebase-functions/v2/https");
 
 // authentication functions
 const {checkAuthentication, checkIsAtLeast} = require("./auth");
-const {UserRecord} = require("firebase-admin/auth");
 
 /**
  * Gets a users record by uid
  * @param {string} targetUid The UID of the user record to get
- * @return {Promise<UserRecord>} The user record of the target user
+ * @return {UserRecord} The user record of the target user
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
@@ -32,7 +31,7 @@ async function getUserRecordByUID(targetUid) {
 /**
  * Gets a user's record using email
  * @param {string} targetEmail The email of the user record to get
- * @return {Promise<UserRecord>} The user record of the target user
+ * @return {UserRecord} The user record of the target user
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
