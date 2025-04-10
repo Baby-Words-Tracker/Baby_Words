@@ -1,4 +1,3 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +5,6 @@ import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
@@ -281,7 +279,7 @@ Future<void> fetchData() async {
       fetchTasks.add(() async {
         try {
           String childID = childDoc.id;
-          List<LanguageCode> childLangs = (childDoc['language'] as List<dynamic>).cast<LanguageCode>();
+          List<dynamic> childLangs = childDoc['language'];
           DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
           int childAge = DateTime.now().year - childBirthday.year;
 
@@ -297,16 +295,14 @@ Future<void> fetchData() async {
               try {
                 DocumentSnapshot posDoc = await FirebaseFirestore.instance.collection('Word').doc(wordDoc.id).get();
                 var posData = posDoc['partOfSpeech'];
-                if (posData == null) {
-                  debugPrint('Warning: partOfSpeech is null for word ${wordDoc.id}');
-                return; // Skip this word if data is missing
+                Map<String, String> posMap = Map.from(posData);
+                Map<String, String> partOfSpeechTracker = {};
+                if(childLangs.isEmpty){
+                  partOfSpeechTracker = posMap;
                 }
-                Map<LanguageCode, PartOfSpeech> posMap = Map.from(posData);
-                //Map<LanguageCode, PartOfSpeech> posMap = posDoc['partOfSpeech'].toMap();
-                Map<LanguageCode, PartOfSpeech> partOfSpeechTracker = {};
-                posMap.forEach((LanguageCode, PartOfSpeech) {
-                  if(childLangs.contains(LanguageCode)){
-                    partOfSpeechTracker[LanguageCode] = PartOfSpeech;
+                posMap.forEach((langCode, partSpeech) {
+                  if(childLangs.contains(langCode)){
+                    partOfSpeechTracker[langCode] = partSpeech;
                   }
                 });
                 tempInstances.add(WordInstance(
