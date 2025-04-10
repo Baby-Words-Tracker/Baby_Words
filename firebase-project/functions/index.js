@@ -11,7 +11,7 @@ const {Storage} = require("@google-cloud/storage");
 const {Role} = require("./auth/roles");
 const {giveClaim, removeClaim} = require("./auth/claims");
 // eslint-disable-next-line max-len
-const {checkAuthentication, checkIsAtLeast} = require("./auth/auth.js");
+const {checkIsAtLeast} = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -63,13 +63,13 @@ function checkEmpty(variable, variableName) {
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveResearcherClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.giveResearcherClaim = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
   checkEmpty(targetUid, "targetUid");
 
   // Assign the 'researcher' role to the target user
   try {
-    giveClaim(Role.researcher, Role.admin, targetUid, data);
+    giveClaim(Role.researcher, Role.admin, targetUid, req);
   } catch (error) {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
@@ -93,12 +93,12 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeResearcherClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.removeResearcherClaim = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
   checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.researcher, Role.admin, targetUid, data);
+    removeClaim(Role.researcher, Role.admin, targetUid, req);
   } catch (error) {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
@@ -122,12 +122,12 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveParentClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.giveParentClaim = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
   checkEmpty(targetUid, "targetUid");
 
   try {
-    giveClaim(Role.parent, Role.researcher, targetUid, data);
+    giveClaim(Role.parent, Role.researcher, targetUid, req);
   } catch (error) {
     logger.error(`Failed to assign parent role: ${error}`);
     return {
@@ -151,12 +151,12 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeParentClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.removeParentClaim = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
   checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.parent, Role.admin, targetUid, data);
+    removeClaim(Role.parent, Role.admin, targetUid, req);
   } catch (error) {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
@@ -180,12 +180,12 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveAdminClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.giveAdminClaim = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
   checkEmpty(targetUid, "targetUid");
 
   try {
-    giveClaim(Role.admin, Role.admin, targetUid, data);
+    giveClaim(Role.admin, Role.admin, targetUid, req);
   } catch (error) {
     logger.error(`Failed to assign admin role: ${error}`);
     return {
@@ -209,12 +209,12 @@ exports.giveAdminClaim = https.onCall(async (data, context) => {
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeAdminClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.removeAdminClaim = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
   checkEmpty(targetUid, "targetUid");
 
   try {
-    removeClaim(Role.admin, Role.admin, targetUid, data);
+    removeClaim(Role.admin, Role.admin, targetUid, req);
   } catch (error) {
     logger.error(`Failed to remove admin role: ${error}`);
     return {
@@ -243,16 +243,15 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
  * if the is not already a parent of the child,
  * or if the user does not have the minimum role
  */
-exports.addChildToOtherParent = https.onCall(async (data, context) => {
-  const targetEmail = data.data.targetEmail;
-  const childUid = data.data.childUid;
+exports.addChildToOtherParent = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  const childUid = req.data.childUid;
 
   checkEmpty(targetEmail, "targetEmail");
   checkEmpty(childUid, "childUid");
 
   try {
-    checkAuthentication(data);
-    checkIsAtLeast(data, Role.parent);
+    checkIsAtLeast(req, Role.parent);
 
     const parentCollection = db.collection("Parent");
 
@@ -270,7 +269,7 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
 
     await db.runTransaction(async (transaction) => {
-      const userRef = parentCollection.doc(data.auth.uid);
+      const userRef = parentCollection.doc(req.auth.uid);
       const userSnaphot = await transaction.get(userRef);
 
       if (!userSnaphot.exists ||
@@ -318,15 +317,13 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 });
 
 
-exports.getUserCustomClaims = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.getUserCustomClaims = https.onCall(async (req, context) => {
+  const targetUid = req.data.targetUid;
 
   checkEmpty(targetUid, "targetUid");
 
   try {
-    checkAuthentication(data);
-
-    checkIsAtLeast(data, Role.admin);
+    checkIsAtLeast(req, Role.admin);
 
     // Fetch the custom claims of the selected user
     const selectedUser = await admin.auth().getUser(targetUid);
@@ -344,7 +341,6 @@ exports.getUserCustomClaims = https.onCall(async (data, context) => {
 // get signed url - idk if this will even come close to working
 exports.generateSignedUrl = https.onCall(async (req, res) => {
   try {
-    // isAuthenticated(data);
     logger.log(`Current filename passed: ${req.data.fileName}`);
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
@@ -363,6 +359,47 @@ exports.generateSignedUrl = https.onCall(async (req, res) => {
     // res.status(200).send({url});
     return {url};
   } catch (error) {
+    throw new https.HttpsError(
+        "not-found",
+        // eslint-disable-next-line max-len
+        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+    );
+  }
+});
+
+const listAllUsers = (nextPageToken) => {
+  const users = [];
+
+  // List batch of users, 1000 at a time.
+  getAuth()
+      .listUsers(1000, nextPageToken)
+      .then((listUsersResult) => {
+        listUsersResult.users.forEach((userRecord) => {
+          console.log("user", userRecord.toJSON());
+          users.push(userRecord.toJSON());
+        });
+        if (listUsersResult.pageToken) {
+        // List next batch of users.
+          listAllUsers(listUsersResult.pageToken);
+        }
+      })
+      .catch((error) => {
+        console.log("Error listing users:", error);
+      });
+  return users;
+};
+
+exports.getEmailUIDTable = https.onCall(async (req, context) => {
+  try {
+    checkIsAtLeast(req, Role.admin);
+    // Start listing users from the beginning, 1000 at a time.
+    const users = listAllUsers();
+
+    return {
+      users: users,
+    };
+  } catch (error) {
+    console.message(`Error listing users: ${error}`);
     throw new https.HttpsError(
         "not-found",
         // eslint-disable-next-line max-len
