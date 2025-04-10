@@ -352,6 +352,7 @@ exports.generateSignedUrl = https.onCall(async (req, res) => {
     };
 
     const fireFile = storage.bucket(bucketName).file(fileName);
+    await fireFile.save(Buffer.from(""), { contentType: "video/mp4" });
 
     const [url] = await fireFile.getSignedUrl(options);
 
