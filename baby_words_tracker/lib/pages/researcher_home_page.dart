@@ -281,6 +281,7 @@ Future<void> fetchData() async {
       fetchTasks.add(() async {
         try {
           String childID = childDoc.id;
+          List<LanguageCode> childLangs = (childDoc['language'] as List<dynamic>).cast<LanguageCode>();
           DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
           int childAge = DateTime.now().year - childBirthday.year;
 
@@ -295,7 +296,19 @@ Future<void> fetchData() async {
             wordFetchTasks.add(() async {
               try {
                 DocumentSnapshot posDoc = await FirebaseFirestore.instance.collection('Word').doc(wordDoc.id).get();
-
+                var posData = posDoc['partOfSpeech'];
+                if (posData == null) {
+                  debugPrint('Warning: partOfSpeech is null for word ${wordDoc.id}');
+                return; // Skip this word if data is missing
+                }
+                Map<LanguageCode, PartOfSpeech> posMap = Map.from(posData);
+                //Map<LanguageCode, PartOfSpeech> posMap = posDoc['partOfSpeech'].toMap();
+                Map<LanguageCode, PartOfSpeech> partOfSpeechTracker = {};
+                posMap.forEach((LanguageCode, PartOfSpeech) {
+                  if(childLangs.contains(LanguageCode)){
+                    partOfSpeechTracker[LanguageCode] = PartOfSpeech;
+                  }
+                });
                 tempInstances.add(WordInstance(
                   childName: childID,
                   childAge: childAge,
@@ -304,7 +317,10 @@ Future<void> fetchData() async {
                       ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
                       : 'Unknown',
                   videoID: wordDoc['videoID'] ?? 0,
-                  partOfSpeech: posDoc['partOfSpeech'].toString(),
+                  partOfSpeech: 
+                    //posDoc['partOfSpeech'].toString(),
+                    partOfSpeechTracker.toString(),
+
                 ));
               } catch (e) {
                 debugPrint('Error fetching Word document ${wordDoc.id}: $e');
