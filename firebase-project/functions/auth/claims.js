@@ -96,7 +96,6 @@ async function removeClaim(role, minimumRole, targetUser, data) {
   try {
     checkIsAtLeast(data, minimumRole);
 
-    const targetUser = await getAuth().getUser(targetUser);
     const currentClaims = targetUser.customClaims || {};
 
     delete currentClaims[roleName];

@@ -318,15 +318,15 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
 
 
 exports.getUserCustomClaims = https.onCall(async (req, context) => {
-  const targetUid = req.data.targetUid;
+  const targetEmail = req.data.targetEmail;
 
-  checkEmpty(targetUid, "targetUid");
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
     checkIsAtLeast(req, Role.admin);
 
     // Fetch the custom claims of the selected user
-    const selectedUser = await admin.auth().getUser(targetUid);
+    const selectedUser = await admin.auth().getUserByEmail(targetEmail);
 
     // Return the user's custom claims
     return selectedUser.customClaims != null ? selectedUser.customClaims : {};
