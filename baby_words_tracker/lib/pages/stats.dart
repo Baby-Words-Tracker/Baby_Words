@@ -71,7 +71,6 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) { 
-    //addCurrentChildToOtherParent(context, "fakeemail2@email.com");
     //Get the current Parent
     Parent? currParent = getCurrentParent(context);
     if (currParent == null)
@@ -241,23 +240,6 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(ChildDataServi
 }
 
 //Queries the database and returns the number of new words learned over the past `days` days as time series data
-Future<List<(int, DateTime)>> getTimeSeriesNumNewWords(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
-async {
-  if (cache.containsKey((GraphType.newWordsPerDay, days, id))) return cache[(GraphType.newWordsPerDay, days, id)];
-  DateTime now = DateTime.now();
-  List<(int, DateTime)> data = List.empty(growable: true);
-  //for the number of days, grab the amount of words learned
-  for (var i = 0; i < days; i++) {
-    DateTime targetDay = DateTime(now.year, now.month, now.day - (days - i - 1)); //get the day i days before today
-    List<WordTracker> wordsFromTargetDay = await trackerService.getWordsFromDate(id, targetDay);
-    int numOnTargetDay = wordsFromTargetDay.length; //count the amount of words learned that day
-    data.add((numOnTargetDay, targetDay)); //add the tuple of that info to the list
-  }
-  cache[(GraphType.newWordsPerDay, days, id)] = data;
-  return data;
-}
-
-//Queries the database and returns the number of new words learned over the past `days` days as time series data
 Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(ChildDataService childService, WordTrackerDataService trackerService, int days,   Map<(GraphType, int, String), dynamic> cache, {String id = "gz1Qe32xJcF0oRGmhw7f"})
 async {
     if (cache.containsKey((GraphType.newWordsPerDay, days, id))) return cache[(GraphType.newWordsPerDay, days, id)];
@@ -266,12 +248,13 @@ async {
   DateTime startDay = DateTime(now.year, now.month, now.day - (days - 1)); //get the day i days before today
   List<WordTracker> wordsFromTargetDateRange = await trackerService.getWordsFromDateRange(id, startDay, days);
   var groupedByDay = groupBy(wordsFromTargetDateRange, (tracker) => DateTime(tracker.firstUtterance.year, tracker.firstUtterance.month, tracker.firstUtterance.day));
-  var countByDay = groupedByDay.map((day, list) => MapEntry(day, list.length)); //count the amount of words learned on each day
+  Map<DateTime, int> countByDay = groupedByDay.map((day, list) => MapEntry(day, list.length)); //count the amount of words learned on each day
   
   List<(int, DateTime)> data = [];
-  Set<DateTime> existingDates = countByDay.keys.toSet();
+    // Set<DateTime> existingDates = countByDay.keys.toSet();
 
-  for (DateTime date = startDay; date.isBefore(now.add(Duration(days: 1))); date = date.add(Duration(days: 1))) {
+  for (DateTime date = startDay; date.isBefore(now); date = date.add(Duration(days: 1))) {
+    date = DateTime(date.year, date.month, date.day, 0);
     data.add((countByDay[date] ?? 0, date));
   }
 
