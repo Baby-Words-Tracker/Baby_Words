@@ -338,7 +338,7 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
     // Return the user's custom claims
     return selectedUser.customClaims != null ? selectedUser.customClaims : {};
   } catch (error) {
-    console.error("Error fetching user custom claims:", error);
+    logger.error("Error fetching user custom claims:", error);
     return {
       message: `Failed to fetch user custom claims error: ${error}`,
     };
@@ -411,7 +411,7 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
 
 const listAllUsers = async (nextPageToken) => {
   const users = [];
-  console.info("Listing all users...");
+  logger.info("Listing all users...");
 
   try {
     // List batch of users, 1000 at a time.
@@ -419,7 +419,7 @@ const listAllUsers = async (nextPageToken) => {
         .listUsers(1000, nextPageToken);
 
     listUsersResult.users.forEach((userRecord) => {
-      console.log("user", userRecord.toJSON());
+      logger.info("user", userRecord.toJSON());
       users.push(userRecord.toJSON());
     });
 
@@ -429,7 +429,7 @@ const listAllUsers = async (nextPageToken) => {
       users.push(...nextUsers);
     }
   } catch (error) {
-    console.log("Error listing users:", error);
+    logger.error("Error listing users:", error);
     throw new https.HttpsError(
         "internal",
         `Error listing users: ${error}`,
@@ -449,7 +449,7 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
       users: users,
     };
   } catch (error) {
-    console.message(`Error listing users: ${error}`);
+    logger.error(`Error listing users: ${error}`);
     throw new https.HttpsError(
         "internal",
         `Error getting user list: ${error}`,
