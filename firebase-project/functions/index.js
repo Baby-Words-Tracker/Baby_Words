@@ -409,25 +409,32 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
   }
 });
 
-const listAllUsers = (nextPageToken) => {
+const listAllUsers = async (nextPageToken) => {
   const users = [];
 
-  // List batch of users, 1000 at a time.
-  getAuth()
-      .listUsers(1000, nextPageToken)
-      .then((listUsersResult) => {
-        listUsersResult.users.forEach((userRecord) => {
-          console.log("user", userRecord.toJSON());
-          users.push(userRecord.toJSON());
-        });
-        if (listUsersResult.pageToken) {
-        // List next batch of users.
-          listAllUsers(listUsersResult.pageToken);
-        }
-      })
-      .catch((error) => {
-        console.log("Error listing users:", error);
-      });
+  try {
+    // List batch of users, 1000 at a time.
+    const listUsersResult = await getAuth()
+        .listUsers(1000, nextPageToken);
+
+    listUsersResult.users.forEach((userRecord) => {
+      console.log("user", userRecord.toJSON());
+      users.push(userRecord.toJSON());
+    });
+
+    if (listUsersResult.pageToken) {
+      // List next batch of users.
+      const nextUsers = await listAllUsers(listUsersResult.pageToken);
+      users.push(...nextUsers);
+    }
+  } catch (error) {
+    console.log("Error listing users:", error);
+    throw new https.HttpsError(
+        "internal",
+        `Error listing users: ${error}`,
+    );
+  }
+
   return users;
 };
 
@@ -443,9 +450,8 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
   } catch (error) {
     console.message(`Error listing users: ${error}`);
     throw new https.HttpsError(
-        "not-found",
-        // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+        "internal",
+        `Error getting user list: ${error}`,
     );
   }
 });
