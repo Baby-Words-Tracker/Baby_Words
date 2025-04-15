@@ -252,8 +252,8 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
 
   if (targetEmail.length > 100) {
     throw new https.HttpsError(
-        "invalid-argument",
-        "Target email is too long",
+      "invalid-argument",
+      "Target email is too long",
     );
   }
 
@@ -352,7 +352,7 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
     const fileName = req.data.fileName;
-    const userId = context.auth.uid;
+    const userId = req.auth.uid;
     const filePath = `${userId}/${fileName}`
 
     const options = {
@@ -384,7 +384,7 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
     const fileName = req.data.fileName;
-    const userId = context.auth.uid;
+    const userId = req.auth.uid;
     const filePath = `${userId}/${fileName}`
 
     const options = {

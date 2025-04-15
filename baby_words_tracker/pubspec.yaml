@@ -53,7 +53,8 @@ dependencies:
   firebase_ui_localizations: ^1.2.0
   flutter_localization: ^0.3.1
   file_picker: ^6.1.1
-  flutter_ffmpeg: any
+  video_compress: ^3.1.0
+  path_provider: any
 
 dev_dependencies:
   flutter_test:

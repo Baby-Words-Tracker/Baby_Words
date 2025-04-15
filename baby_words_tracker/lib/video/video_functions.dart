@@ -7,36 +7,22 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
-import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
-
-//final FlutterFFmpeg _ffmpeg = FlutterFFmpeg();
+import 'dart:typed_data';
+import 'dart:async';
+import 'package:video_compress/video_compress.dart';
 
 Future<Uint8List?> compressVideo(String inputPath) async {
-  final process = await Process.start(
-    'ffmpeg',
-    [
-      '-i',
-      inputPath,
-      '-vcodec',
-      'h264',
-      '-crf',
-      '28',
-      '-preset',
-      'fast',
-      '-f',
-      'mp4',
-      'pipe:1'
-    ],
-    mode: ProcessStartMode.detachedWithStdio,
+  final MediaInfo? compressedVideo = await VideoCompress.compressVideo(
+    inputPath,
+    quality: VideoQuality.MediumQuality,
   );
 
-  final List<int> bytes = [];
-  process.stdout.listen((data) {
-    bytes.addAll(data);
-  });
-
-  await process.exitCode;
-  return Uint8List.fromList(bytes); // Converts list into Uint8List
+  if (compressedVideo != null && compressedVideo.file != null) {
+    return await compressedVideo.file!.readAsBytes(); // Load into memory
+  } else {
+    debugPrint("Compression failed");
+    return null;
+  }
 }
 
 Future<String?> getSignedUploadUrl(String filename) async {
@@ -95,16 +81,16 @@ Future<String> selectFile(TextEditingController fileTextController) async {
 
 Future<void> uploadVideo(String filePath) async {
   try {
+    debugPrint("File for signed url: $filePath");
     final compressed = await compressVideo(filePath) as List<int>;
 
-    debugPrint("File for signed url: $filePath");
     var signedUrl = await getSignedUploadUrl(path.basename(filePath));
     //final File file = File(filePath);
 
-    if (signedUrl != null && compressed.isNotEmpty) {
+    if (signedUrl != null /* && compressed.isNotEmpty */) {
       final request = http.Request('PUT', Uri.parse(signedUrl))
         ..headers['Content-Type'] = 'video/mp4' // Set the correct MIME type
-        ..bodyBytes = compressed;
+        ..bodyBytes = compressed; //await file.readAsBytes(); //compressed
 
       final response = await request.send();
 
