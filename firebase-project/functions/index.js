@@ -1,17 +1,17 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const {logger} = require("firebase-functions");
+const { logger } = require("firebase-functions");
 
 // The Firebase Admin SDK to access Firestore.
 const admin = require("firebase-admin");
-const {getAuth} = require("firebase-admin/auth");
+const { getAuth } = require("firebase-admin/auth");
 
-const {Storage} = require("@google-cloud/storage");
+const { Storage } = require("@google-cloud/storage");
 
 // Import our auth module
-const {Role} = require("./auth/roles");
-const {giveClaimByEmail, removeClaimByEmail} = require("./auth/claims");
+const { Role } = require("./auth/roles");
+const { giveClaimByEmail, removeClaimByEmail } = require("./auth/claims");
 // eslint-disable-next-line max-len
-const {checkIsAtLeast} = require("./auth/auth.js");
+const { checkIsAtLeast } = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -34,7 +34,7 @@ const storage = new Storage();
 exports.addDefaultClaim = auth.user().onCreate(async (user) => {
   try {
     // Set the custom claim 'parent' to true
-    await getAuth().setCustomUserClaims(user.uid, {parent: true});
+    await getAuth().setCustomUserClaims(user.uid, { parent: true });
 
     logger.log(`Custom claim set for user ${user.uid}`);
   } catch (error) {
@@ -50,7 +50,7 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
 function checkEmpty(variable, variableName) {
   if (!variable) {
     throw new https.HttpsError(
-        "invalid-argument", `Target user ${variableName} is required`);
+      "invalid-argument", `Target user ${variableName} is required`);
   }
 }
 
@@ -275,9 +275,9 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
       if (!userSnaphot.exists ||
         !userSnaphot.data().childIDs.includes(childUid)) {
         throw new https.HttpsError(
-            "permission-denied",
-            // eslint-disable-next-line max-len
-            "You do must be a parent of the child to assign them to another parent",
+          "permission-denied",
+          // eslint-disable-next-line max-len
+          "You do must be a parent of the child to assign them to another parent",
         );
       }
 
@@ -290,8 +290,8 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
 
       if (!childSnapshot.exists) {
         throw new https.HttpsError(
-            "not-found",
-            "Child document not found",
+          "not-found",
+          "Child document not found",
         );
       }
 
@@ -338,31 +338,66 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
   }
 });
 
-// get signed url - idk if this will even come close to working
-exports.generateSignedUrl = https.onCall(async (req, res) => {
+
+exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
   try {
     logger.log(`Current filename passed: ${req.data.fileName}`);
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
     const fileName = req.data.fileName;
+    const userId = context.auth.uid;
+    const filePath = `${userId}/${fileName}`
+
     const options = {
       version: "v4",
       action: "write",
       expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      contentType: "video/mp4", // Ensures Cloud Storage knows the format
     };
 
-    const fireFile = storage.bucket(bucketName).file(fileName);
-    await fireFile.save(Buffer.from(""), {contentType: "video/mp4"});
+    const fireFile = storage.bucket(bucketName).file(filePath);
+    await fireFile.save(Buffer.from(""), { contentType: "video/mp4" });
 
     const [url] = await fireFile.getSignedUrl(options);
 
     // res.status(200).send({url});
-    return {url};
+    return { url };
   } catch (error) {
     throw new https.HttpsError(
-        "not-found",
-        // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+      "not-found",
+      // eslint-disable-next-line max-len
+      `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+    );
+  }
+});
+
+exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
+  try {
+    logger.log(`Current filename passed: ${req.data.fileName}`);
+    // Proceed with signed URL generation
+    const bucketName = "baby-words-tracker-media";
+    const fileName = req.data.fileName;
+    const userId = context.auth.uid;
+    const filePath = `${userId}/${fileName}`
+
+    const options = {
+      version: "v4",
+      action: "read",
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      contentType: "video/mp4", // Ensures Cloud Storage knows the format
+    };
+
+    const fireFile = storage.bucket(bucketName).file(filePath);
+
+    const [url] = await fireFile.getSignedUrl(options);
+
+    // res.status(200).send({url});
+    return { url };
+  } catch (error) {
+    throw new https.HttpsError(
+      "not-found",
+      // eslint-disable-next-line max-len
+      `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
     );
   }
 });
@@ -372,20 +407,20 @@ const listAllUsers = (nextPageToken) => {
 
   // List batch of users, 1000 at a time.
   getAuth()
-      .listUsers(1000, nextPageToken)
-      .then((listUsersResult) => {
-        listUsersResult.users.forEach((userRecord) => {
-          console.log("user", userRecord.toJSON());
-          users.push(userRecord.toJSON());
-        });
-        if (listUsersResult.pageToken) {
-        // List next batch of users.
-          listAllUsers(listUsersResult.pageToken);
-        }
-      })
-      .catch((error) => {
-        console.log("Error listing users:", error);
+    .listUsers(1000, nextPageToken)
+    .then((listUsersResult) => {
+      listUsersResult.users.forEach((userRecord) => {
+        console.log("user", userRecord.toJSON());
+        users.push(userRecord.toJSON());
       });
+      if (listUsersResult.pageToken) {
+        // List next batch of users.
+        listAllUsers(listUsersResult.pageToken);
+      }
+    })
+    .catch((error) => {
+      console.log("Error listing users:", error);
+    });
   return users;
 };
 
@@ -401,9 +436,9 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
   } catch (error) {
     console.message(`Error listing users: ${error}`);
     throw new https.HttpsError(
-        "not-found",
-        // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+      "not-found",
+      // eslint-disable-next-line max-len
+      `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
     );
   }
 });

@@ -1,22 +1,68 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 
-Future<String?> getSignedUrl(String filename) async {
+//final FlutterFFmpeg _ffmpeg = FlutterFFmpeg();
+
+Future<Uint8List?> compressVideo(String inputPath) async {
+  final process = await Process.start(
+    'ffmpeg',
+    [
+      '-i',
+      inputPath,
+      '-vcodec',
+      'h264',
+      '-crf',
+      '28',
+      '-preset',
+      'fast',
+      '-f',
+      'mp4',
+      'pipe:1'
+    ],
+    mode: ProcessStartMode.detachedWithStdio,
+  );
+
+  final List<int> bytes = [];
+  process.stdout.listen((data) {
+    bytes.addAll(data);
+  });
+
+  await process.exitCode;
+  return Uint8List.fromList(bytes); // Converts list into Uint8List
+}
+
+Future<String?> getSignedUploadUrl(String filename) async {
   HttpsCallable function =
-      FirebaseFunctions.instance.httpsCallable("generateSignedUrl");
+      FirebaseFunctions.instance.httpsCallable("generateSignedUploadUrl");
 
   try {
-    debugPrint("FileName in getSignedUrl: $filename");
+    debugPrint("FileName in getSignedUploadUrl: $filename");
     final response = await function.call({'fileName': filename});
     debugPrint('Signed URL: ${response.data['url']}');
-    return response.data["serviceConfig"]!['uri'];
+    return response.data['url'];
+  } catch (e) {
+    debugPrint('Failed to get signed url with error: $e');
+    return null;
+  }
+}
+
+Future<String?> getSignedDownloadUrl(String filename) async {
+  HttpsCallable function =
+      FirebaseFunctions.instance.httpsCallable("generateSignedDownloadUrl");
+
+  try {
+    debugPrint("FileName in getSignedDownloadUrl: $filename");
+    final response = await function.call({'fileName': filename});
+    debugPrint('Signed URL: ${response.data['url']}');
+    return response.data['url'];
   } catch (e) {
     debugPrint('Failed to get signed url with error: $e');
     return null;
@@ -49,14 +95,16 @@ Future<String> selectFile(TextEditingController fileTextController) async {
 
 Future<void> uploadVideo(String filePath) async {
   try {
-    debugPrint("File for signed url: $filePath");
-    var signedUrl = await getSignedUrl(path.basename(filePath));
-    final File file = File(filePath);
+    final compressed = await compressVideo(filePath) as List<int>;
 
-    if (signedUrl != null) {
+    debugPrint("File for signed url: $filePath");
+    var signedUrl = await getSignedUploadUrl(path.basename(filePath));
+    //final File file = File(filePath);
+
+    if (signedUrl != null && compressed.isNotEmpty) {
       final request = http.Request('PUT', Uri.parse(signedUrl))
         ..headers['Content-Type'] = 'video/mp4' // Set the correct MIME type
-        ..bodyBytes = await file.readAsBytes();
+        ..bodyBytes = compressed;
 
       final response = await request.send();
 
@@ -66,7 +114,7 @@ Future<void> uploadVideo(String filePath) async {
         debugPrint('Failed to upload file: ${response.statusCode}');
       }
     } else {
-      debugPrint("Error: no signed URL was received.");
+      debugPrint("Error: either no signed URL or no video was received.");
     }
   } catch (e) {
     debugPrint('Error during file upload: $e');
