@@ -436,6 +436,8 @@ const listAllUsers = async (nextPageToken) => {
     );
   }
 
+  logger.info("Finished listing users: ", users);
+
   return users;
 };
 
@@ -443,7 +445,7 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
   try {
     checkIsAtLeast(req, Role.admin);
     // Start listing users from the beginning, 1000 at a time.
-    const users = listAllUsers();
+    const users = await listAllUsers();
 
     return {
       users: users,
