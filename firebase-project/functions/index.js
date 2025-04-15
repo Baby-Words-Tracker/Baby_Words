@@ -250,6 +250,13 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   checkEmpty(targetEmail, "targetEmail");
   checkEmpty(childUid, "childUid");
 
+  if (targetEmail.length > 100) {
+    throw new https.HttpsError(
+        "invalid-argument",
+        "Target email is too long",
+    );
+  }
+
   try {
     checkIsAtLeast(req, Role.parent);
 
