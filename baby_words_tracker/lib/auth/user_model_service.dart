@@ -45,9 +45,6 @@ class UserModelService extends ChangeNotifier {
     int localI = ++i;
     debugPrint(
         "UserModelService: $localI: Synchronizing user: ${_authenticationService.userId}");
-    await Future.delayed(const Duration(seconds: 3));
-    debugPrint(
-        "UserModelService: $localI: Synchronizing user after sleep: ${_authenticationService.userId} - ${_authenticationService.userEmail} - ${_authenticationService.userName}");
     try {
       if (!_authenticationService.isAuthenticated ||
           _authenticationService.userId == null) {
@@ -91,7 +88,8 @@ class UserModelService extends ChangeNotifier {
             debugPrint(
                 "Error: UserModelService: User model is null when the usertype is not unauthenticated");
           } else {
-            debugPrint("UserModelService: $localI: User Data synchronized successfully");
+            debugPrint(
+                "UserModelService: $localI: User Data synchronized successfully");
           }
         }
       } else {
@@ -99,7 +97,8 @@ class UserModelService extends ChangeNotifier {
             "UserModelService: $localI: User is already authenticated and synchronized, no action needed");
       }
     } catch (e, stack) {
-      debugPrint("UserModelService: $localI: _synchronizeUser failed: $e\n$stack");
+      debugPrint(
+          "UserModelService: $localI: _synchronizeUser failed: $e\n$stack");
     }
     debugPrint(
         "UserModelService: $localI: Synchronization finished, userType: $_userType");
