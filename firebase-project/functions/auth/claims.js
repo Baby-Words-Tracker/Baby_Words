@@ -111,14 +111,14 @@ async function removeClaim(role, minimumRole, targetUser, data) {
 
 /**
  * Assign a claim to a user by UID
- * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {Role} role The role to give
+ * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
  * @param {Object} req The request object associated witht he https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function giveClaimByUID(minimumRole, role, targetUid, req) {
+async function giveClaimByUID(role, minimumRole, targetUid, req) {
   try {
     const targetUser = await getUserRecordByUID(targetUid);
     await giveClaim(role, minimumRole, targetUser, req);
@@ -131,14 +131,14 @@ async function giveClaimByUID(minimumRole, role, targetUid, req) {
 
 /**
  * Assign a claim to a user by email
- * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {Role} role The role to give
+ * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
  * @param {Object} req The request object associated witht he https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function giveClaimByEmail(minimumRole, role, targetEmail, req) {
+async function giveClaimByEmail(role, minimumRole, targetEmail, req) {
   try {
     const targetUser = await getUserRecordByEmail(targetEmail);
     await giveClaim(role, minimumRole, targetUser, req);
@@ -151,14 +151,14 @@ async function giveClaimByEmail(minimumRole, role, targetEmail, req) {
 
 /**
  * Removes a claim from a user by UID
- * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {Role} role The role to remove
+ * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
  * @param {Object} data The data object associated with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function removeClaimByUID(minimumRole, role, targetUid, data) {
+async function removeClaimByUID(role, minimumRole, targetUid, data) {
   try {
     const targetUser = await getUserRecordByUID(targetUid);
     await removeClaim(role, minimumRole, targetUser, data);
@@ -171,14 +171,14 @@ async function removeClaimByUID(minimumRole, role, targetUid, data) {
 
 /**
  * Removes a claim from a user by email
- * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {Role} role The role to remove
+ * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
  * @param {Object} data The data object associated with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function removeClaimByEmail(minimumRole, role, targetEmail, data) {
+async function removeClaimByEmail(role, minimumRole, targetEmail, data) {
   try {
     const targetUser = await getUserRecordByEmail(targetEmail);
     await removeClaim(role, minimumRole, targetUser, data);
