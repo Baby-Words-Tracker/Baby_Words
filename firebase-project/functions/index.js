@@ -411,6 +411,7 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
 
 const listAllUsers = async (nextPageToken) => {
   const users = [];
+  console.info("Listing all users...");
 
   try {
     // List batch of users, 1000 at a time.
