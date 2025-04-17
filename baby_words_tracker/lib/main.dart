@@ -25,6 +25,7 @@ import 'pages/add_text.dart';
 import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
+import 'pages/video_display.dart';
 
 // Util
 import 'package:baby_words_tracker/util/config.dart';
@@ -119,6 +120,7 @@ class MyApp extends StatelessWidget {
           '/uploadvideo': (context) => const UploadVideoPage(),
           '/profilepage': (context) => const ProfilePage(),
           '/settings': (context) => const SettingsPage(),
+          '/videoStream': (context) => const VideoScreen(),
           RoleTesting.routeName: (context) => const RoleTesting(),
         },
         locale:

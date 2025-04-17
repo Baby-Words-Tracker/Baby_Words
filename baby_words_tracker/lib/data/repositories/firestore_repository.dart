@@ -216,6 +216,28 @@ class FirestoreRepository {
     }
   }
 
+  Future<bool> updateFieldForSubcollection(
+      String collectionName,
+      String subcollectionName,
+      String docId,
+      String subId,
+      String field,
+      dynamic value) async {
+    try {
+      final docRef = database
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollectionName)
+          .doc(subId);
+      await docRef.update({field: value});
+      return true;
+    } catch (e) {
+      debugPrint(
+          "Error updating field $field in document $collectionName/$docId/$subcollectionName/$subId: $e");
+      return false;
+    }
+  }
+
   Future<bool> incrementField(
       String collectionName, String docId, String field, int value) async {
     try {
@@ -240,6 +262,64 @@ class FirestoreRepository {
     } catch (e) {
       debugPrint(
           "Error appending to array field $field in document $collectionName/$docID: $e");
+      return false;
+    }
+  }
+
+  Future<bool> appendToArrayFieldForSubcollection(
+      String collectionName,
+      String subCollection,
+      String docID,
+      String subID,
+      String field,
+      dynamic value) async {
+    try {
+      final docRef = database
+          .collection(collectionName)
+          .doc(docID)
+          .collection(subCollection)
+          .doc(subID);
+      await docRef.update({
+        field: FieldValue.arrayUnion([value])
+      });
+      return true;
+    } catch (e) {
+      debugPrint(
+          "Error appending to array field $field in document $collectionName/$docID/$subCollection/$subID: $e");
+      return false;
+    }
+  }
+
+  Future<bool> setObject(
+      String collectionName, String docId, Map<String, dynamic> data) async {
+    try {
+      database
+          .collection(collectionName)
+          .doc(docId)
+          .set(data, SetOptions(merge: true));
+      return true;
+    } catch (_) {
+      debugPrint("Error: failed to set $collectionName/$docId with $data");
+      return false;
+    }
+  }
+
+  Future<bool> setObjectSubcollection(
+      String collectionName,
+      String subcollection,
+      String docId,
+      String subId,
+      Map<String, dynamic> data) async {
+    try {
+      database
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollection)
+          .doc(subId)
+          .set(data, SetOptions(merge: true));
+      return true;
+    } catch (_) {
+      debugPrint("Error: failed to set $collectionName/$docId with $data");
       return false;
     }
   }

@@ -10,6 +10,7 @@ import 'package:path/path.dart' as path;
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:video_compress/video_compress.dart';
+import 'package:baby_words_tracker/util/user_getters.dart';
 
 Future<Uint8List?> compressVideo(String inputPath) async {
   final MediaInfo? compressedVideo = await VideoCompress.compressVideo(
@@ -79,18 +80,18 @@ Future<String> selectFile(TextEditingController fileTextController) async {
   return "Please select a 'mp4' file.";
 }
 
-Future<void> uploadVideo(String filePath) async {
+Future<void> uploadVideo(String filePath, childId) async {
   try {
     debugPrint("File for signed url: $filePath");
-    final compressed = await compressVideo(filePath) as List<int>;
+    //final compressed = await compressVideo(filePath) as List<int>;
 
     var signedUrl = await getSignedUploadUrl(path.basename(filePath));
-    //final File file = File(filePath);
+    final File file = File(filePath);
 
-    if (signedUrl != null /* && compressed.isNotEmpty */) {
+    if (signedUrl != null /*&&  compressed.isNotEmpty */) {
       final request = http.Request('PUT', Uri.parse(signedUrl))
         ..headers['Content-Type'] = 'video/mp4' // Set the correct MIME type
-        ..bodyBytes = compressed; //await file.readAsBytes(); //compressed
+        ..bodyBytes = /* compressed; */ await file.readAsBytes(); //compressed
 
       final response = await request.send();
 

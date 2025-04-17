@@ -8,6 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
+import 'package:baby_words_tracker/util/user_getters.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:path/path.dart' as path;
 
 class UploadVideoPage extends StatefulWidget {
   const UploadVideoPage({super.key});
@@ -21,8 +24,10 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<LocalizationService, AuthenticationService>(
-        builder: (context, localizationService, authenticationService, child) {
+    return Consumer3<LocalizationService, AuthenticationService,
+            ChildDataService>(
+        builder: (context, localizationService, authenticationService,
+            childService, child) {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: TopBar(pageName: localizationService.translate("upload_video")),
@@ -60,7 +65,12 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
                     "") //add the word to the child with the id, or the default testing child if no input
                 {
                   //add child
-                  uploadVideo(fileTextController.text);
+                  final childId = getCurrentChildIDSingleInstance(
+                      context, getCurrentParent(context)!);
+                  final filePath = fileTextController.text;
+                  uploadVideo(filePath, childId);
+                  childService.addVideo(
+                      childId!, "test", path.basename(filePath));
                   //added indicator
                   showAlertMessage(
                       context,

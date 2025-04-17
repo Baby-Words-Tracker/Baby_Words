@@ -55,6 +55,8 @@ dependencies:
   file_picker: ^6.1.1
   video_compress: ^3.1.0
   path_provider: any
+  video_player: ^2.9.5
+
 
 dev_dependencies:
   flutter_test:
