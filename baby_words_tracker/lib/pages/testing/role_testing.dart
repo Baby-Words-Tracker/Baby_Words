@@ -1,4 +1,3 @@
-import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
@@ -13,12 +12,11 @@ class RoleTesting extends StatefulWidget {
 }
 
 class _RoleTestingState extends State<RoleTesting> {
-  UserType _selectedUserType = UserType.parent;
   final TextEditingController _searchController = TextEditingController();
   String? _selectedUserEmail;
 
   Map<String, dynamic> _userRoles = {};
-  List<String> _userData = [];
+  dynamic _userData = [];
 
   // Future<List<Map<String, String>>> _searchUsers(String query) async {
   //   if (query.isEmpty) return [];
@@ -140,9 +138,12 @@ class _RoleTestingState extends State<RoleTesting> {
                   var userData =
                       await callFunction(context, 'getEmailUIDTable', {});
                   if (userData != null) {
+                    debugPrint("userData received: ${userData['users']}");
                     setState(() {
-                      _userData = userData['users'] as List<String>;
+                      _userData = userData['users'];
                     });
+                  } else {
+                    debugPrint("No user data received");
                   }
                 },
                 child: const Text('Get Email-UID Data'),
