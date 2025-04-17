@@ -420,9 +420,31 @@ const listAllUsers = async (nextPageToken) => {
 
     listUsersResult.users.forEach((userRecord) => {
       const user = userRecord.toJSON();
+      // Remove sensitive information.
+      // !!Don't include this unless you are migrating the
+      //    authentication database.
+      //    These hashes compromise password security fo all users if leaked!
       delete user.passwordHash;
       delete user.passwordSalt;
-      logger.info("user", user);
+
+      // This data is unecessary for now, but not sensetive to my knowledge.
+      delete user.tokensValidAfterTime;
+      delete user.providerData;
+      delete user.emailVerified;
+      delete user.metadata;
+      delete user.displayName;
+      delete user.photoURL;
+      delete user.phoneNumber;
+      delete user.tenantId;
+
+      // logger.info("user", user);
+
+      // At this point, the user object should have the follwoing fields:
+      // uid, email, disabled, and customClaims
+      // email is the email of the user
+      // uid is the unique id of the user
+      // disabled is a boolean that indicates if the user account is disabled
+      // customClaims is an object that contains the custom claims of the user
       users.push(user);
     });
 
@@ -445,6 +467,7 @@ const listAllUsers = async (nextPageToken) => {
 };
 
 exports.getEmailUIDTable = https.onCall(async (req, context) => {
+  logger.info(`getEmailUIDTable called from account ID: ${req.auth.uid}`);
   try {
     checkIsAtLeast(req, Role.admin);
     // Start listing users from the beginning, 1000 at a time.
