@@ -420,7 +420,10 @@ const listAllUsers = async (nextPageToken) => {
 
     listUsersResult.users.forEach((userRecord) => {
       logger.info("user", userRecord.toJSON());
-      users.push(userRecord.toJSON());
+      const user = userRecord.toJSON();
+      delete user.passwordHash;
+      delete user.passwordSalt;
+      users.push(user);
     });
 
     if (listUsersResult.pageToken) {
