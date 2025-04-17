@@ -409,6 +409,8 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
   }
 });
 
+// !!! note: this function should only be called by admin users.
+// Make sure to call checkIsAtLeast(req, Role.admin); before using it
 const listAllUsers = async (nextPageToken) => {
   const users = [];
   logger.info("Listing all users...");
