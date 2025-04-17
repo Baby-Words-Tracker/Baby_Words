@@ -150,7 +150,7 @@ class _RoleTestingState extends State<RoleTesting> {
               ),
               if (_userData.isNotEmpty) ...[
                 const Text('User Data:'),
-                ..._userData.map((data) => Text(data)),
+                ..._userData.map((data) => Text(data.toString())),
               ],
             ],
           ],
