@@ -67,7 +67,7 @@ class _RoleTestingState extends State<RoleTesting> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Firebase Page')),
+      appBar: AppBar(title: const Text('Admin Page')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
