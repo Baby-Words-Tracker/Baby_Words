@@ -51,7 +51,16 @@ class _TopBarState extends State<TopBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(widget.pageName),
+      title: Row(
+    children: [
+      const CircleAvatar(
+        radius: 24,
+        backgroundImage: AssetImage('assets/LECS_mascot.png'),
+      ),
+      const SizedBox(width: 8),
+      Text(widget.pageName),
+    ],
+  ),
       actions: [
         Consumer<CurrentChildrenService>(
           builder: (context, currentChildrenService, child) {

@@ -11,8 +11,8 @@ import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' as io;  // For checking platform
 
-import 'home_page.dart';
 import 'researcher_home_page.dart';
+import 'landing_page.dart';
 
 class AuthGate extends StatelessWidget {
 

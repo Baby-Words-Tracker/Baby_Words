@@ -22,7 +22,7 @@ import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'pages/add_text.dart';
-import 'pages/home_page.dart';
+import 'pages/landing_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
 

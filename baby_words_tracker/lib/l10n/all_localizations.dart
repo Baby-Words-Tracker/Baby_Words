@@ -13,6 +13,11 @@ class AllLocalizations {
       "view_stats": "View Stats",
       "hello": "Hello!",
       "home_page": "Home Page",
+      "word_buds": "WordBuds",
+      "knows": "knows",
+      "words": "words",
+      "most_recent": "Most recent word is:",
+      "words_in_past_week": "Words said in the past week:",
 
       //profile
       "profile": "User Profile",
@@ -73,6 +78,7 @@ class AllLocalizations {
       "view_stats": "Ver Estadísticas",
       "hello": "Hola!",
       "home_page": "Página Principal",
+      "word_buds": "WordBuds",
       "profile": "Perfil de Usuario",
       "sign_out": "Cerrar Sesión",
       "delete_account": "Eliminar Cuenta",
@@ -115,7 +121,11 @@ class AllLocalizations {
       "Total Number of Words by Part of Speech": "Número total de palabras por parte de la oración",
       "child_to_new_parent": "Dar acceso a otro padre para el hijo actual:",
       "choose_email": "Elegir correo electrónico...",
-      "no_email": "Por favor, ingrese un valor en el campo de correo electrónico."
+      "no_email": "Por favor, ingrese un valor en el campo de correo electrónico.",
+      "knows": "sabe",
+      "words" : "palabras",
+      "most_recent" : "La palabra más reciente es:",
+      "words_in_past_week" : "Palabras dichas la semana pasada"
     }
   };
 }
