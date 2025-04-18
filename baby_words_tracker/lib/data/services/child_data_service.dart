@@ -9,12 +9,17 @@ class ChildDataService extends ChangeNotifier {
   static final firebaseRepo = FirestoreRepository();
 
   //child services
-  Future<Child?> createChild(DateTime cBirthDay, String cName, List<LanguageCode> language, int cWordCount,
+  Future<Child?> createChild(
+      DateTime cBirthDay,
+      String cName,
+      List<LanguageCode> language,
+      int cWordCount,
       List<String> cParentIDs) async {
     final object = Child(
         birthday: cBirthDay,
         name: cName,
-        language: language, wordCount: cWordCount,
+        language: language,
+        wordCount: cWordCount,
         parentIDs: cParentIDs);
     String? returnId =
         await firebaseRepo.create(Child.collectionName, object.toMap());
@@ -47,12 +52,18 @@ class ChildDataService extends ChangeNotifier {
     return child.wordCount;
   }
 
+  Future<bool> addVideo(String id, String word, String fileName) async {
+    debugPrint("Video Filename to be added: $fileName");
+    return await firebaseRepo.updateFieldForSubcollection(Child.collectionName,
+        WordTracker.collectionName, id, word, "videoID", fileName);
+  }
+
   Future<List<LanguageCode>?> getLanguages(String id) async {
-    final object = await firebaseRepo.read(Child.collectionName, id); 
-    if (object == null) return null; 
-    
+    final object = await firebaseRepo.read(Child.collectionName, id);
+    if (object == null) return null;
+
     final child = Child.fromDataWithId(object);
-    return child.language; 
+    return child.language;
   }
 
   Future<List<WordTracker>> getAllKnownWords(String id) async {

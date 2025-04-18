@@ -10,6 +10,7 @@ class RoleTesting extends StatefulWidget {
   const RoleTesting({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _RoleTestingState createState() => _RoleTestingState();
 }
 
@@ -74,9 +75,6 @@ class _RoleTestingState extends State<RoleTesting> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Flexible(
-            //     fit: FlexFit.loose,
-            //     child:
             TextField(
               controller: _searchController,
               decoration: const InputDecoration(

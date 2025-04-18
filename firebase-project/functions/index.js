@@ -9,9 +9,9 @@ const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
 const {Role} = require("./auth/roles");
-const {giveClaim, removeClaim} = require("./auth/claims");
+const {giveClaimByEmail, removeClaimByEmail} = require("./auth/claims");
 // eslint-disable-next-line max-len
-const {checkAuthentication, checkIsAtLeast, isAuthenticated} = require("./auth/auth.js");
+const {checkIsAtLeast} = require("./auth/auth.js");
 
 // functions
 // v1 functions
@@ -56,20 +56,20 @@ function checkEmpty(variable, variableName) {
 
 /**
  * Assigns the 'researcher' role to the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveResearcherClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+exports.giveResearcherClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   // Assign the 'researcher' role to the target user
   try {
-    giveClaim(Role.researcher, Role.admin, targetUid, data);
+    giveClaimByEmail(Role.researcher, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
@@ -79,26 +79,26 @@ exports.giveResearcherClaim = https.onCall(async (data, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been assigned the` +
+    message: `User ${targetEmail} has been assigned the` +
       ` ${Role.researcher.value.description} role.`,
   };
 });
 
 /**
  * Removes the 'researcher' role from the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeResearcherClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+exports.removeResearcherClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    removeClaim(Role.researcher, Role.admin, targetUid, data);
+    removeClaimByEmail(Role.researcher, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
@@ -108,26 +108,26 @@ exports.removeResearcherClaim = https.onCall(async (data, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been removed from the` +
+    message: `User ${targetEmail} has been removed from the` +
       ` ${Role.researcher.value.description} role.`,
   };
 });
 
 /**
  * Assigns the 'parent' role to the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveParentClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+exports.giveParentClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    giveClaim(Role.parent, Role.researcher, targetUid, data);
+    giveClaimByEmail(Role.parent, Role.researcher, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign parent role: ${error}`);
     return {
@@ -137,26 +137,26 @@ exports.giveParentClaim = https.onCall(async (data, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been assigned the` +
+    message: `User ${targetEmail} has been assigned the` +
       ` ${Role.parent.value.description} role.`,
   };
 });
 
 /**
  * Removes the 'parent' role from the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeParentClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+exports.removeParentClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    removeClaim(Role.parent, Role.admin, targetUid, data);
+    removeClaimByEmail(Role.parent, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
@@ -166,26 +166,26 @@ exports.removeParentClaim = https.onCall(async (data, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been removed from the` +
+    message: `User ${targetEmail} has been removed from the` +
       ` ${Role.parent.value.description} role.`,
   };
 });
 
 /**
  * Assigns the 'admin' role to the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveAdminClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+exports.giveAdminClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    giveClaim(Role.admin, Role.admin, targetUid, data);
+    giveClaimByEmail(Role.admin, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign admin role: ${error}`);
     return {
@@ -195,26 +195,26 @@ exports.giveAdminClaim = https.onCall(async (data, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been assigned the` +
+    message: `User ${targetEmail} has been assigned the` +
       ` ${Role.admin.value.description} role.`,
   };
 });
 
 /**
  * Removes the 'admin' role from the target user
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeAdminClaim = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
-  checkEmpty(targetUid, "targetUid");
+exports.removeAdminClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    removeClaim(Role.admin, Role.admin, targetUid, data);
+    removeClaimByEmail(Role.admin, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to remove admin role: ${error}`);
     return {
@@ -224,7 +224,7 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
   }
 
   return {
-    message: `User ${targetUid} has been removed from the` +
+    message: `User ${targetEmail} has been removed from the` +
       ` ${Role.admin.value.description} role.`,
   };
 });
@@ -235,7 +235,7 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
 // TODO: test if a parent can add a child they don't own to someone else
 /**
  * Assigns a child to another parent
- * @param {https.CallableResponse<unknown>} data the data object
+ * @param {https.CallableResponse<unknown>} req the data object
  * @param {https.CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
  * @throws {https.HttpsError} if the target email or child UID is not provided,
@@ -243,16 +243,22 @@ exports.removeAdminClaim = https.onCall(async (data, context) => {
  * if the is not already a parent of the child,
  * or if the user does not have the minimum role
  */
-exports.addChildToOtherParent = https.onCall(async (data, context) => {
-  const targetEmail = data.data.targetEmail;
-  const childUid = data.data.childUid;
+exports.addChildToOtherParent = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  const childUid = req.data.childUid;
 
   checkEmpty(targetEmail, "targetEmail");
   checkEmpty(childUid, "childUid");
 
+  if (targetEmail.length > 100) {
+    throw new https.HttpsError(
+        "invalid-argument",
+        "Target email is too long",
+    );
+  }
+
   try {
-    checkAuthentication(data);
-    checkIsAtLeast(data, Role.parent);
+    checkIsAtLeast(req, Role.parent);
 
     const parentCollection = db.collection("Parent");
 
@@ -270,7 +276,7 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 
 
     await db.runTransaction(async (transaction) => {
-      const userRef = parentCollection.doc(data.auth.uid);
+      const userRef = parentCollection.doc(req.auth.uid);
       const userSnaphot = await transaction.get(userRef);
 
       if (!userSnaphot.exists ||
@@ -318,54 +324,165 @@ exports.addChildToOtherParent = https.onCall(async (data, context) => {
 });
 
 
-exports.getUserCustomClaims = https.onCall(async (data, context) => {
-  const targetUid = data.data.targetUid;
+exports.getUserCustomClaims = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
 
-  checkEmpty(targetUid, "targetUid");
+  checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(data);
-
-    checkIsAtLeast(data, Role.admin);
+    checkIsAtLeast(req, Role.admin);
 
     // Fetch the custom claims of the selected user
-    const selectedUser = await admin.auth().getUser(targetUid);
+    const selectedUser = await admin.auth().getUserByEmail(targetEmail);
 
     // Return the user's custom claims
     return selectedUser.customClaims != null ? selectedUser.customClaims : {};
   } catch (error) {
-    console.error("Error fetching user custom claims:", error);
+    logger.error("Error fetching user custom claims:", error);
     return {
       message: `Failed to fetch user custom claims error: ${error}`,
     };
   }
 });
 
-// get signed url - idk if this will even come close to working
-exports.generateSignedUrl = https.onRequest(async (data, context) => {
-  try {
-    isAuthenticated(data);
 
+exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
+  try {
+    logger.log(`Current filename passed: ${req.data.fileName}`);
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
-    const fileName = data.fileName;
+    const fileName = req.data.fileName;
+    const userId = req.auth.uid;
+    const filePath = `${userId}/${fileName}`;
+
     const options = {
       version: "v4",
       action: "write",
       expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      contentType: "video/mp4", // Ensures Cloud Storage knows the format
     };
 
-    const [url] = await storage
-        .bucket(bucketName)
-        .file(fileName)
-        .getSignedUrl(options);
+    const fireFile = storage.bucket(bucketName).file(filePath);
+    await fireFile.save(Buffer.from(""), {contentType: "video/mp4"});
+
+    const [url] = await fireFile.getSignedUrl(options);
 
     // res.status(200).send({url});
     return {url};
   } catch (error) {
     throw new https.HttpsError(
         "not-found",
-        `Error generating signed url: ${error}, filename : ${data.fileName}`,
+        // eslint-disable-next-line max-len
+        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+    );
+  }
+});
+
+exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
+  try {
+    logger.log(`Current filename passed: ${req.data.fileName}`);
+    // Proceed with signed URL generation
+    const bucketName = "baby-words-tracker-media";
+    const fileName = req.data.fileName;
+    const userId = req.auth.uid;
+    const filePath = `${userId}/${fileName}`;
+
+    const options = {
+      version: "v4",
+      action: "read",
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      contentType: "video/mp4", // Ensures Cloud Storage knows the format
+    };
+
+    const fireFile = storage.bucket(bucketName).file(filePath);
+
+    const [url] = await fireFile.getSignedUrl(options);
+
+    // res.status(200).send({url});
+    return {url};
+  } catch (error) {
+    throw new https.HttpsError(
+        "not-found",
+        // eslint-disable-next-line max-len
+        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+    );
+  }
+});
+
+// !!! note: this function should only be called by admin users.
+// Make sure to call checkIsAtLeast(req, Role.admin); before using it
+const listAllUsers = async (nextPageToken) => {
+  const users = [];
+  logger.info("Listing all users...");
+
+  try {
+    // List batch of users, 1000 at a time.
+    const listUsersResult = await getAuth()
+        .listUsers(1000, nextPageToken);
+
+    listUsersResult.users.forEach((userRecord) => {
+      const user = userRecord.toJSON();
+      // Remove sensitive information.
+      // !!Don't include this unless you are migrating the
+      //    authentication database.
+      //    These hashes compromise password security fo all users if leaked!
+      delete user.passwordHash;
+      delete user.passwordSalt;
+
+      // This data is unecessary for now, but not sensetive to my knowledge.
+      delete user.tokensValidAfterTime;
+      delete user.providerData;
+      delete user.emailVerified;
+      delete user.metadata;
+      delete user.displayName;
+      delete user.photoURL;
+      delete user.phoneNumber;
+      delete user.tenantId;
+
+      // logger.info("user", user);
+
+      // At this point, the user object should have the follwoing fields:
+      // uid, email, disabled, and customClaims
+      // email is the email of the user
+      // uid is the unique id of the user
+      // disabled is a boolean that indicates if the user account is disabled
+      // customClaims is an object that contains the custom claims of the user
+      users.push(user);
+    });
+
+    if (listUsersResult.pageToken) {
+      // List next batch of users.
+      const nextUsers = await listAllUsers(listUsersResult.pageToken);
+      users.push(...nextUsers);
+    }
+  } catch (error) {
+    logger.error("Error listing users:", error);
+    throw new https.HttpsError(
+        "internal",
+        `Error listing users: ${error}`,
+    );
+  }
+
+  logger.info("Finished listing users: ", users);
+
+  return users;
+};
+
+exports.getEmailUIDTable = https.onCall(async (req, context) => {
+  logger.info(`getEmailUIDTable called from account ID: ${req.auth.uid}`);
+  try {
+    checkIsAtLeast(req, Role.admin);
+    // Start listing users from the beginning, 1000 at a time.
+    const users = await listAllUsers();
+
+    return {
+      users: users,
+    };
+  } catch (error) {
+    logger.error(`Error listing users: ${error}`);
+    throw new https.HttpsError(
+        "internal",
+        `Error getting user list: ${error}`,
     );
   }
 });

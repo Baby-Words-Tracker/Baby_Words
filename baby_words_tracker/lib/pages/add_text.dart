@@ -1,28 +1,21 @@
+import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:flutter/material.dart';
-import 'package:csv/csv.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 
 // baby words packages
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
+import 'package:baby_words_tracker/video/video_functions.dart';
 
-import 'package:baby_words_tracker/data/models/word.dart';
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 
-import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:path/path.dart' as path;
 
 class AddTextPage extends StatefulWidget {
   const AddTextPage({super.key});
@@ -33,6 +26,7 @@ class AddTextPage extends StatefulWidget {
 
 class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController fileTextController = TextEditingController();
   List<String> parsedWords = [];
 
   void _parseWords() {
@@ -52,8 +46,10 @@ class _AddTextPageState extends State<AddTextPage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    return Consumer<LocalizationService>(
-        builder: (context, localizationService, child) {
+    return Consumer3<LocalizationService, AuthenticationService,
+            ChildDataService>(
+        builder: (context, localizationService, authenticationService,
+            childService, child) {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
@@ -92,6 +88,19 @@ class _AddTextPageState extends State<AddTextPage> {
                       fillColor: const Color(0xFF9E1B32),
                     ),
                   ),
+                  TextField(
+                    controller: fileTextController,
+                    onTap: () => selectFile(fileTextController),
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      //border: OutlineInputBorder(),
+                      hintText: localizationService.translate(
+                          "choose_file"), //'Tap to Choose Birthday..',
+                      hintStyle: const TextStyle(color: Colors.white),
+                      filled: true,
+                      fillColor: const Color(0xFF9E1B32),
+                    ),
+                  ),
                   Center(
                       child: OutlinedButton(
                     onPressed: () async {
@@ -99,13 +108,13 @@ class _AddTextPageState extends State<AddTextPage> {
                       final wordDataService = context.read<WordDataService>();
                       final wordTrackerDataService =
                           context.read<WordTrackerDataService>();
-                      Child? currChild = context.read<CurrentChildrenService>().getCurrChild();
+                      Child? currChild =
+                          context.read<CurrentChildrenService>().getCurrChild();
                       String? currChildID;
-                      if (currChild != null)
-                      {
+                      if (currChild != null) {
                         currChildID = currChild.id;
                       }
-                      
+
                       /* List<LanguageCode>? maybeLanguages = currChildID != null
                           ? await childDataService.getLanguages(currChildID)
                           : [LanguageCode.en];
@@ -120,12 +129,23 @@ class _AddTextPageState extends State<AddTextPage> {
 
                       for (var word in parsedWords) {
                         totalWords++;
-                        bool? result = await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
+                        bool? result = await checkAndUpdateWords(
+                            word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
                         if (result != null && result && currChildID != null) {
+                          late String? filePath;
+                          if (fileTextController.text != "") {
+                            filePath = path.basename(fileTextController.text);
+                            uploadVideo(fileTextController.text, currChildID);
+                          } else {
+                            filePath = null;
+                          }
                           addWordToChild(word, childDataService,
                               wordDataService, wordTrackerDataService,
-                              id: currChildID);
+                              id: currChildID, videoId: filePath);
                           correctWords++;
+                          /* addVideoToWord(
+                              word, path.basename(filePath), childService,
+                              id: currChildID); */
                         } else {
                           if (!context.mounted) return;
                           await showDialog(
@@ -176,6 +196,7 @@ class _AddTextPageState extends State<AddTextPage> {
                           },
                         );
                         _controller.clear();
+                        fileTextController.clear();
                       }
                     },
                     style: OutlinedButton.styleFrom(
@@ -202,13 +223,34 @@ class _AddTextPageState extends State<AddTextPage> {
 
   Future<void> addWordToChild(String word, ChildDataService childService,
       WordDataService wordService, WordTrackerDataService trackerService,
-      {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
+      {String id = "gz1Qe32xJcF0oRGmhw7f", String? videoId}) async {
+    //FIXME: implement language, part of speech, defn, spellcheck
     //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
-    if (await trackerService.createWordTracker(id, word, DateTime.now()) ==
-        null) {
-      debugPrint("AddText: Error adding word to child");
+    final object = await trackerService.getWordTracker(id, word);
+    if (object == null) {
+      if (await trackerService.createWordTracker(
+              id, word, DateTime.now(), videoId) ==
+          null) {
+        debugPrint("AddText: Error adding word to child");
+      } else {
+        debugPrint("AddText: Word added to child");
+      }
     } else {
-      debugPrint("AddText: Word added to child");
+      if (videoId != null) {
+        trackerService.setWordTracker(id, word, filePath: videoId);
+        debugPrint("UpdateText: word already existed, updating file");
+      }
+    }
+  }
+
+  Future<void> addVideoToWord(
+      String word, String filePath, ChildDataService childService,
+      {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
+    if (await childService.addVideo(id, word, path.basename(filePath)) ==
+        false) {
+      debugPrint("AddVideo: Error adding video to work tracker");
+    } else {
+      debugPrint("AddVideo: $filePath added to $word");
     }
   }
 }

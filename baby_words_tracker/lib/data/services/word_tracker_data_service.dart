@@ -24,6 +24,25 @@ class WordTrackerDataService extends ChangeNotifier {
     return object.copyWith(id: result);
   }
 
+  Future<bool> setWordTracker(String childId, String word,
+      {DateTime? firstUtterance, String? filePath}) async {
+    late WordTracker? object;
+    if (firstUtterance != null) {
+      object = await createWordTracker(childId, word, firstUtterance, filePath);
+      if (object != null) return true;
+    } else {
+      try {
+        fireRepo.setObjectSubcollection(Child.collectionName,
+            WordTracker.collectionName, childId, word, {"videoID": filePath});
+        return true;
+      } catch (e) {
+        debugPrint("Error: failed to update word tracker: $e");
+        return false;
+      }
+    }
+    return false;
+  }
+
   Future<WordTracker?> getWordTracker(String childId, String id) async {
     final word = await fireRepo.readSubcollection(
         Child.collectionName, childId, WordTracker.collectionName, id);

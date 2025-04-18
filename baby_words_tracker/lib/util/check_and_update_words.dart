@@ -8,22 +8,31 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 //basic spellcheck that checks if a word exists in our word bank or in the englsh dictionary
-Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = const [LanguageCode.en, LanguageCode.es]}) async {
+Future<bool?> checkAndUpdateWords(String word,
+    {List<LanguageCode> languages = const [
+      LanguageCode.en,
+      LanguageCode.es
+    ]}) async {
   final word_service = WordDataService();
-  Word? wordTest = await word_service.getWord(word); 
-  if(wordTest != null && wordTest.languageCodes == languages) return true; //word is the exact same word as requested
+  Word? wordTest = await word_service.getWord(word);
+  if (wordTest != null /* && wordTest.languageCodes == languages */)
+    return true; //word is the exact same word as requested
 
-  String url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json"; //get wikidata pages associated with word (will return pages from all languages that have that word)
-  
-  final http.Response response = await http.get(Uri.parse(url), headers: {'User-Agent': 'Dart/Flutter'},); 
-  
-  if(response.statusCode == 200) {
+  String url =
+      "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json"; //get wikidata pages associated with word (will return pages from all languages that have that word)
+
+  final http.Response response = await http.get(
+    Uri.parse(url),
+    headers: {'User-Agent': 'Dart/Flutter'},
+  );
+
+  if (response.statusCode == 200) {
     Map<LanguageCode, String?> wordDefs = {};
     Map<LanguageCode, PartOfSpeech> partsOfSpeech = {};
     Set<LanguageCode> usedLanguage = {};
 
-
-    final Map<String, dynamic> responseBody = jsonDecode(response.body); // get body
+    final Map<String, dynamic> responseBody =
+        jsonDecode(response.body); // get body
     final List<dynamic> searchList = responseBody['search'];
 
     if (searchList == []) {
@@ -33,62 +42,67 @@ Future<bool?> checkAndUpdateWords(String word, {List<LanguageCode> languages = c
 
     for (Map<String, dynamic> item in searchList) {
       final Map<String, dynamic> match = item['match'];
-      final List<String> stringLang = languages.map((lang) => lang.displayCode).toList(); 
+      final List<String> stringLang =
+          languages.map((lang) => lang.displayCode).toList();
 
-      if (stringLang.contains(match['language'])) { 
+      if (stringLang.contains(match['language'])) {
         stringLang.removeWhere((item) => item == match['langauge']);
-    
+
         final LanguageCode matchLang = LanguageCode.values.firstWhere(
-                                    (lang) => lang.name == match['language'],
-                                    orElse: () => throw ArgumentError('Invalid language:' + match['language']), //error should never be reached
-                                    );
+          (lang) => lang.name == match['language'],
+          orElse: () => throw ArgumentError('Invalid language:' +
+              match['language']), //error should never be reached
+        );
 
         final String id = item['id'];
         debugPrint("Current word id: $id");
-        List<String> desc = item['description'].split(' ');
-        final String pOSString = desc.length == 2 ? item['description'].split(' ')[1] as String : "";
+        List<String> desc = item['description'].split(", ");
+        final String pOSString = desc.isNotEmpty ? desc[1] : "";
+        debugPrint("Part of Speech: $desc");
         final PartOfSpeech partOfSpeech = PartOfSpeech.values.firstWhere(
-                                          (e) => e.displayName == pOSString,
-                                          orElse: () => PartOfSpeech.unknown,
-                                          );//desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
-        partsOfSpeech[matchLang] = partOfSpeech; 
+          (e) => e.displayName.toLowerCase() == pOSString.toLowerCase(),
+          orElse: () => PartOfSpeech.unknown,
+        ); //desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
+        partsOfSpeech[matchLang] = partOfSpeech;
 
-        final idUrl = "https://www.wikidata.org/wiki/Special:EntityData/$id.json";
+        final idUrl =
+            "https://www.wikidata.org/wiki/Special:EntityData/$id.json";
         final http.Response idResponse = await http.get(Uri.parse(idUrl));
 
-        if(idResponse.statusCode == 200) {
+        if (idResponse.statusCode == 200) {
           final Map<String, dynamic> body = jsonDecode(idResponse.body);
           final Map<String, dynamic> entity = body['entities'];
           final Map<String, dynamic> code = entity[id];
           final List<dynamic> senses = code['senses'];
-          final Map<String, dynamic> glosses = senses.length != 0 ? senses[0]['glosses'] : {};
+          final Map<String, dynamic> glosses =
+              senses.length != 0 ? senses[0]['glosses'] : {};
           final String? definition = glosses['en']?['value'];
 
-          debugPrint("Current definition: $definition"); 
+          debugPrint("Current definition: $definition");
 
           //if (definition == null) return null;
           wordDefs[matchLang] = definition;
 
           usedLanguage.add(matchLang);
-
         }
       }
     }
     debugPrint("$usedLanguage");
     debugPrint("was unable to match language code: $languages");
-    if(usedLanguage.isNotEmpty) {
-          debugPrint("Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
-          final Word? newWord = await word_service.createWord(word, usedLanguage.toList(), partsOfSpeech, wordDefs); 
-          if (newWord == null) return null;
+    if (usedLanguage.isNotEmpty) {
+      debugPrint(
+          "Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
+      final Word? newWord = await word_service.createWord(
+          word, usedLanguage.toList(), partsOfSpeech, wordDefs);
+      if (newWord == null) return null;
 
-          return true;
-        }
+      return true;
+    }
     return false;
-  }
-  else {
-      final int status = response.statusCode;
-      debugPrint("did not get a response: $status");
+  } else {
+    final int status = response.statusCode;
+    debugPrint("did not get a response: $status");
   }
 
-  return false; 
+  return false;
 }
