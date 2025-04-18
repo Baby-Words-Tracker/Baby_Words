@@ -1,30 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'package:path/path.dart' as path;
-import 'dart:typed_data';
 import 'dart:async';
-import 'package:video_compress/video_compress.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
+import 'dart:io';
 
-Future<Uint8List?> compressVideo(String inputPath) async {
-  final MediaInfo? compressedVideo = await VideoCompress.compressVideo(
-    inputPath,
-    quality: VideoQuality.MediumQuality,
-  );
-
-  if (compressedVideo != null && compressedVideo.file != null) {
-    return await compressedVideo.file!.readAsBytes(); // Load into memory
-  } else {
-    debugPrint("Compression failed");
-    return null;
-  }
-}
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 
 Future<String?> getSignedUploadUrl(String filename) async {
   HttpsCallable function =
@@ -80,7 +61,7 @@ Future<String> selectFile(TextEditingController fileTextController) async {
   return "Please select a 'mp4' file.";
 }
 
-Future<void> uploadVideo(String filePath, childId) async {
+Future<void> uploadVideo(String filePath) async {
   try {
     debugPrint("File for signed url: $filePath");
     //final compressed = await compressVideo(filePath) as List<int>;

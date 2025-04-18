@@ -1,8 +1,6 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:flutter/material.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
@@ -24,10 +22,10 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, AuthenticationService,
-            ChildDataService>(
-        builder: (context, localizationService, authenticationService,
-            childService, child) {
+    return Consumer3<LocalizationService, ChildDataService,
+            CurrentChildrenService>(
+        builder: (context, localizationService, childService,
+            currentChildrenService, child) {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: TopBar(pageName: localizationService.translate("upload_video")),
@@ -48,7 +46,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
                       .translate("choose_file"), //'Tap to Choose Birthday..',
                   hintStyle: const TextStyle(color: Colors.white),
                   filled: true,
-                  fillColor: Color(0xFF9E1B32),
+                  fillColor: const Color(0xFF9E1B32),
                 ),
               ),
             ),
@@ -61,14 +59,13 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
             Center(
                 child: OutlinedButton(
               onPressed: () {
-                if (fileTextController.text !=
-                    "") //add the word to the child with the id, or the default testing child if no input
-                {
+                //add the word to the child with the id, or the default testing child if no input
+                if (fileTextController.text != "") {
                   //add child
-                  final childId = getCurrentChildIDSingleInstance(
-                      context, getCurrentParent(context)!);
+                  final String? childId =
+                      currentChildrenService.getCurrChild()?.id;
                   final filePath = fileTextController.text;
-                  uploadVideo(filePath, childId);
+                  uploadVideo(filePath);
                   childService.addVideo(
                       childId!, "test", path.basename(filePath));
                   //added indicator

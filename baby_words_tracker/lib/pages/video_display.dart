@@ -1,26 +1,15 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
-import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
-import 'package:baby_words_tracker/l10n/localization_service.dart';
-import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/video/video_functions.dart';
-import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
-
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'package:video_player/video_player.dart';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart' as path;
 import 'dart:io';
+
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:baby_words_tracker/video/video_functions.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart' as path;
+import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 
 class DisplayVideo extends StatefulWidget {
   const DisplayVideo({super.key});
@@ -35,13 +24,23 @@ class _DisplayVideoState extends State<DisplayVideo> {
 
   /// Fetch video metadata from Firestore
   Future<void> fetchVideos(
-      BuildContext context, ChildDataService childService) async {
-    final wordList = await childService.getAllKnownWords(
-        getCurrentChildIDListening(context, getCurrentParent(context)!)!);
-    setState(() {
-      _wordList = wordList.where((video) => video.videoID != null).toList();
-      //debugPrint(_wordList.toString());
-    });
+    BuildContext context,
+    ChildDataService childService,
+    CurrentChildrenService currentChildrenService,
+  ) async {
+    String? currentChildID = currentChildrenService.getCurrChild()?.id;
+    if (currentChildID == null) {
+      debugPrint("No current child ID found.");
+      setState(() {
+        _wordList = [];
+      });
+    } else {
+      final wordList = await childService.getAllKnownWords(currentChildID);
+      setState(() {
+        _wordList = wordList.where((video) => video.videoID != null).toList();
+        //debugPrint(_wordList.toString());
+      });
+    }
   }
 
   Future<File> downloadVideo(String fileName) async {
@@ -83,18 +82,18 @@ class _DisplayVideoState extends State<DisplayVideo> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, AuthenticationService,
-            ChildDataService>(
-        builder: (context, localizationService, authenticationService,
-            childService, child) {
-      fetchVideos(context, childService);
+    return Consumer3<LocalizationService, ChildDataService,
+            CurrentChildrenService>(
+        builder: (context, localizationService, childService,
+            currentChildrenService, child) {
+      fetchVideos(context, childService, currentChildrenService);
       return Scaffold(
-        appBar: AppBar(title: Text("Select a Video")),
+        appBar: AppBar(title: const Text("Select a Video")),
         body: Column(
           children: [
             DropdownButton<String>(
               value: _selectedVideoId,
-              hint: Text("Select a video"),
+              hint: const Text("Select a video"),
               items: _wordList.map((video) {
                 return DropdownMenuItem<String>(
                   value: video.id,
@@ -118,7 +117,7 @@ class _DisplayVideoState extends State<DisplayVideo> {
                       aspectRatio: _controller!.value.aspectRatio,
                       child: VideoPlayer(_controller!),
                     )
-                  : Center(child: Text("Select a video to play")),
+                  : const Center(child: Text("Select a video to play")),
             ),
             if (_controller != null)
               FloatingActionButton(
