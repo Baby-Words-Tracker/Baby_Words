@@ -21,10 +21,16 @@ Future<bool?> checkAndUpdateWords(String word,
   String url =
       "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json"; //get wikidata pages associated with word (will return pages from all languages that have that word)
 
-  final http.Response response = await http.get(
-    Uri.parse(url),
-    headers: {'User-Agent': 'Dart/Flutter'},
-  );
+  late http.Response response;
+  try {
+    response = await http.get(
+      Uri.parse(url),
+      headers: {'User-Agent': 'Dart/Flutter'},
+    );
+  } catch (e) {
+    debugPrint("Error fetching data: $e");
+    return false;
+  }
 
   if (response.statusCode == 200) {
     Map<LanguageCode, String?> wordDefs = {};
