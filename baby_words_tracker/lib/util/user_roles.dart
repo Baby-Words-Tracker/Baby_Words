@@ -5,13 +5,13 @@ extension UserRoleExtension on UserRole {
   String get name {
     switch (this) {
       case UserRole.admin:
-        return 'Admin';
+        return 'admin';
       case UserRole.researcher:
-        return 'Researcher';
+        return 'researcher';
       case UserRole.parent:
-        return 'Parent';
+        return 'parent';
       case UserRole.unauthenticated:
-        return 'Unauthenticated';
+        return 'unauthenticated';
     }
   }
 
@@ -36,13 +36,13 @@ bool isAtLeast(UserRole role, UserRole targetRole) {
 List<UserRole> getUserRolesFromClaims(Map<String, dynamic> claims) {
   List<UserRole> roles = [];
 
-  if (claims['admin'] == true) {
+  if (claims[UserRole.admin.name] == true) {
     roles.add(UserRole.admin);
   }
-  if (claims['researcher'] == true) {
+  if (claims[UserRole.researcher.name] == true) {
     roles.add(UserRole.researcher);
   }
-  if (claims['parent'] == true) {
+  if (claims[UserRole.parent.name] == true) {
     roles.add(UserRole.parent);
   }
 

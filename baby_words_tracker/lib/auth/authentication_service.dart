@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
+import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -39,8 +40,17 @@ class AuthenticationService extends ChangeNotifier {
     if (_user != null) {
       try {
         final idTokenResult = await _user!.getIdTokenResult(forceRefresh);
+        var oldClaims = _customClaims;
         _customClaims = idTokenResult.claims;
-        notifyListeners();
+        if (!(const DeepCollectionEquality())
+            .equals(oldClaims, _customClaims)) {
+          debugPrint(
+              'AuthenticationService: Custom claims updated with new values');
+          notifyListeners();
+        } else {
+          debugPrint(
+              'AuthenticationService: Custom claims unchanged, no need to notify listeners');
+        }
       } catch (e) {
         debugPrint('Error fetching custom claims: $e');
         _customClaims = null;
