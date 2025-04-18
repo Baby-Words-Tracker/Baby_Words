@@ -6,13 +6,13 @@ import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 
 import 'package:baby_words_tracker/util/pair.dart';
-import 'package:baby_words_tracker/util/safe_synchonizer.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 
 import 'package:flutter/material.dart';
 
 class UserModelService extends ChangeNotifier {
-  late final SafeSynchonizer _safeSynchonizer;
+  late final SafeSynchronizer _safeSynchronizer;
 
   UserType _userType = UserType.unauthenticated;
   static const UserType _defaultUserType = UserType.parent;
@@ -22,42 +22,51 @@ class UserModelService extends ChangeNotifier {
 
   IDocumentListener? _listener;
 
+  int i = 0;
+
   UserModelService({
     required AuthenticationService authenticationService,
     required GeneralUserService generalUserService,
   })  : _authenticationService = authenticationService,
         _generalUserService = generalUserService {
-    _safeSynchonizer = SafeSynchonizer(_synchronizeUser);
+    _safeSynchronizer = SafeSynchronizer(_synchronizeUser);
 
-    _authenticationService.addListener(
-      () => _safeSynchonizer.safeSynchronize(),
-    );
+    _authenticationService.addListener(() {
+      debugPrint(
+          "UserModelService: change notification recieved. resync triggered");
+      _safeSynchronizer.safeSynchronize().catchError((e) {
+        debugPrint(
+            "UserModelService: Error synchronizing user: $e\n${e.stackTrace}");
+      });
+    });
   }
 
   Future<void> _synchronizeUser() async {
+    int localI = ++i;
     debugPrint(
-        "UserModelService: Synchronizing user: ${_authenticationService.userId}");
-
+        "UserModelService: $localI: Synchronizing user: ${_authenticationService.userId}");
+    await Future.delayed(const Duration(seconds: 3));
+    debugPrint(
+        "UserModelService: $localI: Synchronizing user after sleep: ${_authenticationService.userId} - ${_authenticationService.userEmail} - ${_authenticationService.userName}");
     try {
       if (!_authenticationService.isAuthenticated ||
           _authenticationService.userId == null) {
         _unathenticateUser();
-        debugPrint("UserModelService: User unauthenticated");
+        debugPrint(
+            "UserModelService: $localI: User unauthenticated ending synchronization.");
         return;
       }
       // else if user is authenticated or the authentication data has changed, synchronize user
       else if (_userType == UserType.unauthenticated ||
-          _getCurrentUserModelId() != _authenticationService.userId ||
-          _getCurrentUserModelEmail() != _authenticationService.userEmail ||
-          _getCurrentUserModelName() != _authenticationService.userName) {
+          _getCurrentUserModelId() != _authenticationService.userId) {
         // debugPrint all of these and their comparison: _getCurrentModelEmail() != _authenticationService.userEmail || _getCurrentUserModelName() != _authenticationService.userName
         debugPrint(
-            "UserModelService: ${_userType.name} user authenticated, but not synchronized");
+            "UserModelService: $localI: ${_userType.name} user authenticated, but not synchronized");
 
         await _updateUserTypeAndListener(_authenticationService.userId!);
 
         if (_userType == UserType.unauthenticated) {
-          // debugPrint("UserModelService: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
+          // debugPrint("UserModelService: $localI: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
 
           Pair<dynamic, UserType> user = await _generalUserService.createUser(
               userType: _defaultUserType,
@@ -66,9 +75,9 @@ class UserModelService extends ChangeNotifier {
               name: _authenticationService.userName);
 
           debugPrint(
-              "UserModelService: user created -> ${user.first} | ${user.second}");
+              "UserModelService: $localI: user created -> ${user.first} | ${user.second}");
           if (user.first != null) {
-            debugPrint("UserModelService: new User model created");
+            debugPrint("UserModelService: $localI: new User model created");
             await _updateUserTypeAndListener(_authenticationService.userId!);
             if (user.second != _defaultUserType) {
               debugPrint(
@@ -82,13 +91,18 @@ class UserModelService extends ChangeNotifier {
             debugPrint(
                 "Error: UserModelService: User model is null when the usertype is not unauthenticated");
           } else {
-            debugPrint("UserModelService: No updated needed");
+            debugPrint("UserModelService: $localI: User Data synchronized successfully");
           }
         }
+      } else {
+        debugPrint(
+            "UserModelService: $localI: User is already authenticated and synchronized, no action needed");
       }
     } catch (e, stack) {
-      debugPrint("UserModelService: _synchronizeUser failed: $e\n$stack");
+      debugPrint("UserModelService: $localI: _synchronizeUser failed: $e\n$stack");
     }
+    debugPrint(
+        "UserModelService: $localI: Synchronization finished, userType: $_userType");
   }
 
   dynamic _getCurrentUserModel() {
@@ -102,14 +116,6 @@ class UserModelService extends ChangeNotifier {
     }
   }
 
-  String? _getCurrentUserModelEmail() {
-    return _getCurrentUserModel()?.email;
-  }
-
-  String? _getCurrentUserModelName() {
-    return _getCurrentUserModel()?.name;
-  }
-
   String? _getCurrentUserModelId() {
     return _getCurrentUserModel()?.id;
   }
@@ -118,6 +124,8 @@ class UserModelService extends ChangeNotifier {
     _listener?.dispose();
     _listener = null;
     _userType = UserType.unauthenticated;
+    debugPrint(
+        "UserModelService: User unauthenticated, listener disposed, userType set to $_userType, notifying listeners");
     notifyListeners();
   }
 
@@ -125,8 +133,9 @@ class UserModelService extends ChangeNotifier {
     debugPrint("UserModelService: Updating user type and listener");
     Pair<IDocumentListener?, UserType> listenerTypePair =
         await _generalUserService.getUserListener(userId,
-            expectedType: _userType);
-    debugPrint("UserModelService: ListenerTypePair: $listenerTypePair");
+            listenerType: _userType);
+    debugPrint(
+        "UserModelService: ListenerTypePair: {${listenerTypePair.first} , ${listenerTypePair.second.name}}");
     if (_userType != listenerTypePair.second) {
       await _replaceListener(listenerTypePair.first, listenerTypePair.second);
     } else {
@@ -153,11 +162,16 @@ class UserModelService extends ChangeNotifier {
     _listener?.dispose();
     _listener = listener;
     _userType = userType;
+    debugPrint(
+        "UserModelService: Listener replaced: $_listener, userType: $_userType");
 
     _listener?.addListener(() {
+      debugPrint(
+          "UserModelService: Notifying listeners from listener callback");
       notifyListeners();
     });
 
+    debugPrint("UserModelService: Listener replaced, notifying listeners");
     notifyListeners();
   }
 

@@ -1,10 +1,10 @@
 import 'dart:async';
 
-class SafeSynchonizer {
+class SafeSynchronizer {
   final Future<void> Function() _syncFunction;
   bool _needSynchronization = false;
 
-  SafeSynchonizer(Future<void> Function() syncFunction)
+  SafeSynchronizer(Future<void> Function() syncFunction)
       : _syncFunction = syncFunction;
 
 // Use a completer to track synchronization state

@@ -1,10 +1,5 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/util/config.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -22,102 +17,104 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TopBarState extends State<TopBar> {
-  Parent? _currParent;
-  List<PopupMenuEntry<int>> _childNames = List.empty(growable: true);
-  bool _isInvalidUserType = false;
-  bool _isloadingChildren = true;
-  String _currName = "Unable to find current child";
-
   @override
   void didChangeDependencies() {
     // use didChangeDependencies instead of initState because we depend on an inherited provider for our behavior
     super.didChangeDependencies();
-    _loadParentAndChildren(context);
   }
 
-  Future<void> _loadParentAndChildren(BuildContext context) async {
-    if (_childNames.isNotEmpty) {
-      // ensure we init only once, idk if this is buggy or not we'll see
-      return;
-    }
-    // load parent
-    Parent? currParent;
-    if (context.watch<UserModelService>().userType == UserType.parent) {
-      currParent = context.read<UserModelService>().parent!;
-    } else {
-      // if it is not a parent acccessing the page, short circuit and say invalid state
-      setState(() {
-        _isInvalidUserType = true; // handle invalid user type with this bool
-        _currName = "Unable to find current child";
-      });
-      return;
-    }
-    //load children
-    List<PopupMenuEntry<int>> childNames = List.empty(growable: true);
-    if (currParent.childIDs.isNotEmpty){
-      int i = 0;
-      for (var childID in currParent.childIDs) {
-        Child? currChild = await context.read<ChildDataService>().getChild(childID);
-        if (currChild != null)
-        {
-          PopupMenuItem<int> currEntry = PopupMenuItem<int>(value: i, child: Text(currChild.name));
-          childNames.add(currEntry);
-          i++;
-        }
+  List<PopupMenuEntry<String>> _loadParentAndChildren(
+      CurrentChildrenService currentChildrenService) {
+    List<Child>? children = currentChildrenService.getCurrChildren();
+    List<PopupMenuEntry<String>> childNamesToChildIDs =
+        List.empty(growable: true);
+    if (children != null) {
+      childNamesToChildIDs = children
+          .map((entry) => PopupMenuItem<String>(
+                value: entry.id,
+                child: Text(entry.name),
+              ))
+          .toList();
+      if (childNamesToChildIDs.isNotEmpty) {
+        return childNamesToChildIDs;
       }
     }
-    
-    
-
-    setState(() {
-      _currParent = currParent;
-      if (childNames.isNotEmpty){
-        _currName = ((childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
-        _childNames = childNames; 
-      } else { //_childNames is empty
-        _currName = "\t\t\t\t\t\t\t\t\t\tNo children,\n add a child in settings"; //FIXME: insane thing to do
-      }
-      _isInvalidUserType = false;
-      _isloadingChildren = false;
-      
-      
-    });
+    return List.empty();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isInvalidUserType || _isloadingChildren) {
-      return AppBar(title: const Text("Loading..."), automaticallyImplyLeading: false, leading: null);
-    }
-
     return AppBar(
       title: Text(widget.pageName),
       actions: [
-        Text( _currName, style: TextStyle(color: Colors.grey),),
-        PopupMenuButton<int>(
-          onSelected: (value) {
-            if (value > -1 && value < (_currParent?.childIDs.length ?? -1)) {
-              context.read<Config>().switchChild(value);
-                  setState(() {
-                    _currName = ((_childNames[context.read<Config>().childIndex] as PopupMenuItem<int>).child as Text).data!;
-                  });
-            }
-          },
-          itemBuilder: (BuildContext context) {
-            if (_childNames.isEmpty) {
-              return [
-                PopupMenuItem(
-                  value: -1,
-                  child: Consumer<LocalizationService>(
-                    builder: (context, localizationService, child) {
-                      return Text(localizationService.translate("loading"));
-            }
-            )
-            ),
-              ];
-            } else {
-              return _childNames;
-            }
+        Consumer<CurrentChildrenService>(
+          builder: (context, currentChildrenService, child) {
+            var childNamesToChildIDs =
+                _loadParentAndChildren(currentChildrenService);
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "Current child: ",
+                  style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color ??
+                          Colors.grey),
+                ),
+                Builder(
+                  builder: (context) {
+                    Child? currChild = currentChildrenService.getCurrChild();
+                    String text = '';
+                    if (!currentChildrenService.dataRetrieved) {
+                      text = "loading";
+                    } else if (currChild != null) {
+                      text = currChild.name;
+                    } else {
+                      text = "No-Children-nl-Yet";
+                    }
+
+                    return Consumer<LocalizationService>(
+                      builder: (context, localizationService, children) {
+                        return Text(
+                          localizationService.translate(text),
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).textTheme.bodyMedium?.color ??
+                                    Colors.grey,
+                          ),
+                          textAlign: TextAlign.center,
+                        );
+                      },
+                    );
+                  },
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value != "") {
+                      currentChildrenService.switchChild(value);
+                    }
+                  },
+                  itemBuilder: (BuildContext context) {
+                    if (childNamesToChildIDs.isEmpty) {
+                      return [
+                        PopupMenuItem(
+                            value: "",
+                            child: Consumer<LocalizationService>(
+                                builder: (context, localizationService, child) {
+                              return Text(localizationService
+                                  .translate("No children yet"));
+                            })),
+                      ];
+                    } else {
+                      List<PopupMenuEntry<String>> itemList =
+                          childNamesToChildIDs;
+                      return itemList;
+                    }
+                  },
+                ),
+              ],
+            );
           },
         ),
         IconButton(
@@ -132,44 +129,3 @@ class _TopBarState extends State<TopBar> {
     );
   }
 }
-
-//   return AppBar(
-//         title: Text(pageName),
-//         actions: [
-//           PopupMenuButton<String>(
-//             onSelected: (value) {
-//               // Handle selection
-//               print("Selected: $value");
-//             },
-//             itemBuilder: (BuildContext context) {
-//               ChildDataService childService = context.read<ChildDataService>();
-//               List<String> childNames = List.empty(growable: true);
-//               for (String childID in currParent.childIDs) {
-//                 childNames.add((await childService.getChild(childID)).name);
-//               }
-//               return [
-//                 const PopupMenuItem(
-//                   value: "Option 1",
-//                   child: Text("Option 1"),
-//                 ),
-//                 const PopupMenuItem(
-//                   value: "Option 2",
-//                   child: Text("Option 2"),
-//                 ),
-//                 const PopupMenuItem(
-//                   value: "Option 3",
-//                   child: Text("Option 3"),
-//                 ),
-//               ];
-//             },
-//           ),
-//           IconButton(
-//             icon: const Icon(Icons.person),
-//             onPressed: () {
-//               Navigator.pushNamed(context, '/profilepage');
-//             },
-//           )
-//         ],
-//         automaticallyImplyLeading: true,
-//       );
-// }

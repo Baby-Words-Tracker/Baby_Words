@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,7 +6,10 @@ import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-
+import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/util/user_roles.dart';
+import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
 
 class ResearcherHomePage extends StatefulWidget {
   const ResearcherHomePage({super.key});
@@ -22,7 +26,7 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
   bool _isLoading = true;
 
-    @override
+  @override
   void initState() {
     super.initState();
     _fetchWordTrackers();
@@ -31,8 +35,11 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   void _fetchWordTrackers() async {
     setState(() => _isLoading = true);
     await _dataSource.fetchData();
+    if (!mounted) return;
+    final newData = _dataSource.getAllData();
+
     setState(() {
-      wordInstances = _dataSource.getAllData();
+      wordInstances = newData;
       _isLoading = false;
     });
   }
@@ -43,23 +50,32 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
       selectedEntry = entry;
       _dataSource.filterData(field, entry);
     });
-     debugPrint("Filter updated: Field -> $selectedField, Entry -> $selectedEntry");
+    debugPrint(
+        "Filter updated: Field -> $selectedField, Entry -> $selectedEntry");
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    if(Provider.of<LocalizationService>(context, listen : false).getLocaleCode() != LanguageCode.en) {
-      Provider.of<LocalizationService>(context, listen :false).changeLocale(LanguageCode.en);
+    if (Provider.of<LocalizationService>(context, listen: false)
+            .getLocaleCode() !=
+        LanguageCode.en) {
+      Provider.of<LocalizationService>(context, listen: false)
+          .changeLocale(LanguageCode.en);
     }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Baby Word Tracker', style: TextStyle(color: Color(0xFF9E1B32), 
-                                                         fontSize: 24,        
-                                                         fontWeight: FontWeight.bold, 
-                                                        ),
-                          ),
+        title: const Text(
+          'Baby Word Tracker',
+          style: TextStyle(
+            color: Color(0xFF9E1B32),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -67,9 +83,9 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute<ProfileScreen>(
-                  builder: (context) =>  ProfileScreen(
+                  builder: (context) => ProfileScreen(
                     appBar: AppBar(
-                        title: const Text('User Profile'),
+                      title: const Text('User Profile'),
                     ),
                     actions: [
                       SignedOutAction((context) {
@@ -80,36 +96,52 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                 ),
               );
             },
-          )
+          ),
+          Consumer<AuthenticationService>(
+            builder: (context, authenticationService, config) {
+              if (authenticationService.roles.contains(UserRole.admin)) {
+                return IconButton(
+                    icon: const Icon(Icons.admin_panel_settings),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/roletesting');
+                    });
+              } else {
+                return const Text(''); //TODO: make this an empty space filler
+              }
+            },
+          ),
         ],
         automaticallyImplyLeading: false,
       ),
-      body: 
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-                const Text('Hello, Researcher!', style: TextStyle(color: Color(0xFF9E1B32), 
-                                                         fontSize: 24,        
-                                                         fontWeight: FontWeight.bold,)),
-                Expanded(
-                  flex: 1,
-                  child: FilterMenu(onFilterChanged: updateFilter, dataSource: wordInstances)
-                  ),
-                Expanded(
-                  flex: 3,
-                  child: _isLoading
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          height: screenHeight,
+          child: Column(children: [
+            const Text('Hello, Researcher!',
+                style: TextStyle(
+                  color: Color(0xFF9E1B32),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                )),
+            Flexible(
+                flex: 1,
+                child: FilterMenu(
+                    onFilterChanged: updateFilter, dataSource: wordInstances)),
+            Flexible(
+              flex: 3,
+              child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : WordTrackerTable(dataSource: _dataSource),
-                )
-                ]),
+            ),
+          ]),
         ),
+      ),
     );
   }
 }
 
-class WordTrackerTable extends StatefulWidget{
-
+class WordTrackerTable extends StatefulWidget {
   final FirestoreDataTableSource dataSource;
 
   const WordTrackerTable({super.key, required this.dataSource});
@@ -119,11 +151,11 @@ class WordTrackerTable extends StatefulWidget{
 }
 
 class _WordTrackerTableState extends State<WordTrackerTable> {
-
   bool _isAscending = true;
   int _sortColumnIndex = 0;
 
-  void _sort<T>(Comparable<T> Function(WordInstance wordInstance) getField, int columnIndex, bool ascending) {
+  void _sort<T>(Comparable<T> Function(WordInstance wordInstance) getField,
+      int columnIndex, bool ascending) {
     setState(() {
       _sortColumnIndex = columnIndex;
       _isAscending = ascending;
@@ -134,47 +166,100 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
   @override
   Widget build(BuildContext context) {
     final rows = widget.dataSource.getFilteredData();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-          child: DataTable(
-            sortColumnIndex: _sortColumnIndex,
-            sortAscending: _isAscending,
-            columns: [
-              DataColumn(
-                label: const Text("Child"),
-                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.childName, columnIndex, ascending),
-              ),
-              DataColumn(
-                label: const Text("Age"),
-                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.childAge, columnIndex, ascending),
-              ),
-              DataColumn(
-                label: const Text("Word"),
-                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.id, columnIndex, ascending),
-              ),
-              DataColumn(
-                label: const Text("First Utterance"),
-                numeric: true,
-                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.firstUtterance, columnIndex, ascending),
-              ),
-              DataColumn(
-                label: const Text("Video ID"),
-                numeric: true,
-                onSort: (columnIndex, ascending) => _sort((wordInstance) => wordInstance.videoID, columnIndex, ascending),
-              ),
-            ],
-            rows: rows.map((wordInstance) => DataRow(
-              cells: [
-                DataCell(Text(wordInstance.childName)),
-                DataCell(Text(wordInstance.childAge.toString())),
-                DataCell(Text(wordInstance.id)),
-                DataCell(Text(wordInstance.firstUtterance)),
-                DataCell(Text(wordInstance.videoID.toString())),
-              ],
-            )).toList(),
+    final dataTable = DataTable(
+      sortColumnIndex: _sortColumnIndex,
+      sortAscending: _isAscending,
+      columns: [
+        DataColumn(
+          label: const Text("Child"),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.childName, columnIndex, ascending),
+        ),
+        DataColumn(
+          label: const Text("Age"),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.childAge, columnIndex, ascending),
+        ),
+        DataColumn(
+          label: const Text("Word"),
+          onSort: (columnIndex, ascending) =>
+              _sort((wordInstance) => wordInstance.id, columnIndex, ascending),
+        ),
+        DataColumn(
+          label: const Text("Part of Speech"),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.partOfSpeech,
+              columnIndex,
+              ascending),
+        ),
+        DataColumn(
+          label: const Text("First Utterance"),
+          numeric: true,
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.firstUtterance,
+              columnIndex,
+              ascending),
+        ),
+        DataColumn(
+          label: const Text("Video ID"),
+          numeric: true,
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.videoID, columnIndex, ascending),
+        ),
+      ],
+      rows: rows
+          .map((wordInstance) => DataRow(
+                cells: [
+                  DataCell(Text(wordInstance.childName)),
+                  DataCell(Text(wordInstance.childAge.toString())),
+                  DataCell(Text(wordInstance.id)),
+                  DataCell(Text(wordInstance.partOfSpeech)),
+                  DataCell(Text(wordInstance.firstUtterance)),
+                  DataCell(Text(wordInstance.videoID.toString())),
+                ],
+              ))
+          .toList(),
+    );
+
+    List<List<String>> dataList = dataTable.rows.map((dataRow) {
+      return dataRow.cells.map((dataCell) {
+        if (dataCell.child is Text) {
+          return (dataCell.child as Text).data ?? "";
+        } else {
+          return "";
+        }
+      }).toList();
+    }).toList();
+
+    List<String> header = [
+      'Child',
+      'Age',
+      'Word',
+      'Part of Speech',
+      'First Utterance',
+      'Video ID'
+    ];
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 350,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SingleChildScrollView(
+              child: dataTable,
+            ),
           ),
         ),
+        const SizedBox(
+          height: 10,
+        ),
+        ElevatedButton(
+            onPressed: () {
+              download_csv.downloadAsCSV(header, dataList);
+            },
+            child: const Text('Download as CSV'))
+      ],
     );
   }
 }
@@ -183,54 +268,69 @@ class FirestoreDataTableSource extends DataTableSource {
   List<WordInstance> _wordInstances = [];
   List<WordInstance> _filteredInstances = [];
 
-  Future<void> fetchData() async {
-  
+Future<void> fetchData() async {
   try {
-
-    debugPrint('querying');
-    List<WordInstance> wordInstances = [];
+    debugPrint('Querying Firestore...');
     
     QuerySnapshot childSnapshot = await FirebaseFirestore.instance.collection('Child').get();
-    
-    
+    List<Future<void>> fetchTasks = [];
+
+    List<WordInstance> tempInstances = [];
+
     for (var childDoc in childSnapshot.docs) {
-      try {
-        String childName = childDoc['name'];
-        DateTime currentTime = DateTime.now();
-        DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
-        int childAge = currentTime.year - childBirthday.year;
-        if((childBirthday.month > currentTime.month) || (childBirthday.month == currentTime.month && childBirthday.day > currentTime.day)){
-          childAge--;
+      fetchTasks.add(() async {
+        try {
+          String childID = childDoc.id;
+          DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
+          int childAge = DateTime.now().year - childBirthday.year;
+
+          if (childBirthday.isAfter(DateTime.now().subtract(Duration(days: 365 * childAge)))) {
+            childAge--;
+          }
+
+          QuerySnapshot wordTrackerSnapshot = await childDoc.reference.collection('WordTracker').get();
+          List<Future<void>> wordFetchTasks = [];
+
+          for (var wordDoc in wordTrackerSnapshot.docs) {
+            wordFetchTasks.add(() async {
+              try {
+                DocumentSnapshot posDoc = await FirebaseFirestore.instance.collection('Word').doc(wordDoc.id).get();
+
+                tempInstances.add(WordInstance(
+                  childName: childID,
+                  childAge: childAge,
+                  id: wordDoc.id,
+                  firstUtterance: wordDoc['firstUtterance'] != null
+                      ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
+                      : 'Unknown',
+                  videoID: wordDoc['videoID'] ?? 0,
+                  partOfSpeech: posDoc['partOfSpeech'].toString(),
+                ));
+              } catch (e) {
+                debugPrint('Error fetching Word document ${wordDoc.id}: $e');
+              }
+            }());
+          }
+          await Future.wait(wordFetchTasks);
+        } catch (e) {
+          debugPrint('Error processing Child ${childDoc.id}: $e');
         }
-        
-        QuerySnapshot wordTrackerSnapshot = await childDoc.reference.collection('WordTracker').get();
-        
-        
-        wordInstances.addAll(wordTrackerSnapshot.docs.map((doc) {
-          return WordInstance(
-            childName: childName,
-            childAge: childAge,
-            id: doc.id,
-            firstUtterance: doc['firstUtterance'] != null
-                            ? (doc['firstUtterance'] as Timestamp).toDate().toString()
-                            : 'Unknown',
-            videoID: doc['videoID'] ?? 0,
-          );
-        }).toList());
-      } catch (e) {
-        debugPrint('Error fetching WordTracker subcollection for Child document ${childDoc.id}: $e');
-      }
+      }());
     }
-    _wordInstances = wordInstances;
-    if(_filteredInstances.isEmpty) _filteredInstances = List.from(_wordInstances);
+
+    await Future.wait(fetchTasks);
+    _wordInstances = tempInstances;
+    _filteredInstances = List.from(_wordInstances);
     notifyListeners();
   } catch (e) {
-    debugPrint('Error fetching Child documents: $e');
+    debugPrint('Error fetching data: $e');
   }
 }
 
   void filterData(FieldLabel? selectedField, String? selectedEntry) {
-    if (selectedField == null || selectedEntry == null || selectedEntry.isEmpty) {
+    if (selectedField == null ||
+        selectedEntry == null ||
+        selectedEntry.isEmpty) {
       _filteredInstances = List.from(_wordInstances);
     } else {
       _filteredInstances = _wordInstances.where((word) {
@@ -241,19 +341,23 @@ class FirestoreDataTableSource extends DataTableSource {
             return word.id == selectedEntry;
           case FieldLabel.age:
             return word.childAge.toString() == selectedEntry;
+          case FieldLabel.partofspeech:
+            return word.partOfSpeech == selectedEntry;
         }
       }).toList();
     }
     notifyListeners();
   }
 
-  void sort<T>(Comparable<T> Function(WordInstance wordTracker) getField, bool ascending) {
+  void sort<T>(Comparable<T> Function(WordInstance wordTracker) getField,bool ascending) {
     _filteredInstances.sort((a, b) {
       final aValue = getField(a);
       final bValue = getField(b);
-      return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
+      return ascending
+          ? Comparable.compare(aValue, bValue)
+          : Comparable.compare(bValue, aValue);
     });
-    notifyListeners(); 
+    notifyListeners();
   }
 
   List<WordInstance> getFilteredData() => _filteredInstances;
@@ -282,12 +386,12 @@ class FirestoreDataTableSource extends DataTableSource {
   int get selectedRowCount => 0;
 }
 
-
 class FilterMenu extends StatefulWidget {
   final void Function(FieldLabel? field, String? value) onFilterChanged;
   final List<WordInstance> dataSource;
 
-  const FilterMenu({super.key, required this.onFilterChanged, required this.dataSource});
+  const FilterMenu(
+      {super.key, required this.onFilterChanged, required this.dataSource});
 
   @override
   State<FilterMenu> createState() => _FilterMenuState();
@@ -296,7 +400,7 @@ class FilterMenu extends StatefulWidget {
 class _FilterMenuState extends State<FilterMenu> {
   TextEditingController fieldController = TextEditingController();
   TextEditingController entryController = TextEditingController();
-  
+
   FieldLabel? selectedField;
   String selectedEntry = '';
 
@@ -314,140 +418,160 @@ class _FilterMenuState extends State<FilterMenu> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  DropdownMenu<FieldLabel>(
-                    initialSelection: null,
-                    controller: fieldController,
-                    requestFocusOnTap: true,
-                    label: const Text('Field'),
-                    onSelected: (FieldLabel? field) {
-                      setState(() {
-                        selectedField = field;
-                        _updateSuggestions();
-                      });
-                    },
-                    dropdownMenuEntries: FieldLabel.entries,
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-              child: Autocomplete<String>(
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text.isEmpty) {
-                    return suggestions;
-                  }
-                  return suggestions.where((option) =>
-                      option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
-                },
-                onSelected: (String value) {
-                  setState(() {
-                    selectedEntry = value;
-                    entryController.text = value;
-                  });
-                },
-                fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-                  entryController = controller;
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Entry',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (String value) {
-                      selectedEntry = value;
-                    },
-                  );
-                },
-              ),
-            ),
-                ],
-              ),
-            ),
-            Row(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState((){
-                      filterMessage = 'Filtering by ${selectedField?.label} "$selectedEntry"';
+                DropdownMenu<FieldLabel>(
+                  initialSelection: null,
+                  controller: fieldController,
+                  requestFocusOnTap: true,
+                  label: const Text('Field'),
+                  onSelected: (FieldLabel? field) {
+                    setState(() {
+                      selectedField = field;
+                      entryController.clear();
+                      _updateSuggestions();
                     });
-                      widget.onFilterChanged(selectedField, selectedEntry);
-                      },
-                child: const Text('Filter'),
-                            ),
-                const SizedBox(
-                  width: 20
+                  },
+                  dropdownMenuEntries: FieldLabel.entries,
                 ),
-                ElevatedButton(
-              onPressed: () {
-                  setState((){
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Autocomplete<String>(
+                    key: ValueKey(selectedField),
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return suggestions;
+                      }
+                      return suggestions.where((option) => option
+                          .toLowerCase()
+                          .contains(textEditingValue.text.toLowerCase()));
+                    },
+                    onSelected: (String value) {
+                      setState(() {
+                        selectedEntry = value;
+                        entryController.text = value;
+                      });
+                    },
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onEditingComplete) {
+                      entryController = controller;
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Entry',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (String value) {
+                          selectedEntry = value;
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    filterMessage =
+                        'Filtering by ${selectedField?.label} "$selectedEntry"';
+                  });
+                  widget.onFilterChanged(selectedField, selectedEntry);
+                },
+                child: const Text('Filter'),
+              ),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
                     selectedField = null;
                     fieldController.clear();
                     entryController.clear();
                     filterMessage = '';
                   });
                   widget.onFilterChanged(null, null);
-                  },
-            child: const Text('Clear Filter'),
-          )
-              ],
-            ),
-            const SizedBox(
-              height: 5),
-            if (filterMessage.isNotEmpty)
-              Text(filterMessage, style: const TextStyle(fontSize: 16)),
-            
-          ],
-          
-        ),
-      );
+                },
+                child: const Text('Clear Filter'),
+              )
+            ],
+          ),
+          const SizedBox(height: 5),
+          if (filterMessage.isNotEmpty)
+            Text(filterMessage, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
   }
 
- void _updateSuggestions() {
-  if (selectedField == null) return;
+  void _updateSuggestions() {
+    if (selectedField == null) return;
 
-  debugPrint("Updating suggestions for field: ${selectedField?.label}");
+    debugPrint("Updating suggestions for field: ${selectedField?.label}");
 
-  if (widget.dataSource.isEmpty) {
-    debugPrint("No data available for suggestions.");
-    setState(() => suggestions = []);
-    return;
+    if (widget.dataSource.isEmpty) {
+      debugPrint("No data available for suggestions.");
+      if (!mounted) return;
+      setState(() => suggestions = []);
+      return;
+    }
+
+    Set<String> uniqueValues = {};
+    switch (selectedField) {
+      case FieldLabel.child:
+        uniqueValues = widget.dataSource
+            .map((word) => word.childName)
+            .where((e) => e.isNotEmpty)
+            .toSet();
+        break;
+      case FieldLabel.word:
+        uniqueValues = widget.dataSource
+            .map((word) => word.id)
+            .where((e) => e.isNotEmpty)
+            .toSet();
+      case FieldLabel.partofspeech:
+        uniqueValues = widget.dataSource
+            .map((word) => word.partOfSpeech)
+            .where((e) => e.isNotEmpty)
+            .toSet();      
+        break;
+      default:
+        uniqueValues = {};
+    }
+
+    if (!mounted) return;
+    setState(() {
+      suggestions = uniqueValues.toList();
+    });
+
+    debugPrint("Suggestions updated: ${suggestions.length} items");
   }
-
-  Set<String> uniqueValues = {};
-  switch (selectedField) {
-    case FieldLabel.child:
-      uniqueValues = widget.dataSource.map((word) => word.childName).where((e) => e.isNotEmpty).toSet();
-      break;
-    case FieldLabel.word:
-      uniqueValues = widget.dataSource.map((word) => word.id).where((e) => e.isNotEmpty).toSet();
-      break;
-    default:
-      uniqueValues = {};
-  }
-
-  setState(() {
-    suggestions = uniqueValues.toList();
-  });
-
-  debugPrint("Suggestions updated: ${suggestions.length} items");
-}
 }
 
 class WordInstance {
   final String childName;
   final int childAge;
   final String id;
+  final String partOfSpeech;
   final String firstUtterance;
   final int videoID;
 
-  WordInstance({required this.childName, required this.childAge, required this.id, required this.firstUtterance, required this.videoID});
+  WordInstance(
+      {required this.childName,
+      required this.childAge,
+      required this.id,
+      required this.partOfSpeech,
+      required this.firstUtterance,
+      required this.videoID});
 }
 
 typedef FieldEntry = DropdownMenuEntry<FieldLabel>;
@@ -455,18 +579,20 @@ typedef FieldEntry = DropdownMenuEntry<FieldLabel>;
 enum FieldLabel {
   child('Child'),
   age('Age'),
-  word('Word');
+  word('Word'),
+  partofspeech('Part of Speech');
 
   const FieldLabel(this.label);
   final String label;
 
   static final List<FieldEntry> entries = UnmodifiableListView<FieldEntry>(
     values.map<FieldEntry>(
-      (FieldLabel field) => FieldEntry(value: field, label: field.label,
-        style: MenuItemButton.styleFrom(foregroundColor: const Color(0xFF9E1B32)),
+      (FieldLabel field) => FieldEntry(
+        value: field,
+        label: field.label,
+        style:
+            MenuItemButton.styleFrom(foregroundColor: const Color(0xFF9E1B32)),
       ),
     ),
   );
 }
-
-

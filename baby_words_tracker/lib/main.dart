@@ -28,7 +28,7 @@ import 'pages/upload_video.dart';
 import 'pages/video_display.dart';
 
 // Util
-import 'package:baby_words_tracker/util/config.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/check_emulators.dart';
 
 // Firebase
@@ -56,6 +56,7 @@ void main() async {
     );
     //can probably remove this once adding the change notifyers
     runApp(
+      // Provider used for dependency injection of database functions and configurations
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ChildDataService()),
@@ -63,9 +64,10 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
-          ChangeNotifierProvider(create: (_) => Config()),
           ChangeNotifierProvider(
-              create: (_) => LocalizationService(), lazy: false),
+            create: (_) => LocalizationService(),
+            lazy: false,
+          ),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
               parentDataService:
@@ -83,10 +85,21 @@ void main() async {
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
-                authenticationService:
-                    Provider.of<AuthenticationService>(context, listen: false),
-                generalUserService:
-                    Provider.of<GeneralUserService>(context, listen: false)),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+              generalUserService:
+                  Provider.of<GeneralUserService>(context, listen: false),
+            ),
+            lazy: false,
+          ),
+          ChangeNotifierProvider(
+            create: (context) => CurrentChildrenService(
+              childService:
+                  Provider.of<ChildDataService>(context, listen: false),
+              userService:
+                  Provider.of<UserModelService>(context, listen: false),
+            ),
+            lazy: false,
           ),
         ],
         child: const MyApp(),
@@ -100,20 +113,20 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  // Root widget
   @override
   Widget build(BuildContext context) {
     Provider.of<UserModelService>(context, listen: false);
 
     return MaterialApp(
-        title: 'Flutter Demo',
+        title: 'WordBuds Root',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
           useMaterial3: true,
         ),
-        initialRoute: '/authgate',
-        routes: {
-          '/': (context) => const HomePage(),
+        initialRoute: '/authgate', // Set the initial route to force user to login
+        routes: { //Navigate app using named routes
+          '/': (context) => const HomePage(), 
           '/stats': (context) => const StatsPage(),
           '/addtext': (context) => const AddTextPage(),
           '/authgate': (context) => const AuthGate(),

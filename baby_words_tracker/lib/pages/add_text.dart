@@ -1,29 +1,19 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
-import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/util/check_and_update_words.dart';
-import 'package:baby_words_tracker/util/config.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
-import 'package:flutter/material.dart';
-import 'package:csv/csv.dart';
-import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/util/check_and_update_words.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 // baby words packages
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
 
-import 'package:baby_words_tracker/data/models/word.dart';
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 
-import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:path/path.dart' as path;
 
@@ -108,7 +98,7 @@ class _AddTextPageState extends State<AddTextPage> {
                           "choose_file"), //'Tap to Choose Birthday..',
                       hintStyle: const TextStyle(color: Colors.white),
                       filled: true,
-                      fillColor: Color(0xFF9E1B32),
+                      fillColor: const Color(0xFF9E1B32),
                     ),
                   ),
                   Center(
@@ -118,12 +108,13 @@ class _AddTextPageState extends State<AddTextPage> {
                       final wordDataService = context.read<WordDataService>();
                       final wordTrackerDataService =
                           context.read<WordTrackerDataService>();
-                      Parent? currParent = getCurrentParent(context);
-                      String? currChildID = "";
-                      if (currParent != null) {
-                        currChildID = getCurrentChildIDSingleInstance(
-                            context, currParent);
+                      Child? currChild =
+                          context.read<CurrentChildrenService>().getCurrChild();
+                      String? currChildID;
+                      if (currChild != null) {
+                        currChildID = currChild.id;
                       }
+
                       /* List<LanguageCode>? maybeLanguages = currChildID != null
                           ? await childDataService.getLanguages(currChildID)
                           : [LanguageCode.en];
