@@ -1,11 +1,7 @@
-import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
-
 
 class RoleTesting extends StatefulWidget {
   static const routeName = '/roletesting';
@@ -18,36 +14,39 @@ class RoleTesting extends StatefulWidget {
 
 class _RoleTestingState extends State<RoleTesting> {
   UserType _selectedUserType = UserType.parent;
-  TextEditingController _searchController = TextEditingController();
-  String? _selectedUserId;
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedUserEmail;
 
-  Future<List<Map<String, String>>> _searchUsers(String query) async {
-    if (query.isEmpty) return [];
+  Map<String, dynamic> _userRoles = {};
+  List<String> _userData = [];
 
-    String collection = _selectedUserType == UserType.parent
-        ? Parent.collectionName
-        : Researcher.collectionName;
-    var snapshot = await FirebaseFirestore.instance
-        .collection(collection)
-        .where('email', isGreaterThanOrEqualTo: query)
-        .where('email', isLessThan: '${query}z')
-        .limit(5)
-        .get();
+  // Future<List<Map<String, String>>> _searchUsers(String query) async {
+  //   if (query.isEmpty) return [];
 
-    return snapshot.docs
-        .map((doc) => {'email': doc['email'] as String, 'uid': doc.id})
-        .toList();
-  }
+  //   String collection = _selectedUserType == UserType.parent
+  //       ? Parent.collectionName
+  //       : Researcher.collectionName;
+  //   var snapshot = await FirebaseFirestore.instance
+  //       .collection(collection)
+  //       .where('email', isGreaterThanOrEqualTo: query)
+  //       .where('email', isLessThan: '${query}z')
+  //       .limit(5)
+  //       .get();
 
-  Future<void> _callFunction(String functionName) async {
-    if (_selectedUserId == null) return;
+  //   return snapshot.docs
+  //       .map((doc) => {'email': doc['email'] as String, 'uid': doc.id})
+  //       .toList();
+  // }
+
+  Future<void> _callRoleFunction(String functionName) async {
+    if (_selectedUserEmail == null) return;
     debugPrint(
-        'Getting callable for function $functionName with uid $_selectedUserId');
+        'Getting callable for function $functionName with uid $_selectedUserEmail');
     HttpsCallable function =
         FirebaseFunctions.instance.httpsCallable(functionName);
     try {
-      debugPrint('Calling function $functionName with uid $_selectedUserId');
-      final response = await function.call({'targetUid': _selectedUserId});
+      debugPrint('Calling function $functionName with uid $_selectedUserEmail');
+      final response = await function.call({'targetEmail': _selectedUserEmail});
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(response.data['message'])));
     } catch (error) {
@@ -65,104 +64,93 @@ class _RoleTestingState extends State<RoleTesting> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButton<UserType>(
-              value: _selectedUserType,
-              onChanged: (UserType? newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    _selectedUserType = newValue;
-                    _selectedUserId = null;
-                    _searchController.clear();
-                  });
-                }
-              },
-              items: UserType.values
-                  .where((type) => type != UserType.unauthenticated)
-                  .map((UserType type) {
-                return DropdownMenuItem<UserType>(
-                  value: type,
-                  child: Text(type.toString().split('.').last),
-                );
-              }).toList(),
-            ),
-            Autocomplete<Map<String, String>>(
-              optionsBuilder: (TextEditingValue textEditingValue) async {
-                return await _searchUsers(textEditingValue.text);
-              },
-              displayStringForOption: (Map<String, String> option) =>
-                  option['email']!,
-              onSelected: (Map<String, String> selection) {
+            TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search User by Email',
+              ),
+              onChanged: (String value) async {
+                debugPrint("Setting value for $value");
                 setState(() {
-                  _searchController.text = selection['email']!;
-                  _selectedUserId = selection['uid'];
+                  _selectedUserEmail = value;
+                  _userRoles = {};
+                  debugPrint("_selectedUserEmail set to $value");
                 });
-                debugPrint(
-                    'Selected: ${selection['email']} with id ${selection['uid']}');
-              },
-              fieldViewBuilder:
-                  (context, controller, focusNode, onFieldSubmitted) {
-                _searchController = controller;
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration:
-                      const InputDecoration(labelText: 'Search User by Email'),
-                );
               },
             ),
-            if (_selectedUserId != null) ...[
-              Text('Selected User ID: $_selectedUserId'),
+            if (_selectedUserEmail != null) ...[
+              Text('Selected User ID: $_selectedUserEmail'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(" User Roles: "),
-                  FutureBuilder<Map<String, dynamic>?>(
-                    key: UniqueKey(),
-                    future: callFunction(
-                      context,
-                      'getUserCustomClaims',
-                      {'targetUid': _selectedUserId},
-                    ),
-                    builder: (context, snapshot) {
-                      final Map<String, dynamic> roles =
-                          snapshot.hasData && snapshot.data != null
-                              ? snapshot.data as Map<String, dynamic>
-                              : {};
-                      return roles.isEmpty
-                          ? const Text('No roles assigned')
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text("$roles, "),
-                              ],
-                            );
+                  const Text(" User Roles: ["),
+                  ..._userRoles.entries.map(
+                    (entry) {
+                      return Text("(${entry.key}: ${entry.value}), ");
                     },
-                  )
+                  ),
+                  const Text("]"),
                 ],
               ),
               ElevatedButton(
-                  onPressed: () => _callFunction('giveParentClaim'),
+                onPressed: () async {
+                  var customClaims = await callFunction(
+                    context,
+                    'getUserCustomClaims',
+                    {'targetEmail': _selectedUserEmail},
+                  );
+                  if (customClaims == null) {
+                    debugPrint("No Custom Claims");
+                    return;
+                  } else {
+                    setState(() {
+                      _userRoles = customClaims;
+                    });
+                  }
+                },
+                child: const Text("Get Custom Claims"),
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    await _callRoleFunction('giveParentClaim');
+                  },
                   child: const Text("Assign Parent Role")),
               ElevatedButton(
-                  onPressed: () => _callFunction('removeParentClaim'),
+                  onPressed: () => _callRoleFunction('removeParentClaim'),
                   child: const Text("Remove Parent Role")),
               ElevatedButton(
-                onPressed: () => _callFunction('giveResearcherClaim'),
+                onPressed: () => _callRoleFunction('giveResearcherClaim'),
                 child: const Text('Assign Researcher Role'),
               ),
               ElevatedButton(
-                onPressed: () => _callFunction('removeResearcherClaim'),
+                onPressed: () => _callRoleFunction('removeResearcherClaim'),
                 child: const Text('Remove Researcher Role'),
               ),
               ElevatedButton(
-                onPressed: () => _callFunction('giveAdminClaim'),
+                onPressed: () => _callRoleFunction('giveAdminClaim'),
                 child: const Text('Assign Admin Role'),
               ),
               ElevatedButton(
-                onPressed: () => _callFunction('removeAdminClaim'),
+                onPressed: () => _callRoleFunction('removeAdminClaim'),
                 child: const Text('Remove Admin Role'),
               ),
+              ElevatedButton(
+                onPressed: () async {
+                  var userData =
+                      await callFunction(context, 'getEmailUIDTable', {});
+                  if (userData != null) {
+                    setState(() {
+                      _userData = userData['users'] as List<String>;
+                    });
+                  }
+                },
+                child: const Text('Get Email-UID Data'),
+              ),
+              if (_userData.isNotEmpty) ...[
+                const Text('User Data:'),
+                ..._userData.map((data) => Text(data)),
+              ],
             ],
           ],
         ),

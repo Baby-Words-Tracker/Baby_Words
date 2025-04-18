@@ -1,4 +1,3 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +5,6 @@ import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
@@ -281,6 +279,7 @@ Future<void> fetchData() async {
       fetchTasks.add(() async {
         try {
           String childID = childDoc.id;
+          List<dynamic> childLangs = childDoc['language'];
           DateTime childBirthday = (childDoc['birthday'] as Timestamp).toDate();
           int childAge = DateTime.now().year - childBirthday.year;
 
@@ -295,7 +294,17 @@ Future<void> fetchData() async {
             wordFetchTasks.add(() async {
               try {
                 DocumentSnapshot posDoc = await FirebaseFirestore.instance.collection('Word').doc(wordDoc.id).get();
-
+                var posData = posDoc['partOfSpeech'];
+                Map<String, String> posMap = Map.from(posData);
+                Map<String, String> partOfSpeechTracker = {};
+                if(childLangs.isEmpty){
+                  partOfSpeechTracker = posMap;
+                }
+                posMap.forEach((langCode, partSpeech) {
+                  if(childLangs.contains(langCode)){
+                    partOfSpeechTracker[langCode] = partSpeech;
+                  }
+                });
                 tempInstances.add(WordInstance(
                   childName: childID,
                   childAge: childAge,
@@ -304,7 +313,10 @@ Future<void> fetchData() async {
                       ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
                       : 'Unknown',
                   videoID: wordDoc['videoID'] ?? 0,
-                  partOfSpeech: posDoc['partOfSpeech'].toString(),
+                  partOfSpeech: 
+                    //posDoc['partOfSpeech'].toString(),
+                    partOfSpeechTracker.toString(),
+
                 ));
               } catch (e) {
                 debugPrint('Error fetching Word document ${wordDoc.id}: $e');
