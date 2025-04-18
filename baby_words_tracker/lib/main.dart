@@ -117,10 +117,10 @@ class MyApp extends StatelessWidget {
           '/stats': (context) => const StatsPage(),
           '/addtext': (context) => const AddTextPage(),
           '/authgate': (context) => const AuthGate(),
-          '/uploadvideo': (context) => const UploadVideoPage(),
+          '/uploadvideo': (context) => const DisplayVideo(),
           '/profilepage': (context) => const ProfilePage(),
           '/settings': (context) => const SettingsPage(),
-          '/videoStream': (context) => const VideoScreen(),
+          //'/videoStream': (context) => const VideoScreen(),
           RoleTesting.routeName: (context) => const RoleTesting(),
         },
         locale:

@@ -15,7 +15,7 @@ Future<bool?> checkAndUpdateWords(String word,
     ]}) async {
   final word_service = WordDataService();
   Word? wordTest = await word_service.getWord(word);
-  if (wordTest != null && wordTest.languageCodes == languages)
+  if (wordTest != null /* && wordTest.languageCodes == languages */)
     return true; //word is the exact same word as requested
 
   String url =

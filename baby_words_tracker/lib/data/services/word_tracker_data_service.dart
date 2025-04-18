@@ -32,8 +32,8 @@ class WordTrackerDataService extends ChangeNotifier {
       if (object != null) return true;
     } else {
       try {
-        fireRepo
-            .setObject(WordTracker.collectionName, word, {"videoID": filePath});
+        fireRepo.setObjectSubcollection(Child.collectionName,
+            WordTracker.collectionName, childId, word, {"videoID": filePath});
         return true;
       } catch (e) {
         debugPrint("Error: failed to update word tracker: $e");

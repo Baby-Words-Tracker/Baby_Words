@@ -205,6 +205,7 @@ class _AddTextPageState extends State<AddTextPage> {
                           },
                         );
                         _controller.clear();
+                        fileTextController.clear();
                       }
                     },
                     style: OutlinedButton.styleFrom(
