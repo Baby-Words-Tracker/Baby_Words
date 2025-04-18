@@ -55,6 +55,7 @@ void main() async {
     );
     //can probably remove this once adding the change notifyers
     runApp(
+      // Provider used for dependency injection of database functions and configurations
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ChildDataService()),
@@ -111,20 +112,20 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  // Root widget
   @override
   Widget build(BuildContext context) {
     Provider.of<UserModelService>(context, listen: false);
 
     return MaterialApp(
-        title: 'Flutter Demo',
+        title: 'WordBuds Root',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
           useMaterial3: true,
         ),
-        initialRoute: '/authgate',
-        routes: {
-          '/': (context) => const HomePage(),
+        initialRoute: '/authgate', // Set the initial route to force user to login
+        routes: { //Navigate app using named routes
+          '/': (context) => const HomePage(), 
           '/stats': (context) => const StatsPage(),
           '/addtext': (context) => const AddTextPage(),
           '/authgate': (context) => const AuthGate(),

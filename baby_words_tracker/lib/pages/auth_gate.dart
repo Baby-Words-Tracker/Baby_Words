@@ -5,50 +5,47 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' as io;  // For checking platform
+import 'dart:io' as io; // For checking platform
 
 import 'researcher_home_page.dart';
 import 'landing_page.dart';
 
 class AuthGate extends StatelessWidget {
-
   const AuthGate({super.key});
 
   String _getPlatformKey() {
-    if(kIsWeb) {
-      return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com';  // Use this key for web
+    if (kIsWeb) {
+      return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com'; // Use this key for web
     } else if (io.Platform.isIOS) {
-      return '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com';  // Use this key for iOS
-    } 
-    return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com';  // Use this key for all other platforms
+      return '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com'; // Use this key for iOS
+    }
+    return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com'; // Use this key for all other platforms
   }
 
   @override
   Widget build(BuildContext context) {
-    var localizationService = Provider.of<LocalizationService>(context, listen: true); 
+    var localizationService =
+        Provider.of<LocalizationService>(context, listen: true);
     return StreamBuilder<User?>(
       stream: Provider.of<FirebaseAuth>(context).authStateChanges(),
       builder: (context, snapshot) {
-        if(snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
           );
-        }
-        else if (snapshot.hasError) {
+        } else if (snapshot.hasError) {
           String errorMessage = snapshot.error.toString();
           return Scaffold(
             body: Center(
               child: Text('An error occurred: $errorMessage'),
             ),
           );
-        }
-        else if (!snapshot.hasData) {
+        } else if (!snapshot.hasData) {
           return SignInScreen(
             providers: [
               EmailAuthProvider(),
@@ -75,7 +72,9 @@ class AuthGate extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: Text(
-                  context.read<LocalizationService>().translate("terms_and_conditions"),
+                  context
+                      .read<LocalizationService>()
+                      .translate("terms_and_conditions"),
                   style: const TextStyle(color: Colors.grey),
                 ),
               );
@@ -95,28 +94,22 @@ class AuthGate extends StatelessWidget {
         // Add user to database on first login
         User? user = snapshot.data;
 
-        final userModelService = context.watch<UserModelService>(); // Listen for changes
-        UserType userType = userModelService.userType;
-        //context.read<LocalizationService>().matchParentLanguage(context);
-        //matchParentLanguage(context);
-
-        if (user == null) {
-          throw Exception('User is null in auth_gate');
-        }
-        else if (userType == UserType.unauthenticated) {
-          return const Center(child: CircularProgressIndicator()); // Wait until the sync is complete
-        } 
-        else if (userType == UserType.parent) {
-          return const HomePage();
-        } 
-        else if (userType == UserType.researcher) {
-          return const ResearcherHomePage();
-        }
-        else {
-          throw Exception('Unexpected user state occured');
-        }
+        return Consumer<UserModelService>(
+          builder: (context, userModelService, child) {
+            if (user == null) {
+              throw Exception('User is null in auth_gate');
+            } else if (userModelService.userType == UserType.unauthenticated) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (userModelService.userType == UserType.parent) {
+              return const HomePage();
+            } else if (userModelService.userType == UserType.researcher) {
+              return const ResearcherHomePage();
+            } else {
+              throw Exception('Unexpected user state occured');
+            }
+          },
+        );
       },
     );
   }
 }
-

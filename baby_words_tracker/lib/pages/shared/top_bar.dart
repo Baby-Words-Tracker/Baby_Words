@@ -1,11 +1,5 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -66,7 +60,6 @@ class _TopBarState extends State<TopBar> {
           builder: (context, currentChildrenService, child) {
             var childNamesToChildIDs =
                 _loadParentAndChildren(currentChildrenService);
-
             return Row(
               mainAxisAlignment: MainAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
@@ -78,15 +71,33 @@ class _TopBarState extends State<TopBar> {
                       color: Theme.of(context).textTheme.bodyMedium?.color ??
                           Colors.grey),
                 ),
-                Builder(builder: (context) {
-                  Child? currChild = currentChildrenService.getCurrChild();
-                  return Text(
-                    currChild != null ? currChild.name : "No children yet",
-                    style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color ??
-                            Colors.grey),
-                  );
-                }),
+                Builder(
+                  builder: (context) {
+                    Child? currChild = currentChildrenService.getCurrChild();
+                    String text = '';
+                    if (!currentChildrenService.dataRetrieved) {
+                      text = "loading";
+                    } else if (currChild != null) {
+                      text = currChild.name;
+                    } else {
+                      text = "No-Children-nl-Yet";
+                    }
+
+                    return Consumer<LocalizationService>(
+                      builder: (context, localizationService, children) {
+                        return Text(
+                          localizationService.translate(text),
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).textTheme.bodyMedium?.color ??
+                                    Colors.grey,
+                          ),
+                          textAlign: TextAlign.center,
+                        );
+                      },
+                    );
+                  },
+                ),
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value != "") {
@@ -127,44 +138,3 @@ class _TopBarState extends State<TopBar> {
     );
   }
 }
-
-//   return AppBar(
-//         title: Text(pageName),
-//         actions: [
-//           PopupMenuButton<String>(
-//             onSelected: (value) {
-//               // Handle selection
-//               print("Selected: $value");
-//             },
-//             itemBuilder: (BuildContext context) {
-//               ChildDataService childService = context.read<ChildDataService>();
-//               List<String> childNames = List.empty(growable: true);
-//               for (String childID in currParent.childIDs) {
-//                 childNames.add((await childService.getChild(childID)).name);
-//               }
-//               return [
-//                 const PopupMenuItem(
-//                   value: "Option 1",
-//                   child: Text("Option 1"),
-//                 ),
-//                 const PopupMenuItem(
-//                   value: "Option 2",
-//                   child: Text("Option 2"),
-//                 ),
-//                 const PopupMenuItem(
-//                   value: "Option 3",
-//                   child: Text("Option 3"),
-//                 ),
-//               ];
-//             },
-//           ),
-//           IconButton(
-//             icon: const Icon(Icons.person),
-//             onPressed: () {
-//               Navigator.pushNamed(context, '/profilepage');
-//             },
-//           )
-//         ],
-//         automaticallyImplyLeading: true,
-//       );
-// }

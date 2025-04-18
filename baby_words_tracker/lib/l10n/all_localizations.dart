@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class AllLocalizations {
   AllLocalizations();
 
@@ -53,6 +51,7 @@ class AllLocalizations {
       "select_graph": "Select Graph Type",
       "words_per_pos": "All Words Per Part of Speech",
       "loading": "Loading...",
+      "No-Children-nl-Yet": "No Children\nYet",
       "over_num_days": "Over how many days...",
       "select_option": "select an option",
       "Words Learned / Day": "Words Learned / Day",
@@ -111,6 +110,7 @@ class AllLocalizations {
       "words_error":
           "No se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
       "loading": "Cargando...",
+      "No-Children-nl-Yet": "Aún No Hay\nNiños",
       "settings": "Configuración",
       "parent_settings": "Configuración Para Padres",
       "add_child": "Agregar hijo",
@@ -143,11 +143,12 @@ class AllLocalizations {
           "Número total de palabras por parte de la oración",
       "child_to_new_parent": "Dar acceso a otro padre para el hijo actual:",
       "choose_email": "Elegir correo electrónico...",
-      "no_email": "Por favor, ingrese un valor en el campo de correo electrónico.",
+      "no_email":
+          "Por favor, ingrese un valor en el campo de correo electrónico.",
       "knows": "sabe",
-      "words" : "palabras",
-      "most_recent" : "La palabra más reciente es:",
-      "words_in_past_week" : "Palabras dichas la semana pasada",
+      "words": "palabras",
+      "most_recent": "La palabra más reciente es:",
+      "words_in_past_week": "Palabras dichas la semana pasada",
 
       //admin page (role_testing)
       "admin_page": "Pagina de Administrador",

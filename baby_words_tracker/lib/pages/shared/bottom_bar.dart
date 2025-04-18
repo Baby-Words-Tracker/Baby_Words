@@ -1,6 +1,10 @@
 import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:flutter/material.dart';
 
+
+// Bottom Bar Widget
+// In its own file to save clutter
+// Allows page name to be passed in to deactivate the button for the current page
 Widget bottomBar(BuildContext context, String currPage) {
   return BottomAppBar(
     color: const Color(0xFF9E1B32),

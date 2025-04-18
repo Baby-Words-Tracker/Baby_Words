@@ -13,6 +13,7 @@ class CurrentChildrenService extends ChangeNotifier {
   // Parent? _parent;
   List<Child> _children = List.empty(growable: true);
   int _childIndex = 0;
+  bool _dataRetrieved = false;
 
   final UserModelService _userService;
   final ChildDataService _childService;
@@ -27,10 +28,16 @@ class CurrentChildrenService extends ChangeNotifier {
   })  : _userService = userService,
         _childService = childService {
     _parentSynchronizer = SafeSynchronizer(() async {
-      Parent? parent =
-          _userService.userType == UserType.parent ? _userService.parent : null;
-
-      return updateChildren(parent);
+      Parent? parent = _userService.parent;
+      if (_userService.userType != UserType.parent || parent == null) {
+        _children.clear();
+        _childIndex = 0;
+        _dataRetrieved = false;
+        notifyListeners();
+        return Future.value();
+      } else {
+        return updateChildren(parent);
+      }
     });
     _userService.addListener(_parentSynchronizer.safeSynchronize);
   }
@@ -46,17 +53,12 @@ class CurrentChildrenService extends ChangeNotifier {
     return _children[_childIndex];
   }
 
-  Future<void> updateChildren(Parent? parent) async {
-    if (parent != null) // it could still be null after an updateparent
-    {
-      List<Child> children =
-          (await _childService.getMultipleChildren(parent!.childIDs));
-      children.sortBy((child) => child.name);
-      _children = children;
-    } else {
-      _children = List.empty();
-      _childIndex = 0;
-    }
+  Future<void> updateChildren(Parent parent) async {
+    List<Child> children =
+        (await _childService.getMultipleChildren(parent.childIDs));
+    children.sortBy((child) => child.name);
+    _children = children;
+    _dataRetrieved = true;
     notifyListeners();
   }
 
@@ -76,5 +78,9 @@ class CurrentChildrenService extends ChangeNotifier {
   void switchChildByIndex(int newChildIndex) {
     _childIndex = newChildIndex;
     notifyListeners();
+  }
+
+  bool get dataRetrieved {
+    return _dataRetrieved;
   }
 }
