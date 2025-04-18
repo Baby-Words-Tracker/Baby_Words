@@ -10,6 +10,8 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:baby_words_tracker/video/video_functions.dart';
+import 'package:path/path.dart' as path;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +22,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController fileTextController = TextEditingController();
   List<String> parsedWords = [];
 
   void _parseWords() {
@@ -283,6 +286,24 @@ class _HomePageState extends State<HomePage> {
                         height: 5,
                       ),
                       Center(
+                        child: TextField(
+                          controller: fileTextController,
+                          onTap: () => selectFile(fileTextController),
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            //border: OutlineInputBorder(),
+                            hintText: localizationService.translate(
+                                "choose_file"), //'Tap to Choose Birthday..',
+                            hintStyle: const TextStyle(color: Colors.white),
+                            filled: true,
+                            fillColor: const Color(0xFF9E1B32),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Center(
                           child: OutlinedButton(
                         onPressed: () async {
                           final childDataService =
@@ -306,14 +327,21 @@ class _HomePageState extends State<HomePage> {
 
                           for (var word in parsedWords) {
                             totalWords++;
-                            bool? result = await checkAndUpdateWords(
-                                word);
+                            bool? result = await checkAndUpdateWords(word);
                             if (result != null &&
                                 result &&
                                 currChildID != null) {
+                              late String? filePath;
+                              if (fileTextController.text != "") {
+                                filePath =
+                                    path.basename(fileTextController.text);
+                                uploadVideo(fileTextController.text);
+                              } else {
+                                filePath = null;
+                              }
                               addWordToChild(word, childDataService,
                                   wordDataService, wordTrackerDataService,
-                                  id: currChildID);
+                                  id: currChildID, videoId: filePath);
                               correctWords++;
                             } else {
                               if (!context.mounted) return;
@@ -333,6 +361,7 @@ class _HomePageState extends State<HomePage> {
                                           Navigator.of(context)
                                               .pop(); // Close the dialog
                                           _controller.clear();
+                                          fileTextController.clear();
                                         },
                                       ),
                                     ],
@@ -390,16 +419,35 @@ class _HomePageState extends State<HomePage> {
       );
     });
   }
+}
 
-  Future<void> addWordToChild(String word, ChildDataService childService,
-      WordDataService wordService, WordTrackerDataService trackerService,
-      {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-    if (await trackerService.createWordTracker(id, word, DateTime.now()) ==
+Future<void> addWordToChild(String word, ChildDataService childService,
+    WordDataService wordService, WordTrackerDataService trackerService,
+    {String id = "gz1Qe32xJcF0oRGmhw7f", String? videoId}) async {
+  final object = await trackerService.getWordTracker(id, word);
+  if (object == null) {
+    if (await trackerService.createWordTracker(
+            id, word, DateTime.now(), videoId) ==
         null) {
       debugPrint("AddText: Error adding word to child");
     } else {
       debugPrint("AddText: Word added to child");
     }
+  } else {
+    if (videoId != null) {
+      trackerService.setWordTracker(id, word, filePath: videoId);
+      debugPrint("UpdateText: word already existed, updating file");
+    }
+  }
+}
+
+Future<void> addVideoToWord(
+    String word, String filePath, ChildDataService childService,
+    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
+  if (await childService.addVideo(id, word, path.basename(filePath)) == false) {
+    debugPrint("AddVideo: Error adding video to work tracker");
+  } else {
+    debugPrint("AddVideo: $filePath added to $word");
   }
 }
 

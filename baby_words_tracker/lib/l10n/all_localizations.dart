@@ -14,6 +14,7 @@ class AllLocalizations {
       "words": "words",
       "most_recent": "Most recent word is:",
       "words_in_past_week": "Words said in the past week:",
+      "choose_file" : "Choose File",
 
       //profile
       "profile": "User Profile",
@@ -42,7 +43,7 @@ class AllLocalizations {
       "success": "Success!",
       "word_success": "Words successfully submitted!",
       "error": "Error!",
-      "words_error": "not found in dictionary, please try again!",
+      "words_error": " not found in dictionary, please try again!",
 
       //stats page
       "learning_summary": "Learning Summary",
@@ -98,6 +99,7 @@ class AllLocalizations {
       "delete_account": "Eliminar Cuenta",
       "child_said": "Mi Hijo Dijo...",
       "enter_text": "Escriba una palabra o frase",
+      "choose_file": "Elegir Archivo",
       "submit": "enviar",
       "learning_summary": "Resumen de Aprendizaje",
       "num_days": "¿Durante cuántos días?",
@@ -108,7 +110,7 @@ class AllLocalizations {
       "word_success": "¡Palabras enviadas con éxito!",
       "error": "¡Error!",
       "words_error":
-          "No se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
+          " no se encontraron en el diccionario, ¡por favor inténtalo de nuevo!",
       "loading": "Cargando...",
       "No-Children-nl-Yet": "Aún No Hay\nNiños",
       "settings": "Configuración",

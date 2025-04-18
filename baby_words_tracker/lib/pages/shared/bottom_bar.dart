@@ -23,7 +23,7 @@ Widget bottomBar(BuildContext context, String currPage) {
                 if (currPage != "home") Navigator.pushNamed(context, '/');
               },
             ),
-            IconButton(
+            /* IconButton(
               icon: const Icon(
                 Icons.chat_bubble_outlined,
                 color: Colors.white,
@@ -34,7 +34,7 @@ Widget bottomBar(BuildContext context, String currPage) {
                   Navigator.pushNamed(context, '/addtext');
                 }
               },
-            ),
+            ), */
             IconButton(
                 icon: const Icon(
                   Icons.video_camera_front,

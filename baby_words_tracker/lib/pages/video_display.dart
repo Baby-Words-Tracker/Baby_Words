@@ -1,5 +1,6 @@
 import 'dart:io';
-
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -88,7 +89,9 @@ class _DisplayVideoState extends State<DisplayVideo> {
             currentChildrenService, child) {
       fetchVideos(context, childService, currentChildrenService);
       return Scaffold(
-        appBar: AppBar(title: const Text("Select a Video")),
+        backgroundColor: const Color(0xFF828A8F),
+        appBar: TopBar(pageName: localizationService.translate("add_words")),
+        bottomNavigationBar: bottomBar(context, "addtext"),
         body: Column(
           children: [
             DropdownButton<String>(
