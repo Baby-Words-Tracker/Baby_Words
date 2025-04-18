@@ -135,7 +135,7 @@ class _AddTextPageState extends State<AddTextPage> {
                           late String? filePath;
                           if (fileTextController.text != "") {
                             filePath = path.basename(fileTextController.text);
-                            uploadVideo(fileTextController.text, currChildID);
+                            uploadVideo(fileTextController.text);
                           } else {
                             filePath = null;
                           }
