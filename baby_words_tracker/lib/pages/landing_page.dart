@@ -57,11 +57,11 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      FutureBuilder<Child?>(
-                        future:
-                            context.read<ChildDataService>().getChild(childID),
+                      StreamBuilder<int?>(
+                        stream:
+                            getNumWords(childID),
                         builder: (BuildContext context,
-                            AsyncSnapshot<Child?> snapshot) {
+                            AsyncSnapshot<int?> snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             return Center(
@@ -75,14 +75,14 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           } else if (snapshot.hasData) {
-                            Child? child = snapshot.data;
+                            int? numWords = snapshot.data;
                             return Padding(
                               padding: const EdgeInsets.only(top: 25.0),
                               child: Center(
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: Text(
-                                    "${child?.name} ${localizationService.translate("knows")} ${child?.wordCount} ${localizationService.translate("words")}!",
+                                    "${currChild?.name} ${localizationService.translate("knows")} $numWords ${localizationService.translate("words")}!",
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 40,
@@ -123,8 +123,8 @@ class _HomePageState extends State<HomePage> {
                                     width: 150,
                                     height: 150,
                                     alignment: Alignment.center,
-                                    child: FutureBuilder<String?>(
-                                      future: getRecentWordTracker(childID),
+                                    child: StreamBuilder<String?>(
+                                      stream: getRecentWordTracker(childID),
                                       builder: (BuildContext context,
                                           AsyncSnapshot<String?> snapshot) {
                                         if (snapshot.connectionState ==
@@ -158,12 +158,15 @@ class _HomePageState extends State<HomePage> {
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                                Text(
-                                                  "$word",
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF9E1B32),
-                                                    fontSize: 40,
-                                                    fontWeight: FontWeight.bold,
+                                                FittedBox(
+                                                  fit: BoxFit.contain,
+                                                  child: Text(
+                                                    "$word",
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF9E1B32),
+                                                      fontSize: 40,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -201,8 +204,8 @@ class _HomePageState extends State<HomePage> {
                                     width: 150,
                                     height: 150,
                                     alignment: Alignment.center,
-                                    child: FutureBuilder<int?>(
-                                      future: getPastWeekWordTrackers(childID),
+                                    child: StreamBuilder<int?>(
+                                      stream: getPastWeekWordTrackers(childID),
                                       builder: (BuildContext context,
                                           AsyncSnapshot<int?> snapshot) {
                                         if (snapshot.connectionState ==
@@ -236,12 +239,15 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   textAlign: TextAlign.center,
                                                 ),
-                                                Text(
-                                                  "$count",
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF9E1B32),
-                                                    fontSize: 40,
-                                                    fontWeight: FontWeight.bold,
+                                                FittedBox(
+                                                  fit: BoxFit.contain,
+                                                  child: Text(
+                                                    "$count",
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF9E1B32),
+                                                      fontSize: 40,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -250,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                                         } else {
                                           return const Center(
                                             child: Text(
-                                              "No data available",
+                                              "",
                                               style: TextStyle(
                                                 color: Color(0xFF9E1B32),
                                                 fontSize: 20,
@@ -451,32 +457,36 @@ Future<void> addVideoToWord(
   }
 }
 
-Future<String?> getRecentWordTracker(String childId) async {
-  QuerySnapshot word = await FirebaseFirestore.instance
+Stream<String?> getRecentWordTracker(String childId) {
+  return FirebaseFirestore.instance
       .collection('Child')
       .doc(childId)
       .collection('WordTracker')
       .orderBy('firstUtterance', descending: true)
       .limit(1)
-      .get();
-
-  String? wordName = 'N/A';
-  for (var wordDoc in word.docs) {
-    wordName = wordDoc.id;
-  }
-  return wordName;
+      .snapshots()
+      .map((snapshot) => snapshot.docs.isNotEmpty
+          ? snapshot.docs.first.id
+          : null);
 }
 
-Future<int?> getPastWeekWordTrackers(String childId) async {
-  DateTime lastWeek = DateTime.now().subtract(const Duration(days: 7));
+Stream<int?> getPastWeekWordTrackers(String childId) {
+  final lastWeek = DateTime.now().subtract(const Duration(days: 7));
 
-  QuerySnapshot words = await FirebaseFirestore.instance
+  return FirebaseFirestore.instance
       .collection('Child')
       .doc(childId)
       .collection('WordTracker')
       .orderBy('firstUtterance', descending: true)
       .where('firstUtterance', isGreaterThanOrEqualTo: lastWeek)
-      .get();
+      .snapshots()
+      .map((snapshot) => snapshot.docs.length);
+}
 
-  return words.docs.length;
+Stream<int?> getNumWords(String childId){
+  return FirebaseFirestore.instance
+    .collection('Child')
+    .doc(childId)
+    .snapshots()
+    .map((snapshot) => snapshot.data()?['wordCount'] as int);
 }

@@ -13,7 +13,7 @@ class AllLocalizations {
       "knows": "knows",
       "words": "words",
       "most_recent": "Most recent word is:",
-      "words_in_past_week": "Words said in the past week:",
+      "words_in_past_week": "Words learned in the past week:",
       "choose_file" : "Choose File",
 
       //profile
@@ -150,7 +150,7 @@ class AllLocalizations {
       "knows": "sabe",
       "words": "palabras",
       "most_recent": "La palabra más reciente es:",
-      "words_in_past_week": "Palabras dichas la semana pasada",
+      "words_in_past_week": "Palabras aprendidas la semana pasada:",
 
       //admin page (role_testing)
       "admin_page": "Pagina de Administrador",
