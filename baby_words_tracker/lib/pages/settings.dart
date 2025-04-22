@@ -46,10 +46,10 @@ class _AddSettingsPage extends State<SettingsPage> {
                   ),
                   Center(
                     child: Text(localizationService.translate("settings"),
-                      style: const TextStyle(
-                          fontSize: 32.0,
-                          color: Color(0xFF9E1B32),
-                          fontWeight: FontWeight.bold)),
+                        style: const TextStyle(
+                            fontSize: 32.0,
+                            color: Color(0xFF9E1B32),
+                            fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(
                     height: 60,
@@ -92,7 +92,7 @@ class _AddSettingsPage extends State<SettingsPage> {
                                     listen: false)
                                 .updateParent(parent.id, language: newLanguage);
 
-                            ///localizationService.changeLocale(newLanguage);
+                            localizationService.changeLocale(newLanguage);
                             _isSpanish = !_isSpanish;
                           });
                         },
