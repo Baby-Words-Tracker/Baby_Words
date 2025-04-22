@@ -52,7 +52,7 @@ class _TopBarState extends State<TopBar> {
         backgroundImage: AssetImage('assets/LECS_mascot.png'),
       ),
       const SizedBox(width: 8),
-      Text(widget.pageName),
+      Expanded(child: Text(widget.pageName)),
     ],
   ),
       actions: [
