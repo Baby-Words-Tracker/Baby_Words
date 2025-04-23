@@ -20,15 +20,15 @@ import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 // Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
-import 'package:baby_words_tracker/pages/testing/role_testing.dart';
+import 'package:baby_words_tracker/pages/role_testing.dart';
 import 'pages/add_text.dart';
 import 'pages/landing_page.dart';
 import 'pages/stats.dart';
-import 'pages/upload_video.dart';
 import 'pages/video_display.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
+// ignore: unused_import
 import 'package:baby_words_tracker/util/check_emulators.dart';
 
 // Firebase
@@ -124,9 +124,11 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
           useMaterial3: true,
         ),
-        initialRoute: '/authgate', // Set the initial route to force user to login
-        routes: { //Navigate app using named routes
-          '/': (context) => const HomePage(), 
+        initialRoute:
+            '/authgate', // Set the initial route to force user to login
+        routes: {
+          //Navigate app using named routes
+          '/': (context) => const HomePage(),
           '/stats': (context) => const StatsPage(),
           '/addtext': (context) => const AddTextPage(),
           '/authgate': (context) => const AuthGate(),

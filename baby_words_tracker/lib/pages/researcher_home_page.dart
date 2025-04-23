@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/pages/role_testing.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -101,7 +102,7 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                 return IconButton(
                     icon: const Icon(Icons.admin_panel_settings),
                     onPressed: () {
-                      Navigator.pushNamed(context, '/roletesting');
+                      Navigator.pushNamed(context, RoleTesting.routeName);
                     });
               } else {
                 return const Text(''); //TODO: make this an empty space filler

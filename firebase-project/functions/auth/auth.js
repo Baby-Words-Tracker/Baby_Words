@@ -1,34 +1,8 @@
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
-// The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const {logger} = require("firebase-functions");
-
 // Role enum
 const {getRoleFromToken} = require("./roles");
-
-/**
- * checks if the user is authenticated
- * @param {Object} data the data object
- * @return {boolean} true if the user is authenticated, false otherwise
- */
-function isAuthenticated(data) {
-  return !!data.auth;
-}
-
-/**
- * checks if the user is authenticated
- * @param {Object} data the data object
- * @throws {https.HttpsError} if the user is not authenticated
- */
-function checkAuthentication(data) {
-  if (!isAuthenticated(data)) {
-    throw new https.HttpsError(
-        "unauthenticated", "User must be authenticated");
-  } else {
-    logger.debug("User is authenticated.");
-  }
-}
 
 /**
  * checks if the user is at least the minimum role
@@ -59,8 +33,6 @@ function checkIsAtLeast(data, minimumRole) {
 
 // Export all functions
 module.exports = {
-  isAuthenticated,
-  checkAuthentication,
   isAtLeast,
   checkIsAtLeast,
 };
