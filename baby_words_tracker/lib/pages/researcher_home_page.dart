@@ -9,6 +9,7 @@ import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
 
+
 class ResearcherHomePage extends StatefulWidget {
   const ResearcherHomePage({super.key});
 
@@ -66,14 +67,16 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Baby Word Tracker',
-          style: TextStyle(
-            color: Color(0xFF9E1B32),
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Row(
+    children: [
+      CircleAvatar(
+        radius: 24,
+        backgroundImage: AssetImage('assets/LECS_mascot.png'),
+      ),
+      SizedBox(width: 8),
+      Expanded(child: Text("WordBuds"))
+    ],
+  ),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -104,7 +107,9 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                       Navigator.pushNamed(context, '/roletesting');
                     });
               } else {
-                return const Text(''); //TODO: make this an empty space filler
+                return const SizedBox(
+                  width: 5,
+                );
               }
             },
           ),
@@ -198,12 +203,6 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
               columnIndex,
               ascending),
         ),
-        DataColumn(
-          label: const Text("Video ID"),
-          numeric: true,
-          onSort: (columnIndex, ascending) => _sort(
-              (wordInstance) => wordInstance.videoID, columnIndex, ascending),
-        ),
       ],
       rows: rows
           .map((wordInstance) => DataRow(
@@ -213,7 +212,6 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
                   DataCell(Text(wordInstance.id)),
                   DataCell(Text(wordInstance.partOfSpeech)),
                   DataCell(Text(wordInstance.firstUtterance)),
-                  DataCell(Text(wordInstance.videoID.toString())),
                 ],
               ))
           .toList(),
@@ -234,8 +232,7 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
       'Age',
       'Word',
       'Part of Speech',
-      'First Utterance',
-      'Video ID'
+      'First Utterance'
     ];
 
     return Column(
@@ -312,7 +309,6 @@ Future<void> fetchData() async {
                   firstUtterance: wordDoc['firstUtterance'] != null
                       ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
                       : 'Unknown',
-                  videoID: wordDoc['videoID'] ?? 0,
                   partOfSpeech: 
                     //posDoc['partOfSpeech'].toString(),
                     partOfSpeechTracker.toString(),
@@ -384,7 +380,6 @@ Future<void> fetchData() async {
       DataCell(Text(wordInstance.childAge.toString())),
       DataCell(Text(wordInstance.id)),
       DataCell(Text(wordInstance.firstUtterance)),
-      DataCell(Text(wordInstance.videoID.toString())),
     ]);
   }
 
@@ -575,15 +570,13 @@ class WordInstance {
   final String id;
   final String partOfSpeech;
   final String firstUtterance;
-  final int videoID;
 
   WordInstance(
       {required this.childName,
       required this.childAge,
       required this.id,
       required this.partOfSpeech,
-      required this.firstUtterance,
-      required this.videoID});
+      required this.firstUtterance});
 }
 
 typedef FieldEntry = DropdownMenuEntry<FieldLabel>;

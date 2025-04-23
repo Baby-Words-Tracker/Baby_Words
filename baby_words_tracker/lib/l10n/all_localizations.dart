@@ -44,6 +44,7 @@ class AllLocalizations {
       "word_success": "Words successfully submitted!",
       "error": "Error!",
       "words_error": " not found in dictionary, please try again!",
+      "go_to_settings": "Navigate to settings to add a child",
 
       //stats page
       "learning_summary": "Learning Summary",
@@ -151,6 +152,8 @@ class AllLocalizations {
       "words": "palabras",
       "most_recent": "La palabra más reciente es:",
       "words_in_past_week": "Palabras aprendidas la semana pasada:",
+      "go_to_settings": "Vaya a la configuración para agregar un niño",
+
 
       //admin page (role_testing)
       "admin_page": "Pagina de Administrador",

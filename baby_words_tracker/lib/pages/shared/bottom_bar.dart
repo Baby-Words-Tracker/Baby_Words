@@ -14,6 +14,8 @@ Widget bottomBar(BuildContext context, String currPage) {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
               icon: const Icon(
                 Icons.home,
                 color: Colors.white,
@@ -36,6 +38,8 @@ Widget bottomBar(BuildContext context, String currPage) {
               },
             ), */
             IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 icon: const Icon(
                   Icons.video_camera_front,
                   color: Colors.white,
@@ -47,6 +51,8 @@ Widget bottomBar(BuildContext context, String currPage) {
                   }
                 }),
             IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
               icon: const Icon(
                 Icons.bar_chart_outlined,
                 color: Colors.white,
@@ -57,6 +63,8 @@ Widget bottomBar(BuildContext context, String currPage) {
               },
             ),
             IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
               icon: const Icon(
                 Icons.settings_rounded,
                 color: Colors.white,
