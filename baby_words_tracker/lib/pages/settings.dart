@@ -42,7 +42,7 @@ class _AddSettingsPage extends State<SettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(
-                    height: 50,
+                    height: 25.0,
                   ),
                   Center(
                     child: Text(localizationService.translate("settings"),

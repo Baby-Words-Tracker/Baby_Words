@@ -93,12 +93,13 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           } else {
-                            return const Center(
+                            return Center(
                               child: Text(
-                                "N/A",
-                                style: TextStyle(
+                                localizationService.translate("go_to_settings"),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 50,
+                                  fontSize: 30,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -173,14 +174,28 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           );
                                         } else {
-                                          return const Center(
-                                            child: Text(
-                                              "N/A",
-                                              style: TextStyle(
-                                                color: Color(0xFF9E1B32),
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                          return Center(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(localizationService.translate("most_recent"),
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF9E1B32),
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  "N/A",
+                                                  style: TextStyle(
+                                                    color: Color(0xFF9E1B32),
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           );
                                         }
@@ -254,14 +269,31 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           );
                                         } else {
-                                          return const Center(
-                                            child: Text(
-                                              "",
-                                              style: TextStyle(
-                                                color: Color(0xFF9E1B32),
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                          return Center(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  localizationService.translate(
+                                                      "words_in_past_week"),
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF9E1B32),
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const Text(
+                                                  "N/A",
+                                                  style: TextStyle(
+                                                    color: Color(0xFF9E1B32),
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           );
                                         }
@@ -307,7 +339,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(
-                        height: 20,
+                        height: 5,
                       ),
                       Center(
                           child: OutlinedButton(

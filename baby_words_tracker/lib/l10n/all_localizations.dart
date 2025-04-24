@@ -44,6 +44,7 @@ class AllLocalizations {
       "word_success": "Words successfully submitted!",
       "error": "Error!",
       "words_error": " not found in dictionary, please try again!",
+      "go_to_settings": "Navigate to settings to add a child",
 
       //stats page
       "learning_summary": "Learning Summary",
@@ -83,7 +84,7 @@ class AllLocalizations {
       "welcome_sign_up": "Welcome to BabyWordsTracker, please sign up!",
       "terms_and_conditions":
           "By signing in, you agree to our terms and conditions.",
-      "child_to_new_parent": "Give another Parent Access To Current Child:",
+      "child_to_new_parent": "Give Another Parent Access To Current Child:",
       "choose_email": "Choose Email...",
       "no_email": "Please give some input for the email field."
     },
@@ -151,6 +152,8 @@ class AllLocalizations {
       "words": "palabras",
       "most_recent": "La palabra más reciente es:",
       "words_in_past_week": "Palabras aprendidas la semana pasada:",
+      "go_to_settings": "Vaya a la configuración para agregar un niño",
+
 
       //admin page (role_testing)
       "admin_page": "Pagina de Administrador",

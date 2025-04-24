@@ -1,32 +1,22 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/user_getters.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-
 import 'package:baby_words_tracker/util/graph_type.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
-import 'package:baby_words_tracker/util/time_utils.dart';
-
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
-
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 final List<GraphType> graphsWithLength = [GraphType.newWordsPerDay]; // List of GraphTypes that have a length parameter, to be expanded when more graph types are added
@@ -89,31 +79,43 @@ class _StatsPageState extends State<StatsPage> {
     return Scaffold(
       appBar: TopBar(pageName: context.read<LocalizationService>().translate("learning_summary")),
       bottomNavigationBar: bottomBar(context, "stats"),
-      body: Center(
-        child: Consumer2<LocalizationService, WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
-          builder: (context, localizationService, trackerService, child) {
-            return Column(
-              children: [
-
-                wordsKnownFeature(context, currChildId!), //Displays text to show how many words the child knows, FIXME: ugly
-                
-                Text(localizationService.translate(graphType.displayName), style: const TextStyle( // Displays the name of the current graph type as text above the graph
-                      fontSize: 30.0,
-                      color: Color(0xFF9E1B32),
-                      fontWeight: FontWeight.bold)),
-                
-                // Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
-                graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId!),
-
-                //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
-                lengthChangeFeature(context, graphType, textcontroller1, updateLength),
-
-                Text(localizationService.translate("learning_summary")),
-
-                graphTypeSelectDropdown(graphType, updateType),
-              ],
-            );
-          }
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Consumer2<LocalizationService, WordTrackerDataService>( // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
+              builder: (context, localizationService, trackerService, child) {
+                return Column(
+                  children: [
+                    const SizedBox(
+                      height: 25.0
+                    ),
+          
+                    //wordsKnownFeature(context, currChildId!), //Displays text to show how many words the child knows, FIXME: ugly
+                    
+                    Text(localizationService.translate(graphType.displayName), textAlign: TextAlign.center, style: const TextStyle( // Displays the name of the current graph type as text above the graph
+                          fontSize: 30.0,
+                          color: Color(0xFF9E1B32),
+                          fontWeight: FontWeight.bold)),
+                    
+                    // Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
+                    graphSwitcher(graphType, context.read<ChildDataService>(), context.read<WordDataService>(), context.read<WordTrackerDataService>(), graphLength, graphCache, id: currChildId!),
+          
+                    //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
+                    lengthChangeFeature(context, graphType, textcontroller1, updateLength),
+          
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+          
+                    //Text(localizationService.translate("learning_summary")),
+          
+                    graphTypeSelectDropdown(graphType, updateType),
+                  ],
+                );
+              }
+            ),
+          ),
         ),
       ),
     );
@@ -315,6 +317,9 @@ Widget lengthChangeFeature(BuildContext context, GraphType type, TextEditingCont
           fillColor: const Color(0xFF9E1B32),
         ),
       ),
+      const SizedBox(
+        height: 5.0,
+      ),
       Center(
         child: OutlinedButton(
           onPressed: () {
@@ -362,7 +367,10 @@ Consumer graphTypeSelectDropdown(GraphType currType, void Function(GraphType typ
     items: options.map<DropdownMenuItem<String>>((String value) {
       return DropdownMenuItem<String>(
         value: value,
-        child: Text(localizationService.translate(value)),
+        child: Text(localizationService.translate(value), style: const TextStyle(
+                        fontSize: 18.0,
+                        color: Color(0xFF9E1B32),
+                        fontWeight: FontWeight.bold)),
       );
     }).toList(),
   );
