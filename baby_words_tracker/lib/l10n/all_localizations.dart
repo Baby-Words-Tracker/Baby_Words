@@ -84,7 +84,7 @@ class AllLocalizations {
       "welcome_sign_up": "Welcome to BabyWordsTracker, please sign up!",
       "terms_and_conditions":
           "By signing in, you agree to our terms and conditions.",
-      "child_to_new_parent": "Give another Parent Access To Current Child:",
+      "child_to_new_parent": "Give Another Parent Access To Current Child:",
       "choose_email": "Choose Email...",
       "no_email": "Please give some input for the email field."
     },

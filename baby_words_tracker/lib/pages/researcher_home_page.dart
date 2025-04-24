@@ -116,28 +116,29 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
         ],
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          height: screenHeight,
-          child: Column(children: [
-            const Text('Hello, Researcher!',
-                style: TextStyle(
-                  color: Color(0xFF9E1B32),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                )),
-            Flexible(
-                flex: 1,
-                child: FilterMenu(
-                    onFilterChanged: updateFilter, dataSource: wordInstances)),
-            Flexible(
-              flex: 3,
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : WordTrackerTable(dataSource: _dataSource),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              height: screenHeight,
+              child: Column(children: [
+                const Text('Hello, Researcher!',
+                    style: TextStyle(
+                      color: Color(0xFF9E1B32),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    )),
+                FilterMenu(
+                    onFilterChanged: updateFilter, dataSource: wordInstances),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : WordTrackerTable(dataSource: _dataSource),
+                ),
+              ]),
             ),
-          ]),
+          ),
         ),
       ),
     );
@@ -310,7 +311,6 @@ Future<void> fetchData() async {
                       ? (wordDoc['firstUtterance'] as Timestamp).toDate().toString()
                       : 'Unknown',
                   partOfSpeech: 
-                    //posDoc['partOfSpeech'].toString(),
                     partOfSpeechTracker.toString(),
 
                 ));
@@ -329,7 +329,6 @@ Future<void> fetchData() async {
     await Future.wait(fetchTasks);
     _wordInstances = tempInstances;
     _filteredInstances = List.from(_wordInstances);
-    notifyListeners();
   } catch (e) {
     debugPrint('Error fetching data: $e');
   }
@@ -354,7 +353,6 @@ Future<void> fetchData() async {
         }
       }).toList();
     }
-    notifyListeners();
   }
 
   void sort<T>(Comparable<T> Function(WordInstance wordTracker) getField,bool ascending) {
@@ -365,7 +363,6 @@ Future<void> fetchData() async {
           ? Comparable.compare(aValue, bValue)
           : Comparable.compare(bValue, aValue);
     });
-    notifyListeners();
   }
 
   List<WordInstance> getFilteredData() => _filteredInstances;
@@ -423,9 +420,7 @@ class _FilterMenuState extends State<FilterMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
+    return Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
@@ -512,12 +507,11 @@ class _FilterMenuState extends State<FilterMenu> {
               )
             ],
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 20),
           if (filterMessage.isNotEmpty)
-            Text(filterMessage, style: const TextStyle(fontSize: 16)),
+            Text(filterMessage, style: const TextStyle(fontSize: 18, color: Color(0xFF9E1B32), fontWeight: FontWeight.bold)),
         ],
-      ),
-    );
+      );
   }
 
   void _updateSuggestions() {
