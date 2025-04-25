@@ -56,8 +56,8 @@ class _TopBarState extends State<TopBar> {
     ],
   ),
       actions: [
-        Consumer<CurrentChildrenService>(
-          builder: (context, currentChildrenService, child) {
+        Consumer2<LocalizationService, CurrentChildrenService>(
+          builder: (context, localizationService, currentChildrenService, child) {
             var childNamesToChildIDs =
                 _loadParentAndChildren(currentChildrenService);
             return Row(
@@ -66,7 +66,7 @@ class _TopBarState extends State<TopBar> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  "Current child: ",
+                  localizationService.translate("curr_child"),
                   style: TextStyle(
                       color: Theme.of(context).textTheme.bodyMedium?.color ??
                           Colors.grey),
