@@ -86,7 +86,10 @@ class AllLocalizations {
           "By signing in, you agree to our terms and conditions.",
       "child_to_new_parent": "Give Another Parent Access To Current Child:",
       "choose_email": "Choose Email...",
-      "no_email": "Please give some input for the email field."
+      "no_email": "Please give some input for the email field.",
+
+      //top bar
+      "curr_child": "Current child: ",
     },
     'es': {
       "add_words": "Añadir Palabras",
@@ -153,6 +156,7 @@ class AllLocalizations {
       "most_recent": "La palabra más reciente es:",
       "words_in_past_week": "Palabras aprendidas la semana pasada:",
       "go_to_settings": "Vaya a la configuración para agregar un niño",
+      "curr_child": "Niño actual: ",
 
 
       //admin page (role_testing)

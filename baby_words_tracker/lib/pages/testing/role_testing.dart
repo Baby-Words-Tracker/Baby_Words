@@ -51,6 +51,17 @@ class _RoleTestingState extends State<RoleTesting> {
     }).toList();
   }
 
+  Map<String, dynamic> convertToMapStringDynamic(Map<Object?, Object?> input) {
+    return input.map((key, value) {
+      return MapEntry(
+        key.toString(),
+        value is Map<Object?, Object?>
+            ? convertToMapStringDynamic(value)
+            : value,
+      );
+    });
+  }
+
   List<String> header = [
     'email',
     'uid',
@@ -182,14 +193,38 @@ class _RoleTestingState extends State<RoleTesting> {
                                   context, 'getEmailUIDTable', {});
                               if (userData != null) {
                                 // List<Map<String, dynamic>>
+                                // debugPrint(
+                                //     "userData received: ${userData['users']}");
+                                // debugPrint("");
+                                // // print the type of users
+                                // debugPrint(
+                                //     "users type: ${userData['users'].runtimeType}");
+                                // // print the type of users['users'].first
+                                // debugPrint(
+                                //     "users[0] type: ${userData['users'][0].runtimeType}");
+
+                                // // print the type of the objects in userDats.first
+                                // debugPrint("");
+                                // userData['users'].forEach((key, value) {
+                                //   debugPrint(
+                                //       "userData.first key: $key value: $value");
+                                //   debugPrint(
+                                //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
+                                // });
+
                                 List<Map<String, dynamic>> users =
-                                    (userData['users'] as List).map((user) {
-                                  var userMap = Map<String, dynamic>.from(user);
+                                    (userData['users'] as List)
+                                        .map<Map<String, dynamic>>((user) {
+                                  final rawMap = user as Map<Object?, Object?>;
+                                  final userMap =
+                                      convertToMapStringDynamic(rawMap);
+
                                   if (userMap['customClaims'] != null) {
                                     userMap['customClaims'] =
                                         getUserRolesFromClaims(
                                             userMap['customClaims']);
                                   }
+
                                   return userMap;
                                 }).toList();
 
@@ -198,12 +233,14 @@ class _RoleTestingState extends State<RoleTesting> {
                                 // // print the type of users
                                 // debugPrint("users type: ${users.runtimeType}");
                                 // // print the type of users['users'].first
-                                // debugPrint("users[0] type: ${users[0].runtimeType}");
+                                // debugPrint(
+                                //     "users[0] type: ${users[0].runtimeType}");
 
                                 // // print the type of the objects in userDats.first
                                 // debugPrint("");
                                 // users.first.forEach((key, value) {
-                                //   debugPrint("userData.first key: $key value: $value");
+                                //   debugPrint(
+                                //       "userData.first key: $key value: $value");
                                 //   debugPrint(
                                 //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
                                 // });
@@ -219,15 +256,18 @@ class _RoleTestingState extends State<RoleTesting> {
                                 // debugPrint("userData received: $dataList");
                                 // debugPrint("");
                                 // // print the type of dataList
-                                // debugPrint("dataList type: ${dataList.runtimeType}");
+                                // debugPrint(
+                                //     "dataList type: ${dataList.runtimeType}");
                                 // // print the type of dataList['dataList'].first
-                                // debugPrint("dataList[0] type: ${dataList[0].runtimeType}");
+                                // debugPrint(
+                                //     "dataList[0] type: ${dataList[0].runtimeType}");
 
                                 // // print the type of the objects in userDats.first
                                 // debugPrint("");
                                 // for (var value in dataList.first) {
                                 //   debugPrint("userData value: $value");
-                                //   debugPrint("\t\tuserData valuetype: ${value.runtimeType} ");
+                                //   debugPrint(
+                                //       "\t\tuserData valuetype: ${value.runtimeType} ");
                                 // }
                                 // debugPrint("");
 
