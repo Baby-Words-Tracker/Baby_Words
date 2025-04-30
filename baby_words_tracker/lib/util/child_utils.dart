@@ -41,7 +41,7 @@ Future<void> addCurrentChildToOtherParent(
         context, "Child Add Failed", "You're somehow not a parent?????");
     return;
   }
-  Child? currChild = context.watch<CurrentChildrenService>().getCurrChild();
+  Child? currChild = context.read<CurrentChildrenService>().getCurrChild();
   String? currChildID;
   String? currChildName;
   if (currChild != null) {

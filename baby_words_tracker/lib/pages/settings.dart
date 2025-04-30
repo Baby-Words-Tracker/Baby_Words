@@ -207,7 +207,7 @@ class _AddSettingsPage extends State<SettingsPage> {
             onPressed: () {
               if (nameController.text != "" &&
                   dateController.text !=
-                      "") //add the word to the child with the id, or the default testing child if no input
+                      "")
               {
                 //add child
                 addChildToCurrParent(context, nameController.text,
