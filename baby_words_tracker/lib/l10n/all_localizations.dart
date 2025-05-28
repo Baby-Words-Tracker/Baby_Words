@@ -14,14 +14,14 @@ class AllLocalizations {
       "words": "words",
       "most_recent": "Most recent word is:",
       "words_in_past_week": "Words learned in the past week:",
-      "choose_file" : "Choose File",
+      "choose_file": "Choose File",
 
       //profile
       "profile": "User Profile",
       "sign_out": "Sign Out",
       "delete_account": "Delete Account",
 
-      //admin page (role_testing)
+      //admin page
       "admin_page": "Admin Page",
       "selected_user_id": "Selected User ID",
       "User Roles": "User Roles",
@@ -158,8 +158,7 @@ class AllLocalizations {
       "go_to_settings": "Vaya a la configuración para agregar un niño",
       "curr_child": "Niño actual: ",
 
-
-      //admin page (role_testing)
+      //admin page
       "admin_page": "Pagina de Administrador",
       "selected_user_id": "ID de Usuario Seleccionado",
       "User Roles": "Roles de Usuario",

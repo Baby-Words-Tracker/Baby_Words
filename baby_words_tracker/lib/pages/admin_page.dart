@@ -4,17 +4,17 @@ import 'package:cloud_functions/cloud_functions.dart';
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
 import 'package:baby_words_tracker/util/download_as_csv.dart';
 
-class RoleTesting extends StatefulWidget {
-  static const routeName = '/roletesting';
+class AdminPage extends StatefulWidget {
+  static const routeName = '/adminpage';
 
-  const RoleTesting({super.key});
+  const AdminPage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _RoleTestingState createState() => _RoleTestingState();
+  _AdminPageState createState() => _AdminPageState();
 }
 
-class _RoleTestingState extends State<RoleTesting> {
+class _AdminPageState extends State<AdminPage> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedUserEmail;
 

@@ -134,7 +134,7 @@ class MyApp extends StatelessWidget {
           '/profilepage': (context) => const ProfilePage(),
           '/settings': (context) => const SettingsPage(),
           //'/videoStream': (context) => const VideoScreen(),
-          RoleTesting.routeName: (context) => const RoleTesting(),
+          AdminPage.routeName: (context) => const AdminPage(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),

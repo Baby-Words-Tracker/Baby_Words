@@ -104,7 +104,7 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                 return IconButton(
                     icon: const Icon(Icons.admin_panel_settings),
                     onPressed: () {
-                      Navigator.pushNamed(context, RoleTesting.routeName);
+                      Navigator.pushNamed(context, AdminPage.routeName);
                     });
               } else {
                 return const SizedBox(
