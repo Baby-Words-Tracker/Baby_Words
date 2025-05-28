@@ -7,6 +7,7 @@ import 'package:baby_words_tracker/data/services/general_user_service.dart';
 
 import 'package:baby_words_tracker/util/pair.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
+import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 
 import 'package:flutter/material.dart';
@@ -53,12 +54,18 @@ class UserModelService extends ChangeNotifier {
             "UserModelService: $localI: User unauthenticated ending synchronization.");
         return;
       }
-      // else if user is authenticated or the authentication data has changed, synchronize user
+      // else if user is marekd as unauthenticated or the signed in user has changed, synchronize user
       else if (_userType == UserType.unauthenticated ||
           _getCurrentUserModelId() != _authenticationService.userId) {
-        // debugPrint all of these and their comparison: _getCurrentModelEmail() != _authenticationService.userEmail || _getCurrentUserModelName() != _authenticationService.userName
         debugPrint(
             "UserModelService: $localI: ${_userType.name} user authenticated, but not synchronized");
+
+        final customClaims = _authenticationService.customClaims;
+        final List<UserRole> userRoles = customClaims != null
+            ? getUserRolesFromClaims(customClaims)
+            : [];
+
+         
 
         await _updateUserTypeAndListener(_authenticationService.userId!);
 

@@ -69,6 +69,9 @@ class AuthenticationService extends ChangeNotifier {
   }
 
   User? get user => _user;
+
+  /// Returns the custom claims of the authenticated user as a raw map.
+  /// Use getUserRolesFromClaims from the UserRoles enum to get the roles from the claims.
   Map<String, dynamic>? get customClaims => _customClaims;
 
   List<UserRole> get roles {

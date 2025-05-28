@@ -323,6 +323,24 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   };
 });
 
+exports.getUserIdByEmail = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
+  try {
+    checkIsAtLeast(req, Role.admin);
+    // Fetch the user record by email
+    const userRecord = await getAuth().getUserByEmail(targetEmail);
+    // Return the user's UID
+    return {userId: userRecord.uid};
+  } catch (error) {
+    logger.error("Error fetching user UID by email:", error);
+    throw new https.HttpsError(
+        "not-found",
+        `Failed to fetch user UID by email: ${error}`,
+    );
+  }
+});
+
 
 exports.getUserCustomClaims = https.onCall(async (req, context) => {
   const targetEmail = req.data.targetEmail;

@@ -583,23 +583,23 @@ class FirestoreRepository {
 
       if (currentUserDataWithIdAndCollection == null) {
         debugPrint(
-            "FirestoreRepository: changeUserType() no user found with ID $userId");
-        return null;
-      }
-
-      // Move the document to the new collection using a transaction
-      final newUser = await moveDocumentWithoutSubcollections(
-          userId, currentUserDataWithIdAndCollection.second, newCollectionName);
-
-      if (newUser == null) {
-        debugPrint(
-            "FirestoreRepository: changeUserType() failed to move user $userId to $newCollectionName");
+            "FirestoreRepository: changeUserType() no user found with ID $userId. This may be an error, or the user may not yet have a document.");
         return null;
       } else {
-        debugPrint(
-            "FirestoreRepository: changeUserType() user $userId moved successfully to $newCollectionName");
-        // return the new user
-        return Pair(newUser, newCollectionName);
+        // Move the document to the new collection using a transaction
+        final newUser = await moveDocumentWithoutSubcollections(userId,
+            currentUserDataWithIdAndCollection.second, newCollectionName);
+
+        if (newUser == null) {
+          debugPrint(
+              "FirestoreRepository: changeUserType() failed to move user $userId to $newCollectionName");
+          return null;
+        } else {
+          debugPrint(
+              "FirestoreRepository: changeUserType() user $userId moved successfully to $newCollectionName");
+          // return the new user
+          return Pair(newUser, newCollectionName);
+        }
       }
     } catch (e) {
       debugPrint("changeUserType: $e");

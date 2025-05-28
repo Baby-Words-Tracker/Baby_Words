@@ -1,10 +1,13 @@
+import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
+import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
 import 'package:baby_words_tracker/util/download_as_csv.dart';
+import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
   static const routeName = '/adminpage';
@@ -153,6 +156,113 @@ class _AdminPageState extends State<AdminPage> {
                                   _userRoles = customClaims;
                                 });
                               }
+                            },
+                          ),
+                        ),
+                        _buildPadded(
+                          Consumer<GeneralUserService>(
+                            builder: (context, generalUserService, child) {
+                              return ElevatedButton(
+                                child: const Text(
+                                    "Change user type to Researcher"),
+                                onPressed: () async {
+                                  if (await showConfirmationDialog(context,
+                                          'Are your sure you want to make $_selectedUserEmail a Researcher?') ??
+                                      false) {
+                                    final data = await callFunction(
+                                      // ignore: use_build_context_synchronously
+                                      context,
+                                      'getUserIdByEmail',
+                                      {'targetEmail': _selectedUserEmail},
+                                    );
+                                    if (data == null ||
+                                        data['userId'] == null) {
+                                      if (context.mounted) {
+                                        showAlertMessage(
+                                          context,
+                                          'Error',
+                                          'No user found with email $_selectedUserEmail',
+                                        );
+                                      } else {
+                                        debugPrint(
+                                            "No user found with email $_selectedUserEmail");
+                                      }
+                                      return;
+                                    }
+                                    final String userId =
+                                        data['userId'] as String;
+                                    await Future.wait([
+                                      _callRoleFunction('giveResearcherClaim'),
+                                      generalUserService.changeUserType(
+                                          userId, UserType.researcher)
+                                    ]);
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        _buildPadded(
+                          Consumer<GeneralUserService>(
+                            builder: (context, generalUserService, child) {
+                              return ElevatedButton(
+                                child: const Text("Change user type to Parent"),
+                                onPressed: () async {
+                                  if (await showConfirmationDialog(context,
+                                          'Are your sure you want to make $_selectedUserEmail a Parent?') ??
+                                      false) {
+                                    Map<String, dynamic>? data;
+                                    try {
+                                      data = await callFunctionWithThrow(
+                                        // ignore: use_build_context_synchronously
+                                        context,
+                                        'getUserIdByEmail',
+                                        {'targetEmail': _selectedUserEmail},
+                                      );
+
+                                      if (data == null ||
+                                          data['userId'] == null) {
+                                        data = null;
+                                        if (context.mounted) {
+                                          showAlertMessage(
+                                            context,
+                                            'Error',
+                                            'No user found with email $_selectedUserEmail',
+                                          );
+                                        } else {
+                                          debugPrint(
+                                              "No user found with email $_selectedUserEmail");
+                                        }
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        showAlertMessage(
+                                          context,
+                                          'Error',
+                                          'No user found with email $_selectedUserEmail',
+                                        );
+                                      } else {
+                                        debugPrint(
+                                            "No user found with email $_selectedUserEmail");
+                                      }
+                                    }
+
+                                    if (data == null) {
+                                      return;
+                                    }
+
+                                    final String userId =
+                                        data['userId'] as String;
+                                    await Future.wait([
+                                      _callRoleFunction('giveParentClaim'),
+                                      _callRoleFunction(
+                                          'removeResearcherClaim'),
+                                      generalUserService.changeUserType(
+                                          userId, UserType.parent),
+                                    ]);
+                                  }
+                                },
+                              );
                             },
                           ),
                         ),
