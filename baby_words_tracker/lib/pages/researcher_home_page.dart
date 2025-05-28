@@ -1,4 +1,4 @@
-import 'package:baby_words_tracker/pages/testing/role_testing.dart';
+import 'package:baby_words_tracker/pages/role_testing.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
