@@ -1,12 +1,13 @@
+import "package:baby_words_tracker/util/cloud_function_utils.dart";
+import 'package:baby_words_tracker/data/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
+import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
+import 'package:baby_words_tracker/util/download_as_csv.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import "package:baby_words_tracker/util/cloud_function_utils.dart";
-import 'package:baby_words_tracker/util/download_as_csv.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
@@ -21,13 +22,13 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedUserEmail;
+  String _selectedUserEmail = '';
 
-  Map<String, dynamic> _userRoles = {};
+  Map<String, dynamic>? _userRoles;
   List<Map<String, dynamic>> _userData = [];
 
   Future<void> _callRoleFunction(String functionName) async {
-    if (_selectedUserEmail == null) return;
+    if (_selectedUserEmail.isEmpty) return;
     // debugPrint('Getting callable for function $functionName with uid $_selectedUserEmail');
     HttpsCallable function =
         FirebaseFunctions.instance.httpsCallable(functionName);
@@ -90,6 +91,98 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
+  Future<void> changeUserType(UserType newType) async {
+    Map<String, dynamic>? data;
+    if (!([UserType.parent, UserType.researcher].contains(newType))) {
+      throw ArgumentError(
+          'Invalid user type: $newType. Only parent and researcher are allowed.');
+    }
+    try {
+      data = await callFunctionWithThrow(
+        // ignore: use_build_context_synchronously
+        context,
+        'getUserIdByEmail',
+        {'targetEmail': _selectedUserEmail},
+      );
+
+      if (data == null || data['userId'] == null) {
+        data = null;
+        if (mounted) {
+          showAlertMessage(
+            context,
+            'Error',
+            'No user found with email $_selectedUserEmail',
+          );
+        } else {
+          debugPrint("No user found with email $_selectedUserEmail");
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        showAlertMessage(
+          context,
+          'Error',
+          'No user found with email $_selectedUserEmail',
+        );
+      } else {
+        debugPrint("No user found with email $_selectedUserEmail");
+      }
+    }
+
+    if (data == null) {
+      return;
+    }
+
+    final String userId = data['userId'] as String;
+    try {
+      if (mounted) {
+        switch (newType) {
+          case UserType.parent:
+            await _callRoleFunction('giveParentClaim');
+            await _callRoleFunction('removeResearcherClaim');
+            await Provider.of<GeneralUserService>(context, listen: false)
+                .changeUserType(userId, newType);
+            break;
+          case UserType.researcher:
+            await _callRoleFunction('giveResearcherClaim');
+            await _callRoleFunction('removeParentClaim');
+            await Provider.of<GeneralUserService>(context, listen: false)
+                .changeUserType(userId, newType);
+            break;
+          default:
+            throw ArgumentError(
+                'Invalid user type: $newType. Only parent and researcher are allowed.');
+        }
+      } else {
+        debugPrint(
+            "Change user type action not performed in admin page because context is not mounted.");
+      }
+    } on ActionFailedException catch (e) {
+      if (mounted) {
+        showAlertMessage(
+          context,
+          'Error',
+          'Failed to change user type: ${e.message}',
+        );
+      } else {
+        debugPrint("Failed to change user type: ${e.message}");
+      }
+      return;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'User type changed to ${newType.name} for $_selectedUserEmail'),
+        ),
+      );
+    } else {
+      debugPrint(
+          "User type changed to ${newType.name} for $_selectedUserEmail");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,7 +202,7 @@ class _AdminPageState extends State<AdminPage> {
                 // debugPrint("Setting value for $value");
                 setState(() {
                   _selectedUserEmail = value;
-                  _userRoles = {};
+                  _userRoles = null;
                   // debugPrint("_selectedUserEmail set to $value");
                 });
               },
@@ -124,36 +217,72 @@ class _AdminPageState extends State<AdminPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Selected User ID: $_selectedUserEmail'),
+                        Text('Selected User Email: $_selectedUserEmail'),
                         // TODO: make this wrap
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(" User Roles: ["),
-                            ..._userRoles.entries.map(
-                              (entry) {
-                                return Text("(${entry.key}: ${entry.value}), ");
-                              },
-                            ),
-                            const Text("]"),
-                          ],
-                        ),
+                        if (_userRoles != null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(" User Roles: ["),
+                              ..._userRoles!.entries.map(
+                                (entry) {
+                                  return Text(
+                                      "(${entry.key}: ${entry.value}), ");
+                                },
+                              ),
+                              const Text("]"),
+                            ],
+                          ),
                         _buildPadded(
                           ElevatedButton(
                             child: const Text("Get Custom Claims"),
                             onPressed: () async {
-                              var customClaims = await callFunction(
-                                context,
-                                'getUserCustomClaims',
-                                {'targetEmail': _selectedUserEmail},
-                              );
-                              if (customClaims == null) {
-                                // debugPrint("No Custom Claims");
+                              late final Map<String, dynamic>? customClaims;
+                              bool failure = false;
+                              try {
+                                customClaims = await callFunctionWithThrow(
+                                  context,
+                                  'getUserCustomClaims',
+                                  {'targetEmail': _selectedUserEmail},
+                                );
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Failed to get custom claims: $e'),
+                                    ),
+                                  );
+                                } else {
+                                  debugPrint("Failed to get custom claims: $e");
+                                }
+                                failure = true;
+                              }
+
+                              if (failure) {
+                                setState(() {
+                                  _userRoles = null;
+                                });
                                 return;
+                              } else if (customClaims == null) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'No custom claims found for this user.'),
+                                    ),
+                                  );
+                                } else {
+                                  debugPrint(
+                                      "No custom claims found for this user.");
+                                }
+                                setState(() {
+                                  _userRoles = {};
+                                });
                               } else {
                                 setState(() {
-                                  _userRoles = customClaims;
+                                  _userRoles = customClaims!;
                                 });
                               }
                             },
@@ -169,33 +298,7 @@ class _AdminPageState extends State<AdminPage> {
                                   if (await showConfirmationDialog(context,
                                           'Are your sure you want to make $_selectedUserEmail a Researcher?') ??
                                       false) {
-                                    final data = await callFunction(
-                                      // ignore: use_build_context_synchronously
-                                      context,
-                                      'getUserIdByEmail',
-                                      {'targetEmail': _selectedUserEmail},
-                                    );
-                                    if (data == null ||
-                                        data['userId'] == null) {
-                                      if (context.mounted) {
-                                        showAlertMessage(
-                                          context,
-                                          'Error',
-                                          'No user found with email $_selectedUserEmail',
-                                        );
-                                      } else {
-                                        debugPrint(
-                                            "No user found with email $_selectedUserEmail");
-                                      }
-                                      return;
-                                    }
-                                    final String userId =
-                                        data['userId'] as String;
-                                    await Future.wait([
-                                      _callRoleFunction('giveResearcherClaim'),
-                                      generalUserService.changeUserType(
-                                          userId, UserType.researcher)
-                                    ]);
+                                    await changeUserType(UserType.researcher);
                                   }
                                 },
                               );
@@ -211,55 +314,7 @@ class _AdminPageState extends State<AdminPage> {
                                   if (await showConfirmationDialog(context,
                                           'Are your sure you want to make $_selectedUserEmail a Parent?') ??
                                       false) {
-                                    Map<String, dynamic>? data;
-                                    try {
-                                      data = await callFunctionWithThrow(
-                                        // ignore: use_build_context_synchronously
-                                        context,
-                                        'getUserIdByEmail',
-                                        {'targetEmail': _selectedUserEmail},
-                                      );
-
-                                      if (data == null ||
-                                          data['userId'] == null) {
-                                        data = null;
-                                        if (context.mounted) {
-                                          showAlertMessage(
-                                            context,
-                                            'Error',
-                                            'No user found with email $_selectedUserEmail',
-                                          );
-                                        } else {
-                                          debugPrint(
-                                              "No user found with email $_selectedUserEmail");
-                                        }
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        showAlertMessage(
-                                          context,
-                                          'Error',
-                                          'No user found with email $_selectedUserEmail',
-                                        );
-                                      } else {
-                                        debugPrint(
-                                            "No user found with email $_selectedUserEmail");
-                                      }
-                                    }
-
-                                    if (data == null) {
-                                      return;
-                                    }
-
-                                    final String userId =
-                                        data['userId'] as String;
-                                    await Future.wait([
-                                      _callRoleFunction('giveParentClaim'),
-                                      _callRoleFunction(
-                                          'removeResearcherClaim'),
-                                      generalUserService.changeUserType(
-                                          userId, UserType.parent),
-                                    ]);
+                                    await changeUserType(UserType.parent);
                                   }
                                 },
                               );

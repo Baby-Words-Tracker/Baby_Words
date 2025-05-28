@@ -127,7 +127,7 @@ exports.giveParentClaim = https.onCall(async (req, context) => {
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    giveClaimByEmail(Role.parent, Role.researcher, targetEmail, req);
+    giveClaimByEmail(Role.parent, Role.admin, targetEmail, req);
   } catch (error) {
     logger.error(`Failed to assign parent role: ${error}`);
     return {
@@ -357,9 +357,9 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
     return selectedUser.customClaims != null ? selectedUser.customClaims : {};
   } catch (error) {
     logger.error("Error fetching user custom claims:", error);
-    return {
-      message: `Failed to fetch user custom claims error: ${error}`,
-    };
+    throw new https.HttpsError(
+        "not-found",
+        `Failed to fetch user custom claims error: ${error}`);
   }
 });
 

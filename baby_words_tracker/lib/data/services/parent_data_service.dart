@@ -12,7 +12,7 @@ class ParentDataService extends ChangeNotifier {
   //Parent services
   Future<Parent?> createParent(Parent parent) async {
     String? returnId = await _firestoreRepository.createWithId(
-        Parent.collectionName, parent.id, parent.toMap());
+        Parent.collectionName, parent.id, parent.toMap(), true);
 
     if (returnId == null) {
       return null;

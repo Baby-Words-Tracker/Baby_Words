@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/data/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/listeners/firestore_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/util/pair.dart';
@@ -27,10 +28,11 @@ class FirestoreRepository {
   }
 
   Future<String?> createWithId(
-      String collectionName, String docId, Map<String, dynamic> data) async {
+      String collectionName, String docId, Map<String, dynamic> data,
+      [bool merge = false]) async {
     try {
       final collection = database.collection(collectionName);
-      await collection.doc(docId).set(data);
+      await collection.doc(docId).set(data, SetOptions(merge: merge));
       return docId;
     } catch (e) {
       debugPrint("Error creating document in $collectionName: $e");
@@ -584,23 +586,36 @@ class FirestoreRepository {
       if (currentUserDataWithIdAndCollection == null) {
         debugPrint(
             "FirestoreRepository: changeUserType() no user found with ID $userId. This may be an error, or the user may not yet have a document.");
-        return null;
+        throw DocumentNotFoundException(
+            "No user found with ID $userId in collections: $possibleFromCollections");
       } else {
-        // Move the document to the new collection using a transaction
-        final newUser = await moveDocumentWithoutSubcollections(userId,
-            currentUserDataWithIdAndCollection.second, newCollectionName);
-
-        if (newUser == null) {
+        if (currentUserDataWithIdAndCollection.second == newCollectionName) {
           debugPrint(
-              "FirestoreRepository: changeUserType() failed to move user $userId to $newCollectionName");
-          return null;
+              "FirestroreRepository: changeUserType() user $userId is already in the collection $newCollectionName");
+          // return the current user data
+          return Pair(currentUserDataWithIdAndCollection.first,
+              currentUserDataWithIdAndCollection.second);
         } else {
+          // Move the document to the new collection using a transaction
           debugPrint(
-              "FirestoreRepository: changeUserType() user $userId moved successfully to $newCollectionName");
-          // return the new user
-          return Pair(newUser, newCollectionName);
+              "FirestoreRepository: changeUserType() moving user $userId from ${currentUserDataWithIdAndCollection.second} to $newCollectionName with data: ${currentUserDataWithIdAndCollection.first.data}");
+          final newUser = await moveDocumentWithoutSubcollections(userId,
+              currentUserDataWithIdAndCollection.second, newCollectionName);
+
+          if (newUser == null) {
+            debugPrint(
+                "FirestoreRepository: changeUserType() failed to move user $userId to $newCollectionName");
+            return null;
+          } else {
+            debugPrint(
+                "FirestoreRepository: changeUserType() user $userId moved successfully to $newCollectionName");
+            // return the new user
+            return Pair(newUser, newCollectionName);
+          }
         }
       }
+    } on DocumentNotFoundException {
+      rethrow;
     } catch (e) {
       debugPrint("changeUserType: $e");
       return null;

@@ -7,6 +7,7 @@ import 'package:baby_words_tracker/data/services/general_user_service.dart';
 
 import 'package:baby_words_tracker/util/pair.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
+import 'package:baby_words_tracker/util/user_role_and_type_mapper.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 
@@ -60,20 +61,21 @@ class UserModelService extends ChangeNotifier {
         debugPrint(
             "UserModelService: $localI: ${_userType.name} user authenticated, but not synchronized");
 
-        final customClaims = _authenticationService.customClaims;
-        final List<UserRole> userRoles = customClaims != null
-            ? getUserRolesFromClaims(customClaims)
-            : [];
-
-         
-
         await _updateUserTypeAndListener(_authenticationService.userId!);
 
         if (_userType == UserType.unauthenticated) {
-          // debugPrint("UserModelService: $localI: Creating new user -> email: ${_authenticationService.userEmail} | uaserName: ${_authenticationService.userName}");
+          final customClaims = _authenticationService.customClaims;
+          final List<UserRole> userRoles = customClaims != null
+              ? getUserRolesFromClaims(customClaims)
+              : [UserRole.unauthenticated];
+          final maxRole = userRoles.reduce((a, b) => a.index < b.index ? a : b);
+          final userType = maxRole.userType;
+
+          debugPrint(
+              "UserModelService: $localI: Creating new user -> email: ${_authenticationService.userEmail} | userName: ${_authenticationService.userName} | userType: ${userType.name}");
 
           Pair<dynamic, UserType> user = await _generalUserService.createUser(
-              userType: _defaultUserType,
+              userType: userType,
               id: _authenticationService.userId!,
               email: _authenticationService.userEmail,
               name: _authenticationService.userName);
@@ -108,7 +110,7 @@ class UserModelService extends ChangeNotifier {
           "UserModelService: $localI: _synchronizeUser failed: $e\n$stack");
     }
     debugPrint(
-        "UserModelService: $localI: Synchronization finished, userType: $_userType");
+        "UserModelService: $localI: Synchronization finished, userType: ${_userType.name}");
   }
 
   dynamic _getCurrentUserModel() {

@@ -41,7 +41,7 @@ class Parent {
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
       id: map['id'] as String,
-      language: map['language'] == null // TODO: remove this null check later
+      language: map['language'] == null
           ? LanguageCode.en
           : LanguageCode.values.firstWhere((e) => e.name == map['language']),
       childIDs: (map['childIDs'] != null && map['childIDs'] is List)

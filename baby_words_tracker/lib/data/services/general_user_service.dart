@@ -1,9 +1,12 @@
+import 'package:baby_words_tracker/data/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
+import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
+import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:baby_words_tracker/util/pair.dart';
@@ -163,14 +166,25 @@ class GeneralUserService {
       throw ArgumentError(
           "GeneralUserService: changeUserType() new type is invalid: $newType");
     }
+
     // Move the document to the new collection using a transaction
-    var newUser = await _firestoreRepository.changeUserType(
-        userId, fromCollections, toCollection,
-        expectedCollectionName: expectedCollection);
+    late final Pair<DataWithId, String>? newUser;
+    try {
+      newUser = await _firestoreRepository.changeUserType(
+          userId, fromCollections, toCollection,
+          expectedCollectionName: expectedCollection);
+    } on DocumentNotFoundException catch (e) {
+      debugPrint("GeneralUserService: User not found: $e");
+      return null;
+    } catch (e) {
+      debugPrint("GeneralUserService: changeUserType() error: $e");
+      rethrow;
+    }
 
     if (newUser == null) {
       debugPrint("GeneralUserService: changeUserType() failed to move user");
-      return null;
+      throw ActionFailedException(
+          "GeneralUserService: changeUserType() failed to move user $userId to $toCollection");
     } else {
       debugPrint(
           "GeneralUserService: changeUserType() user moved successfully");
@@ -181,10 +195,8 @@ class GeneralUserService {
         case UserType.researcher:
           return Pair(Researcher.fromDataWithId(newUser.first), newType);
         default:
-          debugPrint(
+          throw ActionFailedException(
               "GeneralUserService: changeUserType() new type is invalid after the move. This should never happen.");
-          // This should never happen, but just in case
-          return null;
       }
     }
   }

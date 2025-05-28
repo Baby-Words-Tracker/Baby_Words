@@ -10,7 +10,7 @@ class ResearcherDataService extends ChangeNotifier {
   //Reseacher services
   Future<Researcher?> createResearcher(Researcher researcher) async {
     String? returnId = await _firestoreRepository.createWithId(
-        Researcher.collectionName, researcher.id, researcher.toMap());
+        Researcher.collectionName, researcher.id, researcher.toMap(), true);
 
     if (returnId == null) {
       return null;
