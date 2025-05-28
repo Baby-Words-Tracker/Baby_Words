@@ -1,4 +1,6 @@
+import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
@@ -29,11 +31,20 @@ class _AdminPageState extends State<AdminPage> {
     try {
       // debugPrint('Calling function $functionName with uid $_selectedUserEmail');
       final response = await function.call({'targetEmail': _selectedUserEmail});
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(response.data['message'])));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(response.data['message'])));
+      } else {
+        debugPrint(
+            "Context not mounted. Function returned message: ${response.data['message']}");
+      }
     } catch (error) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $error')));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $error')));
+      } else {
+        debugPrint("Context not mounted. Error: $error");
+      }
     }
   }
 
@@ -150,134 +161,168 @@ class _AdminPageState extends State<AdminPage> {
                           ElevatedButton(
                             child: const Text("Assign Parent Role"),
                             onPressed: () async {
-                              await _callRoleFunction('giveParentClaim');
+                              if (await showConfirmationDialog(context,
+                                      'Are your sure you want to assign the Parent role to $_selectedUserEmail?') ??
+                                  false) {
+                                await _callRoleFunction('giveParentClaim');
+                              }
                             },
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
                             child: const Text("Remove Parent Role"),
-                            onPressed: () =>
-                                _callRoleFunction('removeParentClaim'),
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context,
+                                      'Are your sure you want to remove the Parent role from $_selectedUserEmail?') ??
+                                  false) {
+                                await _callRoleFunction('removeParentClaim');
+                              }
+                            },
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
-                            child: const Text('Assign Researcher Role'),
-                            onPressed: () =>
-                                _callRoleFunction('giveResearcherClaim'),
-                          ),
+                              child: const Text('Assign Researcher Role'),
+                              onPressed: () async {
+                                if (await showConfirmationDialog(context,
+                                        'Are your sure you want to give the Researcher role to $_selectedUserEmail?') ??
+                                    false) {
+                                  _callRoleFunction('giveResearcherClaim');
+                                }
+                              }),
                         ),
                         _buildPadded(
                           ElevatedButton(
-                            onPressed: () =>
-                                _callRoleFunction('removeResearcherClaim'),
                             child: const Text('Remove Researcher Role'),
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context,
+                                      'Are your sure you want to remove the Researcher role from $_selectedUserEmail?') ??
+                                  false) {
+                                _callRoleFunction('removeResearcherClaim');
+                              }
+                            },
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
                             child: const Text('Assign Admin Role'),
-                            onPressed: () =>
-                                _callRoleFunction('giveAdminClaim'),
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context,
+                                      'Are your sure you want to give the Admin role to $_selectedUserEmail?') ??
+                                  false) {
+                                _callRoleFunction('giveAdminClaim');
+                              }
+                            },
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
                             child: const Text('Remove Admin Role'),
-                            onPressed: () =>
-                                _callRoleFunction('removeAdminClaim'),
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context,
+                                      'Are your sure you want to remove the Admin role from $_selectedUserEmail?') ??
+                                  false) {
+                                _callRoleFunction('removeAdminClaim');
+                              }
+                            },
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
                             child: const Text('Get Email-UID Data'),
                             onPressed: () async {
-                              var userData = await callFunction(
-                                  context, 'getEmailUIDTable', {});
-                              if (userData != null) {
-                                // List<Map<String, dynamic>>
-                                // debugPrint(
-                                //     "userData received: ${userData['users']}");
-                                // debugPrint("");
-                                // // print the type of users
-                                // debugPrint(
-                                //     "users type: ${userData['users'].runtimeType}");
-                                // // print the type of users['users'].first
-                                // debugPrint(
-                                //     "users[0] type: ${userData['users'][0].runtimeType}");
+                              if (await showConfirmationDialog(context,
+                                      'This will query all email and uid data and return it as a csv. Continue?') ??
+                                  false) {
+                                var userData = await callFunction(
+                                    context, 'getEmailUIDTable', {});
+                                if (userData != null) {
+                                  // List<Map<String, dynamic>>
+                                  // debugPrint(
+                                  //     "userData received: ${userData['users']}");
+                                  // debugPrint("");
+                                  // // print the type of users
+                                  // debugPrint(
+                                  //     "users type: ${userData['users'].runtimeType}");
+                                  // // print the type of users['users'].first
+                                  // debugPrint(
+                                  //     "users[0] type: ${userData['users'][0].runtimeType}");
 
-                                // // print the type of the objects in userDats.first
-                                // debugPrint("");
-                                // userData['users'].forEach((key, value) {
-                                //   debugPrint(
-                                //       "userData.first key: $key value: $value");
-                                //   debugPrint(
-                                //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
-                                // });
+                                  // // print the type of the objects in userDats.first
+                                  // debugPrint("");
+                                  // userData['users'].forEach((key, value) {
+                                  //   debugPrint(
+                                  //       "userData.first key: $key value: $value");
+                                  //   debugPrint(
+                                  //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
+                                  // });
 
-                                List<Map<String, dynamic>> users =
-                                    (userData['users'] as List)
-                                        .map<Map<String, dynamic>>((user) {
-                                  final rawMap = user as Map<Object?, Object?>;
-                                  final userMap =
-                                      convertToMapStringDynamic(rawMap);
+                                  List<Map<String, dynamic>> users =
+                                      (userData['users'] as List)
+                                          .map<Map<String, dynamic>>((user) {
+                                    final rawMap =
+                                        user as Map<Object?, Object?>;
+                                    final userMap =
+                                        convertToMapStringDynamic(rawMap);
 
-                                  if (userMap['customClaims'] != null) {
-                                    userMap['customClaims'] =
-                                        getUserRolesFromClaims(
-                                            userMap['customClaims']);
-                                  }
+                                    if (userMap['customClaims'] != null) {
+                                      userMap['customClaims'] =
+                                          getUserRolesFromClaims(
+                                              userMap['customClaims']);
+                                    }
 
-                                  return userMap;
-                                }).toList();
+                                    return userMap;
+                                  }).toList();
 
-                                // debugPrint("userData received: $users");
-                                // debugPrint("");
-                                // // print the type of users
-                                // debugPrint("users type: ${users.runtimeType}");
-                                // // print the type of users['users'].first
-                                // debugPrint(
-                                //     "users[0] type: ${users[0].runtimeType}");
+                                  // debugPrint("userData received: $users");
+                                  // debugPrint("");
+                                  // // print the type of users
+                                  // debugPrint("users type: ${users.runtimeType}");
+                                  // // print the type of users['users'].first
+                                  // debugPrint(
+                                  //     "users[0] type: ${users[0].runtimeType}");
 
-                                // // print the type of the objects in userDats.first
-                                // debugPrint("");
-                                // users.first.forEach((key, value) {
-                                //   debugPrint(
-                                //       "userData.first key: $key value: $value");
-                                //   debugPrint(
-                                //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
-                                // });
-                                // debugPrint("");
+                                  // // print the type of the objects in userDats.first
+                                  // debugPrint("");
+                                  // users.first.forEach((key, value) {
+                                  //   debugPrint(
+                                  //       "userData.first key: $key value: $value");
+                                  //   debugPrint(
+                                  //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
+                                  // });
+                                  // debugPrint("");
 
-                                setState(() {
-                                  _userData = users;
-                                });
+                                  setState(() {
+                                    _userData = users;
+                                  });
 
-                                final dataList =
-                                    _convertUserDataToLineList(users);
+                                  final dataList =
+                                      _convertUserDataToLineList(users);
 
-                                // debugPrint("userData received: $dataList");
-                                // debugPrint("");
-                                // // print the type of dataList
-                                // debugPrint(
-                                //     "dataList type: ${dataList.runtimeType}");
-                                // // print the type of dataList['dataList'].first
-                                // debugPrint(
-                                //     "dataList[0] type: ${dataList[0].runtimeType}");
+                                  // debugPrint("userData received: $dataList");
+                                  // debugPrint("");
+                                  // // print the type of dataList
+                                  // debugPrint(
+                                  //     "dataList type: ${dataList.runtimeType}");
+                                  // // print the type of dataList['dataList'].first
+                                  // debugPrint(
+                                  //     "dataList[0] type: ${dataList[0].runtimeType}");
 
-                                // // print the type of the objects in userDats.first
-                                // debugPrint("");
-                                // for (var value in dataList.first) {
-                                //   debugPrint("userData value: $value");
-                                //   debugPrint(
-                                //       "\t\tuserData valuetype: ${value.runtimeType} ");
-                                // }
-                                // debugPrint("");
+                                  // // print the type of the objects in userDats.first
+                                  // debugPrint("");
+                                  // for (var value in dataList.first) {
+                                  //   debugPrint("userData value: $value");
+                                  //   debugPrint(
+                                  //       "\t\tuserData valuetype: ${value.runtimeType} ");
+                                  // }
+                                  // debugPrint("");
 
-                                downloadAsCSV(header, dataList, "UserUIDData");
-                              } else {
-                                // debugPrint("No user data received");
+                                  downloadAsCSV(
+                                      header, dataList, "UserUIDData");
+                                } else {
+                                  debugPrint("No user data received");
+                                }
                               }
                             },
                           ),
