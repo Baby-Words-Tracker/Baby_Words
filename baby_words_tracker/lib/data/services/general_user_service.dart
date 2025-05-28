@@ -1,16 +1,19 @@
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
+import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:baby_words_tracker/util/pair.dart';
+import 'package:baby_words_tracker/util/user_type_collection_mapper.dart';
 import 'package:flutter/foundation.dart';
 
 class GeneralUserService {
   final ParentDataService _parentDataService;
   final ResearcherDataService _researcherDataService;
+  final FirestoreRepository _firestoreRepository = FirestoreRepository();
 
   GeneralUserService(
       {required ParentDataService parentDataService,
@@ -69,6 +72,7 @@ class GeneralUserService {
     // if there is no expected type, run simultaneous queries
     if (expectedType == null || expectedType == UserType.unauthenticated) {
       debugPrint("GeneralUserService: getUser() running simultaneous queries");
+      // run both queries simultaneously
       final results = await Future.wait([
         _parentDataService.getParent(userId),
         _researcherDataService.getResearcher(userId)
@@ -76,7 +80,7 @@ class GeneralUserService {
 
       debugPrint(
           "GeneralUserService: getUser() simultaneous queries results: $results");
-      if (results[01] != null) {
+      if (results[1] != null) {
         return Pair(results[1], UserType.researcher);
       } else if (results[0] != null) {
         return Pair(results[0], UserType.parent);
@@ -117,17 +121,18 @@ class GeneralUserService {
   }
 
   Future<Pair<IDocumentListener?, UserType>> getUserListener(String userId,
-      {UserType? listenerType}) async {
-    if (listenerType == UserType.unauthenticated || listenerType == null) {
+      {UserType? expectedListenerType}) async {
+    if (expectedListenerType == UserType.unauthenticated ||
+        expectedListenerType == null) {
       debugPrint("GeneralUserService: getUserListener() expectedType is null");
       Pair<dynamic, UserType> result =
-          await getUser(userId, expectedType: listenerType);
-      listenerType = result.second;
+          await getUser(userId, expectedType: expectedListenerType);
+      expectedListenerType = result.second;
       debugPrint(
-          "GeneralUserService: getUserListener() expectedType: $listenerType");
+          "GeneralUserService: getUserListener() expectedListenerType: $expectedListenerType");
     }
 
-    switch (listenerType) {
+    switch (expectedListenerType) {
       case UserType.researcher:
         return Pair(
           _researcherDataService.getUserListener(userId),
@@ -140,6 +145,47 @@ class GeneralUserService {
         );
       default:
         return Pair(null, UserType.unauthenticated);
+    }
+  }
+
+  Future<Pair<dynamic, UserType>?> changeUserType(
+      String userId, UserType newType,
+      {UserType? expectedType}) async {
+    debugPrint(
+        "GeneralUserService: changeUserType() userId: $userId, newType: $newType");
+
+    // set collection names based on user types
+    List<String> fromCollections = UserTypeCollectionMapper.allCollectionNames;
+    String? expectedCollection = expectedType?.collectionName;
+    String? toCollection = newType.collectionName;
+
+    if (toCollection == null) {
+      throw ArgumentError(
+          "GeneralUserService: changeUserType() new type is invalid: $newType");
+    }
+    // Move the document to the new collection using a transaction
+    var newUser = await _firestoreRepository.changeUserType(
+        userId, fromCollections, toCollection,
+        expectedCollectionName: expectedCollection);
+
+    if (newUser == null) {
+      debugPrint("GeneralUserService: changeUserType() failed to move user");
+      return null;
+    } else {
+      debugPrint(
+          "GeneralUserService: changeUserType() user moved successfully");
+      // return the new user
+      switch (newType) {
+        case UserType.parent:
+          return Pair(Parent.fromDataWithId(newUser.first), newType);
+        case UserType.researcher:
+          return Pair(Researcher.fromDataWithId(newUser.first), newType);
+        default:
+          debugPrint(
+              "GeneralUserService: changeUserType() new type is invalid after the move. This should never happen.");
+          // This should never happen, but just in case
+          return null;
+      }
     }
   }
 }

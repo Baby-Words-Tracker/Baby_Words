@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/data/listeners/firestore_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
+import 'package:baby_words_tracker/util/pair.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -170,6 +171,51 @@ class FirestoreRepository {
       debugPrint(
           "Error reading all documents from subcollection in $parentCollection/$parentId/$subCollection: $e");
       return [];
+    }
+  }
+
+  Future<Pair<DataWithId, String>?> queryMultipleCollections(
+      String documentId, List<String> collectionNames,
+      {String? expectedCollection}) async {
+    try {
+      // if the expected collection is provided, check it first
+      // this is useful for cases where you expect the document to be in a specific collection
+      if (expectedCollection != null) {
+        DataWithId? doc = await read(expectedCollection, documentId);
+        if (doc != null) {
+          return Pair(doc, expectedCollection);
+        }
+      }
+
+      final remainingCollections =
+          collectionNames.where((name) => name != expectedCollection).toList();
+
+      if (remainingCollections.isEmpty) {
+        throw ArgumentError("Collection names cannot be empty.");
+      }
+
+      // If multiple collections are provided, query them simultaneously
+      Iterable<Future<DataWithId?>> futures =
+          remainingCollections.map((collectionName) async {
+        return read(collectionName, documentId);
+      });
+
+      List<DataWithId?> docs = await Future.wait(futures);
+
+      for (int i = 0; i < docs.length; i++) {
+        if (docs[i] != null) {
+          return Pair(docs[i]!, remainingCollections.elementAt(i));
+        }
+      }
+
+      // If no document is found in any collection, return null
+      debugPrint(
+          "No document found with ID $documentId in collections: $collectionNames");
+      return null;
+    } catch (e) {
+      debugPrint(
+          "queryMultipleCollections: error with docId: $documentId and message: $e");
+      return null;
     }
   }
 
@@ -494,6 +540,69 @@ class FirestoreRepository {
       });
     } catch (e) {
       debugPrint("Error adding word tracker in $collectionName: $e");
+      return null;
+    }
+  }
+
+  Future<DataWithId?> moveDocumentWithoutSubcollections(
+      String documentId, String fromCollection, String toCollection) async {
+    try {
+      // move a document from one collection to another using a transaction
+      final fromDocRef = database.collection(fromCollection).doc(documentId);
+      final toDocRef = database.collection(toCollection).doc(documentId);
+      return database.runTransaction((transaction) async {
+        // Get the document from the source collection
+        final fromDocSnapshot = await transaction.get(fromDocRef);
+        if (!fromDocSnapshot.exists) {
+          debugPrint("Document $documentId does not exist in $fromCollection");
+          return null;
+        }
+
+        // Create a new document in the target collection with the same data
+        transaction.set(toDocRef, fromDocSnapshot.data()!);
+
+        // Delete the document from the source collection
+        transaction.delete(fromDocRef);
+
+        // Return the newly created document
+        return DataWithId(id: documentId, data: fromDocSnapshot.data()!);
+      });
+    } catch (e) {
+      debugPrint("moveDocumentWithoutSubcollections: $e");
+      return null;
+    }
+  }
+
+  Future<Pair<DataWithId, String>?> changeUserType(String userId,
+      List<String> possibleFromCollections, String newCollectionName,
+      {String? expectedCollectionName}) async {
+    try {
+      final currentUserDataWithIdAndCollection = await queryMultipleCollections(
+          userId, possibleFromCollections,
+          expectedCollection: expectedCollectionName);
+
+      if (currentUserDataWithIdAndCollection == null) {
+        debugPrint(
+            "FirestoreRepository: changeUserType() no user found with ID $userId");
+        return null;
+      }
+
+      // Move the document to the new collection using a transaction
+      final newUser = await moveDocumentWithoutSubcollections(
+          userId, currentUserDataWithIdAndCollection.second, newCollectionName);
+
+      if (newUser == null) {
+        debugPrint(
+            "FirestoreRepository: changeUserType() failed to move user $userId to $newCollectionName");
+        return null;
+      } else {
+        debugPrint(
+            "FirestoreRepository: changeUserType() user $userId moved successfully to $newCollectionName");
+        // return the new user
+        return Pair(newUser, newCollectionName);
+      }
+    } catch (e) {
+      debugPrint("changeUserType: $e");
       return null;
     }
   }

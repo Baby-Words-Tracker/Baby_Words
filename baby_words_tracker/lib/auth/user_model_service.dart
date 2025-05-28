@@ -132,7 +132,7 @@ class UserModelService extends ChangeNotifier {
     debugPrint("UserModelService: Updating user type and listener");
     Pair<IDocumentListener?, UserType> listenerTypePair =
         await _generalUserService.getUserListener(userId,
-            listenerType: _userType);
+            expectedListenerType: _userType);
     debugPrint(
         "UserModelService: ListenerTypePair: {${listenerTypePair.first} , ${listenerTypePair.second.name}}");
     if (_userType != listenerTypePair.second) {
@@ -164,7 +164,15 @@ class UserModelService extends ChangeNotifier {
     debugPrint(
         "UserModelService: Listener replaced: $_listener, userType: $_userType");
 
+    // This line is important! This makes the class react to changes in the listener's data and notify its listeners.
     _listener?.addListener(() {
+      if (_listener?.data == null) {
+        _unathenticateUser();
+        _safeSynchronizer.safeSynchronize().catchError((e) {
+          debugPrint(
+              "UserModelService: Error synchronizing user from listener callback: $e\n${e.stackTrace}");
+        });
+      }
       debugPrint(
           "UserModelService: Notifying listeners from listener callback");
       notifyListeners();
