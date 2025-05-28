@@ -1,6 +1,4 @@
-import 'package:baby_words_tracker/pages/testing/role_testing.dart';
 import 'package:flutter/material.dart';
-
 
 // Bottom Bar Widget
 // In its own file to save clutter
@@ -76,18 +74,6 @@ Widget bottomBar(BuildContext context, String currPage) {
                 }
               },
             ),
-            // IconButton(
-            //   icon: const Icon(
-            //     Icons.admin_panel_settings_rounded,
-            //     color: Colors.white,
-            //     size: 40.0,
-            //   ),
-            //   onPressed: () {
-            //     if (currPage != RoleTesting.routeName.split('/')[1]) {
-            //       Navigator.pushNamed(context, RoleTesting.routeName);
-            //     }
-            //   },
-            // ),
           ],
         )),
   );
