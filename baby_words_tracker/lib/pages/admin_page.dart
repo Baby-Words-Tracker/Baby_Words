@@ -127,6 +127,7 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                         _buildPadded(
                           ElevatedButton(
+                            child: const Text("Get Custom Claims"),
                             onPressed: () async {
                               var customClaims = await callFunction(
                                 context,
@@ -142,27 +143,29 @@ class _AdminPageState extends State<AdminPage> {
                                 });
                               }
                             },
-                            child: const Text("Get Custom Claims"),
+                          ),
+                        ),
+                        // TODO: add a button here to make a user a parnet and one to make them a researcher or use a dropdown and a single button to change user type.
+                        _buildPadded(
+                          ElevatedButton(
+                            child: const Text("Assign Parent Role"),
+                            onPressed: () async {
+                              await _callRoleFunction('giveParentClaim');
+                            },
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
-                              onPressed: () async {
-                                await _callRoleFunction('giveParentClaim');
-                              },
-                              child: const Text("Assign Parent Role")),
+                            child: const Text("Remove Parent Role"),
+                            onPressed: () =>
+                                _callRoleFunction('removeParentClaim'),
+                          ),
                         ),
                         _buildPadded(
                           ElevatedButton(
-                              onPressed: () =>
-                                  _callRoleFunction('removeParentClaim'),
-                              child: const Text("Remove Parent Role")),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
+                            child: const Text('Assign Researcher Role'),
                             onPressed: () =>
                                 _callRoleFunction('giveResearcherClaim'),
-                            child: const Text('Assign Researcher Role'),
                           ),
                         ),
                         _buildPadded(
@@ -174,20 +177,21 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                         _buildPadded(
                           ElevatedButton(
+                            child: const Text('Assign Admin Role'),
                             onPressed: () =>
                                 _callRoleFunction('giveAdminClaim'),
-                            child: const Text('Assign Admin Role'),
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
+                            child: const Text('Remove Admin Role'),
                             onPressed: () =>
                                 _callRoleFunction('removeAdminClaim'),
-                            child: const Text('Remove Admin Role'),
                           ),
                         ),
                         _buildPadded(
                           ElevatedButton(
+                            child: const Text('Get Email-UID Data'),
                             onPressed: () async {
                               var userData = await callFunction(
                                   context, 'getEmailUIDTable', {});
@@ -276,7 +280,6 @@ class _AdminPageState extends State<AdminPage> {
                                 // debugPrint("No user data received");
                               }
                             },
-                            child: const Text('Get Email-UID Data'),
                           ),
                         ),
                       ],
