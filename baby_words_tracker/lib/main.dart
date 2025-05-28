@@ -20,7 +20,7 @@ import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 // Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
-import 'package:baby_words_tracker/pages/role_testing.dart';
+import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'pages/add_text.dart';
 import 'pages/landing_page.dart';
 import 'pages/stats.dart';
