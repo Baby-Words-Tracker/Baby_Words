@@ -22,10 +22,10 @@ import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'pages/add_text.dart';
-import 'pages/landing_page.dart';
+import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
-import 'pages/video_display.dart';
+import 'pages/display_video_page.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';

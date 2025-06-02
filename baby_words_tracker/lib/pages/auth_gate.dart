@@ -11,7 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' as io; // For checking platform
 
 import 'researcher_home_page.dart';
-import 'landing_page.dart';
+import 'home_page.dart';
 
 class AuthGate extends StatelessWidget {
   static const routeName = '/authGate';
