@@ -12,16 +12,17 @@ import 'package:path_provider/path_provider.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
-class DisplayVideo extends StatefulWidget {
+class DisplayVideoPage extends StatefulWidget {
   static const routeName = '/displayvideo';
 
-  const DisplayVideo({super.key});
+  const DisplayVideoPage({super.key});
 
   @override
-  _DisplayVideoState createState() => _DisplayVideoState();
+  // ignore: library_private_types_in_public_api
+  _DisplayVideoPageState createState() => _DisplayVideoPageState();
 }
 
-class _DisplayVideoState extends State<DisplayVideo> {
+class _DisplayVideoPageState extends State<DisplayVideoPage> {
   String? _selectedVideoId;
   List<WordTracker> _wordList = [];
   VideoPlayerController? _controller;
@@ -130,7 +131,7 @@ class _DisplayVideoState extends State<DisplayVideo> {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
-        bottomNavigationBar: bottomBar(context, DisplayVideo.routeName),
+        bottomNavigationBar: bottomBar(context, DisplayVideoPage.routeName),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(

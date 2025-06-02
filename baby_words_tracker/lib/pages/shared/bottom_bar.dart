@@ -38,8 +38,8 @@ Widget bottomBar(BuildContext context, String currPage) {
                   size: 40.0,
                 ),
                 onPressed: () {
-                  if (currPage != DisplayVideo.routeName) {
-                    Navigator.pushNamed(context, DisplayVideo.routeName);
+                  if (currPage != DisplayVideoPage.routeName) {
+                    Navigator.pushNamed(context, DisplayVideoPage.routeName);
                   }
                 }),
             IconButton(

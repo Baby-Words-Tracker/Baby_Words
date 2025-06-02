@@ -132,7 +132,7 @@ class MyApp extends StatelessWidget {
           StatsPage.routeName: (context) => const StatsPage(),
           AddTextPage.routeName: (context) => const AddTextPage(),
           AuthGate.routeName: (context) => const AuthGate(),
-          DisplayVideo.routeName: (context) => const DisplayVideo(),
+          DisplayVideoPage.routeName: (context) => const DisplayVideoPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
           SettingsPage.routeName: (context) => const SettingsPage(),
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),
