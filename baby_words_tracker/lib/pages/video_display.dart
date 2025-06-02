@@ -29,18 +29,54 @@ class _DisplayVideoState extends State<DisplayVideo> {
     ChildDataService childService,
     CurrentChildrenService currentChildrenService,
   ) async {
+    setState(() {
+      _isLoading = true;
+    });
+    debugPrint("Fetching videos for current child...");
+    // Get the current child ID
     String? currentChildID = currentChildrenService.getCurrChild()?.id;
     if (currentChildID == null) {
       debugPrint("No current child ID found.");
       setState(() {
         _wordList = [];
+        _isLoading = false;
       });
     } else {
-      final wordList = await childService.getAllKnownWords(currentChildID);
-      setState(() {
-        _wordList = wordList.where((video) => video.videoID != null).toList();
-        //debugPrint(_wordList.toString());
-      });
+      try {
+        final wordList = await childService.getAllKnownWords(currentChildID);
+        setState(() {
+          _wordList = wordList.where((video) => video.videoID != null).toList();
+          //debugPrint(_wordList.toString());
+        });
+      } catch (e) {
+        debugPrint("Error fetching videos: $e");
+        setState(() {
+          _wordList = [];
+        });
+      } finally {
+        debugPrint("Videos fetched: ${_wordList.length}");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String? _lastChildId;
+  bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final childService = context.read<ChildDataService>();
+    final currentChildService = context.read<CurrentChildrenService>();
+    final currentChild = context.watch<CurrentChildrenService>().getCurrChild();
+
+    if (currentChild != null && currentChild.id != _lastChildId) {
+      _lastChildId = currentChild.id;
+      Future.microtask(
+          () => fetchVideos(context, childService, currentChildService));
     }
   }
 
@@ -52,7 +88,7 @@ class _DisplayVideoState extends State<DisplayVideo> {
     final signedUrl = await getSignedDownloadUrl(fileName);
     final response = await http.get(Uri.parse(signedUrl!));
     final file = File(filePath);
-    file.writeAsBytes(response.bodyBytes);
+    await file.writeAsBytes(response.bodyBytes);
     debugPrint("File location: ${file.path}");
     _controller = VideoPlayerController.file(File(filePath))
       ..initialize().then((_) {
@@ -87,56 +123,59 @@ class _DisplayVideoState extends State<DisplayVideo> {
             CurrentChildrenService>(
         builder: (context, localizationService, childService,
             currentChildrenService, child) {
-      fetchVideos(context, childService, currentChildrenService);
+      // fetchVideos(context, childService, currentChildrenService);
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
         bottomNavigationBar: bottomBar(context, "addtext"),
-        body: Column(
-          children: [
-            DropdownButton<String>(
-              value: _selectedVideoId,
-              hint: const Text("Select a video"),
-              items: _wordList.map((video) {
-                return DropdownMenuItem<String>(
-                  value: video.id,
-                  child: Text(video.id!),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedVideoId = value;
-                });
-                final selectedVideo =
-                    _wordList.firstWhere((video) => video.id == value);
-                downloadVideo(selectedVideo.videoID!);
-                //initializeVideoPlayer(selectedVideo.videoID!);
-                //_cacheAndPlayVideo(selectedVideo.videoID!);
-              },
-            ),
-            Expanded(
-              child: _controller != null && _controller!.value.isInitialized
-                  ? AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
-                      child: VideoPlayer(_controller!),
-                    )
-                  : const Center(child: Text("Select a video to play")),
-            ),
-            if (_controller != null)
-              FloatingActionButton(
-                onPressed: () {
-                  setState(() {
-                    _controller!.value.isPlaying
-                        ? _controller!.pause()
-                        : _controller!.play();
-                  });
-                },
-                child: Icon(_controller!.value.isPlaying
-                    ? Icons.pause
-                    : Icons.play_arrow),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  DropdownButton<String>(
+                    value: _selectedVideoId,
+                    hint: const Text("Select a video"),
+                    items: _wordList.map((video) {
+                      return DropdownMenuItem<String>(
+                        value: video.id,
+                        child: Text(video.id!),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedVideoId = value;
+                      });
+                      final selectedVideo =
+                          _wordList.firstWhere((video) => video.id == value);
+                      downloadVideo(selectedVideo.videoID!);
+                      //initializeVideoPlayer(selectedVideo.videoID!);
+                      //_cacheAndPlayVideo(selectedVideo.videoID!);
+                    },
+                  ),
+                  Expanded(
+                    child: _controller != null &&
+                            _controller!.value.isInitialized
+                        ? AspectRatio(
+                            aspectRatio: _controller!.value.aspectRatio,
+                            child: VideoPlayer(_controller!),
+                          )
+                        : const Center(child: Text("Select a video to play")),
+                  ),
+                  if (_controller != null)
+                    FloatingActionButton(
+                      onPressed: () {
+                        setState(() {
+                          _controller!.value.isPlaying
+                              ? _controller!.pause()
+                              : _controller!.play();
+                        });
+                      },
+                      child: Icon(_controller!.value.isPlaying
+                          ? Icons.pause
+                          : Icons.play_arrow),
+                    ),
+                ],
               ),
-          ],
-        ),
       );
     });
   }
