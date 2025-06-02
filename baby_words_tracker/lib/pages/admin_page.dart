@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
-  static const routeName = '/adminpage';
+  static const routeName = '/admin';
 
   const AdminPage({super.key});
 

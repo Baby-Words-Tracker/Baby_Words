@@ -18,6 +18,8 @@ import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:path/path.dart' as path;
 
 class AddTextPage extends StatefulWidget {
+  static const routeName = "/addtext";
+
   const AddTextPage({super.key});
 
   @override
@@ -53,7 +55,7 @@ class _AddTextPageState extends State<AddTextPage> {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
-        bottomNavigationBar: bottomBar(context, "addtext"),
+        bottomNavigationBar: bottomBar(context, AddTextPage.routeName),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Consumer<LocalizationService>(

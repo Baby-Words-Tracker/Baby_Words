@@ -13,7 +13,10 @@ import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
 class DisplayVideo extends StatefulWidget {
+  static const routeName = '/displayvideo';
+
   const DisplayVideo({super.key});
+
   @override
   _DisplayVideoState createState() => _DisplayVideoState();
 }
@@ -127,7 +130,7 @@ class _DisplayVideoState extends State<DisplayVideo> {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
-        bottomNavigationBar: bottomBar(context, "addtext"),
+        bottomNavigationBar: bottomBar(context, DisplayVideo.routeName),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(

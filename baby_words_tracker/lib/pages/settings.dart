@@ -11,6 +11,8 @@ import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 class SettingsPage extends StatefulWidget {
+  static const routeName = '/settings';
+
   const SettingsPage({super.key});
 
   @override
@@ -205,10 +207,7 @@ class _AddSettingsPage extends State<SettingsPage> {
           Center(
               child: OutlinedButton(
             onPressed: () {
-              if (nameController.text != "" &&
-                  dateController.text !=
-                      "")
-              {
+              if (nameController.text != "" && dateController.text != "") {
                 //add child
                 addChildToCurrParent(context, nameController.text,
                     DateTime.parse(dateController.text), selectedLanguages);

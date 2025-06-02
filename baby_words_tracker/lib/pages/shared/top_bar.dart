@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -46,18 +47,19 @@ class _TopBarState extends State<TopBar> {
   Widget build(BuildContext context) {
     return AppBar(
       title: Row(
-    children: [
-      const CircleAvatar(
-        radius: 24,
-        backgroundImage: AssetImage('assets/LECS_mascot.png'),
+        children: [
+          const CircleAvatar(
+            radius: 24,
+            backgroundImage: AssetImage('assets/LECS_mascot.png'),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(widget.pageName)),
+        ],
       ),
-      const SizedBox(width: 8),
-      Expanded(child: Text(widget.pageName)),
-    ],
-  ),
       actions: [
         Consumer2<LocalizationService, CurrentChildrenService>(
-          builder: (context, localizationService, currentChildrenService, child) {
+          builder:
+              (context, localizationService, currentChildrenService, child) {
             var childNamesToChildIDs =
                 _loadParentAndChildren(currentChildrenService);
             return Row(
@@ -129,7 +131,7 @@ class _TopBarState extends State<TopBar> {
         IconButton(
           icon: const Icon(Icons.person),
           onPressed: () {
-            Navigator.pushNamed(context, '/profilepage');
+            Navigator.pushNamed(context, ProfilePage.routeName);
           },
         )
       ],

@@ -14,6 +14,7 @@ import 'researcher_home_page.dart';
 import 'landing_page.dart';
 
 class AuthGate extends StatelessWidget {
+  static const routeName = '/authGate';
   const AuthGate({super.key});
 
   String _getPlatformKey() {

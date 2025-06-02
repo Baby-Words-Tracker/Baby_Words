@@ -6,11 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:path/path.dart' as path;
 
 class UploadVideoPage extends StatefulWidget {
+  static const routeName = '/uploadvideo';
   const UploadVideoPage({super.key});
 
   @override
@@ -29,7 +29,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: TopBar(pageName: localizationService.translate("upload_video")),
-        bottomNavigationBar: bottomBar(context, "uploadvideo"),
+        bottomNavigationBar: bottomBar(context, UploadVideoPage.routeName),
         body: Column(
           children: [
             const SizedBox(

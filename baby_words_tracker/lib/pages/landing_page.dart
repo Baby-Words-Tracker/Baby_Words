@@ -1,19 +1,20 @@
+import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_words.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
-import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/l10n/localization_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
+  static const routeName = '/';
   const HomePage({super.key});
 
   @override
@@ -47,7 +48,7 @@ class _HomePageState extends State<HomePage> {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("word_buds")),
-        bottomNavigationBar: bottomBar(context, "home"),
+        bottomNavigationBar: bottomBar(context, HomePage.routeName),
         body: Stack(children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -58,8 +59,7 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       StreamBuilder<int?>(
-                        stream:
-                            getNumWords(childID),
+                        stream: getNumWords(childID),
                         builder: (BuildContext context,
                             AsyncSnapshot<int?> snapshot) {
                           if (snapshot.connectionState ==
@@ -166,7 +166,8 @@ class _HomePageState extends State<HomePage> {
                                                     style: const TextStyle(
                                                       color: Color(0xFF9E1B32),
                                                       fontSize: 40,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
@@ -177,9 +178,12 @@ class _HomePageState extends State<HomePage> {
                                           return Center(
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
-                                                Text(localizationService.translate("most_recent"),
+                                                Text(
+                                                  localizationService
+                                                      .translate("most_recent"),
                                                   textAlign: TextAlign.center,
                                                   style: const TextStyle(
                                                     color: Color(0xFF9E1B32),
@@ -261,7 +265,8 @@ class _HomePageState extends State<HomePage> {
                                                     style: const TextStyle(
                                                       color: Color(0xFF9E1B32),
                                                       fontSize: 40,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
@@ -497,9 +502,8 @@ Stream<String?> getRecentWordTracker(String childId) {
       .orderBy('firstUtterance', descending: true)
       .limit(1)
       .snapshots()
-      .map((snapshot) => snapshot.docs.isNotEmpty
-          ? snapshot.docs.first.id
-          : null);
+      .map((snapshot) =>
+          snapshot.docs.isNotEmpty ? snapshot.docs.first.id : null);
 }
 
 Stream<int?> getPastWeekWordTrackers(String childId) {
@@ -515,10 +519,10 @@ Stream<int?> getPastWeekWordTrackers(String childId) {
       .map((snapshot) => snapshot.docs.length);
 }
 
-Stream<int?> getNumWords(String childId){
+Stream<int?> getNumWords(String childId) {
   return FirebaseFirestore.instance
-    .collection('Child')
-    .doc(childId)
-    .snapshots()
-    .map((snapshot) => snapshot.data()?['wordCount'] as int);
+      .collection('Child')
+      .doc(childId)
+      .snapshots()
+      .map((snapshot) => snapshot.data()?['wordCount'] as int);
 }

@@ -124,16 +124,18 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
           useMaterial3: true,
         ),
-        initialRoute: '/authgate', // Set the initial route to force user to login
-        routes: { //Navigate app using named routes
-          '/': (context) => const HomePage(), 
-          '/stats': (context) => const StatsPage(),
-          '/addtext': (context) => const AddTextPage(),
-          '/authgate': (context) => const AuthGate(),
-          '/uploadvideo': (context) => const DisplayVideo(),
-          '/profilepage': (context) => const ProfilePage(),
-          '/settings': (context) => const SettingsPage(),
-          //'/videoStream': (context) => const VideoScreen(),
+        initialRoute:
+            AuthGate.routeName, // Set the initial route to force user to login
+        routes: {
+          //Navigate app using named routes
+          HomePage.routeName: (context) => const HomePage(),
+          StatsPage.routeName: (context) => const StatsPage(),
+          AddTextPage.routeName: (context) => const AddTextPage(),
+          AuthGate.routeName: (context) => const AuthGate(),
+          DisplayVideo.routeName: (context) => const DisplayVideo(),
+          ProfilePage.routeName: (context) => const ProfilePage(),
+          SettingsPage.routeName: (context) => const SettingsPage(),
+          UploadVideoPage.routeName: (context) => const UploadVideoPage(),
           AdminPage.routeName: (context) => const AdminPage(),
         },
         locale:

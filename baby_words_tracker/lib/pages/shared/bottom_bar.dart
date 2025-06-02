@@ -1,3 +1,7 @@
+import 'package:baby_words_tracker/pages/landing_page.dart';
+import 'package:baby_words_tracker/pages/settings.dart';
+import 'package:baby_words_tracker/pages/stats.dart';
+import 'package:baby_words_tracker/pages/video_display.dart';
 import 'package:flutter/material.dart';
 
 // Bottom Bar Widget
@@ -20,21 +24,11 @@ Widget bottomBar(BuildContext context, String currPage) {
                 size: 40.0,
               ),
               onPressed: () {
-                if (currPage != "home") Navigator.pushNamed(context, '/');
-              },
-            ),
-            /* IconButton(
-              icon: const Icon(
-                Icons.chat_bubble_outlined,
-                color: Colors.white,
-                size: 40.0,
-              ),
-              onPressed: () {
-                if (currPage != "addtext") {
-                  Navigator.pushNamed(context, '/addtext');
+                if (currPage != HomePage.routeName) {
+                  Navigator.pushNamed(context, HomePage.routeName);
                 }
               },
-            ), */
+            ),
             IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -44,8 +38,8 @@ Widget bottomBar(BuildContext context, String currPage) {
                   size: 40.0,
                 ),
                 onPressed: () {
-                  if (currPage != "uploadvideo") {
-                    Navigator.pushNamed(context, '/uploadvideo');
+                  if (currPage != DisplayVideo.routeName) {
+                    Navigator.pushNamed(context, DisplayVideo.routeName);
                   }
                 }),
             IconButton(
@@ -57,7 +51,9 @@ Widget bottomBar(BuildContext context, String currPage) {
                 size: 40.0,
               ),
               onPressed: () {
-                if (currPage != "stats") Navigator.pushNamed(context, '/stats');
+                if (currPage != StatsPage.routeName) {
+                  Navigator.pushNamed(context, StatsPage.routeName);
+                }
               },
             ),
             IconButton(
@@ -70,7 +66,7 @@ Widget bottomBar(BuildContext context, String currPage) {
               ),
               onPressed: () {
                 if (currPage != "settings") {
-                  Navigator.pushNamed(context, '/settings');
+                  Navigator.pushNamed(context, SettingsPage.routeName);
                 }
               },
             ),
