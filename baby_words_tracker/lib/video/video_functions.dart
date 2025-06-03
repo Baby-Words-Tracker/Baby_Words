@@ -72,7 +72,8 @@ Future<void> uploadVideo(String filePath) async {
     if (signedUrl != null /*&&  compressed.isNotEmpty */) {
       final request = http.Request('PUT', Uri.parse(signedUrl))
         ..headers['Content-Type'] = 'video/mp4' // Set the correct MIME type
-        ..bodyBytes = /* compressed; */ await file.readAsBytes(); //compressed
+        ..bodyBytes = /* compressed; */ await file.readAsBytes()
+        ..headers['Content-Length'] = (await file.length()).toString();
 
       final response = await request.send();
 

@@ -20,6 +20,9 @@ const auth = require("firebase-functions/v1/auth");
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
+// path
+const path = require("path");
+
 admin.initializeApp();
 
 const db = admin.firestore();
@@ -365,13 +368,62 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
 
 
 exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
+  logger.log(`Current filename passed: ${req.data.fileName}`);
+
   try {
-    logger.log(`Current filename passed: ${req.data.fileName}`);
+    checkIsAtLeast(req, Role.parent);
+  } catch (error) {
+    logger.error(`User does not have permission to upload: ${error}`);
+    throw new https.HttpsError(
+        "permission-denied",
+        `User does not have permission to upload: ${error}`,
+    );
+  }
+
+  // code to validate the file name
+  const rawFileName = req.data.fileName;
+
+  // Reject obviously bad characters
+  if (
+    typeof rawFileName !== "string" ||
+      rawFileName.includes("/") ||
+      rawFileName.includes("..")
+  ) {
+    throw new https.HttpsError(
+        "invalid-argument",
+        "Filename cannot be an address",
+    );
+  }
+
+  // Ensure the file name contains only valid characters
+  if (!/^[a-zA-Z0-9._-]+$/.test(rawFileName)) {
+    throw new https.HttpsError(
+        "invalid-argument",
+        "Invalid characters in file name",
+    );
+  }
+
+  // Ensure the file name ends with .mp4
+  if (!rawFileName.toLowerCase().endsWith(".mp4")) {
+    throw new https.HttpsError(
+        "invalid-argument",
+        "File extension must be .mp4",
+    );
+  }
+
+  // Ensure normalized path is within user directory
+  const userId = req.auth.uid;
+  const filePath = path.posix.normalize(`${userId}/${rawFileName}`);
+  if (!filePath.startsWith(`${userId}/`)) {
+    throw new https.HttpsError(
+        "permission-denied",
+        "Illegal file path traversal attempt",
+    );
+  }
+
+  try {
     // Proceed with signed URL generation
     const bucketName = "baby-words-tracker-media";
-    const fileName = req.data.fileName;
-    const userId = req.auth.uid;
-    const filePath = `${userId}/${fileName}`;
 
     const options = {
       version: "v4",
@@ -381,7 +433,9 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
     };
 
     const fireFile = storage.bucket(bucketName).file(filePath);
-    await fireFile.save(Buffer.from(""), {contentType: "video/mp4"});
+    await fireFile.save(Buffer.from(""), {
+      contentType: "video/mp4",
+    });
 
     const [url] = await fireFile.getSignedUrl(options);
 
@@ -397,19 +451,49 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
 });
 
 exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
-  try {
-    logger.log(`Current filename passed: ${req.data.fileName}`);
-    // Proceed with signed URL generation
-    const bucketName = "baby-words-tracker-media";
-    const fileName = req.data.fileName;
-    const userId = req.auth.uid;
-    const filePath = `${userId}/${fileName}`;
+  logger.log(`Current filename passed: ${req.data.fileName}`);
 
+  try {
+    checkIsAtLeast(req, Role.parent);
+  } catch (error) {
+    logger.error(`User does not have permission to upload: ${error}`);
+    throw new https.HttpsError(
+        "permission-denied",
+        `User does not have permission to upload: ${error}`,
+    );
+  }
+
+  // Proceed with signed URL generation
+  const bucketName = "baby-words-tracker-media";
+
+  // code to validate the file name
+  const rawFileName = req.data.fileName;
+
+  // Reject obviously bad characters
+  if (
+    typeof rawFileName !== "string" ||
+      rawFileName.includes("/") ||
+      rawFileName.includes("..")
+  ) {
+    throw new https.HttpsError("invalid-argument", "Invalid file name");
+  }
+
+  // Ensure normalized path is within user directory
+  const userId = req.auth.uid;
+  const filePath = path.posix.normalize(`${userId}/${rawFileName}`);
+  if (!filePath.startsWith(`${userId}/`)) {
+    throw new https.HttpsError(
+        "permission-denied",
+        "Illegal file path traversal attempt",
+    );
+  }
+
+  try {
     const options = {
       version: "v4",
       action: "read",
       expires: Date.now() + 5 * 60 * 1000, // 5 minutes
-      contentType: "video/mp4", // Ensures Cloud Storage knows the format
+      // contentType: "video/mp4", // Ensures Cloud Storage knows the format
     };
 
     const fireFile = storage.bucket(bucketName).file(filePath);
