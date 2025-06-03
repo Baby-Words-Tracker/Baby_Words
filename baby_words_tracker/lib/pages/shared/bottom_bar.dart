@@ -2,6 +2,7 @@ import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/stats.dart';
 import 'package:baby_words_tracker/pages/display_video_page.dart';
+import 'package:baby_words_tracker/pages/upload_video.dart';
 import 'package:flutter/material.dart';
 
 // Bottom Bar Widget
