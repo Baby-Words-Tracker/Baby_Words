@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
 class DisplayVideoPage extends StatefulWidget {
   static const routeName = '/displayvideo';
@@ -26,7 +27,13 @@ class DisplayVideoPage extends StatefulWidget {
 class _DisplayVideoPageState extends State<DisplayVideoPage> {
   String? _selectedVideoId;
   List<WordTracker> _wordList = [];
+
   VideoPlayerController? _controller;
+  ChewieController? _chewieController;
+  Chewie? _playerWidget;
+
+  String? _lastChildId;
+  bool _isLoading = true;
 
   /// Fetch video metadata from Firestore
   Future<void> fetchVideos(
@@ -66,8 +73,56 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
     }
   }
 
-  String? _lastChildId;
-  bool _isLoading = true;
+  void _disposeControllers() {
+    _disposeVideoController();
+    _disposeChewieController();
+    _resetPlayerWidget();
+  }
+
+  void _disposeVideoController() {
+    if (_controller != null) {
+      _controller!.dispose();
+      _controller = null;
+      debugPrint("Disposed of previous video controller.");
+    }
+  }
+
+  void _disposeChewieController() {
+    if (_chewieController != null) {
+      _chewieController!.dispose();
+      _chewieController = null;
+      debugPrint("Disposed of Chewie controller.");
+    }
+  }
+
+  void _resetPlayerWidget() {
+    if (_playerWidget != null) {
+      _playerWidget = null;
+      debugPrint("Reset player widget.");
+    }
+  }
+
+  void _initializeWidget(VideoPlayerController controller) {
+    try {
+      _chewieController = ChewieController(
+        videoPlayerController: _controller!,
+        autoPlay: true,
+        looping: false,
+      );
+    } catch (e) {
+      debugPrint("Error initializing Chewie controller: $e");
+      _disposeControllers();
+    }
+
+    try {
+      _playerWidget = Chewie(
+        controller: _chewieController!,
+      );
+    } catch (e) {
+      debugPrint("Error creating Chewie widget: $e");
+      _disposeControllers();
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -83,13 +138,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
     }
   }
 
-  Future<File?> downloadVideo(String fileName) async {
-    if (_controller != null) {
-      _controller!.dispose();
-      _controller = null;
-      debugPrint("Disposed of previous video controller.");
-    }
-
+  Future<File?> initializeFileVideoPlayer(String fileName) async {
     final signedUrl = await getSignedDownloadUrl(fileName);
     final response = await http.get(Uri.parse(signedUrl!));
     debugPrint("Response length: ${response.bodyBytes.length} bytes");
@@ -123,6 +172,8 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
       return null;
     }
 
+    _disposeControllers();
+
     try {
       _controller = VideoPlayerController.file(
         file,
@@ -133,25 +184,27 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
       debugPrint("Video Player Controller created with file: $filePath");
     } catch (e) {
       debugPrint("Error initializing video player: $e");
+      _disposeControllers();
+      return null;
     }
+
+    _initializeWidget(_controller!);
+
     return file;
   }
 
   /// Initialize the Video Player
-  void initializeVideoPlayer(String filename) async {
-    if (_controller != null) {
-      _controller!.dispose();
-      _controller = null;
-      debugPrint("Disposed of previous video controller.");
-    }
+  void initializeNetworkVideoPlayer(String filename) async {
+    _disposeControllers();
+
     try {
       final signedUrl = await getSignedDownloadUrl(filename);
-      //debugPrint(signedUrl);
       _controller = VideoPlayerController.networkUrl(Uri.parse(signedUrl!))
         ..initialize().then((_) {
           setState(() {});
           _controller!.play();
         });
+      _initializeWidget(_controller!);
     } catch (e) {
       debugPrint("Error: could not get signed download url.");
     }
@@ -176,50 +229,41 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
                       DropdownButton<String>(
                         value: _selectedVideoId,
                         hint: const Text("Select a video"),
-                        items: _wordList.map((video) {
-                          return DropdownMenuItem<String>(
-                            value: video.id,
-                            child: Text(video.id!),
-                          );
-                        }).toList(),
+                        items: _wordList.map(
+                          (video) {
+                            return DropdownMenuItem<String>(
+                              value: video.id,
+                              child: Text(video.id!),
+                            );
+                          },
+                        ).toList(),
                         onChanged: (value) async {
-                          setState(() {
-                            _selectedVideoId = value;
-                          });
+                          setState(
+                            () {
+                              _selectedVideoId = value;
+                            },
+                          );
                           final selectedVideo = _wordList
                               .firstWhere((video) => video.id == value);
                           if (kIsWeb) {
-                            initializeVideoPlayer(selectedVideo.videoID!);
+                            initializeNetworkVideoPlayer(
+                                selectedVideo.videoID!);
                           } else {
-                            downloadVideo(selectedVideo.videoID!);
+                            initializeFileVideoPlayer(selectedVideo.videoID!);
                           }
-
-                          // _cacheAndPlayVideo(selectedVideo.videoID!);
                         },
                       ),
                       Expanded(
-                        child: _controller != null &&
-                                _controller!.value.isInitialized
+                        child: _playerWidget != null &&
+                                _controller != null &&
+                                _chewieController != null
                             ? AspectRatio(
                                 aspectRatio: _controller!.value.aspectRatio,
-                                child: VideoPlayer(_controller!),
+                                child: _playerWidget!,
                               )
                             : const Center(
                                 child: Text("Select a video to play")),
                       ),
-                      if (_controller != null)
-                        FloatingActionButton(
-                          onPressed: () {
-                            setState(() {
-                              _controller!.value.isPlaying
-                                  ? _controller!.pause()
-                                  : _controller!.play();
-                            });
-                          },
-                          child: Icon(_controller!.value.isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow),
-                        ),
                     ],
                   ),
                 ),
