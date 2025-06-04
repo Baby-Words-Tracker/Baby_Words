@@ -1,18 +1,20 @@
 import 'dart:io';
-import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
-import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
+
+import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
 
 class DisplayVideoPage extends StatefulWidget {
   static const routeName = '/displayvideo';
