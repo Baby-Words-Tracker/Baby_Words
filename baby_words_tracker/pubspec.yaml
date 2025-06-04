@@ -59,6 +59,11 @@ dependencies:
   intl: ^0.20.2
   universal_html: ^2.2.4
   chewie: ^1.11.3
+  path: ^1.9.1
+
+  # Options for video compression later
+  # video_compress: ^3.1.4
+  # ffmpeg_kit_flutter_new: ^1.6.1
 
 dev_dependencies:
   flutter_test:

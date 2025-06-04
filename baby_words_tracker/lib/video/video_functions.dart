@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+// import 'package:path_provider/path_provider.dart' as path_provider;
+// import 'package:video_compress/video_compress.dart';
 
 Future<String?> getSignedUploadUrl(String filename) async {
   HttpsCallable function =
@@ -90,7 +92,87 @@ Future<void> uploadVideo(String filePath) async {
   }
 }
 
-Future<void> downloadVideo(String filePath) async {
-  //TODO: do this when implementing video streaming
-  return;
-}
+// Future<String?> uploadCompressedVideo(String filePath, String filename) async {
+//   try {
+//     debugPrint("File for signed url: $filePath");
+//     final signedUrl = await getSignedUploadUrl(filename);
+
+//     if (signedUrl == null) {
+//       debugPrint("Error: No signed URL received.");
+//       return null;
+//     }
+
+//     // Compress the video
+//     final compressedFile = await VideoCompress.compressVideo(
+//       filePath,
+//       quality: VideoQuality.MediumQuality,
+//       deleteOrigin: false,
+//     );
+
+//     if (compressedFile == null ||
+//         compressedFile.file == null ||
+//         !(await compressedFile.file!.exists())) {
+//       debugPrint('Failed to compress video');
+//       return null;
+//     }
+
+//     final request = http.Request('PUT', Uri.parse(signedUrl))
+//       ..headers['Content-Type'] = 'video/mp4'
+//       ..bodyBytes = await compressedFile.file!.readAsBytes()
+//       ..headers['Content-Length'] =
+//           (await compressedFile.file!.length()).toString();
+
+//     final responseUpload = await request.send();
+
+//     if (responseUpload.statusCode == 200) {
+//       debugPrint('Compressed video uploaded successfully!');
+//       return signedUrl;
+//     } else {
+//       debugPrint(
+//           'Failed to upload compressed video: ${responseUpload.statusCode}');
+//       return null;
+//     }
+//   } catch (e) {
+//     debugPrint('Error during compressed video upload: $e');
+//     return null;
+//   }
+// }
+
+// Future<File?> _getVideoFile(String fileName) async {
+//   final signedUrl = await getSignedDownloadUrl(fileName);
+
+//   if (signedUrl == null) {
+//     debugPrint("Error: No signed URL received for download.");
+//     return null;
+//   }
+
+//   final response = await http.get(Uri.parse(signedUrl));
+//   debugPrint("Response length: ${response.bodyBytes.length} bytes");
+
+//   final tempDirectory = await path_provider
+//       .getTemporaryDirectory(); //this directory will be cleared by the device when needed and does not persist through bootups
+
+//   final filePath = '${tempDirectory.path}/$fileName';
+
+//   final file = File(filePath);
+//   await file.writeAsBytes(response.bodyBytes);
+
+//   debugPrint("File location: ${file.path}");
+//   debugPrint("File size: ${await file.length()} bytes");
+
+//   if (!(await file.exists())) {
+//     debugPrint("Error: File was not saved correctly");
+//     return null;
+//   }
+//   debugPrint("File saved successfully at: ${file.path}");
+
+//   debugPrint("opening file: $filePath");
+//   try {
+//     await file.open(mode: FileMode.read);
+//     debugPrint("File opened successfully.");
+//   } catch (e) {
+//     debugPrint("Error opening file: $e");
+//     return null;
+//   }
+//   return file;
+// }
