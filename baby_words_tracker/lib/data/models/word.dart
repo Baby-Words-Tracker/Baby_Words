@@ -13,8 +13,7 @@ class Word {
   final String word;
   final List<LanguageCode> languageCodes;
   final Map<LanguageCode, PartOfSpeech> partOfSpeech;
-  final Map<LanguageCode,String?> definition;
-
+  final Map<LanguageCode, String?> definition;
 
   Word({
     required this.word,
@@ -27,7 +26,7 @@ class Word {
     String? word,
     List<LanguageCode>? languageCodes,
     Map<LanguageCode, PartOfSpeech>? partOfSpeech,
-    Map<LanguageCode,String?>? definition,
+    Map<LanguageCode, String?>? definition,
   }) {
     return Word(
       word: word ?? this.word,
@@ -40,8 +39,10 @@ class Word {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'languageCodes': languageCodes.map((x) => x.name).toList(),
-      'partOfSpeech': partOfSpeech.map((key, value) => MapEntry(key.displayCode, value.name)),// partOfSpeech.name,
-      'definition': definition.map((key, value) => MapEntry(key.displayCode, value)),
+      'partOfSpeech': partOfSpeech.map((key, value) =>
+          MapEntry(key.displayCode, value.name)), // partOfSpeech.name,
+      'definition':
+          definition.map((key, value) => MapEntry(key.displayCode, value)),
     };
   }
 
@@ -49,22 +50,30 @@ class Word {
     return Word(
       word: id,
       languageCodes: (map['languageCodes'] as List<dynamic>?)
-        ?.whereType<String>()
-        .map((i) => LanguageCode.values.byName(i))
-        .toList() ?? [],
-      partOfSpeech: (map['partOfSpeech'] as Map<String, dynamic>).map(
-        (key, value) => MapEntry(LanguageCode.values.firstWhere((e) => e.name == key), PartOfSpeech.values.byName(value))),
-      definition: (map['definition'] as Map<String, dynamic>).map(
-        (key, value) => MapEntry(LanguageCode.values.firstWhere((e) => e.name == key), value)),//(map['definition'] as String?) ?? '',
+              ?.whereType<String>()
+              .map((i) => LanguageCode.values.byName(i))
+              .toList() ??
+          [],
+      partOfSpeech: (map['partOfSpeech'] as Map<String, dynamic>)
+          .map((key, value) => MapEntry(
+                LanguageCode.values.firstWhere((e) => e.name == key),
+                PartOfSpeech.values.byName(value),
+              )),
+      definition: (map['definition'] as Map<String, dynamic>)
+          .map((key, value) => MapEntry(
+                LanguageCode.values.firstWhere((e) => e.name == key),
+                value,
+              )),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Word.fromJson(String source, String id) => Word.fromMap(json.decode(source) as Map<String, dynamic>, id);
+  factory Word.fromJson(String source, String id) =>
+      Word.fromMap(json.decode(source) as Map<String, dynamic>, id);
 
   factory Word.fromDataWithId(DataWithId source) {
-    return Word.fromMap(source.data, source.id); 
+    return Word.fromMap(source.data, source.id);
   }
 
   @override
@@ -73,22 +82,23 @@ class Word {
   }
 
   @override
-  bool operator ==(covariant Word other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! Word) return false;
+
     final listEquals = const DeepCollectionEquality().equals;
-  
-    return 
-      other.word == word &&
-      listEquals(other.languageCodes, languageCodes) &&
-      other.partOfSpeech == partOfSpeech &&
-      other.definition == definition;
+
+    return other.word == word &&
+        listEquals(other.languageCodes, languageCodes) &&
+        other.partOfSpeech == partOfSpeech &&
+        other.definition == definition;
   }
 
   @override
-  int get hashCode {
-    return word.hashCode ^
-      languageCodes.hashCode ^
-      partOfSpeech.hashCode ^
-      definition.hashCode;
-  }
+  int get hashCode => Object.hashAll([
+        word,
+        const DeepCollectionEquality().hash(languageCodes),
+        partOfSpeech,
+        definition,
+      ]);
 }

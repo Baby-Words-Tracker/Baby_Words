@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DataWithId {
@@ -23,8 +22,8 @@ class DataWithId {
   factory DataWithId.fromFirestore(DocumentSnapshot doc) {
     return DataWithId(
       id: doc.id,
-      data: doc.data() as Map<String, dynamic>, // Ensure this cast works for your use case
+      data: doc.data()
+          as Map<String, dynamic>, // Ensure this cast works for your use case
     );
   }
-
 }

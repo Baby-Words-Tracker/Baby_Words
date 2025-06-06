@@ -7,15 +7,15 @@ import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Child {
-  static String collectionName = 'Child'; 
+  static String collectionName = 'Child';
 
   final String? id;
   final DateTime birthday;
   final String name;
-  final List<LanguageCode> language; 
+  final List<LanguageCode> language;
   final int wordCount;
   final List<String> parentIDs;
-  
+
   Child({
     this.id,
     required this.birthday,
@@ -47,7 +47,7 @@ class Child {
     return <String, dynamic>{
       'birthday': birthday,
       'name': name,
-      'language' : language.map((i) => i.displayCode).toList(),
+      'language': language.map((i) => i.displayCode).toList(),
       'wordCount': wordCount,
       'parentIDs': parentIDs as List<dynamic>,
     };
@@ -56,27 +56,31 @@ class Child {
   factory Child.fromMap(Map<String, dynamic> map) {
     return Child(
       id: map['id'] as String?,
-      birthday: map['birthday'] != null ? convertToDateTime(map['birthday']) : DateTime.fromMillisecondsSinceEpoch(0),
+      birthday: map['birthday'] != null
+          ? convertToDateTime(map['birthday'])
+          : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
-      language : (map['languageCodes'] as List<dynamic>?)
-        ?.whereType<String>()
-        .map((i) => LanguageCode.values.byName(i))
-        .toList() ?? [],
+      language: (map['languageCodes'] as List<dynamic>?)
+              ?.whereType<String>()
+              .map((i) => LanguageCode.values.byName(i))
+              .toList() ??
+          [],
       wordCount: (map['wordCount'] ?? 0) as int,
-      parentIDs: (map['parentIDS'] as List<dynamic>?)
-        ?.whereType<String>()
-        .toList() ?? [],
+      parentIDs:
+          (map['parentIDS'] as List<dynamic>?)?.whereType<String>().toList() ??
+              [],
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Child.fromJson(String source) => Child.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Child.fromJson(String source) =>
+      Child.fromMap(json.decode(source) as Map<String, dynamic>);
 
   factory Child.fromDataWithId(DataWithId source) {
     Map<String, dynamic> data = source.data;
     data['id'] = source.id;
-    return Child.fromMap(data); 
+    return Child.fromMap(data);
   }
 
   @override
@@ -85,24 +89,25 @@ class Child {
   }
 
   @override
-  bool operator ==(covariant Child other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! Child) return false;
+
     final listEquals = const DeepCollectionEquality().equals;
-  
-    return 
-      other.id == id &&
-      other.birthday == birthday &&
-      other.name == name &&
-      other.wordCount == wordCount &&
-      listEquals(other.parentIDs, parentIDs);
+
+    return other.id == id &&
+        other.birthday == birthday &&
+        other.name == name &&
+        other.wordCount == wordCount &&
+        listEquals(other.parentIDs, parentIDs);
   }
 
   @override
-  int get hashCode {
-    return (id?.hashCode ?? 0) ^
-      birthday.hashCode ^
-      name.hashCode ^
-      wordCount.hashCode ^
-      parentIDs.hashCode;
-  }
+  int get hashCode => Object.hashAll([
+        id,
+        birthday,
+        name,
+        wordCount,
+        const DeepCollectionEquality().hash(parentIDs),
+      ]);
 }

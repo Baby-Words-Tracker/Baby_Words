@@ -2,14 +2,16 @@
 import 'dart:convert';
 
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
+import 'package:baby_words_tracker/data/models/i_user_model.dart';
 import 'package:baby_words_tracker/data/models/shared_fields.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/time_utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 
-class Parent {
+class Parent extends IUserModel {
   static String collectionName = 'Parent';
 
-  final String id;
   final LanguageCode language;
   final List<String> childIDs;
 
@@ -17,23 +19,17 @@ class Parent {
   final bool demographicSurveyComplete;
   final bool preStudySurveyComplete;
 
-  final SharedFields sharedFields;
-
   Parent({
-    required this.id,
+    required super.id,
     this.language = LanguageCode.en,
     List<String>? childIDs,
     this.consentFormComplete = false,
     this.demographicSurveyComplete = false,
     this.preStudySurveyComplete = false,
-    SharedFields? sharedFields,
-  })  : childIDs = childIDs ?? [],
-        sharedFields = sharedFields ??
-            const SharedFields(
-              acceptedPrivacyPolicy: false,
-              policyVersion: null,
-              consentDate: null,
-            );
+    super.acceptedPrivacyPolicy = false,
+    super.policyVersion,
+    super.consentDate,
+  }) : childIDs = childIDs ?? [];
 
   Parent copyWith({
     String? id,
@@ -42,7 +38,9 @@ class Parent {
     bool? consentFormComplete,
     bool? demographicSurveyComplete,
     bool? preStudySurveyComplete,
-    SharedFields? sharedFields,
+    bool? acceptedPrivacyPolicy,
+    String? policyVersion,
+    DateTime? consentDate,
   }) {
     return Parent(
       id: id ?? this.id,
@@ -51,24 +49,28 @@ class Parent {
       consentFormComplete: this.consentFormComplete,
       demographicSurveyComplete: this.demographicSurveyComplete,
       preStudySurveyComplete: this.preStudySurveyComplete,
-      sharedFields: this.sharedFields,
+      acceptedPrivacyPolicy:
+          acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
+      policyVersion: policyVersion ?? this.policyVersion,
+      consentDate: consentDate ?? this.consentDate,
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      ...super.toMap(),
       'language': language.displayCode,
       'childIDs': childIDs,
       'consentFormComplete': consentFormComplete,
       'demographicSurveyComplete': demographicSurveyComplete,
       'preStudySurveyComplete': preStudySurveyComplete,
-      'sharedFields': sharedFields.toMap(),
     };
   }
 
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
-      id: map['id'] as String,
+      id: IUserModel.fromMapId(map),
       language: map['language'] == null
           ? LanguageCode.en
           : LanguageCode.values.firstWhere((e) => e.name == map['language']),
@@ -79,9 +81,9 @@ class Parent {
       demographicSurveyComplete:
           map['demographicSurveyComplete'] as bool? ?? false,
       preStudySurveyComplete: map['preStudySurveyComplete'] as bool? ?? false,
-      sharedFields: SharedFields.fromMap(
-          map['sharedFields'] as Map<String, dynamic>? ??
-              const <String, dynamic>{}),
+      acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
+      policyVersion: IUserModel.fromMapPolicyVersion(map),
+      consentDate: IUserModel.fromMapConsentDate(map),
     );
   }
 
@@ -102,9 +104,12 @@ class Parent {
     bool? consentFormComplete,
     bool? demographicSurveyComplete,
     bool? preStudySurveyComplete,
-    SharedFields? sharedFields,
+    bool? acceptedPrivacyPolicy,
+    String? policyVersion,
+    DateTime? consentDate,
   }) {
     Map<String, dynamic> map = {};
+
     if (childIDs != null) map['childIDs'] = childIDs;
     if (language != null) map['language'] = language.displayCode;
     if (consentFormComplete != null) {
@@ -116,19 +121,26 @@ class Parent {
     if (preStudySurveyComplete != null) {
       map['preStudySurveyComplete'] = preStudySurveyComplete;
     }
-    if (sharedFields != null) map['sharedFields'] = sharedFields.toMap();
+
+    map.addAll(IUserModel.createUpdateMap(
+      acceptedPrivacyPolicy: acceptedPrivacyPolicy,
+      policyVersion: policyVersion,
+      consentDate: consentDate,
+    ));
 
     return map;
   }
 
   @override
   String toString() {
-    return 'Parent(id: $id, childIDs: $childIDs, language: $language, consentFormComplete: $consentFormComplete, demographicSurveyComplete: $demographicSurveyComplete, preStudySurveyComplete: $preStudySurveyComplete, sharedFields: $sharedFields)';
+    return 'Parent(${super.toString()}, childIDs: $childIDs, language: $language, consentFormComplete: $consentFormComplete, demographicSurveyComplete: $demographicSurveyComplete, preStudySurveyComplete: $preStudySurveyComplete)';
   }
 
   @override
-  bool operator ==(covariant Parent other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! Parent) return false;
+
     final listEquals = const DeepCollectionEquality().equals;
 
     return other.id == id &&
@@ -137,17 +149,17 @@ class Parent {
         other.consentFormComplete == consentFormComplete &&
         other.demographicSurveyComplete == demographicSurveyComplete &&
         other.preStudySurveyComplete == preStudySurveyComplete &&
-        other.sharedFields == sharedFields;
+        super == other;
   }
 
   @override
-  int get hashCode {
-    return id.hashCode ^
-        childIDs.hashCode ^
-        language.hashCode ^
-        consentFormComplete.hashCode ^
-        demographicSurveyComplete.hashCode ^
-        preStudySurveyComplete.hashCode ^
-        sharedFields.hashCode;
-  }
+  int get hashCode => Object.hashAll([
+        id,
+        const DeepCollectionEquality().hash(childIDs),
+        language,
+        consentFormComplete,
+        demographicSurveyComplete,
+        preStudySurveyComplete,
+        super.hashCode,
+      ]);
 }

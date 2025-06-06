@@ -1,32 +1,29 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
-import 'package:baby_words_tracker/data/models/shared_fields.dart';
+import 'package:baby_words_tracker/data/models/i_user_model.dart';
 
-class Researcher {
+class Researcher extends IUserModel {
   static String collectionName = 'Researcher';
 
-  final String id;
+  // final String id;
   final String? email;
   final String? name;
   final String? institution;
   final String? phoneNumber;
 
-  final SharedFields sharedFields;
+  // final SharedFields sharedFields;
 
   Researcher({
-    required this.id,
+    required super.id,
     this.email,
     this.name,
     this.institution,
     this.phoneNumber,
-    SharedFields? sharedFields,
-  }) : sharedFields = sharedFields ??
-            const SharedFields(
-              acceptedPrivacyPolicy: false,
-              policyVersion: null,
-              consentDate: null,
-            );
+    super.acceptedPrivacyPolicy = false,
+    super.policyVersion,
+    super.consentDate,
+  });
 
   Researcher copyWith({
     String? id,
@@ -34,7 +31,9 @@ class Researcher {
     String? name,
     String? institution,
     String? phoneNumber,
-    SharedFields? sharedFields,
+    bool? acceptedPrivacyPolicy,
+    String? policyVersion,
+    DateTime? consentDate,
   }) {
     return Researcher(
       id: id ?? this.id,
@@ -42,7 +41,10 @@ class Researcher {
       name: name ?? this.name,
       institution: institution ?? this.institution,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      sharedFields: sharedFields ?? this.sharedFields,
+      acceptedPrivacyPolicy:
+          acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
+      policyVersion: policyVersion ?? this.policyVersion,
+      consentDate: consentDate ?? this.consentDate,
     );
   }
 
@@ -52,21 +54,20 @@ class Researcher {
       'name': name,
       'institution': institution,
       'phoneNumber': phoneNumber,
-      'sharedFields': sharedFields.toMap(),
+      ...super.toMap(),
     };
   }
 
   factory Researcher.fromMap(Map<String, dynamic> map) {
     return Researcher(
-      id: map['id'] as String,
+      id: IUserModel.fromMapId(map),
       email: map['email'] as String?,
       name: map['name'] as String?,
       institution: map['institution'] as String?,
       phoneNumber: map['phoneNumber'] as String?,
-      sharedFields: SharedFields.fromMap(
-        map['sharedFields'] as Map<String, dynamic>? ??
-            const <String, dynamic>{},
-      ),
+      acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
+      policyVersion: IUserModel.fromMapPolicyVersion(map),
+      consentDate: IUserModel.fromMapConsentDate(map),
     );
   }
 
@@ -86,43 +87,51 @@ class Researcher {
     String? name,
     String? institution,
     String? phoneNumber,
-    SharedFields? sharedFields,
+    bool? acceptedPrivacyPolicy,
+    String? policyVersion,
+    DateTime? consentDate,
   }) {
     Map<String, dynamic> updateData = <String, dynamic>{};
     if (email != null) updateData['email'] = email;
     if (name != null) updateData['name'] = name;
     if (institution != null) updateData['institution'] = institution;
     if (phoneNumber != null) updateData['phoneNumber'] = phoneNumber;
-    if (sharedFields != null) {
-      updateData['sharedFields'] = sharedFields.toMap();
-    }
+
+    updateData.addAll(
+      IUserModel.createUpdateMap(
+        acceptedPrivacyPolicy: acceptedPrivacyPolicy,
+        policyVersion: policyVersion,
+        consentDate: consentDate,
+      ),
+    );
+
     return updateData;
   }
 
   @override
   String toString() {
-    return 'Researcher(id: $id, email: $email, name: $name, institution: $institution, phoneNumber: $phoneNumber, sharedFields: $sharedFields)';
+    return 'Researcher(${super.toString()}, email: $email, name: $name, institution: $institution, phoneNumber: $phoneNumber)';
   }
 
   @override
-  bool operator ==(covariant Researcher other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! Researcher) return false;
 
     return other.id == id &&
         other.email == email &&
         other.name == name &&
         other.institution == institution &&
         other.phoneNumber == phoneNumber &&
-        other.sharedFields == sharedFields;
+        super == other;
   }
 
   @override
-  int get hashCode {
-    return id.hashCode ^
-        email.hashCode ^
-        name.hashCode ^
-        institution.hashCode ^
-        phoneNumber.hashCode ^
-        sharedFields.hashCode;
-  }
+  int get hashCode => Object.hashAll([
+        email,
+        name,
+        institution,
+        phoneNumber,
+        super.hashCode,
+      ]);
 }
