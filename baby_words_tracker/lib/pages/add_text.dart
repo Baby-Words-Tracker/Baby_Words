@@ -55,7 +55,7 @@ class _AddTextPageState extends State<AddTextPage> {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
-        bottomNavigationBar: bottomBar(context, AddTextPage.routeName),
+        bottomNavigationBar: CustomBottomBar(AddTextPage.routeName),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Consumer<LocalizationService>(

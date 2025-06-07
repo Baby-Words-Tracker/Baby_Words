@@ -85,7 +85,7 @@ class _StatsPageState extends State<StatsPage> {
                 .read<LocalizationService>()
                 .translate("learning_summary")),
         body: const Text("Please create a child before viewing stats"),
-        bottomNavigationBar: bottomBar(context, StatsPage.routeName),
+        bottomNavigationBar: CustomBottomBar(StatsPage.routeName),
       );
     }
     return Scaffold(
@@ -93,7 +93,7 @@ class _StatsPageState extends State<StatsPage> {
           pageName: context
               .read<LocalizationService>()
               .translate("learning_summary")),
-      bottomNavigationBar: bottomBar(context, StatsPage.routeName),
+      bottomNavigationBar: CustomBottomBar(StatsPage.routeName),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

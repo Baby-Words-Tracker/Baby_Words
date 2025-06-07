@@ -68,6 +68,17 @@ class AuthenticationService extends ChangeNotifier {
     await _fetchCustomClaims(true);
   }
 
+  Future<void> signOut() async {
+    try {
+      await _firebaseAuthInstance.signOut();
+      _user = null;
+      _customClaims = null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error signing out: $e');
+    }
+  }
+
   User? get user => _user;
 
   /// Returns the custom claims of the authenticated user as a raw map.

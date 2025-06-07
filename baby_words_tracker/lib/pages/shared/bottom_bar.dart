@@ -1,14 +1,69 @@
+import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/pages/display_video_page.dart';
 import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/stats.dart';
-import 'package:baby_words_tracker/pages/display_video_page.dart';
-import 'package:baby_words_tracker/pages/upload_video.dart';
+import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class CustomBottomBar extends StatefulWidget {
+  final String currPage;
+
+  const CustomBottomBar(this.currPage, {super.key});
+
+  @override
+  State<CustomBottomBar> createState() => _CustomBottomBarState();
+}
+
+class _CustomBottomBarState extends State<CustomBottomBar> {
+  static final _privacyPolicyCheckSynchronizer =
+      SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
+
+  void _listener() {
+    if (mounted) {
+      debugPrint("CustomBottomBar: UserModelService listener triggered");
+    } else {
+      debugPrint(
+          "CustomBottomBar: UserModelService listener triggered but context is not mounted");
+      return;
+    }
+    _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
+      debugPrint(
+          "CustomBottomBar: Error checking privacy policy in callback: $e\n${e.stackTrace}");
+    });
+  }
+
+  _CustomBottomBarState() : super() {
+    debugPrint("CustomBottomBar: Initializing BottomBar");
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userModelService = context.read<UserModelService>();
+      userModelService.addListener(_listener);
+      _listener(); // Initial check on creation
+      debugPrint("CustomBottomBar: Listener added to UserModelService");
+      debugPrint("CustomBottomBar: BottomBar initialized");
+    });
+  }
+
+  @override
+  void dispose() {
+    debugPrint("CustomBottomBar: Disposing BottomBar");
+    final userModelService = context.read<UserModelService>();
+    userModelService.removeListener(_listener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return createBottomBar(context, widget.currPage);
+  }
+}
 
 // Bottom Bar Widget
 // In its own file to save clutter
 // Allows page name to be passed in to deactivate the button for the current page
-Widget bottomBar(BuildContext context, String currPage) {
+Widget createBottomBar(BuildContext context, String currPage) {
   return BottomAppBar(
     color: const Color(0xFF9E1B32),
     child: Padding(

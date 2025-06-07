@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
@@ -48,7 +49,7 @@ class _HomePageState extends State<HomePage> {
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("word_buds")),
-        bottomNavigationBar: bottomBar(context, HomePage.routeName),
+        bottomNavigationBar: CustomBottomBar(HomePage.routeName),
         body: Stack(children: [
           Padding(
             padding: const EdgeInsets.all(16.0),

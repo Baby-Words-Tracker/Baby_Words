@@ -7,6 +7,7 @@ import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
+import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
 
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:baby_words_tracker/util/pair.dart';
@@ -198,6 +199,57 @@ class GeneralUserService {
           throw ActionFailedException(
               "GeneralUserService: changeUserType() new type is invalid after the move. This should never happen.");
       }
+    }
+  }
+
+  Future<bool> setPrivacyPolicyAccepted(String userId, bool accepted,
+      {UserType? userType}) async {
+    debugPrint(
+        "GeneralUserService: setPrivacyPolicyAccepted() userId: $userId, accepted: $accepted");
+    if (userType == null || userType == UserType.unauthenticated) {
+      debugPrint(
+          "GeneralUserService: setPrivacyPolicyAccepted() expectedType is null, getting user type");
+      Pair<dynamic, UserType> user = await getUser(userId);
+      if (user.first == null) {
+        debugPrint(
+            "GeneralUserService: setPrivacyPolicyAccepted() could not find user to determine type, returning false");
+        return false; // user not found
+      } else {
+        debugPrint(
+            "GeneralUserService: setPrivacyPolicyAccepted() userType: ${userType?.name ?? 'type is null'}");
+        userType = user.second;
+      }
+    }
+
+    switch (userType) {
+      case UserType.parent:
+        bool success = await _parentDataService.updateParent(
+          userId,
+          acceptedPrivacyPolicy: accepted,
+          policyVersion: PrivacyPolicyInformation.privacyPolicyVersion,
+          consentDate: DateTime.now(),
+        );
+        if (!success) {
+          debugPrint(
+              "GeneralUserService: setPrivacyPolicyAccepted() failed to update parent");
+        }
+        return success;
+      case UserType.researcher:
+        bool success = await _researcherDataService.updateResearcher(
+          userId,
+          acceptedPrivacyPolicy: accepted,
+          policyVersion: PrivacyPolicyInformation.privacyPolicyVersion,
+          consentDate: DateTime.now(),
+        );
+        if (!success) {
+          debugPrint(
+              "GeneralUserService: setPrivacyPolicyAccepted() failed to update researcher");
+        }
+        return success;
+      default:
+        debugPrint(
+            "GeneralUserService: setPrivacyPolicyAccepted() could not find user to determine type, returning false");
+        return false; // user not found
     }
   }
 }

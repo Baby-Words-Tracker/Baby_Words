@@ -1,6 +1,7 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
+import 'package:baby_words_tracker/data/models/i_user_model.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
@@ -14,7 +15,7 @@ import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:flutter/material.dart';
 
 class UserModelService extends ChangeNotifier {
-  late final SafeSynchronizer _safeSynchronizer;
+  late final SafeSynchronizer _informationSynchronizer;
 
   UserType _userType = UserType.unauthenticated;
   static const UserType _defaultUserType = UserType.parent;
@@ -25,20 +26,22 @@ class UserModelService extends ChangeNotifier {
   IDocumentListener? _listener;
 
   int i = 0;
+  int localI = 0;
 
   UserModelService({
     required AuthenticationService authenticationService,
     required GeneralUserService generalUserService,
   })  : _authenticationService = authenticationService,
         _generalUserService = generalUserService {
-    _safeSynchronizer = SafeSynchronizer(_synchronizeUser);
+    _informationSynchronizer = SafeSynchronizer(_synchronizeUser);
 
     _authenticationService.addListener(() {
       debugPrint(
           "UserModelService: change notification recieved. resync triggered");
-      _safeSynchronizer.safeSynchronize().catchError((e) {
+      _informationSynchronizer.safeSynchronize().catchError((e) {
         debugPrint(
             "UserModelService: Error synchronizing user: $e\n${e.stackTrace}");
+        return;
       });
     });
   }
@@ -93,7 +96,7 @@ class UserModelService extends ChangeNotifier {
             debugPrint("Error: UserModelService: Failed to create user");
           }
         } else {
-          if (_getCurrentUserModel() == null) {
+          if (getCurrentUserModel() == null) {
             debugPrint(
                 "Error: UserModelService: User model is null when the usertype is not unauthenticated");
           } else {
@@ -113,19 +116,20 @@ class UserModelService extends ChangeNotifier {
         "UserModelService: $localI: Synchronization finished, userType: ${_userType.name}");
   }
 
-  dynamic _getCurrentUserModel() {
+  IUserModel? getCurrentUserModel() {
+    final data = _listener?.data;
     switch (_userType) {
       case UserType.parent:
-        return _listener?.data as Parent?;
+        return data is Parent ? data : null;
       case UserType.researcher:
-        return _listener?.data as Researcher?;
+        return data is Researcher ? data : null;
       default:
         return null;
     }
   }
 
   String? _getCurrentUserModelId() {
-    return _getCurrentUserModel()?.id;
+    return getCurrentUserModel()?.id;
   }
 
   void _unathenticateUser() {
@@ -147,7 +151,7 @@ class UserModelService extends ChangeNotifier {
     if (_userType != listenerTypePair.second) {
       await _replaceListener(listenerTypePair.first, listenerTypePair.second);
     } else {
-      final currentUserModel = _getCurrentUserModel();
+      final currentUserModel = getCurrentUserModel();
       if (listenerTypePair.first?.data?.runtimeType ==
               currentUserModel?.runtimeType &&
           listenerTypePair.first?.data != currentUserModel) {
@@ -177,7 +181,7 @@ class UserModelService extends ChangeNotifier {
     _listener?.addListener(() {
       if (_listener?.data == null) {
         _unathenticateUser();
-        _safeSynchronizer.safeSynchronize().catchError((e) {
+        _informationSynchronizer.safeSynchronize().catchError((e) {
           debugPrint(
               "UserModelService: Error synchronizing user from listener callback: $e\n${e.stackTrace}");
         });
@@ -198,7 +202,7 @@ class UserModelService extends ChangeNotifier {
       debugPrint("UserModelService: User is not a parent, returning null");
       return null;
     }
-    return _getCurrentUserModel();
+    return getCurrentUserModel() as Parent?;
   }
 
   Researcher? get researcher {
@@ -206,6 +210,19 @@ class UserModelService extends ChangeNotifier {
       debugPrint("UserModelService: User is not a researcher, returning null");
       return null;
     }
-    return _getCurrentUserModel();
+    return getCurrentUserModel() as Researcher?;
+  }
+
+  Future<void> acceptPrivacyPolicy({bool accepted = true}) async {
+    debugPrint("UserModelService: User accepted privacy policy");
+    if (_authenticationService.userId == null) {
+      debugPrint("UserModelService: User is not authenticated, cannot accept");
+      return;
+    }
+    await _generalUserService.setPrivacyPolicyAccepted(
+      _authenticationService.userId!,
+      accepted,
+      userType: _userType,
+    );
   }
 }

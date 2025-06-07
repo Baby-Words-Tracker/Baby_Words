@@ -58,13 +58,27 @@ class ParentDataService extends ChangeNotifier {
         .toList();
   }
 
-  Future<bool> updateParent(String id,
-      {String? email,
-      String? name,
-      List<String>? childIDs,
-      LanguageCode? language}) async {
-    final updateData =
-        Parent.createUpdateMap(childIDs: childIDs, language: language);
+  Future<bool> updateParent(
+    String id, {
+    List<String>? childIDs,
+    LanguageCode? language,
+    bool? consentFormComplete,
+    bool? demographicSurveyComplete,
+    bool? preStudySurveyComplete,
+    bool? acceptedPrivacyPolicy,
+    String? policyVersion,
+    DateTime? consentDate,
+  }) async {
+    final updateData = Parent.createUpdateMap(
+      childIDs: childIDs,
+      language: language,
+      consentFormComplete: consentFormComplete,
+      demographicSurveyComplete: demographicSurveyComplete,
+      preStudySurveyComplete: preStudySurveyComplete,
+      acceptedPrivacyPolicy: acceptedPrivacyPolicy,
+      policyVersion: policyVersion,
+      consentDate: consentDate,
+    );
     bool success = await _firestoreRepository.update(
         Parent.collectionName, id, updateData);
 
@@ -76,7 +90,8 @@ class ParentDataService extends ChangeNotifier {
     return success;
   }
 
-  // TODO: we need this to delete/edit children as well
+  // TODO: this function may also have to delete children or
+  //  store them in a data structure so we don't accrue hanging data.
   // Future<bool> deleteParent(String id) async {
   //   bool success = await fireRepo.delete(Parent.collectionName, id);
   //   if (!success) {

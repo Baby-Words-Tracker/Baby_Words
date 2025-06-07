@@ -1,11 +1,13 @@
 import 'dart:async';
 
 class SafeSynchronizer {
-  final Future<void> Function() _syncFunction;
+  final Function _syncFunction;
   bool _needSynchronization = false;
+  final bool _queueFunctionCalls;
 
-  SafeSynchronizer(Future<void> Function() syncFunction)
-      : _syncFunction = syncFunction;
+  SafeSynchronizer(Function syncFunction, {bool queueFunctionCalls = false})
+      : _syncFunction = syncFunction,
+        _queueFunctionCalls = queueFunctionCalls;
 
 // Use a completer to track synchronization state
   Completer<void>? _syncCompleter;
@@ -15,7 +17,7 @@ class SafeSynchronizer {
       [List<dynamic> positionalArgs = const []]) async {
     if (_syncCompleter != null) {
       // Sync already in progress, return existing future
-      _needSynchronization = true;
+      _needSynchronization = _queueFunctionCalls;
       return _syncCompleter!.future;
     }
 
@@ -24,6 +26,7 @@ class SafeSynchronizer {
       do {
         _needSynchronization = false;
         await Function.apply(
+          // This might be a problem if a synchronous function is used?
           _syncFunction,
           positionalArgs,
         );

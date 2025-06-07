@@ -52,16 +52,25 @@ class ResearcherDataService extends ChangeNotifier {
         .toList();
   }
 
-  Future<bool> updateResearcher(String id,
-      {String? email,
-      String? name,
-      String? institution,
-      String? phoneNumber}) async {
+  Future<bool> updateResearcher(
+    String id, {
+    String? email,
+    String? name,
+    String? institution,
+    String? phoneNumber,
+    bool? acceptedPrivacyPolicy,
+    String? policyVersion,
+    DateTime? consentDate,
+  }) async {
     final updateData = Researcher.createUpdateMap(
-        email: email,
-        name: name,
-        institution: institution,
-        phoneNumber: phoneNumber);
+      email: email,
+      name: name,
+      institution: institution,
+      phoneNumber: phoneNumber,
+      acceptedPrivacyPolicy: acceptedPrivacyPolicy,
+      policyVersion: policyVersion,
+      consentDate: consentDate,
+    );
     bool success = await _firestoreRepository.update(
         Researcher.collectionName, id, updateData);
 

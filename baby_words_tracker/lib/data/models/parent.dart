@@ -3,10 +3,7 @@ import 'dart:convert';
 
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/i_user_model.dart';
-import 'package:baby_words_tracker/data/models/shared_fields.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/time_utils.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 
 class Parent extends IUserModel {

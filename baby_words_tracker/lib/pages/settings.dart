@@ -36,7 +36,7 @@ class _AddSettingsPage extends State<SettingsPage> {
             appBar: TopBar(
               pageName: localizationService.translate("settings"),
             ),
-            bottomNavigationBar: bottomBar(context, "settings"),
+            bottomNavigationBar: CustomBottomBar("settings"),
             body: SingleChildScrollView(
               padding: const EdgeInsets.all(
                   16.0), // Optional: Add some padding for better layout
