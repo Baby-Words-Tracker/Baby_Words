@@ -36,38 +36,38 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     _fetchWordTrackers();
   }
 
-  _ResearcherHomePageState() : super() {
-    debugPrint("ResearcherHomePage: Initializing HomePage");
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userModelService = context.read<UserModelService>();
-      userModelService.addListener(_consentListener);
-      _consentListener(); // Initial check on creation
-      debugPrint("ResearcherHomePage: Listener added to UserModelService");
-      debugPrint("ResearcherHomePage: HomePage initialized");
-    });
-  }
+  // _ResearcherHomePageState() : super() {
+  //   debugPrint("ResearcherHomePage: Initializing HomePage");
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     final userModelService = context.read<UserModelService>();
+  //     userModelService.addListener(_consentListener);
+  //     _consentListener(); // Initial check on creation
+  //     debugPrint("ResearcherHomePage: Listener added to UserModelService");
+  //     debugPrint("ResearcherHomePage: HomePage initialized");
+  //   });
+  // }
 
-  @override
-  void dispose() {
-    debugPrint("ResearcherHomePage: Disposing HomePage");
-    final userModelService = context.read<UserModelService>();
-    userModelService.removeListener(_consentListener);
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   debugPrint("ResearcherHomePage: Disposing HomePage");
+  //   final userModelService = context.read<UserModelService>();
+  //   userModelService.removeListener(_consentListener);
+  //   super.dispose();
+  // }
 
-  void _consentListener() {
-    if (mounted) {
-      debugPrint("ResearcherHomePage: UserModelService listener triggered");
-    } else {
-      debugPrint(
-          "ResearcherHomePage: UserModelService listener triggered but context is not mounted");
-      return;
-    }
-    _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
-      debugPrint(
-          "ResearcherHomePage: Error checking privacy policy in callback: $e\n${e.stackTrace}");
-    });
-  }
+  // void _consentListener() {
+  //   if (mounted) {
+  //     debugPrint("ResearcherHomePage: UserModelService listener triggered");
+  //   } else {
+  //     debugPrint(
+  //         "ResearcherHomePage: UserModelService listener triggered but context is not mounted");
+  //     return;
+  //   }
+  //   _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
+  //     debugPrint(
+  //         "ResearcherHomePage: Error checking privacy policy in callback: $e\n${e.stackTrace}");
+  //   });
+  // }
 
   void _fetchWordTrackers() async {
     setState(() => _isLoading = true);

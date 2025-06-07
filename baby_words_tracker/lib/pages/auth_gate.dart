@@ -1,4 +1,7 @@
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
+import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
@@ -13,9 +16,56 @@ import 'dart:io' as io; // For checking platform
 import 'researcher_home_page.dart';
 import 'home_page.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   static const routeName = '/authGate';
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  static final _privacyPolicyCheckSynchronizer =
+      SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
+  late final UserModelService _userModelService;
+
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _userModelService = Provider.of<UserModelService>(context, listen: false);
+      _userModelService.addListener(_consentListener);
+
+      _initialized = true;
+
+      debugPrint("AuthGate: Listener added to UserModelService");
+      debugPrint("AuthGate: AuthGate initialized");
+    }
+  }
+
+  @override
+  void dispose() {
+    debugPrint("AuthGate: Disposing AuthGate");
+    _userModelService.removeListener(_consentListener);
+    super.dispose();
+  }
+
+  void _consentListener() {
+    if (mounted) {
+      debugPrint("AuthGate: UserModelService listener triggered");
+    } else {
+      debugPrint(
+          "AuthGate: UserModelService listener triggered but context is not mounted");
+      return;
+    }
+
+    _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
+      debugPrint(
+          "AuthGate: Error checking privacy policy in callback: $e\n${e.stackTrace}");
+    });
+  }
 
   String _getPlatformKey() {
     if (kIsWeb) {
@@ -33,6 +83,8 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: Provider.of<FirebaseAuth>(context).authStateChanges(),
       builder: (context, snapshot) {
+        final userModelService =
+            Provider.of<UserModelService>(context, listen: true);
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
@@ -46,49 +98,13 @@ class AuthGate extends StatelessWidget {
               child: Text('An error occurred: $errorMessage'),
             ),
           );
-        } else if (!snapshot.hasData) {
-          return SignInScreen(
-            providers: [
-              EmailAuthProvider(),
-              GoogleProvider(clientId: _getPlatformKey()),
-            ],
-            headerBuilder: (context, constraints, shrinkOffset) {
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.asset('assets/LECS_mascot.png'),
-                ),
-              );
-            },
-            subtitleBuilder: (context, action) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: action == AuthAction.signIn
-                    ? Text(localizationService.translate("welcome_sign_in"))
-                    : Text(localizationService.translate("welcome_sign_up")),
-              );
-            },
-            footerBuilder: (context, action) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Text(
-                  context
-                      .read<LocalizationService>()
-                      .translate("terms_and_conditions"),
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              );
-            },
-            sideBuilder: (context, shrinkOffset) {
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.asset('assets/LECS_mascot.png'),
-                ),
-              );
-            },
+        } else if (!snapshot.hasData ||
+            (userModelService.userType == UserType.unauthenticated ||
+                !checkPrivacyPolicy(context))) {
+          return buildSignInScreen(
+            context,
+            localizationService,
+            _getPlatformKey(),
           );
         }
 
@@ -99,8 +115,6 @@ class AuthGate extends StatelessWidget {
           builder: (context, userModelService, child) {
             if (user == null) {
               throw Exception('User is null in auth_gate');
-            } else if (userModelService.userType == UserType.unauthenticated) {
-              return const Center(child: CircularProgressIndicator());
             } else if (userModelService.userType == UserType.parent) {
               return const HomePage();
             } else if (userModelService.userType == UserType.researcher) {
@@ -113,4 +127,49 @@ class AuthGate extends StatelessWidget {
       },
     );
   }
+}
+
+Widget buildSignInScreen(BuildContext context,
+    LocalizationService localizationService, String platformKey) {
+  return SignInScreen(
+    providers: [
+      EmailAuthProvider(),
+      GoogleProvider(clientId: platformKey),
+    ],
+    headerBuilder: (context, constraints, shrinkOffset) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Image.asset('assets/LECS_mascot.png'),
+        ),
+      );
+    },
+    subtitleBuilder: (context, action) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: action == AuthAction.signIn
+            ? Text(localizationService.translate("welcome_sign_in"))
+            : Text(localizationService.translate("welcome_sign_up")),
+      );
+    },
+    footerBuilder: (context, action) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Text(
+          context.read<LocalizationService>().translate("terms_and_conditions"),
+          style: const TextStyle(color: Colors.grey),
+        ),
+      );
+    },
+    sideBuilder: (context, shrinkOffset) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Image.asset('assets/LECS_mascot.png'),
+        ),
+      );
+    },
+  );
 }

@@ -18,41 +18,41 @@ class CustomBottomBar extends StatefulWidget {
 }
 
 class _CustomBottomBarState extends State<CustomBottomBar> {
-  static final _privacyPolicyCheckSynchronizer =
-      SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
+  // static final _privacyPolicyCheckSynchronizer =
+  //     SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
 
-  _CustomBottomBarState() : super() {
-    debugPrint("CustomBottomBar: Initializing BottomBar");
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userModelService = context.read<UserModelService>();
-      userModelService.addListener(_consentListener);
-      _consentListener(); // Initial check on creation
-      debugPrint("CustomBottomBar: Listener added to UserModelService");
-      debugPrint("CustomBottomBar: BottomBar initialized");
-    });
-  }
+  // _CustomBottomBarState() : super() {
+  //   debugPrint("CustomBottomBar: Initializing BottomBar");
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     final userModelService = context.read<UserModelService>();
+  //     userModelService.addListener(_consentListener);
+  //     _consentListener(); // Initial check on creation
+  //     debugPrint("CustomBottomBar: Listener added to UserModelService");
+  //     debugPrint("CustomBottomBar: BottomBar initialized");
+  //   });
+  // }
 
-  @override
-  void dispose() {
-    debugPrint("CustomBottomBar: Disposing BottomBar");
-    final userModelService = context.read<UserModelService>();
-    userModelService.removeListener(_consentListener);
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   debugPrint("CustomBottomBar: Disposing BottomBar");
+  //   final userModelService = context.read<UserModelService>();
+  //   userModelService.removeListener(_consentListener);
+  //   super.dispose();
+  // }
 
-  void _consentListener() {
-    if (mounted) {
-      debugPrint("CustomBottomBar: UserModelService listener triggered");
-    } else {
-      debugPrint(
-          "CustomBottomBar: UserModelService listener triggered but context is not mounted");
-      return;
-    }
-    _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
-      debugPrint(
-          "CustomBottomBar: Error checking privacy policy in callback: $e\n${e.stackTrace}");
-    });
-  }
+  // void _consentListener() {
+  //   if (mounted) {
+  //     debugPrint("CustomBottomBar: UserModelService listener triggered");
+  //   } else {
+  //     debugPrint(
+  //         "CustomBottomBar: UserModelService listener triggered but context is not mounted");
+  //     return;
+  //   }
+  //   _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
+  //     debugPrint(
+  //         "CustomBottomBar: Error checking privacy policy in callback: $e\n${e.stackTrace}");
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
