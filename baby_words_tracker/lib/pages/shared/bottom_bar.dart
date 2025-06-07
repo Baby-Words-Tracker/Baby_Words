@@ -12,7 +12,7 @@ class CustomBottomBar extends StatefulWidget {
   final String currPage;
 
   const CustomBottomBar(this.currPage, {super.key});
-
+ 
   @override
   State<CustomBottomBar> createState() => _CustomBottomBarState();
 }
@@ -21,7 +21,26 @@ class _CustomBottomBarState extends State<CustomBottomBar> {
   static final _privacyPolicyCheckSynchronizer =
       SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
 
-  void _listener() {
+  _CustomBottomBarState() : super() {
+    debugPrint("CustomBottomBar: Initializing BottomBar");
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userModelService = context.read<UserModelService>();
+      userModelService.addListener(_consentListener);
+      _consentListener(); // Initial check on creation
+      debugPrint("CustomBottomBar: Listener added to UserModelService");
+      debugPrint("CustomBottomBar: BottomBar initialized");
+    });
+  }
+
+  @override
+  void dispose() {
+    debugPrint("CustomBottomBar: Disposing BottomBar");
+    final userModelService = context.read<UserModelService>();
+    userModelService.removeListener(_consentListener);
+    super.dispose();
+  }
+
+  void _consentListener() {
     if (mounted) {
       debugPrint("CustomBottomBar: UserModelService listener triggered");
     } else {
@@ -33,25 +52,6 @@ class _CustomBottomBarState extends State<CustomBottomBar> {
       debugPrint(
           "CustomBottomBar: Error checking privacy policy in callback: $e\n${e.stackTrace}");
     });
-  }
-
-  _CustomBottomBarState() : super() {
-    debugPrint("CustomBottomBar: Initializing BottomBar");
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userModelService = context.read<UserModelService>();
-      userModelService.addListener(_listener);
-      _listener(); // Initial check on creation
-      debugPrint("CustomBottomBar: Listener added to UserModelService");
-      debugPrint("CustomBottomBar: BottomBar initialized");
-    });
-  }
-
-  @override
-  void dispose() {
-    debugPrint("CustomBottomBar: Disposing BottomBar");
-    final userModelService = context.read<UserModelService>();
-    userModelService.removeListener(_listener);
-    super.dispose();
   }
 
   @override
