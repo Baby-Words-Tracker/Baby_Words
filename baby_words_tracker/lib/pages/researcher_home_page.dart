@@ -1,11 +1,8 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
-import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
@@ -21,8 +18,6 @@ class ResearcherHomePage extends StatefulWidget {
 }
 
 class _ResearcherHomePageState extends State<ResearcherHomePage> {
-  static final _privacyPolicyCheckSynchronizer =
-      SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
   FieldLabel? selectedField;
   String? selectedEntry;
   List<WordInstance> wordInstances = [];
@@ -35,39 +30,6 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     super.initState();
     _fetchWordTrackers();
   }
-
-  // _ResearcherHomePageState() : super() {
-  //   debugPrint("ResearcherHomePage: Initializing HomePage");
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     final userModelService = context.read<UserModelService>();
-  //     userModelService.addListener(_consentListener);
-  //     _consentListener(); // Initial check on creation
-  //     debugPrint("ResearcherHomePage: Listener added to UserModelService");
-  //     debugPrint("ResearcherHomePage: HomePage initialized");
-  //   });
-  // }
-
-  // @override
-  // void dispose() {
-  //   debugPrint("ResearcherHomePage: Disposing HomePage");
-  //   final userModelService = context.read<UserModelService>();
-  //   userModelService.removeListener(_consentListener);
-  //   super.dispose();
-  // }
-
-  // void _consentListener() {
-  //   if (mounted) {
-  //     debugPrint("ResearcherHomePage: UserModelService listener triggered");
-  //   } else {
-  //     debugPrint(
-  //         "ResearcherHomePage: UserModelService listener triggered but context is not mounted");
-  //     return;
-  //   }
-  //   _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
-  //     debugPrint(
-  //         "ResearcherHomePage: Error checking privacy policy in callback: $e\n${e.stackTrace}");
-  //   });
-  // }
 
   void _fetchWordTrackers() async {
     setState(() => _isLoading = true);
