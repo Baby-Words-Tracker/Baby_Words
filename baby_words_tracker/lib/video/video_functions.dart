@@ -63,6 +63,9 @@ Future<String> selectFile(TextEditingController fileTextController) async {
   return "Please select a 'mp4' file.";
 }
 
+// TODO: make this funciton return true or false depending on whether the file was uploaded successfully.
+//  We should also consider throwing errors or logging for failures.
+// TODO: consider compressing the video before uploading it to save space and bandwidth.
 Future<void> uploadVideo(String filePath) async {
   try {
     debugPrint("File for signed url: $filePath");

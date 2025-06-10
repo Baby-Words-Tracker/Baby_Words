@@ -4,7 +4,7 @@ import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/util/check_and_update_words.dart';
+import 'package:baby_words_tracker/util/check_and_update_word.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +30,25 @@ class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController _controller = TextEditingController();
   final TextEditingController fileTextController = TextEditingController();
   List<String> parsedWords = [];
+
+  late final _childDataService;
+  late final _wordDataService;
+  late final _wordTrackerDataService;
+
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+
+    if (!_initialized) {
+      _childDataService = Provider.of<ChildDataService>(context, listen: false);
+      _wordDataService = Provider.of<WordDataService>(context, listen: false);
+      _wordTrackerDataService =
+          Provider.of<WordTrackerDataService>(context, listen: false);
+    }
+  }
 
   void _parseWords() {
     String text = _controller.text;
@@ -106,10 +125,6 @@ class _AddTextPageState extends State<AddTextPage> {
                   Center(
                       child: OutlinedButton(
                     onPressed: () async {
-                      final childDataService = context.read<ChildDataService>();
-                      final wordDataService = context.read<WordDataService>();
-                      final wordTrackerDataService =
-                          context.read<WordTrackerDataService>();
                       Child? currChild =
                           context.read<CurrentChildrenService>().getCurrChild();
                       String? currChildID;
@@ -131,8 +146,8 @@ class _AddTextPageState extends State<AddTextPage> {
 
                       for (var word in parsedWords) {
                         totalWords++;
-                        bool? result = await checkAndUpdateWords(
-                            word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //languages != null ? await checkAndUpdateWords(word, languages: languages) : await checkAndUpdateWords(word); //only checks the childs selected languages
+                        bool? result = await checkAndUpdateWord(word,
+                            _wordDataService); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //only checks the childs selected languages
                         if (result != null && result && currChildID != null) {
                           late String? filePath;
                           if (fileTextController.text != "") {
@@ -141,8 +156,8 @@ class _AddTextPageState extends State<AddTextPage> {
                           } else {
                             filePath = null;
                           }
-                          addWordToChild(word, childDataService,
-                              wordDataService, wordTrackerDataService,
+                          addWordToChild(word, _childDataService,
+                              _wordDataService, _wordTrackerDataService,
                               id: currChildID, videoId: filePath);
                           correctWords++;
                           /* addVideoToWord(

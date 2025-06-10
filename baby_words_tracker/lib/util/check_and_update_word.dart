@@ -1,6 +1,5 @@
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
@@ -8,15 +7,18 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 //basic spellcheck that checks if a word exists in our word bank or in the englsh dictionary
-Future<bool?> checkAndUpdateWords(String word,
-    {List<LanguageCode> languages = const [
-      LanguageCode.en,
-      LanguageCode.es
-    ]}) async {
-  final word_service = WordDataService();
-  Word? wordTest = await word_service.getWord(word);
-  if (wordTest != null /* && wordTest.languageCodes == languages */)
+Future<bool?> checkAndUpdateWord(
+  String word,
+  WordDataService wordDataService, {
+  List<LanguageCode> languages = const [
+    LanguageCode.en,
+    LanguageCode.es,
+  ],
+}) async {
+  Word? wordTest = await wordDataService.getWord(word);
+  if (wordTest != null /* && wordTest.languageCodes == languages */) {
     return true; //word is the exact same word as requested
+  }
 
   String url =
       "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json"; //get wikidata pages associated with word (will return pages from all languages that have that word)
@@ -56,8 +58,8 @@ Future<bool?> checkAndUpdateWords(String word,
 
         final LanguageCode matchLang = LanguageCode.values.firstWhere(
           (lang) => lang.name == match['language'],
-          orElse: () => throw ArgumentError('Invalid language:' +
-              match['language']), //error should never be reached
+          orElse: () => throw ArgumentError(
+              'Invalid language: ${match['language']}'), //error should never be reached
         );
 
         final String id = item['id'];
@@ -81,7 +83,7 @@ Future<bool?> checkAndUpdateWords(String word,
           final Map<String, dynamic> code = entity[id];
           final List<dynamic> senses = code['senses'];
           final Map<String, dynamic> glosses =
-              senses.length != 0 ? senses[0]['glosses'] : {};
+              senses.isNotEmpty ? senses[0]['glosses'] : {};
           final String? definition = glosses['en']?['value'];
 
           debugPrint("Current definition: $definition");
@@ -98,7 +100,7 @@ Future<bool?> checkAndUpdateWords(String word,
     if (usedLanguage.isNotEmpty) {
       debugPrint(
           "Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
-      final Word? newWord = await word_service.createWord(
+      final Word? newWord = await wordDataService.createWord(
           word, usedLanguage.toList(), partsOfSpeech, wordDefs);
       if (newWord == null) return null;
 
