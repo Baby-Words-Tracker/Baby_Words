@@ -1,4 +1,3 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';

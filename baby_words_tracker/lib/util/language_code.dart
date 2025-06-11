@@ -1,50 +1,53 @@
 // See Wikipedia for a list of language codes: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+// See this project for mappings as well: https://github.com/inventaire/wikidata-lang
+
+// TODO: support all fo the language codes: aa, aae, ab, abs, ace, acf, acm, ady, ady-cyrl, aeb, aeb-arab, aeb-latn, af, agq, ak, aln, als, alt, am, ami, an, ang, ann, anp, apc, ar, arc, arn, arq, ary, arz, as, ase, ast, atj, av, avk, awa, ay, az, azb, ba, bag, ban, ban-bali, bar, bas, bat-smg, bax, bbc, bbc-latn, bbj, bcc, bci, bcl, bdr, be, be-tarask, be-x-old, bew, bfd, bfw, bg, bgc, bgn, bh, bho, bi, bjn, bkc, bkh, bkm, blk, bm, bn, bo, bpy, bqi, bqz, br, brh, bs, btm, bto, bug, bug-bugi, bxr, byv, ca, cak, cal, cbk-zam, ccp, cdo, cdo-hant, cdo-latn, ce, ceb, ch, chn, cho, chr, chy, ckb, cnh, co, cop, cps, cpx, cpx-hans, cpx-hant, cpx-latn, cr, crh, crh-cyrl, crh-latn, crh-ro, cs, csb, cu, cv, cy, da, dag, de, de-at, de-ch, de-formal, dga, din, diq, dsb, dso, dtp, dty, dua, dv, dz, ee, efi, egl, el, eml, en, en-ca, en-gb, en-us, eo, es, es-419, es-formal, et, eto, etu, eu, ewo, ext, fa, fat, ff, fi, fit, fiu-vro, fj, fkv, fmp, fo, fon, fr, frc, frp, frr, fur, fvr, fy, ga, gaa, gag, gan, gan-hans, gan-hant, gcf, gcr, gd, gju-arab, gju-deva, gl, gld, glk, gn, gom, gom-deva, gom-latn, gor, got, gpe, grc, gsw, gu, guc, gur, guw, gv, gya, ha, hak, hak-hans, hak-hant, hak-latn, haw, he, hi, hif, hif-latn, hil, hke, hno, ho, hoc, hoc-latn, hr, hrx, hsb, hsn, ht, hu, hu-formal, hy, hyw, hz, ia, iba, ibb, id, ie, ig, igl, ii, ik, ike-cans, ike-latn, ilo, inh, io, is, isu, isv-cyrl, isv-latn, it, iu, ja, jam, jbo, jut, jv, ka, kaa, kab, kai, kbd, kbd-cyrl, kbp, kcg, kea, ker, kg, kge, kgg, khw, ki, kiu, kj, kjh, kjp, kk, kk-arab, kk-cn, kk-cyrl, kk-kz, kk-latn, kk-tr, kl, km, kn, knc, ko, ko-kp, koi, kr, krc, kri, krj, krl, ks, ks-arab, ks-deva, ksf, ksh, ksw, ku, ku-arab, ku-latn, kum, kus, kv, kw, ky, la, lad, lb, lbe, lem, lez, lfn, lg, li, lij, liv, ljp, lki, lld, lmo, ln, lns, lo, loz, lrc, lt, ltg, lua, lus, luz, lv, lzh, lzz, mad, mag, mai, map-bms, mcn, mcp, mdf, mg, mh, mhr, mi, min, mk, ml, mn, mnc, mnc-latn, mnc-mong, mni, mnw, mo, mos, mr, mrh, mrj, ms, ms-arab, mt, mua, mui, mul, mus, mwl, my, myv, mzn, na, nah, nan, nan-hani, nan-hant, nan-latn-pehoeji, nan-latn-tailo, nap, nb, nds, nds-nl, ne, new, ng, nge, nia, nit, niu, nl, nl-informal, nla, nmg, nmz, nn, nnh, nnz, no, nod, nog, nov, nqo, nr, nrm, nso, nup, nv, ny, nyn, nyo, nys, oc, ojb, olo, om, or, os, osa-latn, ota, pa, pag, pam, pap, pap-aw, pcd, pcm, pdc, pdt, pfl, pi, pih, pl, pms, pnb, pnt, prg, ps, pt, pt-br, pwn, qu, quc, qug, rgn, rif, rki, rm, rmc, rmf, rmy, rn, ro, roa-rup, roa-tara, rsk, ru, rue, rup, ruq, ruq-cyrl, ruq-latn, rut, rw, rwr, ryu, sa, sah, sat, sc, scn, sco, sd, sdc, sdh, se, se-fi, se-no, se-se, sei, ses, sg, sgs, sh, sh-cyrl, sh-latn, shi, shi-latn, shi-tfng, shn, shy, shy-latn, si, simple, sjd, sje, sju, sk, skr, skr-arab, sl, sli, sm, sma, smj, smn, sms, sn, so, sq, sr, sr-ec, sr-el, srn, sro, srq, ss, st, stq, sty, su, sv, sw, syl, szl, szy, ta, tay, tcy, tdd, te, tet, tg, tg-cyrl, tg-latn, th, thq, ti, tig, tk, tl, tly, tly-cyrl, tn, to, tok, tpi, tpv, tr, tru, trv, ts, tt, tt-cyrl, tt-latn, ttj, tum, tvu, tw, ty, tyv, tzm, udm, ug, ug-arab, ug-latn, uk, ur, uz, uz-cyrl, uz-latn, ve, vec, vep, vi, vls, vmf, vmw, vo, vot, vro, vut, wa, wal, war, wes, wls, wlx, wo, wuu, wuu-hans, wuu-hant, wya, xal, xh, xmf, xsy, yas, yat, yav, ybb, yi, yo, yrl, yue, yue-hans, yue-hant, za, zea, zgh, zgh-latn, zh, zh-classical, zh-cn, zh-hans, zh-hant, zh-hk, zh-min-nan, zh-mo, zh-my, zh-sg, zh-tw, zh-yue, zu
 
 enum LanguageCode {
-  en,  // English
-  es,  // Spanish
-  fr,  // French
-  de,  // German
-  it,  // Italian
-  zh,  // Chinese
-  ja,  // Japanese
-  ko,  // Korean
-  ar,  // Arabic
-  ru,  // Russian
+  en, // English
+  es, // Spanish
+  fr, // French
+  de, // German
+  it, // Italian
+  zh, // Chinese
+  ja, // Japanese
+  ko, // Korean
+  ar, // Arabic
+  ru, // Russian
+  unknown, // Unknown or not specified
   // Add more as needed
 }
 
-
 extension LanguageCodeExtension on LanguageCode {
-  String get displayName {
-    switch (this) {
-      case LanguageCode.en:
-        return "English";
-      case LanguageCode.es:
-        return "Spanish";
-      case LanguageCode.fr:
-        return "French";
-      case LanguageCode.de:
-        return "German";
-      case LanguageCode.it:
-        return "Italian";
-      case LanguageCode.zh:
-        return "Chinese";
-      case LanguageCode.ja:
-        return "Japanese";
-      case LanguageCode.ko:
-        return "Korean";
-      case LanguageCode.ar:
-        return "Arabic";
-      case LanguageCode.ru:
-        return "Russian";
-      // ignore: unreachable_switch_default
-      default:
-        return "Unknown";
+  static final Map<String, LanguageCode> _codeMap = (() {
+    final map = <String, LanguageCode>{};
+    for (var code in LanguageCode.values) {
+      map[code.name] = code;
     }
+    // can add custom mappings here if needed
+    return map;
+  })();
+
+  static final Map<LanguageCode, String> _displayNames = {
+    LanguageCode.en: "English",
+    LanguageCode.es: "Spanish",
+    LanguageCode.fr: "French",
+    LanguageCode.de: "German",
+    LanguageCode.it: "Italian",
+    LanguageCode.zh: "Chinese",
+    LanguageCode.ja: "Japanese",
+    LanguageCode.ko: "Korean",
+    LanguageCode.ar: "Arabic",
+    LanguageCode.ru: "Russian",
+    LanguageCode.unknown: "Unknown"
+  };
+
+  String get displayName {
+    return _displayNames[this] ?? "Unknown";
   }
-  String get displayCode {
-    switch(this) {
+
+  String get dartLocaleCode {
+    switch (this) {
       case LanguageCode.en:
         return "en";
       case LanguageCode.es:
@@ -58,13 +61,15 @@ extension LanguageCodeExtension on LanguageCode {
       case LanguageCode.zh:
         return "zh";
       case LanguageCode.ja:
-        return "js";
+        return "ja";
       case LanguageCode.ko:
         return "ko";
       case LanguageCode.ar:
         return "ar";
       case LanguageCode.ru:
         return "ru";
+      case LanguageCode.unknown:
+        return "unknown";
       // ignore: unreachable_switch_default
       default:
         return "Unknown";
@@ -72,7 +77,13 @@ extension LanguageCodeExtension on LanguageCode {
   }
 
   static LanguageCode fromString(String value) {
-    return LanguageCode.values.firstWhere((e) => e.toString().split('.').last == value);
+    if (value.isEmpty) {
+      return LanguageCode.unknown;
+    }
+    value = value
+        .trim()
+        .toLowerCase()
+        .replaceAll("-", "_"); // replace hyphens with underscores
+    return _codeMap[value] ?? LanguageCode.unknown;
   }
 }
-

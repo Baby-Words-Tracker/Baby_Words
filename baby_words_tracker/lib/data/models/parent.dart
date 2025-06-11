@@ -57,7 +57,7 @@ class Parent extends IUserModel {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       ...super.toMap(),
-      'language': language.displayCode,
+      'language': language.name,
       'childIDs': childIDs,
       'consentFormComplete': consentFormComplete,
       'demographicSurveyComplete': demographicSurveyComplete,
@@ -108,7 +108,7 @@ class Parent extends IUserModel {
     Map<String, dynamic> map = {};
 
     if (childIDs != null) map['childIDs'] = childIDs;
-    if (language != null) map['language'] = language.displayCode;
+    if (language != null) map['language'] = language.name;
     if (consentFormComplete != null) {
       map['consentFormComplete'] = consentFormComplete;
     }

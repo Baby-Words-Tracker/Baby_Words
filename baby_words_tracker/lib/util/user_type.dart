@@ -2,7 +2,7 @@
 enum UserType { parent, researcher, unauthenticated }
 
 extension UserTypeExtension on UserType {
-  String get name {
+  String get displayName {
     switch (this) {
       case UserType.parent:
         return 'Parent';

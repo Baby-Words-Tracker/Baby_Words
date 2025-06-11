@@ -47,7 +47,7 @@ class Child {
     return <String, dynamic>{
       'birthday': birthday,
       'name': name,
-      'language': language.map((i) => i.displayCode).toList(),
+      'language': language.map((i) => i.name).toList(),
       'wordCount': wordCount,
       'parentIDs': parentIDs as List<dynamic>,
     };

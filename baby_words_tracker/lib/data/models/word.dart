@@ -39,10 +39,13 @@ class Word {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'languageCodes': languageCodes.map((x) => x.name).toList(),
-      'partOfSpeech': partOfSpeech.map((key, value) =>
-          MapEntry(key.displayCode, value.name)), // partOfSpeech.name,
-      'definition':
-          definition.map((key, value) => MapEntry(key.displayCode, value)),
+      // ignore: non_constant_identifier_names
+      'partOfSpeech': partOfSpeech.map((languageCode_Key, partOfSpeech_Value) =>
+          MapEntry(languageCode_Key.name,
+              partOfSpeech_Value.name)), // partOfSpeech.name,
+      'definition': definition.map(
+          // ignore: non_constant_identifier_names
+          (languageCode_Key, value) => MapEntry(languageCode_Key.name, value)),
     };
   }
 

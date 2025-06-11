@@ -6,106 +6,176 @@ import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
+class WikiWordData {
+  final String word;
+  final Set<LanguageCode> languages;
+  final Map<LanguageCode, PartOfSpeech> partsOfSpeech;
+
+  WikiWordData(
+    this.word, {
+    Set<LanguageCode>? languages,
+    Map<LanguageCode, PartOfSpeech>? partsOfSpeech,
+  })  : languages = languages ?? <LanguageCode>{},
+        partsOfSpeech = partsOfSpeech ?? <LanguageCode, PartOfSpeech>{};
+}
+
+Future<http.Response> fetchWordData(
+  String word, {
+  int continueIndex = 0,
+  int resultsLimit = 7,
+}) async {
+  String url =
+      "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json&limit=$resultsLimit&origin=*&offset=$continueIndex";
+
+  debugPrint("word: $word");
+  debugPrint("url parsed word: ${Uri.encodeComponent(word)}");
+  debugPrint("url: $url");
+  debugPrint("url encoded: ${Uri.parse(url)}");
+
+  try {
+    final response = await http.get(
+      Uri.parse(url),
+      // TODO: we must include an informative User-Agent header that includes contact information
+      //  Wikimedia suggests this format: <client name>/<version> (<contact information>) <library/framework name>/<version> [<library name>/<version> ...]
+      //  must include bot in the string if we run an automated agent
+      //  see https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy
+      headers: {'User-Agent': 'WordBuds/0.1 Dart/Flutter'},
+    );
+    return response;
+  } catch (e) {
+    debugPrint("fetchWordData: ERROR fetching data: $e");
+    rethrow;
+  }
+}
+
+WikiWordData? fromSearchList(
+  String word,
+  List<dynamic> searchList, {
+  Set<LanguageCode> languages = const {
+    LanguageCode.en,
+    LanguageCode.es,
+  },
+}) {
+  final WikiWordData wordData = WikiWordData(word);
+
+  for (Map<String, dynamic> item in searchList) {
+    final String? label = item['label'];
+    if (label == null ||
+        label.toLowerCase().trim() != word.toLowerCase().trim()) {
+      continue;
+    }
+
+    final String? languageCodeName = item['match']['language'];
+    if (languageCodeName == null) continue;
+
+    final languageCodeEnum = LanguageCodeExtension.fromString(languageCodeName);
+    if (!languages.contains(languageCodeEnum)) {
+      debugPrint(
+          "fromSearchList(): unrecognized language $languageCodeName (were looking for ${languages.map((lang) => lang.name).join(', ')})");
+      continue; // skip this item if the language code is not valid
+    }
+
+    wordData.languages.add(languageCodeEnum);
+
+    List<String> desc = item['description'].split(", ");
+    debugPrint("Description: $desc");
+
+    final String pOSString = desc.isNotEmpty ? desc[1] : "";
+    debugPrint("Part of speech string: $pOSString");
+
+    final PartOfSpeech partOfSpeech =
+        PartofspeechExtension.fromString(pOSString);
+    debugPrint("Matched part of speech: $partOfSpeech");
+    if (partOfSpeech == PartOfSpeech.unknown) {
+      debugPrint("fromSearchList(): unrecognized part of speech $pOSString");
+    }
+
+    wordData.partsOfSpeech[languageCodeEnum] = partOfSpeech;
+  }
+
+  if (wordData.partsOfSpeech.isEmpty) {
+    debugPrint("fromSearchList(): no parts of speech found for $word");
+    return null; // no parts of speech found
+  }
+
+  return wordData;
+}
+
+Future<String?> getWordDefinition(
+  String wikiWordId,
+) async {
+  final idUrl =
+      "https://www.wikidata.org/wiki/Special:EntityData/$wikiWordId.json";
+  final http.Response idResponse = await http.get(Uri.parse(idUrl));
+
+  if (idResponse.statusCode == 200) {
+    final Map<String, dynamic> body = jsonDecode(idResponse.body);
+    final Map<String, dynamic> entity = body['entities'];
+    final Map<String, dynamic> code = entity[wikiWordId];
+    final List<dynamic> senses = code['senses'];
+    final Map<String, dynamic> glosses =
+        senses.isNotEmpty ? senses[0]['glosses'] : {};
+    final String? definition = glosses['en']?['value'];
+
+    debugPrint("Current definition: $definition");
+
+    //if (definition == null) return null;
+    return definition;
+  }
+  return null;
+}
+
 //basic spellcheck that checks if a word exists in our word bank or in the englsh dictionary
 Future<bool?> checkAndUpdateWord(
   String word,
   WordDataService wordDataService, {
-  List<LanguageCode> languages = const [
+  Set<LanguageCode> languages = const {
     LanguageCode.en,
     LanguageCode.es,
-  ],
+  },
 }) async {
   Word? wordTest = await wordDataService.getWord(word);
   if (wordTest != null /* && wordTest.languageCodes == languages */) {
-    return true; //word is the exact same word as requested
+    return true; //word exists already in our word bank
   }
 
-  String url =
-      "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json"; //get wikidata pages associated with word (will return pages from all languages that have that word)
+  final http.Response response = await fetchWordData(word);
 
-  late http.Response response;
-  try {
-    response = await http.get(
-      Uri.parse(url),
-      headers: {'User-Agent': 'Dart/Flutter'},
-    );
-  } catch (e) {
-    debugPrint("Error fetching data: $e");
-    return false;
-  }
+  debugPrint("Response status code: ${response.statusCode}");
+  debugPrint("Response body: ${response.body}");
 
+  // can check search-continue parameter to see if there are more results
   if (response.statusCode == 200) {
-    Map<LanguageCode, String?> wordDefs = {};
-    Map<LanguageCode, PartOfSpeech> partsOfSpeech = {};
-    Set<LanguageCode> usedLanguage = {};
-
     final Map<String, dynamic> responseBody =
         jsonDecode(response.body); // get body
     final List<dynamic> searchList = responseBody['search'];
 
-    if (searchList == []) {
+    if (searchList.isEmpty) {
       debugPrint("did not find any search results");
       return false;
     }
 
-    for (Map<String, dynamic> item in searchList) {
-      final Map<String, dynamic> match = item['match'];
-      final List<String> stringLang =
-          languages.map((lang) => lang.displayCode).toList();
+    final wordData = fromSearchList(
+      word,
+      searchList,
+      languages: languages,
+    );
 
-      if (stringLang.contains(match['language'])) {
-        stringLang.removeWhere((item) => item == match['langauge']);
-
-        final LanguageCode matchLang = LanguageCode.values.firstWhere(
-          (lang) => lang.name == match['language'],
-          orElse: () => throw ArgumentError(
-              'Invalid language: ${match['language']}'), //error should never be reached
-        );
-
-        final String id = item['id'];
-        debugPrint("Current word id: $id");
-        List<String> desc = item['description'].split(", ");
-        final String pOSString = desc.isNotEmpty ? desc[1] : "";
-        debugPrint("Part of Speech: $desc");
-        final PartOfSpeech partOfSpeech = PartOfSpeech.values.firstWhere(
-          (e) => e.displayName.toLowerCase() == pOSString.toLowerCase(),
-          orElse: () => PartOfSpeech.unknown,
-        ); //desc.length == 2 ? PartOfSpeech.values.byName(item['description'].split(' ')[1] as String) : PartOfSpeech.unknown;
-        partsOfSpeech[matchLang] = partOfSpeech;
-
-        final idUrl =
-            "https://www.wikidata.org/wiki/Special:EntityData/$id.json";
-        final http.Response idResponse = await http.get(Uri.parse(idUrl));
-
-        if (idResponse.statusCode == 200) {
-          final Map<String, dynamic> body = jsonDecode(idResponse.body);
-          final Map<String, dynamic> entity = body['entities'];
-          final Map<String, dynamic> code = entity[id];
-          final List<dynamic> senses = code['senses'];
-          final Map<String, dynamic> glosses =
-              senses.isNotEmpty ? senses[0]['glosses'] : {};
-          final String? definition = glosses['en']?['value'];
-
-          debugPrint("Current definition: $definition");
-
-          //if (definition == null) return null;
-          wordDefs[matchLang] = definition;
-
-          usedLanguage.add(matchLang);
-        }
-      }
-    }
-    debugPrint("$usedLanguage");
-    debugPrint("was unable to match language code: $languages");
-    if (usedLanguage.isNotEmpty) {
+    if (wordData != null) {
       debugPrint(
-          "Creating New Word: $word, $usedLanguage, $partsOfSpeech, $wordDefs");
+          "Creating New Word from search list: ${wordData.word}, ${wordData.languages}, ${wordData.partsOfSpeech}");
       final Word? newWord = await wordDataService.createWord(
-          word, usedLanguage.toList(), partsOfSpeech, wordDefs);
+          word,
+          wordData.languages.toList(),
+          wordData.partsOfSpeech,
+          {for (var lang in wordData.languages) lang: null});
+
       if (newWord == null) return null;
 
       return true;
     }
+
+    debugPrint("Could not find word $word with language code: $languages");
     return false;
   } else {
     final int status = response.statusCode;

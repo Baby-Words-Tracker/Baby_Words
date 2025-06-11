@@ -62,7 +62,7 @@ class UserModelService extends ChangeNotifier {
       else if (_userType == UserType.unauthenticated ||
           _getCurrentUserModelId() != _authenticationService.userId) {
         debugPrint(
-            "UserModelService: $localI: ${_userType.name} user authenticated, but not synchronized");
+            "UserModelService: $localI: ${_userType.displayName} user authenticated, but not synchronized");
 
         await _updateUserTypeAndListener(_authenticationService.userId!);
 

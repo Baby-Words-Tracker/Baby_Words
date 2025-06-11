@@ -10,8 +10,16 @@ enum PartOfSpeech {
   unknown,
 }
 
-
 extension PartofspeechExtension on PartOfSpeech {
+  static final Map<String, PartOfSpeech> _partOfSpeechMap = (() {
+    final map = <String, PartOfSpeech>{};
+    for (var code in PartOfSpeech.values) {
+      map[code.name] = code;
+    }
+    // can add custom mappings here if needed
+    return map;
+  })();
+
   String get displayName {
     switch (this) {
       case PartOfSpeech.noun:
@@ -33,5 +41,13 @@ extension PartofspeechExtension on PartOfSpeech {
       default:
         return "Unknown";
     }
+  }
+
+  static PartOfSpeech fromString(String value) {
+    if (value.isEmpty) {
+      return PartOfSpeech.unknown;
+    }
+    value = value.toLowerCase().trim();
+    return _partOfSpeechMap[value] ?? PartOfSpeech.unknown;
   }
 }
