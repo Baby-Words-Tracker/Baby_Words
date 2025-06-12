@@ -146,8 +146,12 @@ class _AddTextPageState extends State<AddTextPage> {
 
                       for (var word in parsedWords) {
                         totalWords++;
-                        bool? result = await checkAndUpdateWord(word,
-                            _wordDataService); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //only checks the childs selected languages
+                        bool? result = await checkAndUpdateWord(
+                          word,
+                          _wordDataService,
+                          targetLanguage:
+                              localizationService.localization.languageCode,
+                        ); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //only checks the childs selected languages
                         if (result != null && result && currChildID != null) {
                           late String? filePath;
                           if (fileTextController.text != "") {

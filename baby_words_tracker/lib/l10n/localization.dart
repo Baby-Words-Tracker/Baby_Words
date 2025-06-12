@@ -3,14 +3,14 @@ import 'package:baby_words_tracker/l10n/all_localizations.dart';
 import 'package:flutter/material.dart';
 
 class Localization {
-  LanguageCode localeCode;
+  LanguageCode languageCode;
   Locale locale;
   //late Map<String, String> _localizedStrings;
 
-  Localization(this.localeCode, this.locale);
+  Localization(this.languageCode, this.locale);
 
   Future<void> setLocale(LanguageCode code) async {
-    localeCode = code;
+    languageCode = code;
     locale = Locale(code.dartLocaleCode);
   }
 
@@ -22,7 +22,8 @@ class Localization {
   } */
 
   String translate(String key) {
-    return AllLocalizations.localizedStrings[localeCode.dartLocaleCode]![key] ??
+    return AllLocalizations
+            .localizedStrings[languageCode.dartLocaleCode]![key] ??
         key;
   }
 }

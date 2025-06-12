@@ -334,8 +334,12 @@ class _HomePageState extends State<HomePage> {
                         for (var word in parsedWords) {
                           totalWords++;
                           //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //only checks the childs selected languages
-                          bool? result =
-                              await checkAndUpdateWord(word, _wordDataService);
+                          bool? result = await checkAndUpdateWord(
+                            word,
+                            _wordDataService,
+                            targetLanguage:
+                                localizationService.localization.languageCode,
+                          );
                           if (result == true && currChildID != null) {
                             if (!videoUploaded) {
                               if (fileTextController.text != "") {
@@ -401,9 +405,9 @@ class _HomePageState extends State<HomePage> {
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: Text(
-                                    '$correctWords ${localizationService.translate("success").toLowerCase()}'),
-                                content: Text(localizationService
-                                    .translate("word_success")),
+                                    localizationService.translate("success")),
+                                content: Text(
+                                    '$correctWords ${localizationService.translate("word_success").toLowerCase()}'),
                                 actions: <Widget>[
                                   TextButton(
                                     child: const Text('OK'),

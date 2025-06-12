@@ -39,7 +39,7 @@ Future<http.Response> fetchWordData(
       //  Wikimedia suggests this format: <client name>/<version> (<contact information>) <library/framework name>/<version> [<library name>/<version> ...]
       //  must include bot in the string if we run an automated agent
       //  see https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy
-      headers: {'User-Agent': 'WordBuds/0.1 Dart/Flutter'},
+      headers: {'User-Agent': 'WordBuds/0.1 lecslab@ua.edu Dart/Flutter'},
     );
     return response;
   } catch (e) {
@@ -51,12 +51,20 @@ Future<http.Response> fetchWordData(
 WikiWordData? fromSearchList(
   String word,
   List<dynamic> searchList, {
-  Set<LanguageCode> languages = const {
+  Set<LanguageCode> languagesToRetrieve = const {
     LanguageCode.en,
     LanguageCode.es,
   },
+  WikiWordData? existingWordData,
 }) {
-  final WikiWordData wordData = WikiWordData(word);
+  // TODO: remove this in production and add a log message
+  if (existingWordData != null) {
+    assert(
+      existingWordData.word == word,
+      "Existing word data must match the provided word",
+    );
+  }
+  final WikiWordData wordData = existingWordData ?? WikiWordData(word);
 
   for (Map<String, dynamic> item in searchList) {
     final String? label = item['label'];
@@ -69,9 +77,9 @@ WikiWordData? fromSearchList(
     if (languageCodeName == null) continue;
 
     final languageCodeEnum = LanguageCodeExtension.fromString(languageCodeName);
-    if (!languages.contains(languageCodeEnum)) {
+    if (!languagesToRetrieve.contains(languageCodeEnum)) {
       debugPrint(
-          "fromSearchList(): unrecognized language $languageCodeName (were looking for ${languages.map((lang) => lang.name).join(', ')})");
+          "fromSearchList(): unrecognized language $languageCodeName (were looking for ${languagesToRetrieve.map((lang) => lang.name).join(', ')})");
       continue; // skip this item if the language code is not valid
     }
 
@@ -129,58 +137,83 @@ Future<String?> getWordDefinition(
 Future<bool?> checkAndUpdateWord(
   String word,
   WordDataService wordDataService, {
-  Set<LanguageCode> languages = const {
+  LanguageCode targetLanguage = LanguageCode.en,
+  Set<LanguageCode> languagesToRetrieve = const {
     LanguageCode.en,
     LanguageCode.es,
   },
 }) async {
   Word? wordTest = await wordDataService.getWord(word);
-  if (wordTest != null /* && wordTest.languageCodes == languages */) {
+  // check that the word exists for the target language
+  if (wordTest != null && wordTest.languageCodes.contains(targetLanguage)) {
+    debugPrint(
+        "Word $word already exists in the word bank for language: $targetLanguage");
     return true; //word exists already in our word bank
   }
 
-  final http.Response response = await fetchWordData(word);
-
-  debugPrint("Response status code: ${response.statusCode}");
-  debugPrint("Response body: ${response.body}");
+  WikiWordData? wordData;
+  int? continueIndex = 0;
 
   // can check search-continue parameter to see if there are more results
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> responseBody =
-        jsonDecode(response.body); // get body
-    final List<dynamic> searchList = responseBody['search'];
-
-    if (searchList.isEmpty) {
-      debugPrint("did not find any search results");
-      return false;
-    }
-
-    final wordData = fromSearchList(
+  while ((wordData == null || !wordData.languages.contains(targetLanguage)) &&
+      continueIndex != null) {
+    final http.Response response = await fetchWordData(
       word,
-      searchList,
-      languages: languages,
+      continueIndex: continueIndex,
+      resultsLimit: 3, // limit to 7 results per request
     );
 
-    if (wordData != null) {
-      debugPrint(
-          "Creating New Word from search list: ${wordData.word}, ${wordData.languages}, ${wordData.partsOfSpeech}");
-      final Word? newWord = await wordDataService.createWord(
-          word,
-          wordData.languages.toList(),
-          wordData.partsOfSpeech,
-          {for (var lang in wordData.languages) lang: null});
+    debugPrint("Response status code: ${response.statusCode}");
+    debugPrint(
+        "Response continue index: ${response.headers['search-continue']}");
+    debugPrint("Response body: ${response.body}");
 
-      if (newWord == null) return null;
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseBody =
+          jsonDecode(response.body); // get body
+      final List<dynamic> searchList = responseBody['search'];
 
-      return true;
+      if (searchList.isEmpty) {
+        debugPrint("did not find any search results");
+        return false;
+      }
+
+      wordData = fromSearchList(
+        word,
+        searchList,
+        languagesToRetrieve: languagesToRetrieve,
+      );
+      continueIndex = responseBody['search-continue'];
+    } else {
+      final int status = response.statusCode;
+      debugPrint("did not get a response: $status");
+
+      return false; // no response or error
     }
-
-    debugPrint("Could not find word $word with language code: $languages");
-    return false;
-  } else {
-    final int status = response.statusCode;
-    debugPrint("did not get a response: $status");
   }
 
+  if (wordData != null) {
+    debugPrint(
+        "Creating New Word from search list: ${wordData.word}, ${wordData.languages}, ${wordData.partsOfSpeech}");
+    final Word? newWord = await wordDataService.createWord(
+        word,
+        wordData.languages.toList(),
+        wordData.partsOfSpeech,
+        {for (var lang in wordData.languages) lang: null});
+
+    if (newWord == null) return null;
+
+    if (wordData.languages.contains(targetLanguage)) {
+      debugPrint("Found word $word with language code: $targetLanguage");
+      return true; // found the word in the target language
+    } else {
+      debugPrint(
+          "Found word $word, in languages ${wordData.languages}; but not in language code: $targetLanguage");
+      return false; // found the word, but not in the target language
+    }
+  }
+
+  debugPrint(
+      "Could not find word $word with any of the languages $languagesToRetrieve");
   return false;
 }

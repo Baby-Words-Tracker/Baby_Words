@@ -4,6 +4,7 @@ enum PartOfSpeech {
   adjective,
   adverb,
   pronoun,
+  personal_pronoun,
   preposition,
   conjunction,
   article,
@@ -16,6 +17,7 @@ extension PartofspeechExtension on PartOfSpeech {
     for (var code in PartOfSpeech.values) {
       map[code.name] = code;
     }
+    map['personal pronoun'] = PartOfSpeech.personal_pronoun;
     // can add custom mappings here if needed
     return map;
   })();
