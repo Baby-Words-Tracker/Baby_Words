@@ -204,8 +204,7 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
         Word(
             word: "Invalid Word",
             languageCodes: List<LanguageCode>.empty(),
-            partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},
-            definition: {LanguageCode.en: null});
+            partOfSpeech: {LanguageCode.en: PartOfSpeech.noun});
 
     List<LanguageCode> languages = [
       LanguageCode.en,
