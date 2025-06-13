@@ -13,26 +13,26 @@ class Word {
   final String word;
   final List<LanguageCode> languageCodes;
   final Map<LanguageCode, PartOfSpeech> partOfSpeech;
-  final Map<LanguageCode, String?> definition;
+  final bool needsProcessing;
 
   Word({
     required this.word,
     required this.languageCodes,
     required this.partOfSpeech,
-    required this.definition,
+    this.needsProcessing = false,
   });
 
   Word copyWith({
     String? word,
     List<LanguageCode>? languageCodes,
     Map<LanguageCode, PartOfSpeech>? partOfSpeech,
-    Map<LanguageCode, String?>? definition,
+    bool? needsProcessing,
   }) {
     return Word(
       word: word ?? this.word,
       languageCodes: languageCodes ?? this.languageCodes,
       partOfSpeech: partOfSpeech ?? this.partOfSpeech,
-      definition: definition ?? this.definition,
+      needsProcessing: needsProcessing ?? this.needsProcessing,
     );
   }
 
@@ -43,15 +43,13 @@ class Word {
       'partOfSpeech': partOfSpeech.map((languageCode_Key, partOfSpeech_Value) =>
           MapEntry(languageCode_Key.name,
               partOfSpeech_Value.name)), // partOfSpeech.name,
-      'definition': definition.map(
-          // ignore: non_constant_identifier_names
-          (languageCode_Key, value) => MapEntry(languageCode_Key.name, value)),
+      'needsProcessing': needsProcessing,
     };
   }
 
-  factory Word.fromMap(Map<String, dynamic> map, String id) {
+  factory Word.fromMap(Map<String, dynamic> map) {
     return Word(
-      word: id,
+      word: map['id'] as String,
       languageCodes: (map['languageCodes'] as List<dynamic>?)
               ?.whereType<String>()
               .map((i) => LanguageCode.values.byName(i))
@@ -59,29 +57,47 @@ class Word {
           [],
       partOfSpeech: (map['partOfSpeech'] as Map<String, dynamic>)
           .map((key, value) => MapEntry(
-                LanguageCode.values.firstWhere((e) => e.name == key),
-                PartOfSpeech.values.byName(value),
+                LanguageCodeExtension.fromString(key),
+                PartofspeechExtension.fromString(value),
               )),
-      definition: (map['definition'] as Map<String, dynamic>)
-          .map((key, value) => MapEntry(
-                LanguageCode.values.firstWhere((e) => e.name == key),
-                value,
-              )),
+      needsProcessing: map['needsProcessing'] ?? false,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Word.fromJson(String source, String id) =>
-      Word.fromMap(json.decode(source) as Map<String, dynamic>, id);
+  factory Word.fromJson(String source) =>
+      Word.fromMap(json.decode(source) as Map<String, dynamic>);
 
   factory Word.fromDataWithId(DataWithId source) {
-    return Word.fromMap(source.data, source.id);
+    Map<String, dynamic> data = source.data;
+    data['id'] = source.id; // Use the id as the word
+    return Word.fromMap(source.data);
+  }
+
+  static Map<String, dynamic> createUpdateMap({
+    List<LanguageCode>? languageCodes,
+    Map<LanguageCode, PartOfSpeech>? partOfSpeech,
+    bool? needsProcessing,
+  }) {
+    // Create a map for updating a word
+    Map<String, dynamic> map = {};
+    if (languageCodes != null) {
+      map['languageCodes'] = languageCodes.map((x) => x.name).toList();
+    }
+    if (partOfSpeech != null) {
+      map['partOfSpeech'] =
+          partOfSpeech.map((k, v) => MapEntry(k.name, v.name));
+    }
+    if (needsProcessing != null) {
+      map['needsProcessing'] = needsProcessing;
+    }
+    return map;
   }
 
   @override
   String toString() {
-    return 'Word(word: $word, languageCodes: $languageCodes, partOfSpeech: $partOfSpeech, definition: $definition)';
+    return 'Word(word: $word, languageCodes: $languageCodes, partOfSpeech: $partOfSpeech, needsProcessing: $needsProcessing)';
   }
 
   @override
@@ -93,15 +109,15 @@ class Word {
 
     return other.word == word &&
         listEquals(other.languageCodes, languageCodes) &&
-        other.partOfSpeech == partOfSpeech &&
-        other.definition == definition;
+        listEquals(other.partOfSpeech, partOfSpeech) &&
+        other.needsProcessing == needsProcessing;
   }
 
   @override
   int get hashCode => Object.hashAll([
         word,
         const DeepCollectionEquality().hash(languageCodes),
-        partOfSpeech,
-        definition,
+        const DeepCollectionEquality().hash(partOfSpeech),
+        needsProcessing,
       ]);
 }

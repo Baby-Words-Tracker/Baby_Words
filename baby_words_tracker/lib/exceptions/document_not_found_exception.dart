@@ -1,4 +1,3 @@
-
 class DocumentNotFoundException implements Exception {
   final String message;
 

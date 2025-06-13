@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
+import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
@@ -24,12 +25,15 @@ Future<void> callAddChildToOtherParentCloudFunction(
         'Calling function addChildToOtherParent with childID $childID and otherParentEmail $otherParentEmail');
     final response = await function
         .call({'childUid': childID, 'targetEmail': otherParentEmail});
-        
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.read<LocalizationService>().translate(response.data['message']))));
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context
+            .read<LocalizationService>()
+            .translate(response.data['message']))));
   } catch (error) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.read<LocalizationService>().translate('Error: $error'))));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            context.read<LocalizationService>().translate('Error: $error'))));
   }
 }
 
@@ -59,40 +63,42 @@ Future<void> addCurrentChildToOtherParent(
     return;
   }
   showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Consumer<LocalizationService>(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<LocalizationService>(
           builder: (context, localizationService, child) {
-      return AlertDialog(
-        title: Text(localizationService.translate("Confirm Action")),
-        content: Text(
-            localizationService.translate("grant_permission") + otherParentEmail + localizationService.translate("access_child") + currChildName!),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false); // User pressed No
-            },
-            child: Text(localizationService.translate("No")),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true); // User pressed Yes
-            },
-            child: Text(localizationService.translate("Yes")),
-          ),
-        ],
-      );
-    },
-  );
-  }).then((confirmed) {
+            return AlertDialog(
+              title: Text(localizationService.translate("Confirm Action")),
+              content: Text(localizationService.translate("grant_permission") +
+                  otherParentEmail +
+                  localizationService.translate("access_child") +
+                  currChildName!),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // User pressed No
+                  },
+                  child: Text(localizationService.translate("No")),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // User pressed Yes
+                  },
+                  child: Text(localizationService.translate("Yes")),
+                ),
+              ],
+            );
+          },
+        );
+      }).then((confirmed) {
     if (confirmed != null && confirmed) {
       callAddChildToOtherParentCloudFunction(
           context, currChildID!, otherParentEmail);
     } else {
       return;
-    };
     }
-  );
+    ;
+  });
   return;
 }
 
@@ -260,8 +266,13 @@ Future<void> addWordToChild(String word, ChildDataService childService,
     return;
   }
   //FIXME: implement language, part of speech, defn, spellcheck
-  /*Word wordObject =*/ await wordService.createWord(word, [LanguageCode.en],
-      {LanguageCode.en: PartOfSpeech.noun}, {LanguageCode.en: "testWord"});
+  /*Word wordObject =*/ await wordService.createWord(
+    Word(
+      word: word,
+      languageCodes: [LanguageCode.en],
+      partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},
+    ),
+  );
   trackerService.createWordTracker(id, word, DateTime.now());
 }
 

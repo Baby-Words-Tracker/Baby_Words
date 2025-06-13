@@ -1,4 +1,4 @@
-import 'package:baby_words_tracker/data/exceptions/document_not_found_exception.dart';
+import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/listeners/firestore_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/util/pair.dart';

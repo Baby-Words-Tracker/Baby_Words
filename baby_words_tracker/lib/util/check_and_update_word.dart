@@ -1,5 +1,9 @@
+import 'package:baby_words_tracker/exceptions/document_creation_failed_exception.dart';
+import 'package:baby_words_tracker/exceptions/document_update_failed_exception.dart';
+import 'package:baby_words_tracker/exceptions/network_failure_exception.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
@@ -127,7 +131,6 @@ Future<String?> getWordDefinition(
 
     debugPrint("Current definition: $definition");
 
-    //if (definition == null) return null;
     return definition;
   }
   return null;
@@ -148,11 +151,17 @@ Future<bool?> checkAndUpdateWord(
   if (wordTest != null && wordTest.languageCodes.contains(targetLanguage)) {
     debugPrint(
         "Word $word already exists in the word bank for language: $targetLanguage");
-    return true; //word exists already in our word bank
+    if (!wordTest.needsProcessing) {
+      debugPrint("Word $word does not need processing.");
+      return true; // word exists already in our word bank
+    } else {
+      debugPrint("Word $word needs processing.");
+    }
   }
 
   WikiWordData? wordData;
   int? continueIndex = 0;
+  bool needsProcessing = false;
 
   // can check search-continue parameter to see if there are more results
   while ((wordData == null || !wordData.languages.contains(targetLanguage)) &&
@@ -160,7 +169,7 @@ Future<bool?> checkAndUpdateWord(
     final http.Response response = await fetchWordData(
       word,
       continueIndex: continueIndex,
-      resultsLimit: 3, // limit to 7 results per request
+      resultsLimit: 7, // limit to 7 results per request
     );
 
     debugPrint("Response status code: ${response.statusCode}");
@@ -175,33 +184,60 @@ Future<bool?> checkAndUpdateWord(
 
       if (searchList.isEmpty) {
         debugPrint("did not find any search results");
-        return false;
+        continueIndex = null; // no more results to check
+        continue;
       }
 
       wordData = fromSearchList(
         word,
         searchList,
         languagesToRetrieve: languagesToRetrieve,
+        existingWordData:
+            wordData, // TODO: We need to handle the case when a word can be multiple parts of speech
       );
       continueIndex = responseBody['search-continue'];
     } else {
       final int status = response.statusCode;
       debugPrint("did not get a response: $status");
-
-      return false; // no response or error
+      // throw an exception if the status code is not 200 and process the word as custom somewhere else
+      throw NetworkFailureException(status,
+          "Failed to fetch word data for $word. Please check your network connection or try again later.");
     }
   }
 
   if (wordData != null) {
     debugPrint(
         "Creating New Word from search list: ${wordData.word}, ${wordData.languages}, ${wordData.partsOfSpeech}");
-    final Word? newWord = await wordDataService.createWord(
-        word,
-        wordData.languages.toList(),
-        wordData.partsOfSpeech,
-        {for (var lang in wordData.languages) lang: null});
+    if (wordTest != null && wordTest.needsProcessing) {
+      final bool succcess = await wordDataService.updateWord(
+        wordData.word,
+        Word.createUpdateMap(
+          languageCodes: wordData.languages.toList(),
+          partOfSpeech: wordData.partsOfSpeech,
+          needsProcessing: false, // mark as processed
+        ),
+      );
 
-    if (newWord == null) return null;
+      if (!succcess) {
+        throw DocumentUpdateFailedException(
+          "Failed to update word: $word",
+        );
+      }
+    } else {
+      final Word? newWord = await wordDataService.createWord(
+        Word(
+          word: word,
+          languageCodes: wordData.languages.toList(),
+          partOfSpeech: wordData.partsOfSpeech,
+        ),
+      );
+
+      if (newWord == null) {
+        throw DocumentCreationFailedException(
+          "Failed to create word: $word",
+        );
+      }
+    }
 
     if (wordData.languages.contains(targetLanguage)) {
       debugPrint("Found word $word with language code: $targetLanguage");
