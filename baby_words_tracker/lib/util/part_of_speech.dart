@@ -4,6 +4,7 @@ enum PartOfSpeech {
   adjective,
   adverb,
   pronoun,
+  // ignore: constant_identifier_names
   personal_pronoun,
   preposition,
   conjunction,

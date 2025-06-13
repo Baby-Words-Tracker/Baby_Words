@@ -18,6 +18,8 @@ import 'package:provider/provider.dart';
 Future<void> callAddChildToOtherParentCloudFunction(
     BuildContext context, String childID, String otherParentEmail) async {
   debugPrint('Getting callable for addChildToOtherParent');
+  final LocalizationService localizationService =
+      context.read<LocalizationService>();
   HttpsCallable function =
       FirebaseFunctions.instance.httpsCallable("addChildToOtherParent");
   try {
@@ -25,15 +27,30 @@ Future<void> callAddChildToOtherParentCloudFunction(
         'Calling function addChildToOtherParent with childID $childID and otherParentEmail $otherParentEmail');
     final response = await function
         .call({'childUid': childID, 'targetEmail': otherParentEmail});
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context
-            .read<LocalizationService>()
-            .translate(response.data['message']))));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(localizationService.translate(
+          response.data['message'],
+        ))),
+      );
+    } else {
+      debugPrint(
+        'Context not mounted, showing debug message instead: ${localizationService.translate(response.data['message'])}',
+      );
+    }
   } catch (error) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            context.read<LocalizationService>().translate('Error: $error'))));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(localizationService.translate(
+                'callAddChildToOtherParentCloudFunction() Error: $error'))),
+      );
+    } else {
+      debugPrint(
+        'Context not mounted, showing debug message instead: callAddChildToOtherParentCloudFunction() Error: $error',
+      );
+    }
   }
 }
 
@@ -90,15 +107,16 @@ Future<void> addCurrentChildToOtherParent(
             );
           },
         );
-      }).then((confirmed) {
-    if (confirmed != null && confirmed) {
-      callAddChildToOtherParentCloudFunction(
-          context, currChildID!, otherParentEmail);
-    } else {
-      return;
-    }
-    ;
-  });
+      }).then(
+    (confirmed) {
+      if (confirmed != null && confirmed) {
+        callAddChildToOtherParentCloudFunction(
+            context, currChildID!, otherParentEmail);
+      } else {
+        return;
+      }
+    },
+  );
   return;
 }
 
@@ -164,13 +182,13 @@ Consumer addCurrentChildToOtherParentFeature(
 Future<void> addChildToCurrParent(BuildContext context, String name,
     DateTime bday, List<LanguageCode> langauges) async {
   Parent? currParent = context.read<UserModelService>().parent;
+  final ParentDataService parentDataService =
+      context.read<ParentDataService>(); // get the parent data service
   if (currParent != null) {
     Child? child = await context
         .read<ChildDataService>()
         .createChild(DateTime.now(), name, langauges, 0, [currParent.id]);
-    context
-        .read<ParentDataService>()
-        .addChildToParent(currParent.id, child?.id ?? "aaaa");
+    parentDataService.addChildToParent(currParent.id, child?.id ?? "aaaa");
   }
 }
 

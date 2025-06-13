@@ -11,6 +11,7 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
   const TopBar({super.key, required this.pageName});
 
   @override
+  // ignore: library_private_types_in_public_api
   _TopBarState createState() => _TopBarState();
 
   @override

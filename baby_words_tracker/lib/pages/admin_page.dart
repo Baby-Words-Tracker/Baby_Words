@@ -26,6 +26,21 @@ class _AdminPageState extends State<AdminPage> {
   Map<String, dynamic>? _userRoles;
   List<Map<String, dynamic>> _userData = [];
 
+  late final GeneralUserService _generalUserService;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _generalUserService =
+          Provider.of<GeneralUserService>(context, listen: false);
+      // debugPrint("AdminPage didChangeDependencies called");
+      // debugPrint("GeneralUserService: $_generalUserService");
+      _initialized = true;
+    }
+  }
+
   Future<void> _callRoleFunction(String functionName) async {
     if (_selectedUserEmail.isEmpty) return;
     // debugPrint('Getting callable for function $functionName with uid $_selectedUserEmail');
@@ -139,14 +154,12 @@ class _AdminPageState extends State<AdminPage> {
           case UserType.parent:
             await _callRoleFunction('giveParentClaim');
             await _callRoleFunction('removeResearcherClaim');
-            await Provider.of<GeneralUserService>(context, listen: false)
-                .changeUserType(userId, newType);
+            await _generalUserService.changeUserType(userId, newType);
             break;
           case UserType.researcher:
             await _callRoleFunction('giveResearcherClaim');
             await _callRoleFunction('removeParentClaim');
-            await Provider.of<GeneralUserService>(context, listen: false)
-                .changeUserType(userId, newType);
+            await _generalUserService.changeUserType(userId, newType);
             break;
           default:
             throw ArgumentError(
@@ -399,6 +412,7 @@ class _AdminPageState extends State<AdminPage> {
                               if (await showConfirmationDialog(context,
                                       'This will query all email and uid data and return it as a csv. Continue?') ??
                                   false) {
+                                // TODO: do I need to check this context here?
                                 var userData = await callFunction(
                                     context, 'getEmailUIDTable', {});
                                 if (userData != null) {

@@ -154,7 +154,7 @@ Future<List<List<WordTracker>>> getTimeSeriesNewWords(
   //for the number of days, grab the amount of words learned
   DateTime now = DateTime.now();
   List<List<WordTracker>> data = List.empty(growable: true);
-  ;
+
   for (var i = 0; i < days; i++) {
     DateTime targetDay = DateTime(now.year, now.month, now.day - i);
     data.add(await trackerService.getWordsFromDate(id, targetDay));
@@ -193,8 +193,9 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
     WordDataService wordService,
     Map<(GraphType, int, String), dynamic> cache,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  if (cache.containsKey((GraphType.wordsByPartOfSpeech, -1, id)))
+  if (cache.containsKey((GraphType.wordsByPartOfSpeech, -1, id))) {
     return cache[(GraphType.wordsByPartOfSpeech, -1, id)];
+  }
   Map<PartOfSpeech, int> data = <PartOfSpeech, int>{};
   //for the number of days, grab the amount of words learned
   List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
@@ -286,8 +287,9 @@ Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(
     int days,
     Map<(GraphType, int, String), dynamic> cache,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  if (cache.containsKey((GraphType.newWordsPerDay, days, id)))
+  if (cache.containsKey((GraphType.newWordsPerDay, days, id))) {
     return cache[(GraphType.newWordsPerDay, days, id)];
+  }
   DateTime now = DateTime.now();
   //for the number of days, grab the amount of words learned
   DateTime startDay = DateTime(now.year, now.month,
