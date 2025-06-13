@@ -28,8 +28,6 @@ Future<Map<String, dynamic>?> callFunction(
   String functionName,
   Map<String, dynamic> arguments,
 ) async {
-  HttpsCallable function =
-      FirebaseFunctions.instance.httpsCallable(functionName);
   try {
     return await callFunctionWithThrow(context, functionName, arguments);
   } catch (error) {

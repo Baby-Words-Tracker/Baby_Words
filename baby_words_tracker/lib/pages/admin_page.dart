@@ -1,5 +1,4 @@
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
-import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart';

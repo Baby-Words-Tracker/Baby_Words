@@ -161,7 +161,6 @@ Future<bool?> checkAndUpdateWord(
 
   WikiWordData? wordData;
   int? continueIndex = 0;
-  bool needsProcessing = false;
 
   // can check search-continue parameter to see if there are more results
   while ((wordData == null || !wordData.languages.contains(targetLanguage)) &&
