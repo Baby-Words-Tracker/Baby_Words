@@ -6,15 +6,14 @@ import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/util/user_getters.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 Future<void> callAddChildToOtherParentCloudFunction(
     BuildContext context, String childID, String otherParentEmail) async {
