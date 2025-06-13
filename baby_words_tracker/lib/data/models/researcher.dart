@@ -48,6 +48,7 @@ class Researcher extends IUserModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'email': email,
