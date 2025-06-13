@@ -62,8 +62,7 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    Parent? currParent = getCurrentParent(
-        context); //This function used to be useful, could be removed now
+    Parent? currParent = context.read<UserModelService>().parent;
     if (currParent == null) {
       return const Text("Invalid User Type");
     }

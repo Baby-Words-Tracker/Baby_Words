@@ -39,7 +39,7 @@ Future<void> callAddChildToOtherParentCloudFunction(
 
 Future<void> addCurrentChildToOtherParent(
     BuildContext context, String otherParentEmail) async {
-  Parent? currParent = getCurrentParent(context);
+  Parent? currParent = context.read<UserModelService>().parent;
   if (currParent == null) {
     showAlertMessage(
         context, "Child Add Failed", "You're somehow not a parent?????");
@@ -163,7 +163,7 @@ Consumer addCurrentChildToOtherParentFeature(
 
 Future<void> addChildToCurrParent(BuildContext context, String name,
     DateTime bday, List<LanguageCode> langauges) async {
-  Parent? currParent = getCurrentParent(context);
+  Parent? currParent = context.read<UserModelService>().parent;
   if (currParent != null) {
     Child? child = await context
         .read<ChildDataService>()
