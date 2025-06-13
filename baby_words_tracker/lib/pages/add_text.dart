@@ -31,9 +31,9 @@ class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController fileTextController = TextEditingController();
   List<String> parsedWords = [];
 
-  late final _childDataService;
-  late final _wordDataService;
-  late final _wordTrackerDataService;
+  late final ChildDataService _childDataService;
+  late final WordDataService _wordDataService;
+  late final WordTrackerDataService _wordTrackerDataService;
 
   bool _initialized = false;
 
@@ -47,6 +47,7 @@ class _AddTextPageState extends State<AddTextPage> {
       _wordDataService = Provider.of<WordDataService>(context, listen: false);
       _wordTrackerDataService =
           Provider.of<WordTrackerDataService>(context, listen: false);
+      _initialized = true;
     }
   }
 
