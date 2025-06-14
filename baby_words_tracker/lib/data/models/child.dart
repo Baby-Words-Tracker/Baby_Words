@@ -8,6 +8,7 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Child {
   static String collectionName = 'Child';
+  static String wordCountFieldName = 'wordCount';
 
   final String? id;
   final DateTime birthday;
@@ -48,7 +49,7 @@ class Child {
       'birthday': birthday,
       'name': name,
       'language': language.map((i) => i.name).toList(),
-      'wordCount': wordCount,
+      wordCountFieldName: wordCount,
       'parentIDs': parentIDs as List<dynamic>,
     };
   }
@@ -65,7 +66,7 @@ class Child {
               .map((i) => LanguageCode.values.byName(i))
               .toList() ??
           [],
-      wordCount: (map['wordCount'] ?? 0) as int,
+      wordCount: (map[wordCountFieldName] ?? 0) as int,
       parentIDs:
           (map['parentIDS'] as List<dynamic>?)?.whereType<String>().toList() ??
               [],

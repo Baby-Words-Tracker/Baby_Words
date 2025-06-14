@@ -2,6 +2,7 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
@@ -276,22 +277,20 @@ Consumer childAddingFeature(
   });
 }
 
-//testing child id: gz1Qe32xJcF0oRGmhw7f
-Future<void> addWordToChild(String word, ChildDataService childService,
-    WordDataService wordService, WordTrackerDataService trackerService,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  if (await childService.getChild(id) == null) {
-    return;
-  }
-  //FIXME: implement language, part of speech, defn, spellcheck
-  /*Word wordObject =*/ await wordService.createWord(
-    Word(
-      word: word,
-      languageCodes: [LanguageCode.en],
-      partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},
-    ),
-  );
-  trackerService.createWordTracker(id, word, DateTime.now());
+Future<bool> addWordToChild(
+  String childId,
+  String word,
+  WordTrackerDataService trackerService, {
+  String? videoId,
+}) async {
+  return await trackerService.addOrUpdateWordTracker(
+      childId,
+      word,
+      WordTracker(
+        id: word,
+        firstUtterance: DateTime.now(),
+        videoID: videoId,
+      ));
 }
 
 Column wordAddingFeature(
@@ -328,17 +327,14 @@ Column wordAddingFeature(
               "") //add the word to the child with the id, or the default testing child if no input
           {
             addWordToChild(
-                wordTextController.text,
-                context.read<ChildDataService>(),
-                context.read<WordDataService>(),
-                trackerService,
-                id: idController.text);
+              idController.text,
+              wordTextController.text,
+              trackerService,
+            );
           } else {
-            addWordToChild(
-                wordTextController.text,
-                context.read<ChildDataService>(),
-                context.read<WordDataService>(),
-                trackerService);
+            debugPrint("No child ID provided, so word cannot be added.");
+            showAlertMessage(context, "Word Add Failed",
+                "No child ID provided, so word cannot be added.");
           }
           wordTextController.clear();
           idController.clear();

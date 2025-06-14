@@ -7,8 +7,9 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class WordTracker {
   static String collectionName = 'WordTracker';
+  static String videoIDFieldName = 'videoID';
 
-  final String? id;
+  final String? id; // The word being tracked, e.g., "mama", "dada"
   final DateTime firstUtterance;
   final String? videoID;
 
@@ -34,7 +35,7 @@ class WordTracker {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'firstUtterance': firstUtterance,
-      'videoID': videoID,
+      videoIDFieldName: videoID,
     };
   }
 
@@ -44,7 +45,7 @@ class WordTracker {
       firstUtterance: map['firstUtterance'] != null
           ? convertToDateTime(map['firstUtterance'])
           : DateTime.fromMillisecondsSinceEpoch(0),
-      videoID: map['videoID'] as String?,
+      videoID: map[videoIDFieldName] as String?,
     );
   }
 
@@ -57,6 +58,22 @@ class WordTracker {
     Map<String, dynamic> data = source.data;
     data['id'] = source.id;
     return WordTracker.fromMap(data);
+  }
+
+  static Map<String, dynamic> createUpdateMap({
+    DateTime? firstUtterance,
+    String? videoID,
+  }) {
+    Map<String, dynamic> map = {};
+
+    if (firstUtterance != null) {
+      map['firstUtterance'] = firstUtterance;
+    }
+    if (videoID != null) {
+      map[videoIDFieldName] = videoID;
+    }
+
+    return map;
   }
 
   @override

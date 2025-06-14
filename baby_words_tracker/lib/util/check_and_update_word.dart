@@ -28,8 +28,9 @@ Future<http.Response> fetchWordData(
   int continueIndex = 0,
   int resultsLimit = 7,
 }) async {
+  // see: https://www.wikidata.org/w/api.php for help on the API
   String url =
-      "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json&limit=$resultsLimit&origin=*&offset=$continueIndex";
+      "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json&limit=$resultsLimit&origin=*&continue=$continueIndex";
 
   debugPrint("word: $word");
   debugPrint("url parsed word: ${Uri.encodeComponent(word)}");
@@ -136,8 +137,22 @@ Future<String?> getWordDefinition(
   return null;
 }
 
-//basic spellcheck that checks if a word exists in our word bank or in the englsh dictionary
-Future<bool?> checkAndUpdateWord(
+/// Checks if [word] exists in the word bank for the target language.
+/// If it does not exist, it fetches the word data from the Wikidata API,
+/// creates a new word in the word bank, and returns true.
+/// If it exists but does not have the target language, it updates the word
+/// with the new language and returns true.
+/// If it exists and has the target language, it returns true.
+/// If it exists but does not need processing, it returns true.
+/// [word] is the word to check.
+/// [wordDataService] is the service to interact with our word data.
+/// [targetLanguage] is the language to search for the words data in in the Wikidata database.
+/// [languagesToRetrieve] is the set of languages to retrieve data for from the Wikidata API.
+///
+/// Throws [NetworkFailureException] if the Wikidata Api request fails.
+/// Throws [DocumentCreationFailedException] if the word could not be created.
+/// Throws [DocumentUpdateFailedException] if the word could not be updated.
+Future<bool> checkAndUpdateWord(
   String word,
   WordDataService wordDataService, {
   LanguageCode targetLanguage = LanguageCode.en,
@@ -199,6 +214,12 @@ Future<bool?> checkAndUpdateWord(
       final int status = response.statusCode;
       debugPrint("did not get a response: $status");
       // throw an exception if the status code is not 200 and process the word as custom somewhere else
+      if (wordTest != null) {
+        debugPrint(
+            "Word $word already exists in the word bank, but could not fetch data from Wikidata API.");
+        throw DocumentUpdateFailedException("word exists already in our word bank, but we could not fetch data to update it");
+      }
+
       throw NetworkFailureException(status,
           "Failed to fetch word data for $word. Please check your network connection or try again later.");
     }
@@ -207,11 +228,11 @@ Future<bool?> checkAndUpdateWord(
   if (wordData != null) {
     debugPrint(
         "Creating New Word from search list: ${wordData.word}, ${wordData.languages}, ${wordData.partsOfSpeech}");
-    if (wordTest != null && wordTest.needsProcessing) {
+    if (wordTest != null) {
       final bool succcess = await wordDataService.updateWord(
         wordData.word,
         Word.createUpdateMap(
-          languageCodes: wordData.languages.toList(),
+          languageCodes: wordData.languages,
           partOfSpeech: wordData.partsOfSpeech,
           needsProcessing: false, // mark as processed
         ),
@@ -226,7 +247,7 @@ Future<bool?> checkAndUpdateWord(
       final Word? newWord = await wordDataService.createWord(
         Word(
           word: word,
-          languageCodes: wordData.languages.toList(),
+          languageCodes: wordData.languages,
           partOfSpeech: wordData.partsOfSpeech,
         ),
       );

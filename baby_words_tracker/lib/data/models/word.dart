@@ -11,7 +11,7 @@ class Word {
   static String collectionName = 'Word';
 
   final String word;
-  final List<LanguageCode> languageCodes;
+  final Set<LanguageCode> languageCodes;
   final Map<LanguageCode, PartOfSpeech> partOfSpeech;
   final bool needsProcessing;
 
@@ -24,7 +24,7 @@ class Word {
 
   Word copyWith({
     String? word,
-    List<LanguageCode>? languageCodes,
+    Set<LanguageCode>? languageCodes,
     Map<LanguageCode, PartOfSpeech>? partOfSpeech,
     bool? needsProcessing,
   }) {
@@ -39,10 +39,9 @@ class Word {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'languageCodes': languageCodes.map((x) => x.name).toList(),
-      // ignore: non_constant_identifier_names
-      'partOfSpeech': partOfSpeech.map((languageCode_Key, partOfSpeech_Value) =>
-          MapEntry(languageCode_Key.name,
-              partOfSpeech_Value.name)), // partOfSpeech.name,
+      'partOfSpeech': partOfSpeech.map((langCodeKey, posVal) =>
+          MapEntry(langCodeKey.name,
+              posVal.name)), // partOfSpeech.name,
       'needsProcessing': needsProcessing,
     };
   }
@@ -53,8 +52,8 @@ class Word {
       languageCodes: (map['languageCodes'] as List<dynamic>?)
               ?.whereType<String>()
               .map((i) => LanguageCode.values.byName(i))
-              .toList() ??
-          [],
+              .toSet() ??
+          {},
       partOfSpeech: (map['partOfSpeech'] as Map<String, dynamic>)
           .map((key, value) => MapEntry(
                 LanguageCodeExtension.fromString(key),
@@ -72,11 +71,11 @@ class Word {
   factory Word.fromDataWithId(DataWithId source) {
     Map<String, dynamic> data = source.data;
     data['id'] = source.id; // Use the id as the word
-    return Word.fromMap(source.data);
+    return Word.fromMap(data);
   }
 
   static Map<String, dynamic> createUpdateMap({
-    List<LanguageCode>? languageCodes,
+    Set<LanguageCode>? languageCodes,
     Map<LanguageCode, PartOfSpeech>? partOfSpeech,
     bool? needsProcessing,
   }) {

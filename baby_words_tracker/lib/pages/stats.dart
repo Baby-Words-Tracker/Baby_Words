@@ -180,6 +180,7 @@ Widget graphSwitcher(
           id: id);
     case GraphType.wordsByPartOfSpeech:
       return wordsByPartOfSpeechGraph(childService, wordService, cache, id: id);
+    // ignore: unreachable_switch_default
     default:
       return const Text("Graph Switch Failed.");
   }
@@ -203,7 +204,7 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
     Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ??
         Word(
             word: "Invalid Word",
-            languageCodes: List<LanguageCode>.empty(),
+            languageCodes: <LanguageCode>{},
             partOfSpeech: {LanguageCode.en: PartOfSpeech.noun});
 
     List<LanguageCode> languages = [
@@ -481,8 +482,14 @@ async {
     DateTime targetDay = DateTime(now.year, now.month,
         now.day - (n - i - 1)); //get the day i days before today
     for (var j = 0; j < i + 1; j++) {
-      trackerService.createWordTracker("gz1Qe32xJcF0oRGmhw7f",
-          "test${i.toString()}${j.toString()}", targetDay);
+      trackerService.createWordTracker(
+        "gz1Qe32xJcF0oRGmhw7f",
+        "test${i.toString()}${j.toString()}",
+        WordTracker(
+          id: "test${i.toString()}${j.toString()}",
+          firstUtterance: targetDay,
+        ),
+      );
     }
   }
 }

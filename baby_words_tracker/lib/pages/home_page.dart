@@ -1,13 +1,20 @@
 import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/data/models/word.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/exceptions/document_creation_failed_exception.dart';
+import 'package:baby_words_tracker/exceptions/document_update_failed_exception.dart';
+import 'package:baby_words_tracker/exceptions/network_failure_exception.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_word.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
+import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -330,34 +337,131 @@ class _HomePageState extends State<HomePage> {
                         var totalWords = 0;
                         bool videoUploaded = false;
                         String? filePath;
+                        bool networkFailure = false;
 
                         for (var word in parsedWords) {
                           totalWords++;
-                          //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //only checks the childs selected languages
-                          bool? result = await checkAndUpdateWord(
-                            word,
-                            _wordDataService,
-                            targetLanguage:
-                                localizationService.localization.languageCode,
-                          );
-                          if (result == true && currChildID != null) {
-                            if (!videoUploaded) {
-                              if (fileTextController.text != "") {
-                                filePath =
-                                    path.basename(fileTextController.text);
-                                uploadVideo(fileTextController.text);
+                          bool result = false;
+
+                          try {
+                            result = await checkAndUpdateWord(
+                              word,
+                              _wordDataService,
+                              targetLanguage: localizationService.localization
+                                  .languageCode, // TODO: need to give users the ability to select the target language if they are multilingual
+                            );
+                          } on NetworkFailureException catch (e) {
+                            debugPrint(
+                                "HomePage: Network failure while checking and updating word: $word with error message $e");
+                            networkFailure = true;
+                          } on DocumentCreationFailedException {
+                            debugPrint(
+                                "HomePage: Document creation failed while checking and updating word: $word");
+                            if (context.mounted) {
+                              // TODO: translate this message
+                              showAlertMessage(context, "Failed to Add Word",
+                                  "The word '$word' could not be added due to a database issue. Please try again later.");
+                            }
+                            //TODO: add dialog to alert user + tell them
+                            // TODO: later, add the word in local storage and then try to add it again when the network is available
+                            continue; // Skip to the next word if creation failed
+                          } on DocumentUpdateFailedException catch (e) {
+                            debugPrint(
+                                "HomePage: Document update failed while checking and updating word: $word with error message $e");
+                            await _wordDataService.updateWord(
+                              word,
+                              Word.createUpdateMap(needsProcessing: true),
+                            );
+                            result =
+                                true; // The word exists, but it's data needs to be updated. It is marked for update but the next steps can proceed.
+                          } catch (e) {
+                            debugPrint(
+                                "HomePage: Error checking and updating word: $word. Error: $e");
+                            continue; // Skip to the next word if there's an error
+                          }
+
+                          if (!result) {
+                            if (context.mounted) {
+                              // TODO: handle network failure by asking if custom word should be added and updated later
+
+                              // TODO: translate this message and title
+                              String message = networkFailure
+                                  ? "We couldn't find your word in the dictionary due to a network issue. Would you like to add the word '$word' as a custom word for now and try again later?"
+                                  : "We couldn't find your word in the dictionary. Would you like to add the word '$word' as a custom word?";
+                              final createCustom = await showConfirmationDialog(
+                                  context, message,
+                                  title: "Word Not Found");
+
+                              // TODO: need to allow language selection for custom words
+                              if (createCustom) {
+                                final newWord =
+                                    await _wordDataService.createWord(
+                                  Word(
+                                    word: word,
+                                    languageCodes: {
+                                      localizationService
+                                          .localization.languageCode
+                                    },
+                                    partOfSpeech: {
+                                      localizationService.localization
+                                          .languageCode: PartOfSpeech.unknown
+                                    },
+                                    needsProcessing:
+                                        networkFailure, // mark as custom or mark for updates later
+                                  ),
+                                );
+
+                                if (newWord == null) {
+                                  debugPrint(
+                                      "HomePage: Failed to create custom word: $word");
+                                  if (context.mounted) {
+                                    // TODO: translate this message
+                                    showAlertMessage(
+                                      context,
+                                      "Failed to Add Word",
+                                      "The word '$word' could not be added due to a database issue. Please try again later.",
+                                    );
+                                  }
+                                  continue; // Skip to the next word if creation failed
+                                } else {
+                                  debugPrint(
+                                      "HomePage: Custom word created successfully: $word");
+                                  result =
+                                      true; // Custom word created successfully
+                                }
                               } else {
-                                filePath = null;
+                                debugPrint(
+                                    "HomePage: User chose not to create custom word for: $word");
+                                // If the user doesn't want to create a custom word, skip to the next word
+                                continue;
                               }
-                              videoUploaded = filePath != null &&
-                                  filePath.isNotEmpty &&
-                                  filePath.endsWith(
-                                      '.mp4'); // FIXME: make this an actual check by updating the method
+                            } else {
+                              debugPrint(
+                                  "HomePage: Error: context is not mounted. Skipping word: $word");
+                              continue;
+                            }
+                          }
+
+                          if (result == true && currChildID != null) {
+                            if (!videoUploaded &&
+                                fileTextController.text != "") {
+                              filePath = path.basename(fileTextController.text);
+                              videoUploaded = await uploadVideo(fileTextController
+                                  .text); // Might need to add a loading indicator here
                             }
 
-                            addWordToChild(word, _childDataService,
-                                _wordDataService, _wordTrackerDataService,
-                                id: currChildID, videoId: filePath);
+                            bool success = await addWordToChild(
+                              currChildID,
+                              word,
+                              _wordTrackerDataService,
+                              videoId: filePath,
+                            );
+
+                            if (!success) {
+                              debugPrint(
+                                  "HomePage: Failed to add word tracker for $word");
+                              continue; // Skip to the next word if adding failed
+                            }
 
                             correctWords++;
                           } else {
@@ -394,33 +498,63 @@ class _HomePageState extends State<HomePage> {
                             break;
                           }
                         }
+
                         if (!context.mounted) {
                           debugPrint(
                               "HomePage: context is not mounted. Successfully added $correctWords words.");
                           return;
-                        }
-                        if (totalWords == correctWords) {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text(
-                                    localizationService.translate("success")),
-                                content: Text(
-                                    '$correctWords ${localizationService.translate("word_success").toLowerCase()}'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('OK'),
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(); // Close the dialog
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                        } else if (totalWords == correctWords) {
+                          // await showDialog(
+                          //   context: context,
+                          //   builder: (BuildContext context) {
+                          //     return AlertDialog(
+                          //       title: Text(
+                          //           localizationService.translate("success")),
+                          //       content: Text(
+                          //           '$correctWords ${localizationService.translate("word_success").toLowerCase()}'),
+                          //       actions: <Widget>[
+                          //         TextButton(
+                          //           child: const Text('OK'),
+                          //           onPressed: () {
+                          //             Navigator.of(context)
+                          //                 .pop(); // Close the dialog
+                          //           },
+                          //         ),
+                          //       ],
+                          //     );
+                          //   },
+                          // );
+                          debugPrint(
+                              "HomePage: Successfully added all $correctWords words.");
                           _controller.clear();
+                        } else {
+                          debugPrint(
+                              "HomePage: Successfully added $correctWords out of $totalWords words.");
+                          if (context.mounted) {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                      "Partial Success"), // TODO: translate
+                                  content: Text(
+                                      '$correctWords/$totalWords ${localizationService.translate("word_success").toLowerCase()}'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child:
+                                          const Text('OK'), // TODO: Translate
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(); // Close the dialog
+                                        _controller.clear();
+                                        fileTextController.clear();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          }
                         }
                       },
                       style: OutlinedButton.styleFrom(
@@ -447,30 +581,31 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-Future<void> addWordToChild(String word, ChildDataService childService,
-    WordDataService wordService, WordTrackerDataService trackerService,
-    {String id = "gz1Qe32xJcF0oRGmhw7f", String? videoId}) async {
-  final object = await trackerService.getWordTracker(id, word);
-  if (object == null) {
-    if (await trackerService.createWordTracker(
-            id, word, DateTime.now(), videoId) ==
-        null) {
-      debugPrint("AddText: Error adding word to child");
-    } else {
-      debugPrint("AddText: Word added to child");
-    }
-  } else {
-    if (videoId != null) {
-      trackerService.setWordTracker(id, word, filePath: videoId);
-      debugPrint("UpdateText: word already existed, updating file");
-    }
-  }
+Future<bool> addWordToChild(
+  String childId,
+  String word,
+  WordTrackerDataService trackerService, {
+  String? videoId,
+}) async {
+  return await trackerService.addOrUpdateWordTracker(
+    childId,
+    word,
+    WordTracker(
+      id: word,
+      firstUtterance: DateTime.now(),
+      videoID: videoId,
+    ),
+  );
 }
 
 Future<void> addVideoToWord(
-    String word, String filePath, ChildDataService childService,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  if (await childService.addVideo(id, word, path.basename(filePath)) == false) {
+  String childId,
+  String word,
+  String filePath,
+  ChildDataService childService,
+) async {
+  if (await childService.addVideo(childId, word, path.basename(filePath)) ==
+      false) {
     debugPrint("AddVideo: Error adding video to work tracker");
   } else {
     debugPrint("AddVideo: $filePath added to $word");

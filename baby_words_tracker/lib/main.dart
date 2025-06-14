@@ -62,7 +62,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ParentDataService()),
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
-          ChangeNotifierProvider(create: (_) => WordTrackerDataService()),
+          Provider(create: (_) => WordTrackerDataService()),
           ChangeNotifierProvider(
             create: (_) => LocalizationService(),
             lazy: false,

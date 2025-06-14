@@ -1,3 +1,5 @@
+import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/listeners/firestore_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
@@ -264,6 +266,27 @@ class FirestoreRepository {
     }
   }
 
+  Future<bool> updateSubcollectionDocument(
+      String collectionName,
+      String docId,
+      String subcollectionName,
+      String subId,
+      Map<String, dynamic> updateData) async {
+    try {
+      final docRef = database
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollectionName)
+          .doc(subId);
+      await docRef.update(updateData);
+      return true;
+    } catch (e) {
+      debugPrint(
+          "Error updating document in subcollection $collectionName/$docId/$subcollectionName/$subId: $e");
+      return false;
+    }
+  }
+
   Future<bool> updateFieldForSubcollection(
       String collectionName,
       String subcollectionName,
@@ -519,7 +542,7 @@ class FirestoreRepository {
   }
 
   /// Helper function to create workd tracker. This is specialized so that it cannot be used elsewhere because it should not be
-  Future<String?> addWordTracker(
+  Future<bool> addWordTracker(
       String collectionName,
       String childID,
       String subcollectionName,
@@ -529,7 +552,7 @@ class FirestoreRepository {
       final docRef = database.collection(collectionName).doc(childID);
       final subDocRef = docRef.collection(subcollectionName).doc(wordID);
 
-      return database.runTransaction((transaction) async {
+      return await database.runTransaction((transaction) async {
         final snapshot = await transaction.get(docRef);
         if (!snapshot.exists) {
           throw Exception("addWordTracker: Child document does not exist");
@@ -538,11 +561,65 @@ class FirestoreRepository {
         transaction.update(docRef, {"wordCount": FieldValue.increment(1)});
         transaction.set(subDocRef, data);
 
-        return wordID;
+        return true;
       });
     } catch (e) {
       debugPrint("Error adding word tracker in $collectionName: $e");
-      return null;
+      return false;
+    }
+  }
+
+  /// Helper function to create workd tracker. This is specialized so that it cannot be used elsewhere because it should not be
+  Future<bool> addOrUpdateWordTracker(
+    String collectionName,
+    String childID,
+    String subcollectionName,
+    String wordID,
+    WordTracker wordTracker,
+  ) async {
+    try {
+      final docRef = database.collection(collectionName).doc(childID);
+      final subDocRef = docRef.collection(subcollectionName).doc(wordID);
+
+      return await database.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) {
+          throw Exception(
+              "addOrUpdateWordTracker(): Child document does not exist");
+        }
+
+        final subDocSnapshot = await transaction.get(subDocRef);
+        if (subDocSnapshot.exists) {
+          if ((subDocSnapshot.data()?[WordTracker.videoIDFieldName] == null ||
+              subDocSnapshot.data()?[WordTracker.videoIDFieldName] == "")) {
+            // If the subdocument exists, update it
+            transaction.update(
+              subDocRef,
+              WordTracker.createUpdateMap(
+                videoID: wordTracker.videoID,
+              ),
+            );
+            debugPrint(
+                "addOrUpdateWordTracker(): Subdocument $wordID updated with video ID: ${wordTracker.videoID}");
+          } else {
+            // If the subdocument exists and has a video ID, do not update it
+            debugPrint(
+                "addOrUpdateWordTracker(): Subdocument $wordID already exists with video ID, not updating.");
+          }
+        } else {
+          // If the subdocument does not exist, create it
+          transaction.update(
+              docRef, {Child.wordCountFieldName: FieldValue.increment(1)});
+          transaction.set(subDocRef, wordTracker.toMap());
+          debugPrint(
+              "addOrUpdateWordTracker(): Subdocument $wordID created with data: ${wordTracker.toMap()}");
+        }
+
+        return true;
+      });
+    } catch (e) {
+      debugPrint("Error adding word tracker in $collectionName: $e");
+      return false;
     }
   }
 
@@ -552,7 +629,7 @@ class FirestoreRepository {
       // move a document from one collection to another using a transaction
       final fromDocRef = database.collection(fromCollection).doc(documentId);
       final toDocRef = database.collection(toCollection).doc(documentId);
-      return database.runTransaction((transaction) async {
+      return await database.runTransaction((transaction) async {
         // Get the document from the source collection
         final fromDocSnapshot = await transaction.get(fromDocRef);
         if (!fromDocSnapshot.exists) {

@@ -10,6 +10,7 @@ enum PartOfSpeech {
   conjunction,
   article,
   unknown,
+  interjection,
 }
 
 extension PartofspeechExtension on PartOfSpeech {

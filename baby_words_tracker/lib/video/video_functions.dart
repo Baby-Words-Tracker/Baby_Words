@@ -66,7 +66,7 @@ Future<String> selectFile(TextEditingController fileTextController) async {
 // TODO: make this funciton return true or false depending on whether the file was uploaded successfully.
 //  We should also consider throwing errors or logging for failures.
 // TODO: consider compressing the video before uploading it to save space and bandwidth.
-Future<void> uploadVideo(String filePath) async {
+Future<bool> uploadVideo(String filePath) async {
   try {
     debugPrint("File for signed url: $filePath");
     //final compressed = await compressVideo(filePath) as List<int>;
@@ -84,14 +84,18 @@ Future<void> uploadVideo(String filePath) async {
 
       if (response.statusCode == 200) {
         debugPrint('File uploaded successfully!');
+        return true; // Indicate success
       } else {
         debugPrint('Failed to upload file: ${response.statusCode}');
+        return false; // Indicate failure
       }
     } else {
       debugPrint("Error: either no signed URL or no video was received.");
+      return false; // Indicate failure
     }
   } catch (e) {
     debugPrint('Error during file upload: $e');
+    return false; // Indicate failure
   }
 }
 

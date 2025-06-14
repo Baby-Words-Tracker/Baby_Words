@@ -36,26 +36,26 @@ void showAlertMessage(BuildContext context, String title, String message) {
   );
 }
 
-Future<bool?> showConfirmationDialog(BuildContext context, String message) {
-  return showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Confirm Action'),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-          TextButton(
-            child: const Text('Confirm'),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      );
-    },
-  );
+Future<bool> showConfirmationDialog(BuildContext context, String message,
+    {String? title}) async {
+  return await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title ?? 'Confirm Action'),
+            content: Text(message),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              TextButton(
+                child: const Text('Confirm'),
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
+          );
+        },
+      ) ??
+      false;
 }
-
-

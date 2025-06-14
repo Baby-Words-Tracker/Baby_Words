@@ -4,43 +4,79 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
-class WordTrackerDataService extends ChangeNotifier {
+class WordTrackerDataService {
   static final fireRepo = FirestoreRepository();
 
   Future<WordTracker?> createWordTracker(
-      String childId, String wordID, DateTime firstUtterance,
-      [String? videoID]) async {
-    final object = WordTracker(
-        id: wordID, firstUtterance: firstUtterance, videoID: videoID);
-
-    final String? result = await fireRepo.addWordTracker(Child.collectionName,
-        childId, WordTracker.collectionName, wordID, object.toMap());
-
-    if (result == null) {
+    String childId,
+    String word,
+    WordTracker tracker,
+  ) async {
+    if (tracker.id == null) {
+      debugPrint("Error: tracker ID is null");
       return null;
     }
 
-    notifyListeners();
-    return object.copyWith(id: result);
+    final bool result = await fireRepo.addOrUpdateWordTracker(
+      Child.collectionName,
+      childId,
+      WordTracker.collectionName,
+      tracker.id!,
+      tracker,
+    );
+
+    if (!result) {
+      debugPrint("Error: failed to create word tracker for ${tracker.id}");
+      return null;
+    }
+
+    return tracker;
   }
 
-  Future<bool> setWordTracker(String childId, String word,
-      {DateTime? firstUtterance, String? filePath}) async {
-    late WordTracker? object;
-    if (firstUtterance != null) {
-      object = await createWordTracker(childId, word, firstUtterance, filePath);
-      if (object != null) return true;
-    } else {
-      try {
-        fireRepo.setObjectSubcollection(Child.collectionName,
-            WordTracker.collectionName, childId, word, {"videoID": filePath});
-        return true;
-      } catch (e) {
-        debugPrint("Error: failed to update word tracker: $e");
-        return false;
-      }
+  Future<bool> updateWordTracker(
+    String childId,
+    String wordID, {
+    DateTime? firstUtterance,
+    String? videoID,
+  }) async {
+    final updateMap = WordTracker.createUpdateMap(
+      firstUtterance: firstUtterance,
+      videoID: videoID,
+    );
+
+    final bool result = await fireRepo.updateSubcollectionDocument(
+        Child.collectionName,
+        childId,
+        WordTracker.collectionName,
+        wordID,
+        updateMap);
+
+    if (!result) {
+      debugPrint("Error: failed to update word tracker for $wordID");
+      return false;
     }
-    return false;
+
+    return true;
+  }
+
+  Future<bool> addOrUpdateWordTracker(
+    String childId,
+    String wordId,
+    WordTracker wordTracker,
+  ) async {
+    final bool sucess = await fireRepo.addOrUpdateWordTracker(
+      Child.collectionName,
+      childId,
+      WordTracker.collectionName,
+      wordId,
+      wordTracker,
+    );
+
+    if (!sucess) {
+      debugPrint("Error: failed to add or update word tracker for $wordId");
+    }
+
+    return sucess;
   }
 
   Future<WordTracker?> getWordTracker(String childId, String id) async {

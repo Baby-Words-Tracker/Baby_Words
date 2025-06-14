@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
@@ -161,9 +162,12 @@ class _AddTextPageState extends State<AddTextPage> {
                           } else {
                             filePath = null;
                           }
-                          addWordToChild(word, _childDataService,
-                              _wordDataService, _wordTrackerDataService,
-                              id: currChildID, videoId: filePath);
+                          addWordToChild(
+                            currChildID,
+                            word,
+                            _wordTrackerDataService,
+                            videoId: filePath,
+                          );
                           correctWords++;
                           /* addVideoToWord(
                               word, path.basename(filePath), childService,
@@ -243,32 +247,30 @@ class _AddTextPageState extends State<AddTextPage> {
     });
   }
 
-  Future<void> addWordToChild(String word, ChildDataService childService,
-      WordDataService wordService, WordTrackerDataService trackerService,
-      {String id = "gz1Qe32xJcF0oRGmhw7f", String? videoId}) async {
-    //FIXME: implement language, part of speech, defn, spellcheck
-    //Word wordObject = await wordService.createWord(word, [LanguageCode.en], PartOfSpeech.noun, "testWord");
-    final object = await trackerService.getWordTracker(id, word);
-    if (object == null) {
-      if (await trackerService.createWordTracker(
-              id, word, DateTime.now(), videoId) ==
-          null) {
-        debugPrint("AddText: Error adding word to child");
-      } else {
-        debugPrint("AddText: Word added to child");
-      }
-    } else {
-      if (videoId != null) {
-        trackerService.setWordTracker(id, word, filePath: videoId);
-        debugPrint("UpdateText: word already existed, updating file");
-      }
-    }
+  Future<bool> addWordToChild(
+    String childId,
+    String word,
+    WordTrackerDataService trackerService, {
+    String? videoId,
+  }) async {
+
+    return await trackerService.addOrUpdateWordTracker(
+        childId,
+        word,
+        WordTracker(
+          id: word,
+          firstUtterance: DateTime.now(),
+          videoID: videoId,
+        ));
   }
 
   Future<void> addVideoToWord(
-      String word, String filePath, ChildDataService childService,
-      {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-    if (await childService.addVideo(id, word, path.basename(filePath)) ==
+    String childId,
+    String word,
+    String filePath,
+    ChildDataService childService,
+  ) async {
+    if (await childService.addVideo(childId, word, path.basename(filePath)) ==
         false) {
       debugPrint("AddVideo: Error adding video to work tracker");
     } else {
