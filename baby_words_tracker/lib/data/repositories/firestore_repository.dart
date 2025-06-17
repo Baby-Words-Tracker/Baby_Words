@@ -15,7 +15,12 @@ import 'package:flutter/material.dart';
 class FirestoreRepository {
   static final database = FirebaseFirestore.instance;
 
-  FirestoreRepository();
+  FirestoreRepository() {
+    database.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+  }
 
   Future<String?> create(
       String collectionName, Map<String, dynamic> data) async {

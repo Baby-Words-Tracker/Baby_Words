@@ -32,19 +32,26 @@ Future<http.Response> fetchWordData(
   String url =
       "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${Uri.encodeComponent(word)}&language=en&type=lexeme&format=json&limit=$resultsLimit&origin=*&continue=$continueIndex";
 
-  debugPrint("word: $word");
-  debugPrint("url parsed word: ${Uri.encodeComponent(word)}");
-  debugPrint("url: $url");
-  debugPrint("url encoded: ${Uri.parse(url)}");
+  // debugPrint("word: $word");
+  // debugPrint("url parsed word: ${Uri.encodeComponent(word)}");
+  // debugPrint("url: $url");
+  // debugPrint("url encoded: ${Uri.parse(url)}");
 
   try {
+    // we must include an informative User-Agent header that includes contact information
+    //  Wikimedia suggests this format: <client name>/<version> (<contact information>) <library/framework name>/<version> [<library name>/<version> ...]
+    //  must include bot in the string if we run an automated agent
+    //  see https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy
+    // TODO: add a website to the user agent header
+    String headerText =
+        'WordBuds/0.1 (websitePending; lecslab@ua.edu) Dart/Flutter';
+
     final response = await http.get(
       Uri.parse(url),
-      // TODO: we must include an informative User-Agent header that includes contact information
-      //  Wikimedia suggests this format: <client name>/<version> (<contact information>) <library/framework name>/<version> [<library name>/<version> ...]
-      //  must include bot in the string if we run an automated agent
-      //  see https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy
-      headers: {'User-Agent': 'WordBuds/0.1 lecslab@ua.edu Dart/Flutter'},
+      headers: {
+        'User-Agent': headerText,
+        if (kIsWeb) 'Api-User-Agent': headerText, // for web, use Api-User-Agent
+      },
     );
     return response;
   } catch (e) {
@@ -180,11 +187,17 @@ Future<bool> checkAndUpdateWord(
   // can check search-continue parameter to see if there are more results
   while ((wordData == null || !wordData.languages.contains(targetLanguage)) &&
       continueIndex != null) {
-    final http.Response response = await fetchWordData(
-      word,
-      continueIndex: continueIndex,
-      resultsLimit: 7, // limit to 7 results per request
-    );
+    late final http.Response response;
+    try {
+      response = await fetchWordData(
+        word,
+        continueIndex: continueIndex,
+        resultsLimit: 7, // limit to 7 results per request
+      );
+    } catch (e) {
+      debugPrint("Error: CheckAndUpdateWord -> $e");
+      throw NetworkFailureException(400, "Error: CheckAndUpdateWord -> $e");
+    }
 
     debugPrint("Response status code: ${response.statusCode}");
     debugPrint(
@@ -217,7 +230,8 @@ Future<bool> checkAndUpdateWord(
       if (wordTest != null) {
         debugPrint(
             "Word $word already exists in the word bank, but could not fetch data from Wikidata API.");
-        throw DocumentUpdateFailedException("word exists already in our word bank, but we could not fetch data to update it");
+        throw DocumentUpdateFailedException(
+            "word exists already in our word bank, but we could not fetch data to update it");
       }
 
       throw NetworkFailureException(status,
