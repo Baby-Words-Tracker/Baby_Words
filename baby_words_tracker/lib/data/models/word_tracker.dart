@@ -43,7 +43,7 @@ class WordTracker {
     return WordTracker(
       id: map['id'] as String?,
       firstUtterance: map['firstUtterance'] != null
-          ? convertToDateTime(map['firstUtterance'])
+          ? (convertToDateTime(map['firstUtterance']) ?? DateTime(1970, 1, 1))
           : DateTime.fromMillisecondsSinceEpoch(0),
       videoID: map[videoIDFieldName] as String?,
     );

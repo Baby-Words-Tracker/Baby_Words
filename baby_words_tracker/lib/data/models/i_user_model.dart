@@ -45,7 +45,7 @@ abstract class IUserModel {
 
   static DateTime? fromMapConsentDate(Map<String, dynamic> map) {
     return map['consentDate'] != null
-        ? convertToDateTime(map['consentDate'] as Timestamp)
+        ? convertToDateTime(map['consentDate'])
         : null;
   }
 

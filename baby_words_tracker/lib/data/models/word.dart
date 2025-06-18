@@ -40,8 +40,7 @@ class Word {
     return <String, dynamic>{
       'languageCodes': languageCodes.map((x) => x.name).toList(),
       'partOfSpeech': partOfSpeech.map((langCodeKey, posVal) =>
-          MapEntry(langCodeKey.name,
-              posVal.name)), // partOfSpeech.name,
+          MapEntry(langCodeKey.name, posVal.name)), // partOfSpeech.name,
       'needsProcessing': needsProcessing,
     };
   }
@@ -57,7 +56,7 @@ class Word {
       partOfSpeech: (map['partOfSpeech'] as Map<String, dynamic>)
           .map((key, value) => MapEntry(
                 LanguageCodeExtension.fromString(key),
-                PartofspeechExtension.fromString(value),
+                PartOfSpeechExtension.fromString(value),
               )),
       needsProcessing: map['needsProcessing'] ?? false,
     );

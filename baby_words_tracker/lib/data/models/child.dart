@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:baby_words_tracker/data/models/child_aggregate_data.dart';
 import 'package:baby_words_tracker/util/time_utils.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:collection/collection.dart';
@@ -8,39 +9,47 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Child {
   static String collectionName = 'Child';
+
+  static const String aggregateDataSubcollectionName =
+      ChildAggregateData.collectionName;
+
   static String wordCountFieldName = 'wordCount';
 
   final String? id;
   final DateTime birthday;
   final String name;
-  final List<LanguageCode> language;
+  final List<LanguageCode> languages;
   final int wordCount;
   final List<String> parentIDs;
+  final String? latestWordId;
 
   Child({
     this.id,
     required this.birthday,
     required this.name,
-    required this.language,
+    required this.languages,
     required this.wordCount,
     required this.parentIDs,
+    this.latestWordId,
   });
 
   Child copyWith({
     String? id,
     DateTime? birthday,
     String? name,
-    List<LanguageCode>? language,
+    List<LanguageCode>? languages,
     int? wordCount,
     List<String>? parentIDs,
+    String? latestWordId,
   }) {
     return Child(
       id: id ?? this.id,
       birthday: birthday ?? this.birthday,
       name: name ?? this.name,
-      language: language ?? this.language,
+      languages: languages ?? this.languages,
       wordCount: wordCount ?? this.wordCount,
       parentIDs: parentIDs ?? this.parentIDs,
+      latestWordId: latestWordId ?? this.latestWordId,
     );
   }
 
@@ -48,9 +57,10 @@ class Child {
     return <String, dynamic>{
       'birthday': birthday,
       'name': name,
-      'language': language.map((i) => i.name).toList(),
+      'language': languages.map((i) => i.name).toList(),
       wordCountFieldName: wordCount,
       'parentIDs': parentIDs as List<dynamic>,
+      'latestWordId': latestWordId,
     };
   }
 
@@ -58,10 +68,10 @@ class Child {
     return Child(
       id: map['id'] as String?,
       birthday: map['birthday'] != null
-          ? convertToDateTime(map['birthday'])
+          ? (convertToDateTime(map['birthday']) ?? DateTime(1970, 1, 1))
           : DateTime.fromMillisecondsSinceEpoch(0),
       name: (map['name'] ?? '') as String,
-      language: (map['languageCodes'] as List<dynamic>?)
+      languages: (map['language'] as List<dynamic>?)
               ?.whereType<String>()
               .map((i) => LanguageCode.values.byName(i))
               .toList() ??
@@ -70,6 +80,7 @@ class Child {
       parentIDs:
           (map['parentIDS'] as List<dynamic>?)?.whereType<String>().toList() ??
               [],
+      latestWordId: map['latestWordId'] as String?,
     );
   }
 
@@ -86,7 +97,7 @@ class Child {
 
   @override
   String toString() {
-    return 'Child(id: $id, birthday: $birthday, name: $name, wordCount: $wordCount, parentIDs: $parentIDs)';
+    return 'Child(id: $id, birthday: $birthday, name: $name, wordCount: $wordCount, parentIDs: $parentIDs, latestWordId: $latestWordId, languages: $languages)';
   }
 
   @override
@@ -100,7 +111,9 @@ class Child {
         other.birthday == birthday &&
         other.name == name &&
         other.wordCount == wordCount &&
-        listEquals(other.parentIDs, parentIDs);
+        listEquals(other.parentIDs, parentIDs) &&
+        other.latestWordId == latestWordId &&
+        listEquals(other.languages, languages);
   }
 
   @override
@@ -110,5 +123,7 @@ class Child {
         name,
         wordCount,
         const DeepCollectionEquality().hash(parentIDs),
+        const DeepCollectionEquality().hash(languages),
+        latestWordId,
       ]);
 }

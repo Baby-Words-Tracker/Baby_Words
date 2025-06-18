@@ -189,7 +189,19 @@ Future<void> addChildToCurrParent(BuildContext context, String name,
     Child? child = await context
         .read<ChildDataService>()
         .createChild(DateTime.now(), name, langauges, 0, [currParent.id]);
-    parentDataService.addChildToParent(currParent.id, child?.id ?? "aaaa");
+    if (child == null || child.id == null) {
+      if (context.mounted) {
+        showAlertMessage(context, "Child Add Failed",
+            "Failed to add your child, please try again.");
+      } else {
+        debugPrint(
+            "Child Add Failed: Failed to add your child, please try again.");
+      }
+      return;
+    } else {
+      //add the child to the current parent
+      parentDataService.addChildToParent(currParent.id, child.id!);
+    }
   }
 }
 

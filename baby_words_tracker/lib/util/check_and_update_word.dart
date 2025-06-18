@@ -104,7 +104,7 @@ WikiWordData? fromSearchList(
     debugPrint("Part of speech string: $pOSString");
 
     final PartOfSpeech partOfSpeech =
-        PartofspeechExtension.fromString(pOSString);
+        PartOfSpeechExtension.fromString(pOSString);
     debugPrint("Matched part of speech: $partOfSpeech");
     if (partOfSpeech == PartOfSpeech.unknown) {
       debugPrint("fromSearchList(): unrecognized part of speech $pOSString");

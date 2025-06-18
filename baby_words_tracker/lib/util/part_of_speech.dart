@@ -13,7 +13,7 @@ enum PartOfSpeech {
   interjection,
 }
 
-extension PartofspeechExtension on PartOfSpeech {
+extension PartOfSpeechExtension on PartOfSpeech {
   static final Map<String, PartOfSpeech> _partOfSpeechMap = (() {
     final map = <String, PartOfSpeech>{};
     for (var code in PartOfSpeech.values) {

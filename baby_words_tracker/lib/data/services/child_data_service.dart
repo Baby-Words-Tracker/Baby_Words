@@ -12,13 +12,13 @@ class ChildDataService extends ChangeNotifier {
   Future<Child?> createChild(
       DateTime cBirthDay,
       String cName,
-      List<LanguageCode> language,
+      List<LanguageCode> languages,
       int cWordCount,
       List<String> cParentIDs) async {
     final object = Child(
         birthday: cBirthDay,
         name: cName,
-        language: language,
+        languages: languages,
         wordCount: cWordCount,
         parentIDs: cParentIDs);
     String? returnId =
@@ -63,7 +63,7 @@ class ChildDataService extends ChangeNotifier {
     if (object == null) return null;
 
     final child = Child.fromDataWithId(object);
-    return child.language;
+    return child.languages;
   }
 
   Future<List<WordTracker>> getAllKnownWords(String id) async {
