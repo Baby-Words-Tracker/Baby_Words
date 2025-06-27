@@ -13,10 +13,19 @@ Generated*
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 migrate_working_dir/
+
+# MacOS / iOS specific
+*.pbxproj
+*.xcworkspace
+*.xcworkspacedata
+*.xcscheme
+*.xcworkspace/
 
 # IntelliJ related
 *.iml
