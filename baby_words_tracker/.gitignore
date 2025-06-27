@@ -21,11 +21,11 @@ Generated*
 migrate_working_dir/
 
 # MacOS / iOS specific
-*.pbxproj
-*.xcworkspace
-*.xcworkspacedata
-*.xcscheme
-*.xcworkspace/
+# *.pbxproj
+# *.xcworkspace
+# *.xcworkspacedata
+# *.xcscheme
+# *.xcworkspace/
 
 # IntelliJ related
 *.iml
