@@ -49,9 +49,14 @@ class _TopBarState extends State<TopBar> {
     return AppBar(
       title: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 24,
-            backgroundImage: AssetImage('assets/LECS_mascot.png'),
+            child: Image.asset(
+              'assets/lecs_mascot_64x64.png',
+              fit: BoxFit.contain,
+              width: 38,
+              height: 38,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(child: Text(widget.pageName)),

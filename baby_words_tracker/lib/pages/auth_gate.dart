@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
@@ -140,7 +141,10 @@ Widget buildSignInScreen(BuildContext context,
         padding: const EdgeInsets.all(20),
         child: AspectRatio(
           aspectRatio: 1,
-          child: Image.asset('assets/LECS_mascot.png'),
+          child: SvgPicture.asset(
+            'assets/lecs_mascot_overlap.svg',
+            fit: BoxFit.contain,
+          ),
         ),
       );
     },
@@ -166,7 +170,10 @@ Widget buildSignInScreen(BuildContext context,
         padding: const EdgeInsets.all(20),
         child: AspectRatio(
           aspectRatio: 1,
-          child: Image.asset('assets/LECS_mascot.png'),
+          child: SvgPicture.asset(
+            'assets/lecs_mascot_overlap.svg',
+            fit: BoxFit.contain,
+          ),
         ),
       );
     },

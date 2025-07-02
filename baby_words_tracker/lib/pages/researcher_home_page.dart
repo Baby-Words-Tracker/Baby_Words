@@ -67,14 +67,19 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundImage: AssetImage('assets/LECS_mascot.png'),
+              child: Image.asset(
+                'assets/lecs_mascot_64x64.png',
+                fit: BoxFit.contain,
+                width: 38,
+                height: 38,
+              ),
             ),
-            SizedBox(width: 8),
-            Expanded(child: Text("WordBuds"))
+            const SizedBox(width: 8),
+            const Expanded(child: Text("WordBuds"))
           ],
         ),
         actions: [
