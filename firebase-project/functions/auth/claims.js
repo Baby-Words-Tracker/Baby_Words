@@ -54,17 +54,17 @@ async function getUserRecordByEmail(targetEmail) {
  * @param {Role} newRole The role to assign to the user
  * @param {Role} minimumRole The minimum role required to perform the action
  * @param {UserRecord} targetUser The UID of the user to assign the role to
- * @param {Object} data The teh data associated with the https call
+ * @param {Object} request The request associated with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function giveClaim(newRole, minimumRole, targetUser, data) {
-  checkAuthentication(data);
+async function giveClaim(newRole, minimumRole, targetUser, request) {
+  checkAuthentication(request.data);
 
   const roleName = newRole.value.description;
 
   try {
-    checkIsAtLeast(data, minimumRole);
+    checkIsAtLeast(request, minimumRole);
 
     const currentClaims = targetUser.customClaims || {};
 
@@ -84,17 +84,17 @@ async function giveClaim(newRole, minimumRole, targetUser, data) {
  * @param {Role} role The role to remove from the user
  * @param {Role} minimumRole The minimum role required to perform the action
  * @param {UserRecord} targetUser The UID of the user to remove the role from
- * @param {Object} data The data object
+ * @param {Object} request The request object associated with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function removeClaim(role, minimumRole, targetUser, data) {
-  checkAuthentication(data);
+async function removeClaim(role, minimumRole, targetUser, request) {
+  checkAuthentication(request.data);
 
   const roleName = role.value.description;
 
   try {
-    checkIsAtLeast(data, minimumRole);
+    checkIsAtLeast(request, minimumRole);
 
     const currentClaims = targetUser.customClaims || {};
 
@@ -114,14 +114,14 @@ async function removeClaim(role, minimumRole, targetUser, data) {
  * @param {Role} role The role to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
- * @param {Object} req The request object associated witht he https request
+ * @param {Object} request The request object associated witht he https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function giveClaimByUID(role, minimumRole, targetUid, req) {
+async function giveClaimByUID(role, minimumRole, targetUid, request) {
   try {
     const targetUser = await getUserRecordByUID(targetUid);
-    await giveClaim(role, minimumRole, targetUser, req);
+    await giveClaim(role, minimumRole, targetUser, request);
   } catch (error) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(
@@ -154,14 +154,14 @@ async function giveClaimByEmail(role, minimumRole, targetEmail, req) {
  * @param {Role} role The role to remove
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
- * @param {Object} data The data object associated with the https request
+ * @param {Object} request The request object associated with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function removeClaimByUID(role, minimumRole, targetUid, data) {
+async function removeClaimByUID(role, minimumRole, targetUid, request) {
   try {
     const targetUser = await getUserRecordByUID(targetUid);
-    await removeClaim(role, minimumRole, targetUser, data);
+    await removeClaim(role, minimumRole, targetUser, request);
   } catch (error) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(
@@ -174,14 +174,14 @@ async function removeClaimByUID(role, minimumRole, targetUid, data) {
  * @param {Role} role The role to remove
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
- * @param {Object} data The data object associated with the https request
+ * @param {Object} request The request object associated with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function removeClaimByEmail(role, minimumRole, targetEmail, data) {
+async function removeClaimByEmail(role, minimumRole, targetEmail, request) {
   try {
     const targetUser = await getUserRecordByEmail(targetEmail);
-    await removeClaim(role, minimumRole, targetUser, data);
+    await removeClaim(role, minimumRole, targetUser, request);
   } catch (error) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(

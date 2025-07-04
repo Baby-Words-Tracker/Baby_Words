@@ -9,25 +9,30 @@ abstract class IUserModel {
   final bool _acceptedPrivacyPolicy;
   final String? _policyVersion;
   final DateTime? _consentDate;
+  final bool _isDemo;
 
   bool get acceptedPrivacyPolicy => _acceptedPrivacyPolicy;
   String? get policyVersion => _policyVersion;
   DateTime? get consentDate => _consentDate;
+  bool get isDemo => _isDemo;
 
   IUserModel({
     required this.id,
     required bool acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool isDemo = false,
   })  : _consentDate = consentDate,
         _acceptedPrivacyPolicy = acceptedPrivacyPolicy,
-        _policyVersion = policyVersion;
+        _policyVersion = policyVersion,
+        _isDemo = isDemo;
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'acceptedPrivacyPolicy': _acceptedPrivacyPolicy,
       'policyVersion': _policyVersion,
       'consentDate': _consentDate?.millisecondsSinceEpoch,
+      'isDemo': _isDemo,
     };
   }
 
@@ -49,10 +54,15 @@ abstract class IUserModel {
         : null;
   }
 
+  static bool fromMapIsDemo(Map<String, dynamic> map) {
+    return map['isDemo'] as bool? ?? false;
+  }
+
   static Map<String, dynamic> createUpdateMap({
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool? isDemo,
   }) {
     Map<String, dynamic> map = {};
     if (acceptedPrivacyPolicy != null) {
@@ -62,12 +72,13 @@ abstract class IUserModel {
     if (consentDate != null) {
       map['consentDate'] = consentDate;
     }
+    if (isDemo != null) map['isDemo'] = isDemo;
     return map;
   }
 
   @override
   String toString() {
-    return 'IUserModel(id: $id, acceptedPrivacyPolicy: $_acceptedPrivacyPolicy, policyVersion: $_policyVersion, consentDate: $_consentDate)';
+    return 'IUserModel(id: $id, acceptedPrivacyPolicy: $_acceptedPrivacyPolicy, policyVersion: $_policyVersion, consentDate: $_consentDate, isDemo: $_isDemo)';
   }
 
   @override
@@ -78,7 +89,8 @@ abstract class IUserModel {
     return other.id == id &&
         other._acceptedPrivacyPolicy == _acceptedPrivacyPolicy &&
         other._policyVersion == _policyVersion &&
-        other._consentDate == _consentDate;
+        other._consentDate == _consentDate &&
+        other._isDemo == _isDemo;
   }
 
   @override
@@ -87,5 +99,6 @@ abstract class IUserModel {
         _acceptedPrivacyPolicy,
         _policyVersion,
         _consentDate,
+        _isDemo,
       ]);
 }

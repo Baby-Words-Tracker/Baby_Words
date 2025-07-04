@@ -26,6 +26,7 @@ class Parent extends IUserModel {
     super.acceptedPrivacyPolicy = false,
     super.policyVersion,
     super.consentDate,
+    super.isDemo = false,
   }) : childIDs = childIDs ?? [];
 
   Parent copyWith({
@@ -38,6 +39,7 @@ class Parent extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool? isDemo,
   }) {
     return Parent(
       id: id ?? this.id,
@@ -50,6 +52,7 @@ class Parent extends IUserModel {
           acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
       policyVersion: policyVersion ?? this.policyVersion,
       consentDate: consentDate ?? this.consentDate,
+      isDemo: isDemo ?? this.isDemo,
     );
   }
 
@@ -81,6 +84,7 @@ class Parent extends IUserModel {
       acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
       policyVersion: IUserModel.fromMapPolicyVersion(map),
       consentDate: IUserModel.fromMapConsentDate(map),
+      isDemo: IUserModel.fromMapIsDemo(map),
     );
   }
 
@@ -104,6 +108,7 @@ class Parent extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool? isDemo,
   }) {
     Map<String, dynamic> map = {};
 
@@ -123,6 +128,7 @@ class Parent extends IUserModel {
       acceptedPrivacyPolicy: acceptedPrivacyPolicy,
       policyVersion: policyVersion,
       consentDate: consentDate,
+      isDemo: isDemo,
     ));
 
     return map;

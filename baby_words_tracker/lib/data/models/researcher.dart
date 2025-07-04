@@ -23,6 +23,7 @@ class Researcher extends IUserModel {
     super.acceptedPrivacyPolicy = false,
     super.policyVersion,
     super.consentDate,
+    super.isDemo = false,
   });
 
   Researcher copyWith({
@@ -34,6 +35,7 @@ class Researcher extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool? isDemo,
   }) {
     return Researcher(
       id: id ?? this.id,
@@ -45,6 +47,7 @@ class Researcher extends IUserModel {
           acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
       policyVersion: policyVersion ?? this.policyVersion,
       consentDate: consentDate ?? this.consentDate,
+      isDemo: isDemo ?? this.isDemo,
     );
   }
 
@@ -69,6 +72,7 @@ class Researcher extends IUserModel {
       acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
       policyVersion: IUserModel.fromMapPolicyVersion(map),
       consentDate: IUserModel.fromMapConsentDate(map),
+      isDemo: IUserModel.fromMapIsDemo(map),
     );
   }
 
@@ -91,6 +95,7 @@ class Researcher extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool? isDemo,
   }) {
     Map<String, dynamic> updateData = <String, dynamic>{};
     if (email != null) updateData['email'] = email;
@@ -103,6 +108,7 @@ class Researcher extends IUserModel {
         acceptedPrivacyPolicy: acceptedPrivacyPolicy,
         policyVersion: policyVersion,
         consentDate: consentDate,
+        isDemo: isDemo,
       ),
     );
 
