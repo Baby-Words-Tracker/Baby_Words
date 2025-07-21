@@ -1,5 +1,5 @@
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
-import 'package:baby_words_tracker/util/user_roles.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
 import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';

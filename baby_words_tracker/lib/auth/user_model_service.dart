@@ -8,9 +8,9 @@ import 'package:baby_words_tracker/data/services/general_user_service.dart';
 
 import 'package:baby_words_tracker/util/pair.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
-import 'package:baby_words_tracker/util/user_role_and_type_mapper.dart';
-import 'package:baby_words_tracker/util/user_roles.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_role_and_type_mapper.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 
 import 'package:flutter/material.dart';
 

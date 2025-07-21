@@ -3,7 +3,7 @@ import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 

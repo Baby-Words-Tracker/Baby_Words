@@ -9,9 +9,9 @@ import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
 
-import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:baby_words_tracker/util/pair.dart';
-import 'package:baby_words_tracker/util/user_type_collection_mapper.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type_collection_mapper.dart';
 import 'package:flutter/foundation.dart';
 
 class GeneralUserService {

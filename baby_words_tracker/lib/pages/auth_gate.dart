@@ -1,7 +1,7 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';

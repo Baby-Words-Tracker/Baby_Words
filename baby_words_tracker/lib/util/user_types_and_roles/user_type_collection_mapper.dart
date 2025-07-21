@@ -1,6 +1,6 @@
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 
 extension UserTypeCollectionMapper on UserType {
   String? get collectionName {
