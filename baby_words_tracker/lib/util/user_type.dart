@@ -1,5 +1,13 @@
 // make sure to update user_type_collection_mapper.dart when adding user types
-enum UserType { parent, researcher, unauthenticated }
+enum UserType {
+  parent,
+  researcher,
+  // ignore: constant_identifier_names
+  demo_parent,
+  // ignore: constant_identifier_names
+  demo_researcher,
+  unauthenticated
+}
 
 extension UserTypeExtension on UserType {
   String get displayName {
@@ -8,6 +16,10 @@ extension UserTypeExtension on UserType {
         return 'Parent';
       case UserType.researcher:
         return 'Researcher';
+      case UserType.demo_parent:
+        return 'Demo Parent';
+      case UserType.demo_researcher:
+        return 'Demo Researcher';
       case UserType.unauthenticated:
         return 'Unauthenticated';
     }
