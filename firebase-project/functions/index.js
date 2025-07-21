@@ -8,7 +8,8 @@ const {getAuth} = require("firebase-admin/auth");
 const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
-const {Role, getRoleFromToken, isDemoRole} = require("./auth/roles");
+// eslint-disable-next-line max-len
+const {Role, isDemoRole, getRoleFromToken, getRoleFromString} = require("./auth/roles");
 const {giveClaimByEmail, removeClaimByEmail} = require("./auth/claims");
 // eslint-disable-next-line max-len
 const {checkIsAtLeast, checkAuthentication} = require("./auth/auth.js");
@@ -304,6 +305,9 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   const targetEmail = req.data.targetEmail;
   const childUid = req.data.childUid;
 
+  const uid = req.auth.uid;
+  checkEmpty(uid, "uid");
+
   checkEmpty(targetEmail, "targetEmail");
   checkEmpty(childUid, "childUid");
 
@@ -313,7 +317,8 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
         "Target email is too long",
     );
   }
-
+  // TODO: add regex to check if the email is valid.
+  //  I don't think this is a security issue, but we should still validate it
   // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   try {
@@ -334,34 +339,46 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
       childCollection = db.collection("Child");
     }
 
-    // const parentQuerySnapshot = await parentCollection
-    //     .where("email", "==", targetEmail)
-    //     .get();
-
     let targetUid;
     try {
       const userRecord = await getAuth().getUserByEmail(targetEmail);
       targetUid = userRecord.uid;
     } catch (error) {
-      throw new https.HttpsError("not-found", `Parent was not found: ${error}`);
+      throw new https.HttpsError(
+          "not-found",
+          `Target parent does not exist: ${error}`,
+      );
     }
-
 
     await db.runTransaction(async (transaction) => {
       const userRef = parentCollection.doc(req.auth.uid);
-      const userSnaphot = await transaction.get(userRef);
+      const userSnapshot = await transaction.get(userRef);
 
-      if (!userSnaphot.exists ||
-        !userSnaphot.data().childIDs.includes(childUid)) {
+      if (!userSnapshot.exists) {
+        throw new https.HttpsError(
+            "not-found",
+            "User document not found",
+        );
+      }
+
+      if (!userSnapshot.data().childIDs.includes(childUid)) {
         throw new https.HttpsError(
             "permission-denied",
             // eslint-disable-next-line max-len
-            "You do must be a parent of the child to assign them to another parent",
+            "You do must be a parent of the child to assign them to another parent. (1)",
         );
       }
 
       const parentRef = parentCollection.doc(targetUid);
       const parentUID = parentRef.id;
+      const parentSnapshot = await transaction.get(parentRef);
+
+      if (!parentSnapshot.exists) {
+        throw new https.HttpsError(
+            "not-found",
+            "Target parent document not found",
+        );
+      }
 
       const childRef = childCollection.doc(childUid);
       const childSnapshot = await transaction.get(childRef);
@@ -370,6 +387,14 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
         throw new https.HttpsError(
             "not-found",
             "Child document not found",
+        );
+      }
+
+      if (!childSnapshot.data().parentIDs.includes(uid)) {
+        throw new https.HttpsError(
+            "permission-denied",
+            // eslint-disable-next-line max-len
+            "You do must be a parent of the child to assign them to another parent. (2)",
         );
       }
 
@@ -421,10 +446,10 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
   try {
     checkAuthentication(req.data);
 
-    const userRole = getRoleFromToken(req.auth.token); 
-    const isDemo = isDemoRole(userRole);
+    const userRole = getRoleFromToken(req.auth.token);
+    const isNotDemo = !isDemoRole(userRole);
 
-    if (!isDemo) {
+    if (isNotDemo) {
       checkIsAtLeast(req, Role.admin);
 
       // Fetch the custom claims of the selected user
@@ -433,8 +458,7 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
       // Return the user's custom claims
       return selectedUser.customClaims != null ? selectedUser.customClaims : {};
     } else {
-      checkIsAtLeast(req, Role.demo_parent);
-
+      checkIsAtLeast(req, Role.demo_admin);
 
       // Fetch the custom claims of the selected user
       const selectedUser = await admin.auth().getUserByEmail(targetEmail);
@@ -444,10 +468,7 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
       const demoRoles = Object.fromEntries(
           Object.entries(selectedUser.customClaims || {}).filter(
               ([key, value]) =>
-                key === Role.demo_admin.value.description ||
-                key === Role.demo_researcher.value.description ||
-                key === Role.demo_parent.value.description ||
-                key === Role.unauthenticated.value.description,
+                isDemoRole(getRoleFromString(key)),
           ),
       );
 

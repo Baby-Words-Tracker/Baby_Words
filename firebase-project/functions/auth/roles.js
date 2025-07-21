@@ -62,6 +62,9 @@ function isDemoRole(role) {
 
 /**
  * Gets the user's Role object from the token
+ * This function must return the highestr role the user has.
+ * If the user has multiple roles, the one with the highest
+ * order will be returned.
  * @param {unknown} token the token object (context.auth.token)
  * @return {Role} the user's corresponding Role object
  */
@@ -83,8 +86,34 @@ function getRoleFromToken(token) {
   }
 }
 
+/**
+ * Gets the Role object from a string representation
+ * @param {string} roleString the string representation of the role
+ * @return {Role} the corresponding Role object
+ */
+function getRoleFromString(roleString) {
+  switch (roleString) {
+    case Role.admin.value.description:
+      return Role.admin;
+    case Role.researcher.value.description:
+      return Role.researcher;
+    case Role.parent.value.description:
+      return Role.parent;
+    case Role.demo_admin.value.description:
+      return Role.demo_admin;
+    case Role.demo_researcher.value.description:
+      return Role.demo_researcher;
+    case Role.demo_parent.value.description:
+      return Role.demo_parent;
+    // If the role is not recognized, return unauthenticated
+    default:
+      return Role.unauthenticated;
+  }
+}
+
 module.exports = {
   Role,
-  getRoleFromToken,
   isDemoRole,
+  getRoleFromToken,
+  getRoleFromString,
 };
