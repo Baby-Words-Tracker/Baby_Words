@@ -287,9 +287,133 @@ exports.removeAdminClaim = https.onCall(async (req, context) => {
   };
 });
 
+exports.giveDemoParentClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
 
-// TODO: this is extremely insecure.
-//       we need to check if the user is a parent of the child
+  try {
+    checkAuthentication(req.data);
+    giveClaimByEmail(Role.demo_parent, Role.admin, targetEmail, req);
+  } catch (error) {
+    logger.error(`Failed to assign demo parent role: ${error}`);
+    return {
+      message: `Failed to assign the ${Role.demo_parent.value.description}` +
+        ` role to user with error: ${error}`,
+    };
+  }
+
+  return {
+    message: `User ${targetEmail} has been assigned the` +
+      ` ${Role.demo_parent.value.description} role.`,
+  };
+});
+
+exports.removeDemoParentClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
+
+  try {
+    checkAuthentication(req.data);
+    removeClaimByEmail(Role.demo_parent, Role.admin, targetEmail, req);
+  } catch (error) {
+    logger.error(`Failed to remove demo parent role: ${error}`);
+    return {
+      message: `Failed to remove the ${Role.demo_parent.value.description}` +
+        ` role from user with error: ${error}`,
+    };
+  }
+  return {
+    message: `User ${targetEmail} has been removed from the` +
+      ` ${Role.demo_parent.value.description} role.`,
+  };
+});
+
+exports.giveDemoResearcherClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
+
+  try {
+    checkAuthentication(req.data);
+    giveClaimByEmail(Role.demo_researcher, Role.admin, targetEmail, req);
+  } catch (error) {
+    logger.error(`Failed to assign demo researcher role: ${error}`);
+    return {
+      // eslint-disable-next-line max-len
+      message: `Failed to assign the ${Role.demo_researcher.value.description}` +
+        ` role to user with error: ${error}`,
+    };
+  }
+
+  return {
+    message: `User ${targetEmail} has been assigned the` +
+      ` ${Role.demo_researcher.value.description} role.`,
+  };
+});
+
+exports.removeDemoResearcherClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
+
+  try {
+    checkAuthentication(req.data);
+    removeClaimByEmail(Role.demo_researcher, Role.admin, targetEmail, req);
+  } catch (error) {
+    logger.error(`Failed to remove demo researcher role: ${error}`);
+    return {
+      // eslint-disable-next-line max-len
+      message: `Failed to remove the ${Role.demo_researcher.value.description}` +
+        ` role from user with error: ${error}`,
+    };
+  }
+
+  return {
+    message: `User ${targetEmail} has been removed from the` +
+      ` ${Role.demo_researcher.value.description} role.`,
+  };
+});
+
+exports.giveDemoAdminClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
+
+  try {
+    checkAuthentication(req.data);
+    giveClaimByEmail(Role.demo_admin, Role.admin, targetEmail, req);
+  } catch (error) {
+    logger.error(`Failed to assign demo admin role: ${error}`);
+    return {
+      message: `Failed to assign the ${Role.demo_admin.value.description}` +
+        ` role to user with error: ${error}`,
+    };
+  }
+
+  return {
+    message: `User ${targetEmail} has been assigned the` +
+      ` ${Role.demo_admin.value.description} role.`,
+  };
+});
+
+exports.removeDemoAdminClaim = https.onCall(async (req, context) => {
+  const targetEmail = req.data.targetEmail;
+  checkEmpty(targetEmail, "targetEmail");
+
+  try {
+    checkAuthentication(req.data);
+    removeClaimByEmail(Role.demo_admin, Role.admin, targetEmail, req);
+  } catch (error) {
+    logger.error(`Failed to remove demo admin role: ${error}`);
+    return {
+      message: `Failed to remove the ${Role.demo_admin.value.description}` +
+        ` role from user with error: ${error}`,
+    };
+  }
+
+  return {
+    message: `User ${targetEmail} has been removed from the` +
+      ` ${Role.demo_admin.value.description} role.`,
+  };
+});
+
 // TODO: test if a parent can add a child they don't own to someone else
 /**
  * Assigns a child to another parent
