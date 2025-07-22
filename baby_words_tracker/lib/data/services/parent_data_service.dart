@@ -6,13 +6,30 @@ import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
-class ParentDataService extends ChangeNotifier {
-  static final _firestoreRepository = FirestoreRepository();
+class ParentDataService {
+  final FirestoreRepository _firestoreRepository;
+
+  ParentDataService(this._firestoreRepository);
+
+  String _parentCollectionName(bool useDemoCollection) {
+    return useDemoCollection
+        ? "demo_${Parent.collectionName}"
+        : Parent.collectionName;
+  }
+
+  String _childCollectionName(bool useDemoCollection) {
+    return useDemoCollection
+        ? "demo_${Child.collectionName}"
+        : Child.collectionName;
+  }
 
   //Parent services
-  Future<Parent?> createParent(Parent parent) async {
+  Future<Parent?> createParent(Parent parent, bool useDemoCollection) async {
     String? returnId = await _firestoreRepository.createWithId(
-        Parent.collectionName, parent.id, parent.toMap(), true);
+        _parentCollectionName(useDemoCollection),
+        parent.id,
+        parent.toMap(),
+        true);
 
     if (returnId == null) {
       return null;
@@ -24,12 +41,12 @@ class ParentDataService extends ChangeNotifier {
       return null;
     }
 
-    notifyListeners();
     return parent;
   }
 
-  Future<Parent?> getParent(String id) async {
-    final parent = await _firestoreRepository.read(Parent.collectionName, id);
+  Future<Parent?> getParent(String id, bool useDemoCollection) async {
+    final parent = await _firestoreRepository.read(
+        _parentCollectionName(useDemoCollection), id);
     if (parent == null) {
       debugPrint("ParentDataService: Failed to get parent by ID");
       return null;
@@ -37,9 +54,10 @@ class ParentDataService extends ChangeNotifier {
     return Parent.fromDataWithId(parent);
   }
 
-  Future<Parent?> getParentByEmail(String email) async {
-    final parentList = await _firestoreRepository
-        .queryByField(Parent.collectionName, "email", email, limit: 1);
+  Future<Parent?> getParentByEmail(String email, bool useDemoCollection) async {
+    final parentList = await _firestoreRepository.queryByField(
+        _parentCollectionName(useDemoCollection), "email", email,
+        limit: 1);
     if (parentList.isEmpty) {
       debugPrint("ParentDataService: Failed to get parent by email");
       return null;
@@ -47,14 +65,17 @@ class ParentDataService extends ChangeNotifier {
     return Parent.fromDataWithId(parentList.first);
   }
 
-  Future<List<Parent>> getMultipleParents(List<String> ids) async {
-    return (await _firestoreRepository.readMultiple(Parent.collectionName, ids))
+  Future<List<Parent>> getMultipleParents(
+      List<String> ids, bool useDemoCollection) async {
+    return (await _firestoreRepository.readMultiple(
+            _parentCollectionName(useDemoCollection), ids))
         .map((doc) => Parent.fromDataWithId(doc))
         .toList();
   }
 
   Future<bool> updateParent(
-    String id, {
+    String id,
+    bool useDemoCollection, {
     List<String>? childIDs,
     LanguageCode? language,
     bool? consentFormComplete,
@@ -75,43 +96,48 @@ class ParentDataService extends ChangeNotifier {
       consentDate: consentDate,
     );
     bool success = await _firestoreRepository.update(
-        Parent.collectionName, id, updateData);
+        _parentCollectionName(useDemoCollection), id, updateData);
 
     if (!success) {
       return false;
     }
 
-    notifyListeners();
     return success;
   }
 
   // TODO: this function may also have to delete children or
   //  store them in a data structure so we don't accrue hanging data.
-  // Future<bool> deleteParent(String id) async {
-  //   bool success = await fireRepo.delete(Parent.collectionName, id);
+  // Future<bool> deleteParent(String id, bool useDemoCollection) async {
+  //   bool success = await fireRepo.delete(_parentCollectionName(useDemoCollection), id);
   //   if (!success) {
   //     return false;
   //   }
-  //   notifyListeners();
   //   return true;
   // }
 
-  Future<void> addChildToParent(String parentId, String childId) async {
+  Future<void> addChildToParent(
+      String parentId, String childId, bool useDemoCollection) async {
     await _firestoreRepository.appendToArrayField(
-        Parent.collectionName, parentId, "childIDs", childId);
+        _parentCollectionName(useDemoCollection),
+        parentId,
+        "childIDs",
+        childId);
     await _firestoreRepository.appendToArrayField(
-        Child.collectionName, childId, "parentIDs", parentId);
-    notifyListeners();
+        _childCollectionName(useDemoCollection),
+        childId,
+        "parentIDs",
+        parentId);
   }
 
-  Future<List<Child>> getChildList(String id) async {
-    final object = await _firestoreRepository.read(Parent.collectionName, id);
+  Future<List<Child>> getChildList(String id, bool useDemoCollection) async {
+    final object = await _firestoreRepository.read(
+        _parentCollectionName(useDemoCollection), id);
     List<Child> children = List.empty(growable: true);
     if (object == null) return children;
 
     final parent = Parent.fromDataWithId(object);
     final List<DataWithId> data = await _firestoreRepository.readMultiple(
-        Child.collectionName, parent.childIDs);
+        _childCollectionName(useDemoCollection), parent.childIDs);
 
     for (DataWithId child in data) {
       children.add(Child.fromDataWithId(child));
@@ -119,8 +145,9 @@ class ParentDataService extends ChangeNotifier {
     return children;
   }
 
-  Future<LanguageCode?> getLanguage(String id) async {
-    final object = await _firestoreRepository.read(Parent.collectionName, id);
+  Future<LanguageCode?> getLanguage(String id, bool useDemoCollection) async {
+    final object = await _firestoreRepository.read(
+        _parentCollectionName(useDemoCollection), id);
 
     if (object == null) {
       debugPrint("unable to get parent language");
@@ -130,9 +157,9 @@ class ParentDataService extends ChangeNotifier {
     return Parent.fromDataWithId(object).language;
   }
 
-  IDocumentListener<Parent> getUserListener(String id) {
+  IDocumentListener<Parent> getUserListener(String id, bool useDemoCollection) {
     return _firestoreRepository.getDocumentListener<Parent>(
-      path: '${Parent.collectionName}/$id',
+      path: '${_parentCollectionName(useDemoCollection)}/$id',
       convertDataWithId: (data) => Parent.fromDataWithId(data),
     );
   }

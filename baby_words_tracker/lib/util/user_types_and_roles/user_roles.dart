@@ -50,11 +50,11 @@ extension UserRoleExtension on UserRole {
         return 100;
     }
   }
-}
 
-bool isDemoRole(UserRole role) {
-  return role.index >= UserRole.demo_admin.index &&
-      role.index < UserRole.unauthenticated.index;
+  bool get isDemoRole {
+    return this.index >= UserRole.demo_admin.index &&
+        this.index < UserRole.unauthenticated.index;
+  }
 }
 
 bool isAtLeast(UserRole role, UserRole targetRole) {

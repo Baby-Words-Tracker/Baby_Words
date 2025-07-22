@@ -3,13 +3,27 @@ import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
-class ResearcherDataService extends ChangeNotifier {
-  static final _firestoreRepository = FirestoreRepository();
+class ResearcherDataService {
+  final FirestoreRepository _firestoreRepository;
+
+  ResearcherDataService(this._firestoreRepository);
+
+  String _researcherCollectionName(bool isDemoType) {
+    return isDemoType
+        ? "demo_${Researcher.collectionName}"
+        : Researcher.collectionName;
+  }
 
   //Reseacher services
-  Future<Researcher?> createResearcher(Researcher researcher) async {
+  Future<Researcher?> createResearcher(
+    Researcher researcher,
+    bool isDemoType,
+  ) async {
     String? returnId = await _firestoreRepository.createWithId(
-        Researcher.collectionName, researcher.id, researcher.toMap(), true);
+        _researcherCollectionName(isDemoType),
+        researcher.id,
+        researcher.toMap(),
+        true);
 
     if (returnId == null) {
       return null;
@@ -21,13 +35,12 @@ class ResearcherDataService extends ChangeNotifier {
       return null;
     }
 
-    notifyListeners();
     return researcher;
   }
 
-  Future<Researcher?> getResearcher(String id) async {
-    final researcher =
-        await _firestoreRepository.read(Researcher.collectionName, id);
+  Future<Researcher?> getResearcher(String id, bool isDemoType) async {
+    final researcher = await _firestoreRepository.read(
+        _researcherCollectionName(isDemoType), id);
     if (researcher == null) {
       debugPrint("ResearcherDataService: Failed to get researcher by ID");
       return null;
@@ -35,24 +48,28 @@ class ResearcherDataService extends ChangeNotifier {
     return Researcher.fromDataWithId(researcher);
   }
 
-  Future<Researcher?> getResearcherByEmail(String email) async {
-    final researcherList = await _firestoreRepository
-        .queryByField(Researcher.collectionName, "email", email, limit: 1);
+  Future<Researcher?> getResearcherByEmail(
+      String email, bool isDemoType) async {
+    final researcherList = await _firestoreRepository.queryByField(
+        _researcherCollectionName(isDemoType), "email", email,
+        limit: 1);
     if (researcherList.isEmpty) {
       return null;
     }
     return Researcher.fromDataWithId(researcherList.first);
   }
 
-  Future<List<Researcher>> getMultipleResearchers(List<String> ids) async {
+  Future<List<Researcher>> getMultipleResearchers(
+      List<String> ids, bool isDemoType) async {
     return (await _firestoreRepository.readMultiple(
-            Researcher.collectionName, ids))
+            _researcherCollectionName(isDemoType), ids))
         .map((doc) => Researcher.fromDataWithId(doc))
         .toList();
   }
 
   Future<bool> updateResearcher(
-    String id, {
+    String id,
+    bool isDemoType, {
     String? email,
     String? name,
     String? institution,
@@ -71,31 +88,31 @@ class ResearcherDataService extends ChangeNotifier {
       consentDate: consentDate,
     );
     bool success = await _firestoreRepository.update(
-        Researcher.collectionName, id, updateData);
+        _researcherCollectionName(isDemoType), id, updateData);
 
     if (!success) {
       return false;
     }
 
-    notifyListeners();
     return true;
   }
 
-  Future<bool> deleteResearcher(String id) async {
-    bool success =
-        await _firestoreRepository.delete(Researcher.collectionName, id);
+  Future<bool> deleteResearcher(String id, bool isDemoType) async {
+    bool success = await _firestoreRepository.delete(
+      _researcherCollectionName(isDemoType),
+      id,
+    );
 
     if (!success) {
       return false;
     }
 
-    notifyListeners();
     return true;
   }
 
-  IDocumentListener<Researcher> getUserListener(String id) {
+  IDocumentListener<Researcher> getUserListener(String id, bool isDemoType) {
     return _firestoreRepository.getDocumentListener<Researcher>(
-      path: '${Researcher.collectionName}/$id',
+      path: '${_researcherCollectionName(isDemoType)}/$id',
       convertDataWithId: (data) => Researcher.fromDataWithId(data),
     );
   }

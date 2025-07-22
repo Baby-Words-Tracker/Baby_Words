@@ -1,4 +1,5 @@
 // Data
+import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
@@ -9,6 +10,7 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 // Auth
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
 
 //L10n
 import 'package:baby_words_tracker/l10n/localization.dart';
@@ -58,11 +60,26 @@ void main() async {
       // Provider used for dependency injection of database functions and configurations
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => ChildDataService()),
-          ChangeNotifierProvider(create: (_) => ParentDataService()),
-          ChangeNotifierProvider(create: (_) => ResearcherDataService()),
-          ChangeNotifierProvider(create: (_) => WordDataService()),
-          Provider(create: (_) => WordTrackerDataService()),
+          Provider(
+            create: (_) => ChildDataService(FirestoreRepository()),
+            lazy: false,
+          ),
+          Provider(
+            create: (_) => ParentDataService(FirestoreRepository()),
+            lazy: false,
+          ),
+          Provider(
+            create: (_) => ResearcherDataService(FirestoreRepository()),
+            lazy: false,
+          ),
+          Provider(
+            create: (_) => WordDataService(FirestoreRepository()),
+            lazy: false,
+          ),
+          Provider(
+            create: (_) => WordTrackerDataService(FirestoreRepository()),
+            lazy: false,
+          ),
           ChangeNotifierProvider(
             create: (_) => LocalizationService(),
             lazy: false,

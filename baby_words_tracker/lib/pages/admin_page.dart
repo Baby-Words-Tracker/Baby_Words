@@ -105,11 +105,12 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
+  // TODO: change this to use a cloud function instead of multiple calls
   Future<void> changeUserType(UserType newType) async {
     Map<String, dynamic>? data;
-    if (!([UserType.parent, UserType.researcher].contains(newType))) {
+    if (newType == UserType.unauthenticated) {
       throw ArgumentError(
-          'Invalid user type: $newType. Only parent and researcher are allowed.');
+          'Invalid user type: $newType. Unauthenticated is not allowed.');
     }
     try {
       data = await callFunctionWithThrow(
@@ -161,9 +162,18 @@ class _AdminPageState extends State<AdminPage> {
             await _callRoleFunction('removeParentClaim');
             await _generalUserService.changeUserType(userId, newType);
             break;
+          case UserType.demo_parent:
+            await _callRoleFunction('giveDemoParentClaim');
+            await _callRoleFunction('removeDemoResearcherClaim');
+            await _generalUserService.changeUserType(userId, newType);
+            break;
+          case UserType.demo_researcher:
+            await _callRoleFunction('giveDemoResearcherClaim');
+            await _callRoleFunction('removeDemoParentClaim');
+            await _generalUserService.changeUserType(userId, newType);
+            break;
           default:
-            throw ArgumentError(
-                'Invalid user type: $newType. Only parent and researcher are allowed.');
+            throw ArgumentError('Invalid user type: $newType.');
         }
       } else {
         debugPrint(
@@ -186,12 +196,12 @@ class _AdminPageState extends State<AdminPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'User type changed to ${newType.name} for $_selectedUserEmail'),
+              'User type changed to ${newType.displayName} for $_selectedUserEmail'),
         ),
       );
     } else {
       debugPrint(
-          "User type changed to ${newType.name} for $_selectedUserEmail");
+          "User type changed to ${newType.displayName} for $_selectedUserEmail");
     }
   }
 
@@ -308,7 +318,7 @@ class _AdminPageState extends State<AdminPage> {
                                     "Change user type to Researcher"),
                                 onPressed: () async {
                                   if (await showConfirmationDialog(context,
-                                          'Are your sure you want to make $_selectedUserEmail a Researcher?')) {
+                                      'Are your sure you want to make $_selectedUserEmail a Researcher?')) {
                                     await changeUserType(UserType.researcher);
                                   }
                                 },
@@ -323,7 +333,7 @@ class _AdminPageState extends State<AdminPage> {
                                 child: const Text("Change user type to Parent"),
                                 onPressed: () async {
                                   if (await showConfirmationDialog(context,
-                                          'Are your sure you want to make $_selectedUserEmail a Parent?')) {
+                                      'Are your sure you want to make $_selectedUserEmail a Parent?')) {
                                     await changeUserType(UserType.parent);
                                   }
                                 },
@@ -337,7 +347,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text("Assign Parent Role"),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to assign the Parent role to $_selectedUserEmail?')) {
+                                  'Are your sure you want to assign the Parent role to $_selectedUserEmail?')) {
                                 await _callRoleFunction('giveParentClaim');
                               }
                             },
@@ -348,7 +358,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text("Remove Parent Role"),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to remove the Parent role from $_selectedUserEmail?')) {
+                                  'Are your sure you want to remove the Parent role from $_selectedUserEmail?')) {
                                 await _callRoleFunction('removeParentClaim');
                               }
                             },
@@ -359,7 +369,7 @@ class _AdminPageState extends State<AdminPage> {
                               child: const Text('Assign Researcher Role'),
                               onPressed: () async {
                                 if (await showConfirmationDialog(context,
-                                        'Are your sure you want to give the Researcher role to $_selectedUserEmail?')) {
+                                    'Are your sure you want to give the Researcher role to $_selectedUserEmail?')) {
                                   _callRoleFunction('giveResearcherClaim');
                                 }
                               }),
@@ -369,7 +379,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Remove Researcher Role'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to remove the Researcher role from $_selectedUserEmail?')) {
+                                  'Are your sure you want to remove the Researcher role from $_selectedUserEmail?')) {
                                 _callRoleFunction('removeResearcherClaim');
                               }
                             },
@@ -380,7 +390,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Assign Admin Role'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to give the Admin role to $_selectedUserEmail?')) {
+                                  'Are your sure you want to give the Admin role to $_selectedUserEmail?')) {
                                 _callRoleFunction('giveAdminClaim');
                               }
                             },
@@ -391,7 +401,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Remove Admin Role'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to remove the Admin role from $_selectedUserEmail?')) {
+                                  'Are your sure you want to remove the Admin role from $_selectedUserEmail?')) {
                                 _callRoleFunction('removeAdminClaim');
                               }
                             },
@@ -402,7 +412,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Get Email-UID Data'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'This will query all email and uid data and return it as a csv. Continue?')) {
+                                  'This will query all email and uid data and return it as a csv. Continue?')) {
                                 // TODO: do I need to check this context here?
                                 var userData = await callFunction(
                                     context, 'getEmailUIDTable', {});

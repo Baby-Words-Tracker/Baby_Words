@@ -18,6 +18,7 @@ extension UserTypeCollectionMapper on UserType {
     }
   }
 
+  // TODO: add demo collection names if needed
   static List<String> allCollectionNames = [
     Parent.collectionName,
     Researcher.collectionName,

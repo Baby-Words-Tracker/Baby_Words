@@ -198,7 +198,7 @@ class UserModelService extends ChangeNotifier {
   UserType get userType => _userType;
 
   Parent? get parent {
-    if (_userType != UserType.parent) {
+    if (_userType != UserType.parent && _userType != UserType.demo_parent) {
       debugPrint("UserModelService: User is not a parent, returning null");
       return null;
     }
@@ -206,7 +206,8 @@ class UserModelService extends ChangeNotifier {
   }
 
   Researcher? get researcher {
-    if (_userType != UserType.researcher) {
+    if (_userType != UserType.researcher &&
+        _userType != UserType.demo_researcher) {
       debugPrint("UserModelService: User is not a researcher, returning null");
       return null;
     }

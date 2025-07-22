@@ -1,11 +1,11 @@
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_parent_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_researcher_data_service.dart';
 import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
 
@@ -15,13 +15,13 @@ import 'package:baby_words_tracker/util/user_types_and_roles/user_type_collectio
 import 'package:flutter/foundation.dart';
 
 class GeneralUserService {
-  final ParentDataService _parentDataService;
-  final ResearcherDataService _researcherDataService;
+  final TypeAwareParentDataService _parentDataService;
+  final TypeAwareResearcherDataService _researcherDataService;
   final FirestoreRepository _firestoreRepository = FirestoreRepository();
 
   GeneralUserService(
-      {required ParentDataService parentDataService,
-      required ResearcherDataService researcherDataService})
+      {required TypeAwareParentDataService parentDataService,
+      required TypeAwareResearcherDataService researcherDataService})
       : _parentDataService = parentDataService,
         _researcherDataService = researcherDataService;
 
@@ -215,14 +215,15 @@ class GeneralUserService {
             "GeneralUserService: setPrivacyPolicyAccepted() could not find user to determine type, returning false");
         return false; // user not found
       } else {
-        debugPrint(
-            "GeneralUserService: setPrivacyPolicyAccepted() userType: ${userType?.name ?? 'type is null'}");
         userType = user.second;
+        debugPrint(
+            "GeneralUserService: setPrivacyPolicyAccepted() userType: ${userType.name}");
       }
     }
 
     switch (userType) {
       case UserType.parent:
+      case UserType.demo_parent:
         bool success = await _parentDataService.updateParent(
           userId,
           acceptedPrivacyPolicy: accepted,
@@ -235,6 +236,7 @@ class GeneralUserService {
         }
         return success;
       case UserType.researcher:
+      case UserType.demo_researcher:
         bool success = await _researcherDataService.updateResearcher(
           userId,
           acceptedPrivacyPolicy: accepted,

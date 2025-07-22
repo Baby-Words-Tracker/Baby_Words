@@ -1,4 +1,5 @@
 // make sure to update user_type_collection_mapper.dart when adding user types
+// make sure to update changeUserType from admin_page.dart when adding user types
 enum UserType {
   parent,
   researcher,
@@ -23,5 +24,9 @@ extension UserTypeExtension on UserType {
       case UserType.unauthenticated:
         return 'Unauthenticated';
     }
+  }
+
+  bool get isDemoType {
+    return this == UserType.demo_parent || this == UserType.demo_researcher;
   }
 }

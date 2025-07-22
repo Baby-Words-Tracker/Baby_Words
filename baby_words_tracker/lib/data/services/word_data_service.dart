@@ -2,12 +2,14 @@ import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
-class WordDataService extends ChangeNotifier {
-  static final fireRepo = FirestoreRepository();
+class WordDataService {
+  final FirestoreRepository _firestoreRepository;
+
+  WordDataService(this._firestoreRepository);
 
   //word services
-  Future<Word?> createWord(Word word) async {
-    String? returnId = await fireRepo.createWithId(
+  Future<Word?> createWord(Word word, bool isDemoType) async {
+    String? returnId = await _firestoreRepository.createWithId(
         Word.collectionName, word.word, word.toMap());
 
     if (returnId == null) {
@@ -15,19 +17,18 @@ class WordDataService extends ChangeNotifier {
       return null;
     }
 
-    notifyListeners();
     return word;
   }
 
-  Future<Word?> getWord(String id) async {
-    final word = await fireRepo.read(Word.collectionName, id);
+  Future<Word?> getWord(String id, bool isDemoType) async {
+    final word = await _firestoreRepository.read(Word.collectionName, id);
     if (word == null) return null;
 
     return Word.fromDataWithId(word);
   }
 
-  Future<List<Word>> getMultipleWords(List<String> ids) async {
-    return (await fireRepo.readMultiple(Word.collectionName, ids))
+  Future<List<Word>> getMultipleWords(List<String> ids, bool isDemoType) async {
+    return (await _firestoreRepository.readMultiple(Word.collectionName, ids))
         .map((doc) => Word.fromDataWithId(doc))
         .toList();
   }
@@ -44,14 +45,15 @@ class WordDataService extends ChangeNotifier {
   Future<bool> updateWord(
     String wordName,
     Map<String, dynamic> updateMap,
+    bool isDemoType,
   ) async {
     if (updateMap.isEmpty) {
       debugPrint("No updates provided for word: $wordName");
       return true; // No updates to apply
     }
 
-    bool updated =
-        await fireRepo.update(Word.collectionName, wordName, updateMap);
+    bool updated = await _firestoreRepository.update(
+        Word.collectionName, wordName, updateMap);
 
     return updated;
   }
