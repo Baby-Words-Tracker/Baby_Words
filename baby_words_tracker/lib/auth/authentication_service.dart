@@ -1,5 +1,7 @@
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/demo_role.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +12,9 @@ class AuthenticationService extends ChangeNotifier {
 
   User? _user;
   Map<String, dynamic>? _customClaims;
+  List<UserRole> _userRoles = [UserRole.unauthenticated];
+  UserType _userType = UserType.unauthenticated_type;
+  bool _isDemoUser = false;
 
   AuthenticationService(this._firebaseAuthInstance) {
     _safeSynchronizer = SafeSynchronizer(_fetchCustomClaims);
@@ -25,14 +30,22 @@ class AuthenticationService extends ChangeNotifier {
             'AuthenticationService: User update -> uid:${user?.uid} email: ${user?.email} displayName: ${user?.displayName}');
 
         _user = user;
-        notifyListeners(); // Only notify listeners if relevant fields have changed
+        _safeSynchronizer.safeSynchronize().then((_) {
+          debugPrint(
+              'AuthenticationService: User update processed, notifying listeners');
+          notifyListeners(); // Only notify listeners if relevant fields have changed
+        }).catchError((e) {
+          debugPrint(
+              'AuthenticationService: Error during user update processing: $e');
+          notifyListeners(); // Notify listeners even if there was an error because _user has changed
+        });
       } else {
         debugPrint(
             'AuthenticationService: No Change -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
         _user = user;
       }
 
-      _safeSynchronizer.safeSynchronize();
+      // _safeSynchronizer.safeSynchronize();
     });
   }
 
@@ -46,6 +59,10 @@ class AuthenticationService extends ChangeNotifier {
             .equals(oldClaims, _customClaims)) {
           debugPrint(
               'AuthenticationService: Custom claims updated with new values');
+          _userRoles = getUserRolesFromClaims(_customClaims);
+          _userType = getUserTypeFromClaims(_customClaims);
+          _isDemoUser = isDemoRoleFromClaims(_customClaims);
+
           notifyListeners();
         } else {
           debugPrint(
@@ -54,25 +71,34 @@ class AuthenticationService extends ChangeNotifier {
       } catch (e) {
         debugPrint('Error fetching custom claims: $e');
         _customClaims = null;
+        _userRoles = [UserRole.unauthenticated];
+        _userType = UserType.unauthenticated_type;
+        _isDemoUser = false;
         notifyListeners();
       }
     } else {
       _customClaims = null;
+      _userRoles = [UserRole.unauthenticated];
+      _userType = UserType.unauthenticated_type;
+      _isDemoUser = false;
       notifyListeners();
       debugPrint('User is null, cannot fetch custom claims');
     }
   }
 
   // forces a refresh of the user's custom claims
-  Future<void> refreshUserClaims() async {
+  Future<void> refreshUserToken() async {
     await _fetchCustomClaims(true);
   }
 
   Future<void> signOut() async {
     try {
-      await _firebaseAuthInstance.signOut();
       _user = null;
       _customClaims = null;
+      _userRoles = [UserRole.unauthenticated];
+      _userType = UserType.unauthenticated_type;
+      _isDemoUser = false;
+      await _firebaseAuthInstance.signOut();
       notifyListeners();
     } catch (e) {
       debugPrint('Error signing out: $e');
@@ -85,13 +111,15 @@ class AuthenticationService extends ChangeNotifier {
   /// Use getUserRolesFromClaims from the UserRoles enum to get the roles from the claims.
   Map<String, dynamic>? get customClaims => _customClaims;
 
-  List<UserRole> get roles {
-    return getUserRolesFromClaims(_customClaims ?? {});
-  }
+  List<UserRole> get roles => _userRoles;
 
   String? get userId => _user?.uid;
   String? get userName => _user?.displayName;
   String? get userEmail => _user?.email;
 
+  UserType get userType => _userType;
+
   bool get isAuthenticated => _user != null;
+
+  bool get isDemoUser => _isDemoUser;
 }
