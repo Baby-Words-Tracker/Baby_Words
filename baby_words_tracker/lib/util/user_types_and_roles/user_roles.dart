@@ -1,16 +1,5 @@
 // note: lower numbers are higher authority roles
-enum UserRole {
-  admin,
-  researcher,
-  parent,
-  // ignore: constant_identifier_names
-  demo_admin,
-  // ignore: constant_identifier_names
-  demo_researcher,
-  // ignore: constant_identifier_names
-  demo_parent,
-  unauthenticated
-}
+enum UserRole { admin, researcher, parent, unauthenticated }
 
 extension UserRoleExtension on UserRole {
   String get name {
@@ -21,17 +10,16 @@ extension UserRoleExtension on UserRole {
         return 'researcher';
       case UserRole.parent:
         return 'parent';
-      case UserRole.demo_admin:
-        return 'demo_admin';
-      case UserRole.demo_researcher:
-        return 'demo_researcher';
-      case UserRole.demo_parent:
-        return 'demo_parent';
       case UserRole.unauthenticated:
         return 'unauthenticated';
     }
   }
 
+  /// This function determines the authority of the role.
+  /// Lower index means higher authority.
+  /// Admin should always be 0 and demo roles should always
+  /// be higher than demo_admin and lower than unauthenticated.
+  /// Returns int The index of the role.
   int get index {
     switch (this) {
       case UserRole.admin:
@@ -40,20 +28,9 @@ extension UserRoleExtension on UserRole {
         return 3;
       case UserRole.parent:
         return 6;
-      case UserRole.demo_admin:
-        return 50;
-      case UserRole.demo_researcher:
-        return 53;
-      case UserRole.demo_parent:
-        return 56;
       case UserRole.unauthenticated:
         return 100;
     }
-  }
-
-  bool get isDemoRole {
-    return this.index >= UserRole.demo_admin.index &&
-        this.index < UserRole.unauthenticated.index;
   }
 }
 
@@ -61,7 +38,14 @@ bool isAtLeast(UserRole role, UserRole targetRole) {
   return role.index <= targetRole.index;
 }
 
-List<UserRole> getUserRolesFromClaims(Map<String, dynamic> claims) {
+/// Returns a list of UserRole based on the provided claims map.
+/// [claims] is the map containing user roles as keys with boolean values.
+/// Returns List\<UserRole\> A list of UserRole objects based on the claims
+///   or an empty list if no roles are matched.
+/// Returns unauthenticated if [claims] is null.
+List<UserRole> getUserRolesFromClaims(Map<String, dynamic>? claims) {
+  if (claims == null) return [UserRole.unauthenticated];
+
   List<UserRole> roles = [];
 
   if (claims[UserRole.admin.name] == true) {
@@ -72,15 +56,6 @@ List<UserRole> getUserRolesFromClaims(Map<String, dynamic> claims) {
   }
   if (claims[UserRole.parent.name] == true) {
     roles.add(UserRole.parent);
-  }
-  if (claims[UserRole.demo_admin.name] == true) {
-    roles.add(UserRole.demo_admin);
-  }
-  if (claims[UserRole.demo_researcher.name] == true) {
-    roles.add(UserRole.demo_researcher);
-  }
-  if (claims[UserRole.demo_parent.name] == true) {
-    roles.add(UserRole.demo_parent);
   }
   if (claims[UserRole.unauthenticated.name] == true) {
     roles.add(UserRole.unauthenticated);

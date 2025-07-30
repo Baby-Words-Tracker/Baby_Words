@@ -5,15 +5,15 @@ import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 extension UserTypeCollectionMapper on UserType {
   String? get collectionName {
     switch (this) {
-      case UserType.parent:
+      case UserType.parent_type:
         return Parent.collectionName;
-      case UserType.researcher:
+      case UserType.researcher_type:
         return Researcher.collectionName;
-      case UserType.demo_parent:
+      case UserType.demo_parent_type:
         return "demo_${Parent.collectionName}";
-      case UserType.demo_researcher:
+      case UserType.demo_researcher_type:
         return "demo_${Researcher.collectionName}";
-      case UserType.unauthenticated:
+      case UserType.unauthenticated_type:
         return null;
     }
   }
@@ -27,13 +27,13 @@ extension UserTypeCollectionMapper on UserType {
 
 UserType? getUserTypeFromCollectionName(String? collectionName) {
   if (collectionName == Parent.collectionName) {
-    return UserType.parent;
+    return UserType.parent_type;
   } else if (collectionName == Researcher.collectionName) {
-    return UserType.researcher;
+    return UserType.researcher_type;
   } else if (collectionName == "demo_${Parent.collectionName}") {
-    return UserType.demo_parent;
+    return UserType.demo_parent_type;
   } else if (collectionName == "demo_${Researcher.collectionName}") {
-    return UserType.demo_researcher;
+    return UserType.demo_researcher_type;
   }
   return null;
 }

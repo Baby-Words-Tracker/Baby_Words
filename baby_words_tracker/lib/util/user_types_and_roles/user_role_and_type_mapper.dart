@@ -1,23 +1,20 @@
 import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 
+/// This extension maps UserRole to UserType.
 extension UserRoleToUserTypeMapper on UserRole {
-  UserType get userType {
+  /// Returns the UserType corresponding to the UserRole.
+  /// Some roles to not have a corresponding UserType, in which case it returns null.
+  UserType? get userType {
     switch (this) {
-      case UserRole.admin:
-        return UserType.researcher;
       case UserRole.researcher:
-        return UserType.researcher;
+        return UserType.researcher_type;
       case UserRole.parent:
-        return UserType.parent;
-      case UserRole.demo_admin:
-        return UserType.demo_researcher;
-      case UserRole.demo_researcher:
-        return UserType.demo_researcher;
-      case UserRole.demo_parent:
-        return UserType.demo_parent;
+        return UserType.parent_type;
       case UserRole.unauthenticated:
-        return UserType.unauthenticated;
+        return UserType.unauthenticated_type;
+      default:
+        return null;
     }
   }
 }
@@ -25,15 +22,11 @@ extension UserRoleToUserTypeMapper on UserRole {
 extension UserTypeToUserRoleMapper on UserType {
   UserRole get userRole {
     switch (this) {
-      case UserType.researcher:
+      case UserType.researcher_type:
         return UserRole.researcher;
-      case UserType.parent:
+      case UserType.parent_type:
         return UserRole.parent;
-      case UserType.demo_parent:
-        return UserRole.demo_parent;
-      case UserType.demo_researcher:
-        return UserRole.demo_researcher;
-      case UserType.unauthenticated:
+      case UserType.unauthenticated_type:
         return UserRole.unauthenticated;
     }
   }
