@@ -3,11 +3,8 @@
  * NOTE: all values for types must end with _type.
  * @typedef {Object} Type
  * @property {Symbol} value the role value
-//  * @property {Type} demo_type the corresponding demo type
  * @property {Type} researcher_type the researcher role
  * @property {Type} parent_type the parent role
-//  * @property {Type} demo_researcher_type the demo researcher role
-//  * @property {Type} demo_parent_type the demo user role
  */
 const Type = Object.freeze({
   // Production types:
