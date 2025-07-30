@@ -9,24 +9,24 @@ class TypeAwareParentDataService extends ITypeAwareDataService {
   final ParentDataService _parentDataService;
 
   TypeAwareParentDataService({
-    required super.userModelService,
+    required super.authenticationService,
     required ParentDataService parentDataService,
   }) : _parentDataService = parentDataService;
 
   Future<Parent?> createParent(Parent parent) {
-    return _parentDataService.createParent(parent, isDemoType);
+    return _parentDataService.createParent(parent, isDemoUser);
   }
 
   Future<Parent?> getParent(String id) {
-    return _parentDataService.getParent(id, isDemoType);
+    return _parentDataService.getParent(id, isDemoUser);
   }
 
   Future<Parent?> getParentByEmail(String email) {
-    return _parentDataService.getParentByEmail(email, isDemoType);
+    return _parentDataService.getParentByEmail(email, isDemoUser);
   }
 
   Future<List<Parent>> getMultipleParents(List<String> ids) {
-    return _parentDataService.getMultipleParents(ids, isDemoType);
+    return _parentDataService.getMultipleParents(ids, isDemoUser);
   }
 
   Future<bool> updateParent(
@@ -42,7 +42,7 @@ class TypeAwareParentDataService extends ITypeAwareDataService {
   }) {
     return _parentDataService.updateParent(
       id,
-      isDemoType,
+      isDemoUser,
       childIDs: childIDs,
       language: language,
       consentFormComplete: consentFormComplete,
@@ -58,19 +58,18 @@ class TypeAwareParentDataService extends ITypeAwareDataService {
     String parentId,
     String childId,
   ) {
-    return _parentDataService.addChildToParent(parentId, childId, isDemoType);
+    return _parentDataService.addChildToParent(parentId, childId, isDemoUser);
   }
 
   Future<List<Child>> getChildList(String id) {
-    return _parentDataService.getChildList(id, isDemoType);
+    return _parentDataService.getChildList(id, isDemoUser);
   }
 
-
   Future<LanguageCode?> getLanguage(String id) {
-    return _parentDataService.getLanguage(id, isDemoType);
+    return _parentDataService.getLanguage(id, isDemoUser);
   }
 
   IDocumentListener<Parent> getUserListener(String id) {
-    return _parentDataService.getUserListener(id, isDemoType);
+    return _parentDataService.getUserListener(id, isDemoUser);
   }
 }

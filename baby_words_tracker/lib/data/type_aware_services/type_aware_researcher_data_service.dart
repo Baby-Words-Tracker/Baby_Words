@@ -7,7 +7,7 @@ class TypeAwareResearcherDataService extends ITypeAwareDataService {
   final ResearcherDataService _researcherDataService;
 
   TypeAwareResearcherDataService({
-    required super.userModelService,
+    required super.authenticationService,
     required ResearcherDataService researcherDataService,
   }) : _researcherDataService = researcherDataService;
 
@@ -15,28 +15,28 @@ class TypeAwareResearcherDataService extends ITypeAwareDataService {
   Future<Researcher?> createResearcher(Researcher researcher) {
     return _researcherDataService.createResearcher(
       researcher,
-      isDemoType,
+      isDemoUser,
     );
   }
 
   Future<Researcher?> getResearcher(String id) {
     return _researcherDataService.getResearcher(
       id,
-      isDemoType,
+      isDemoUser,
     );
   }
 
   Future<Researcher?> getResearcherByEmail(String email) {
     return _researcherDataService.getResearcherByEmail(
       email,
-      isDemoType,
+      isDemoUser,
     );
   }
 
   Future<List<Researcher>> getMultipleResearchers(List<String> ids) {
     return _researcherDataService.getMultipleResearchers(
       ids,
-      isDemoType,
+      isDemoUser,
     );
   }
 
@@ -52,7 +52,7 @@ class TypeAwareResearcherDataService extends ITypeAwareDataService {
   }) {
     return _researcherDataService.updateResearcher(
       id,
-      isDemoType,
+      isDemoUser,
       email: email,
       name: name,
       institution: institution,
@@ -66,14 +66,14 @@ class TypeAwareResearcherDataService extends ITypeAwareDataService {
   Future<bool> deleteResearcher(String id) {
     return _researcherDataService.deleteResearcher(
       id,
-      isDemoType,
+      isDemoUser,
     );
   }
 
   IDocumentListener<Researcher> getUserListener(String id) {
     return _researcherDataService.getUserListener(
       id,
-      isDemoType,
+      isDemoUser,
     );
   }
 }

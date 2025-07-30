@@ -6,21 +6,21 @@ class TypeAwareWordDataService extends ITypeAwareDataService {
   final WordDataService _wordDataService;
 
   TypeAwareWordDataService({
-    required super.userModelService,
+    required super.authenticationService,
     required WordDataService wordDataService,
   }) : _wordDataService = wordDataService;
 
   //word services
   Future<Word?> createWord(Word word) {
-    return _wordDataService.createWord(word, isDemoType);
+    return _wordDataService.createWord(word, isDemoUser);
   }
 
   Future<Word?> getWord(String id) {
-    return _wordDataService.getWord(id, isDemoType);
+    return _wordDataService.getWord(id, isDemoUser);
   }
 
   Future<List<Word>> getMultipleWords(List<String> ids) {
-    return _wordDataService.getMultipleWords(ids, isDemoType);
+    return _wordDataService.getMultipleWords(ids, isDemoUser);
   }
 
   /// Updates a word in the database.
@@ -39,7 +39,7 @@ class TypeAwareWordDataService extends ITypeAwareDataService {
     return _wordDataService.updateWord(
       wordName,
       updateMap,
-      isDemoType,
+      isDemoUser,
     );
   }
 }

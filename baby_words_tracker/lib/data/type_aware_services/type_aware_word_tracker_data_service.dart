@@ -6,7 +6,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
   final WordTrackerDataService _wordTrackerDataService;
 
   TypeAwareWordTrackerDataService({
-    required super.userModelService,
+    required super.authenticationService,
     required WordTrackerDataService wordTrackerDataService,
   }) : _wordTrackerDataService = wordTrackerDataService;
 
@@ -19,7 +19,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
       childId,
       word,
       tracker,
-      isDemoType,
+      isDemoUser,
     );
   }
 
@@ -32,7 +32,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
     return _wordTrackerDataService.updateWordTracker(
       childId,
       wordID,
-      isDemoType,
+      isDemoUser,
       firstUtterance: firstUtterance,
       videoID: videoID,
     );
@@ -47,7 +47,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
       childId,
       wordId,
       wordTracker,
-      isDemoType,
+      isDemoUser,
     );
   }
 
@@ -55,7 +55,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
     return _wordTrackerDataService.getWordTracker(
       childId,
       id,
-      isDemoType,
+      isDemoUser,
     );
   }
 
@@ -66,7 +66,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
     return _wordTrackerDataService.getWordsFromTime(
       childId,
       time,
-      isDemoType,
+      isDemoUser,
     );
   }
 
@@ -77,7 +77,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
     return _wordTrackerDataService.getWordsFromDate(
       childId,
       date,
-      isDemoType,
+      isDemoUser,
     );
   }
 
@@ -90,7 +90,7 @@ class TypeAwareWordTrackerDataService extends ITypeAwareDataService {
       childId,
       date,
       range,
-      isDemoType,
+      isDemoUser,
     );
   }
 }

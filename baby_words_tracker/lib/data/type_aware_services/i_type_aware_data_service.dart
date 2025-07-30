@@ -1,12 +1,14 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 
 abstract class ITypeAwareDataService {
-  final UserModelService _userModelService;
+  final AuthenticationService _authenticationService;
 
   ITypeAwareDataService({
-    required UserModelService userModelService,
-  }) : _userModelService = userModelService;
+    required AuthenticationService authenticationService,
+  }) : _authenticationService = authenticationService;
 
-  bool get isDemoType => _userModelService.userType.isDemoType;
+  // a helper function to quickly check if the user is a
+  //    demo user in all child classes using the authentication
+  //    service (allows easy updates in the future)
+  bool get isDemoUser => _authenticationService.isDemoUser;
 }

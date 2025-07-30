@@ -8,7 +8,7 @@ class TypeAwareChildDataService extends ITypeAwareDataService {
   final ChildDataService _childDataService;
 
   TypeAwareChildDataService({
-    required super.userModelService,
+    required super.authenticationService,
     required ChildDataService childDataService,
   }) : _childDataService = childDataService;
 
@@ -26,31 +26,31 @@ class TypeAwareChildDataService extends ITypeAwareDataService {
       language,
       cWordCount,
       cParentIDs,
-      isDemoType,
+      isDemoUser,
     );
   }
 
   Future<Child?> getChild(String id) {
-    return _childDataService.getChild(id, isDemoType);
+    return _childDataService.getChild(id, isDemoUser);
   }
 
   Future<List<Child>> getMultipleChildren(List<String> ids) {
-    return _childDataService.getMultipleChildren(ids, isDemoType);
+    return _childDataService.getMultipleChildren(ids, isDemoUser);
   }
 
   Future<int> getNumWords(String id) {
-    return _childDataService.getNumWords(id, isDemoType);
+    return _childDataService.getNumWords(id, isDemoUser);
   }
 
   Future<bool> addVideo(String id, String word, String fileName) {
-    return _childDataService.addVideo(id, word, fileName, isDemoType);
+    return _childDataService.addVideo(id, word, fileName, isDemoUser);
   }
 
   Future<List<LanguageCode>?> getLanguages(String id) {
-    return _childDataService.getLanguages(id, isDemoType);
+    return _childDataService.getLanguages(id, isDemoUser);
   }
 
   Future<List<WordTracker>> getAllKnownWords(String id) {
-    return _childDataService.getAllKnownWords(id, isDemoType);
+    return _childDataService.getAllKnownWords(id, isDemoUser);
   }
 }
