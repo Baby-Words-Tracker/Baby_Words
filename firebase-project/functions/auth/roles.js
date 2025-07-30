@@ -1,5 +1,7 @@
 /**
  * A role object to model authentication
+ * Note: the ending _type is reserved for user and any role with a
+ * value ending in _type will be deleted when type is changed.
  * @typedef {Object} Role
  * @property {Symbol} value the role value
  * @property {number} order the order of the role
@@ -7,9 +9,9 @@
  * @property {Role} researcher the researcher role
  * @property {Role} parent the parent role
  * @property {Role} unauthenticated the unauthenticated role
- * @property {Role} demo_admin the demo admin role
- * @property {Role} demo_researcher the demo researcher role
- * @property {Role} demo_parent the demo user role
+ *  This role is a marker separate from other roles.
+ *  It will not be detected by the getRoleFromToken function
+ *  and must be checked using isDemoRoleFromToken.
  */
 const Role = Object.freeze({
   // DO NOT CHECK ORDER VALUES USING CONSTANTS! ONLY COMPARE THEM!
@@ -20,45 +22,30 @@ const Role = Object.freeze({
   admin: {
     value: Symbol("admin"),
     order: 0,
+    demo_order: this.order + this.Role.demo.order,
   },
   researcher: {
     value: Symbol("researcher"),
     order: 3,
+    demo_order: this.order + this.Role.demo.order,
   },
   parent: {
     value: Symbol("parent"),
     order: 6,
+    demo_order: this.order + this.Role.demo.order,
   },
-  // demo roles are used for demo purposes. All prod roles should be above
-  // demo roles must have order >= demo_admin.order < unauthenticated.order
-  // Demo roles:
-  demo_admin: {
-    value: Symbol("demo_admin"),
-    order: 50,
-  },
-  demo_researcher: {
-    value: Symbol("demo_researcher"),
-    order: 53,
-  },
-  demo_parent: {
-    value: Symbol("demo_parent"),
-    order: 56,
-  },
+  // Note: The demo role marks a user as a demo user.
+  //  To get the corresponding order of a non demo role,
+  //  add the order of the demo role to the prod role's order.
+  //  All prod roles should have order < DemoRole.demo.order
+  //  see demo_role.js for the demo role (order == 50 on 7/30/2025)
   // unauthenticated role is the max order value
   unauthenticated: {
     value: Symbol("unauthenticated"),
     order: 100,
   },
-});
 
-/** * Checks if the given role is a demo role
- * @param {Role} role the role to check
- * @return {boolean} true if the role is a demo role, false otherwise
- */
-function isDemoRole(role) {
-  return role.order >= Role.demo_admin.order &&
-         role.order < Role.unauthenticated.order;
-}
+});
 
 /**
  * Gets the user's Role object from the token
@@ -75,12 +62,6 @@ function getRoleFromToken(token) {
     return Role.researcher;
   } else if (token[Role.parent.value.description] === true) {
     return Role.parent;
-  } else if (token[Role.demo_admin.value.description] === true) {
-    return Role.demo_admin;
-  } else if (token[Role.demo_researcher.value.description] === true) {
-    return Role.demo_researcher;
-  } else if (token[Role.demo_parent.value.description] === true) {
-    return Role.demo_parent;
   } else {
     return Role.unauthenticated;
   }
@@ -99,12 +80,6 @@ function getRoleFromString(roleString) {
       return Role.researcher;
     case Role.parent.value.description:
       return Role.parent;
-    case Role.demo_admin.value.description:
-      return Role.demo_admin;
-    case Role.demo_researcher.value.description:
-      return Role.demo_researcher;
-    case Role.demo_parent.value.description:
-      return Role.demo_parent;
     // If the role is not recognized, return unauthenticated
     default:
       return Role.unauthenticated;
@@ -113,7 +88,6 @@ function getRoleFromString(roleString) {
 
 module.exports = {
   Role,
-  isDemoRole,
   getRoleFromToken,
   getRoleFromString,
 };

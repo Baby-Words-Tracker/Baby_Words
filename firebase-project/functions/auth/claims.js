@@ -6,7 +6,8 @@ const https = require("firebase-functions/v2/https");
 // const {logger} = require("firebase-functions");
 
 // authentication functions
-const {checkAuthentication, checkIsAtLeast} = require("./auth");
+// eslint-disable-next-line max-len
+const {checkAuthentication, checkIsAtLeast, checkDemoStatusesMatch} = require("./auth");
 
 /**
  * Gets a users record by uid
@@ -63,6 +64,8 @@ async function giveClaim(newRole, minimumRole, targetUser, request) {
 
   const roleName = newRole.value.description;
 
+  checkDemoStatusesMatch(request, targetUser);
+
   try {
     checkIsAtLeast(request, minimumRole);
 
@@ -93,6 +96,8 @@ async function removeClaim(role, minimumRole, targetUser, request) {
 
   const roleName = role.value.description;
 
+  checkDemoStatusesMatch(request, targetUser);
+
   try {
     checkIsAtLeast(request, minimumRole);
 
@@ -106,6 +111,45 @@ async function removeClaim(role, minimumRole, targetUser, request) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(
         "internal", "Failed to remove " + roleName + " role", error);
+  }
+}
+
+/**
+ * Assigns a role to a user checking authentication and permissions
+ * @param {Type} newType The role to assign to the user
+ * @param {Role} minimumRole The minimum role required to perform the action
+ * @param {UserRecord} targetUser The UID of the user to assign the role to
+ * @param {Object} request The request associated with the https call
+ * @throws {https.HttpsError} if the user does not have the minimum role
+ *  or is not authenticated
+ */
+async function setTypeClaim(newType, minimumRole, targetUser, request) {
+  checkAuthentication(request.data);
+
+  const typeName = newType.value.description;
+
+  checkDemoStatusesMatch(request, targetUser);
+
+  try {
+    checkIsAtLeast(request, minimumRole);
+
+    const currentClaims = targetUser.customClaims || {};
+
+    // Clear all existing type claims
+    for (const key in currentClaims) {
+      if (key.endsWith("_type")) {
+        delete currentClaims[key];
+      }
+    }
+
+    currentClaims[typeName] = true;
+
+    // Assign the new type to the target user
+    await getAuth().setCustomUserClaims(targetUser.uid, currentClaims);
+  } catch (error) {
+    // Handle errors (e.g., user not found, failed to set claims)
+    throw new https.HttpsError(
+        "internal", "Failed to assign " + typeName + " type", error);
   }
 }
 
@@ -189,10 +233,53 @@ async function removeClaimByEmail(role, minimumRole, targetEmail, request) {
   }
 }
 
+/**
+ * Assign a type claim to a user by UID
+ * @param {Type} type The type to give
+ * @param {Role} minimumRole The minimum role to allow to perform the action
+ * @param {String} targetUid The target user's uid
+ * @param {Object} request The request object associated witht he https request
+ * @throws {https.HttpsError} if the user does not have the minimum role
+ *  or is not authenticated
+ */
+async function setTypeClaimByUID(type, minimumRole, targetUid, request) {
+  try {
+    const targetUser = await getUserRecordByUID(targetUid);
+    await setTypeClaim(type, minimumRole, targetUser, request);
+  } catch (error) {
+    // Handle errors (e.g., user not found, failed to set claims)
+    throw new https.HttpsError(
+        "internal", "Error: Failed to assign type by UID; Error:", error);
+  }
+}
+
+/**
+ * Assign a type claim to a user by email
+ * @param {Type} type The type to give
+ * @param {Role} minimumRole The minimum role to allow to perform the action
+ * @param {String} targetEmail The target user's email
+ * @param {Object} req The request object associated witht he https request
+ * @throws {https.HttpsError} if the user does not have the minimum role
+ *  or is not authenticated
+ */
+async function setTypeClaimByEmail(type, minimumRole, targetEmail, req) {
+  try {
+    const targetUser = await getUserRecordByEmail(targetEmail);
+    await setTypeClaim(type, minimumRole, targetUser, req);
+  } catch (error) {
+    // Handle errors (e.g., user not found, failed to set claims)
+    throw new https.HttpsError(
+        "internal", "Error: Failed to assign type by email; Error:", error);
+  }
+}
+
+
 // Export all functions
 module.exports = {
   giveClaimByEmail,
   giveClaimByUID,
   removeClaimByEmail,
   removeClaimByUID,
+  setTypeClaimByEmail,
+  setTypeClaimByUID,
 };
