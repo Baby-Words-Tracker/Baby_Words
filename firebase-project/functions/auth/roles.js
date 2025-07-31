@@ -22,17 +22,14 @@ const Role = Object.freeze({
   admin: {
     value: Symbol("admin"),
     order: 0,
-    demo_order: this.order + this.Role.demo.order,
   },
   researcher: {
     value: Symbol("researcher"),
     order: 3,
-    demo_order: this.order + this.Role.demo.order,
   },
   parent: {
     value: Symbol("parent"),
     order: 6,
-    demo_order: this.order + this.Role.demo.order,
   },
   // Note: The demo role marks a user as a demo user.
   //  To get the corresponding order of a non demo role,
