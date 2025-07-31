@@ -9,10 +9,6 @@ extension UserTypeCollectionMapper on UserType {
         return Parent.collectionName;
       case UserType.researcher_type:
         return Researcher.collectionName;
-      case UserType.demo_parent_type:
-        return "demo_${Parent.collectionName}";
-      case UserType.demo_researcher_type:
-        return "demo_${Researcher.collectionName}";
       case UserType.unauthenticated_type:
         return null;
     }
@@ -30,10 +26,6 @@ UserType? getUserTypeFromCollectionName(String? collectionName) {
     return UserType.parent_type;
   } else if (collectionName == Researcher.collectionName) {
     return UserType.researcher_type;
-  } else if (collectionName == "demo_${Parent.collectionName}") {
-    return UserType.demo_parent_type;
-  } else if (collectionName == "demo_${Researcher.collectionName}") {
-    return UserType.demo_researcher_type;
   }
   return null;
 }
