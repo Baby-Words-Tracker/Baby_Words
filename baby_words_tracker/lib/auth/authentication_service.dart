@@ -66,7 +66,6 @@ class AuthenticationService extends ChangeNotifier {
               'AuthenticationService: Custom claims updated with new values');
           _userRoles = getUserRolesFromClaims(_customClaims);
           _userType = getUserTypeFromClaims(_customClaims);
-          // _userType = UserType.researcher_type;
           _isDemoUser = isDemoRoleFromClaims(_customClaims);
 
           notifyListeners();
