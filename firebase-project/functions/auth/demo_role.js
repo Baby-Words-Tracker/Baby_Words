@@ -7,8 +7,8 @@
  * @property {number} order the order of the role
  * @property {Role} demo marks a user as a demo user.
  *  This role is a marker separate from other roles.
- *  It will not be detected by the getRoleFromToken function
- *  and must be checked using isDemoRoleFromToken.
+ *  It will not be detected by the getRoleFromClaimsList function
+ *  and must be checked using isDemoRoleFromClaimsList.
  */
 const DemoRole = Object.freeze({
   // The demo role marks a user as a demo user.
@@ -34,12 +34,17 @@ function getDemoOrder(role) {
 
 /**
  * Checks if the user is a demo user
- * @param {unknown} token the token object (context.auth.token)
+ * @param {string[]} token the token object (requst.auth.token)
+ *  (or a list of strings with role names)
  * @return {boolean} true if the user is a demo user, false otherwise
  */
-function isDemoRoleFromToken(token) {
+function isDemoRoleFromClaimsList(token) {
   // This function checks if the user is a demo user
   // It is used to determine if the user is a demo user
+  if (token == null) {
+    return false;
+  }
+
   if (token[DemoRole.demo.value.description] === true) {
     return true;
   }
@@ -63,6 +68,6 @@ function stringMatchesDemoRole(roleString) {
 module.exports = {
   DemoRole,
   getDemoOrder,
-  isDemoRoleFromToken,
+  isDemoRoleFromClaimsList,
   stringMatchesDemoRole,
 };

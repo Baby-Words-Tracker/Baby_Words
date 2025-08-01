@@ -5,10 +5,10 @@ const https = require("firebase-functions/v2/https");
 const {logger} = require("firebase-functions");
 
 // Role enum
-const {getRoleFromToken} = require("./roles");
+const {getRoleFromClaimsList} = require("./roles");
 
 // Demo Role enum
-const {isDemoRoleFromToken} = require("./demo_role");
+const {isDemoRoleFromClaimsList} = require("./demo_role");
 
 // eslint-disable-next-line no-unused-vars
 const {UserRecord} = require("firebase-admin/auth");
@@ -46,7 +46,7 @@ function checkAuthentication(request) {
  *   false otherwise
  */
 function isAtLeast(request, minimumRole) {
-  const userRole = getRoleFromToken(request.auth.token);
+  const userRole = getRoleFromClaimsList(request.auth.token);
   return userRole.order <= minimumRole.order;
 }
 
@@ -59,7 +59,7 @@ function isAtLeast(request, minimumRole) {
  */
 function checkIsAtLeast(request, minimumRole, disallowDemo = false) {
   let allowed = true;
-  if (disallowDemo && isDemoRoleFromToken(request.auth.token)) {
+  if (disallowDemo && isDemoRoleFromClaimsList(request.auth.token)) {
     allowed = false;
     // eslint-disable-next-line max-len
     logger.info(`User ${request.auth.uid} attempted to perform an action that requires a non-demo role.`);
@@ -87,8 +87,8 @@ function checkIsAtLeast(request, minimumRole, disallowDemo = false) {
  *    the target user is not, true otherwise
  */
 function demoStatusesMatch(request, targetUserRecord) {
-  const isDemo = isDemoRoleFromToken(request.auth.token);
-  const targetIsDemo = isDemoRoleFromToken(targetUserRecord.customClaims);
+  const isDemo = isDemoRoleFromClaimsList(request.auth.token);
+  const targetIsDemo = isDemoRoleFromClaimsList(targetUserRecord.customClaims);
   return !isDemo || targetIsDemo;
 }
 

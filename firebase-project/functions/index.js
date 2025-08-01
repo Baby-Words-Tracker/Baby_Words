@@ -3,14 +3,16 @@ const {logger} = require("firebase-functions");
 
 // The Firebase Admin SDK to access Firestore.
 const admin = require("firebase-admin");
-const {getAuth} = require("firebase-admin/auth");
+// eslint-disable-next-line no-unused-vars
+const {getAuth, UserRecord} = require("firebase-admin/auth");
 
 const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
 // eslint-disable-next-line max-len
 const {Role} = require("./auth/roles.js");
-const {isDemoRoleFromToken} = require("./auth/demo_role.js");
+const {isDemoRoleFromClaimsList} = require("./auth/demo_role.js");
+// eslint-disable-next-line max-len
 const {Type, getTypeFromString} = require("./auth/types");
 // eslint-disable-next-line max-len
 const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail} = require("./auth/claims");
@@ -257,7 +259,7 @@ exports.giveDemoClaim = onCall(async (request, context) => {
 
   try {
     checkAuthentication(request);
-    const isDemo = isDemoRoleFromToken(request.auth.token);
+    const isDemo = isDemoRoleFromClaimsList(request.auth.token);
     if (isDemo) {
       // eslint-disable-next-line max-len
       logger.info(`Demo user ${request.auth.uid} attempted to assign demo role`);
@@ -288,7 +290,7 @@ exports.removeDemoClaim = onCall(async (request, context) => {
 
   try {
     checkAuthentication(request);
-    const isDemo = isDemoRoleFromToken(request.auth.token);
+    const isDemo = isDemoRoleFromClaimsList(request.auth.token);
     if (isDemo) {
       // eslint-disable-next-line max-len
       logger.info(`Demo user ${request.auth.uid} attempted to remove demo role`);
@@ -377,7 +379,7 @@ exports.addChildToOtherParent = onCall(async (request, context) => {
     checkAuthentication(request);
     checkIsAtLeast(request, Role.parent);
 
-    const isDemoUser = isDemoRoleFromToken(request.auth.token);
+    const isDemoUser = isDemoRoleFromClaimsList(request.auth.token);
     let parentCollection;
     let childCollection;
 
@@ -402,7 +404,7 @@ exports.addChildToOtherParent = onCall(async (request, context) => {
     }
 
     if (isDemoUser) {
-      const targetIsDemoUser = isDemoRoleFromToken(targetUserRecord.token);
+      const targetIsDemoUser = isDemoRoleFromClaimsList(targetUserRecord.token);
       if (!targetIsDemoUser) {
         logger.info(`Demo user ${request.auth.uid} ` +
           `attempted to assign child to non-demo user`);
@@ -681,64 +683,58 @@ exports.generateSignedDownloadUrl = onCall(async (request, context) => {
   }
 });
 
-// !!! note: this function should only be called by admin users.
-// Make sure to call checkIsAtLeast(request, Role.admin); before using it
-const listAllUsers = async (nextPageToken) => {
-  const users = [];
+//
+
+/**
+ * Lists all users in the Firebase Authentication system.
+ * !!! note: this function should only be called by admin users.
+ * !!! This function accesses all the hashes of every user.
+ *  It's output must be sanitized before being returned.
+ * @param {CallableRequest} request The request object containing the auth token
+ * @param {string} nextPageToken The page token from the previous listUsers call
+ * @return {Promise<UserRecord[]>} A promise that resolves
+ *  to an array of UserRecord objects
+ */
+const listAllUsers = async (request, nextPageToken) => {
+  const userList = [];
   logger.info("Listing all users...");
 
-  // try {
-  //   checkAuthentication(request);
-  //   checkIsAtLeast(request, Role.admin);
-  // } catch (error) {
-  // eslint-disable-next-line max-len
-  //   logger.error(`User ${request.auth.uid} does not have permission to list users: ${error}`);
-  //   throw new HttpsError(
-  //       "permission-denied",
-  // eslint-disable-next-line max-len
-  //       `User ${request.auth.uid} does not have permission to list users: ${error}`,
-  //   );
-  // }
+  try {
+    checkAuthentication(request);
+    checkIsAtLeast(request, Role.admin);
+  } catch (error) {
+    logger.warn(`User ${request.auth.uid} attempted to list` +
+      ` all users with incorrect permissions: ${error}`);
+    throw new HttpsError(
+        "permission-denied",
+        `User ${request.auth.uid} does not have` +
+        ` permission to list users: ${error}`,
+    );
+  }
 
   try {
+    const isDemoUser = isDemoRoleFromClaimsList(request.auth.token);
     // List batch of users, 1000 at a time.
     const listUsersResult = await getAuth()
         .listUsers(1000, nextPageToken);
 
-    listUsersResult.users.forEach((userRecord) => {
-      const user = userRecord.toJSON();
-      // Remove sensitive information.
-      // !!Don't include this unless you are migrating the
-      //    authentication database.
-      //    These hashes compromise password security fo all users if leaked!
-      delete user.passwordHash;
-      delete user.passwordSalt;
-
-      // This data is unecessary for now, but not sensetive to my knowledge.
-      delete user.tokensValidAfterTime;
-      delete user.providerData;
-      delete user.emailVerified;
-      delete user.metadata;
-      delete user.displayName;
-      delete user.photoURL;
-      delete user.phoneNumber;
-      delete user.tenantId;
-
-      // logger.info("user", user);
-
-      // At this point, the user object should have the follwoing fields:
-      // uid, email, disabled, and customClaims
-      // email is the email of the user
-      // uid is the unique id of the user
-      // disabled is a boolean that indicates if the user account is disabled
-      // customClaims is an object that contains the custom claims of the user
-      users.push(user);
-    });
+    // limit demo users from ever accessing non demo user information
+    if (isDemoUser) {
+      // If the user is a demo user, filter out sensitive information.
+      listUsersResult.users.forEach((user) => {
+        if (isDemoRoleFromClaimsList(user.customClaims)) {
+          userList.push(user);
+        }
+      });
+    } else {
+      userList.push(...(listUsersResult.users));
+    }
 
     if (listUsersResult.pageToken) {
       // List next batch of users.
-      const nextUsers = await listAllUsers(listUsersResult.pageToken);
-      users.push(...nextUsers);
+      const nextUsers = await listAllUsers(request, listUsersResult.pageToken);
+
+      userList.push(...nextUsers);
     }
   } catch (error) {
     logger.error("Error listing users:", error);
@@ -748,8 +744,47 @@ const listAllUsers = async (nextPageToken) => {
     );
   }
 
-  logger.info("Finished listing users: ", users);
+  logger.info("Finished listing users: ", userList);
 
+  return userList;
+};
+
+/**
+ * Converts a list of user records to a safe JSON format.
+ * @param {UserRecord[]} listUsersResult The list of user records to convert.
+ * @return {Object[]} The converted user objects as json.
+ */
+const convertUserListToSafeJson = (listUsersResult) => {
+  const users = [];
+  listUsersResult.forEach((userRecord) => {
+    const user = userRecord.toJSON();
+    // Remove sensitive information.
+    // !!Don't include this unless you are migrating the
+    //    authentication database.
+    //    These hashes compromise password security fo all users if leaked!
+    delete user.passwordHash;
+    delete user.passwordSalt;
+
+    // This data is unecessary for now, but not sensetive to my knowledge.
+    delete user.tokensValidAfterTime;
+    delete user.providerData;
+    delete user.emailVerified;
+    delete user.metadata;
+    delete user.displayName;
+    delete user.photoURL;
+    delete user.phoneNumber;
+    delete user.tenantId;
+
+    // logger.info("user", user);
+
+    // At this point, the user object should have the follwoing fields:
+    // uid, email, disabled, and customClaims
+    // email is the email of the user
+    // uid is the unique id of the user
+    // disabled is a boolean that indicates if the user account is disabled
+    // customClaims is an object that contains the custom claims of the user
+    users.push(user);
+  });
   return users;
 };
 
@@ -757,10 +792,12 @@ exports.getEmailUIDTable = onCall(async (request, context) => {
   logger.info(`getEmailUIDTable called from account ID: ${request.auth.uid}`);
   try {
     checkAuthentication(request);
-    checkIsAtLeast(request, Role.admin, true);
+    // TODO: this is safe,
+    //  but it still feels wrong to allow demo users to access this
+    checkIsAtLeast(request, Role.admin);
 
-    // Start listing users from the beginning, 1000 at a time.
-    const users = await listAllUsers();
+    // List all users
+    const users = convertUserListToSafeJson(await listAllUsers(request));
 
     return {
       users: users,
@@ -773,3 +810,58 @@ exports.getEmailUIDTable = onCall(async (request, context) => {
     );
   }
 });
+
+/**
+ * This function sets the type for all users in the system based on their roles.
+ * It was created solely for transitioning from type and permission roles to
+ * separate type and permission roles.
+ *
+ * This function should probably not ever be called again,
+ *  and it is here for reference only.
+ */
+// exports.setAllUserTypes = onCall(async (request) => {
+//   logger.info(`setAllUserTypes called from account ID: ${request.auth.uid}`);
+//   try {
+//     checkAuthentication(request);
+//     checkIsAtLeast(request, Role.admin, true);
+
+//     // Start listing users from the beginning, 1000 at a time.
+//     const userRecords = await listAllUsers(request);
+
+//     for (const user of userRecords) {
+//       const userRoles = getAllRolesFromClaimsList(user.customClaims);
+//       let typeToSet = Type.unauthenticated_type;
+//       if (userRoles.includes(Role.researcher)) {
+// eslint-disable-next-line max-len
+//         logger.info(`setAllUserTypes(): User ${user.email} is a researcher, will set type to researcher...`);
+//         typeToSet = Type.researcher_type;
+//       } else if (userRoles.includes(Role.parent)) {
+// eslint-disable-next-line max-len
+//         logger.info(`setAllUserTypes(): User ${user.email} is a parent, will set type to parent...`);
+//         typeToSet = Type.parent_type;
+//       } else {
+// eslint-disable-next-line max-len
+//         logger.warn(`setAllUserTypes(): User ${user.email} is not a parent or researcher, will set type to parent and set claims to parent...`);
+//         await giveClaimByEmail(Role.parent, Role.admin, user.email, request);
+//         typeToSet = Type.parent_type;
+//       }
+
+// eslint-disable-next-line max-len
+//       logger.info(`setAllUserTypes(): Setting type for user ${user.email} to ${typeToSet.value.description}...`);
+
+//       await setTypeClaimByEmail(typeToSet, Role.admin, user.email, request);
+// eslint-disable-next-line max-len
+//       logger.info(`setAllUserTypes(): User ${user.email} has been set to type ${typeToSet.value.description}.`);
+//     }
+
+//     return {
+//       message: "All user types have been set successfully.",
+//     };
+//   } catch (error) {
+//     logger.error(`Error setting user types: ${error}`);
+//     throw new HttpsError(
+//         "internal",
+//         `Error setting user types: ${error}`,
+//     );
+//   }
+// });

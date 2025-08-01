@@ -10,8 +10,8 @@
  * @property {Role} parent the parent role
  * @property {Role} unauthenticated the unauthenticated role
  *  This role is a marker separate from other roles.
- *  It will not be detected by the getRoleFromToken function
- *  and must be checked using isDemoRoleFromToken.
+ *  It will not be detected by the getRoleFromClaimsList function
+ *  and must be checked using isDemoRoleFromClaimsList.
  */
 const Role = Object.freeze({
   // DO NOT CHECK ORDER VALUES USING CONSTANTS! ONLY COMPARE THEM!
@@ -49,10 +49,11 @@ const Role = Object.freeze({
  * This function must return the highestr role the user has.
  * If the user has multiple roles, the one with the highest
  * order will be returned.
- * @param {unknown} token the token object (context.auth.token)
+ * @param {string[]} token the token object (context.auth.token)
+ *  (just a list of strings corresponding to role names)
  * @return {Role} the user's corresponding Role object
  */
-function getRoleFromToken(token) {
+function getRoleFromClaimsList(token) {
   if (token[Role.admin.value.description] === true) {
     return Role.admin;
   } else if (token[Role.researcher.value.description] === true) {
@@ -62,6 +63,34 @@ function getRoleFromToken(token) {
   } else {
     return Role.unauthenticated;
   }
+}
+
+/**
+ * Gets all roles from the claims list
+ * @param {string[]} token The list of claims as a string
+ *  (usually from the req.auth.token object)
+ * @return {Role[]} an array of Role objects
+ */
+function getAllRolesFromClaimsList(token) {
+  const roles = [];
+  if (token == null) {
+    roles.push(Role.unauthenticated);
+    return roles;
+  }
+
+  if (token[Role.admin.value.description] === true) {
+    roles.push(Role.admin);
+  }
+  if (token[Role.researcher.value.description] === true) {
+    roles.push(Role.researcher);
+  }
+  if (token[Role.parent.value.description] === true) {
+    roles.push(Role.parent);
+  }
+  if (roles.length === 0) {
+    roles.push(Role.unauthenticated);
+  }
+  return roles;
 }
 
 /**
@@ -85,6 +114,7 @@ function getRoleFromString(roleString) {
 
 module.exports = {
   Role,
-  getRoleFromToken,
+  getRoleFromClaimsList,
+  getAllRolesFromClaimsList,
   getRoleFromString,
 };

@@ -24,7 +24,10 @@ const Type = Object.freeze({
  * @param {unknown} token the token object (context.auth.token)
  * @return {Type} the user's corresponding Type object
  */
-function getTypeFromToken(token) {
+function getTypeFromClaimsList(token) {
+  if (token == null) {
+    return Type.unauthenticated_type;
+  }
   if (token[Type.researcher_type.value.description] === true) {
     return Type.researcher_type;
   } else if (token[Type.parent_type.value.description] === true) {
@@ -52,6 +55,6 @@ function getTypeFromString(typeString) {
 
 module.exports = {
   Type,
-  getTypeFromToken,
+  getTypeFromClaimsList,
   getTypeFromString,
 };
