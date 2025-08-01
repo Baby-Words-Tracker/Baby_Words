@@ -21,6 +21,9 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   final TextEditingController _searchController = TextEditingController();
+
+  UserType? _selectedUserType;
+
   String _selectedUserEmail = '';
 
   Map<String, dynamic>? _userRoles;
@@ -69,13 +72,15 @@ class _AdminPageState extends State<AdminPage> {
   List<List<String>> _convertUserDataToLineList(
       List<Map<String, dynamic>> userData) {
     return userData.map((row) {
-      final claims = row['customClaims'] as List<UserRole>? ?? [];
+      final roles = row['roles'] as List<UserRole>? ?? [];
+      final type = row['type'] as UserType? ?? UserType.unauthenticated_type;
       return List<String>.from([
         row['email'] ?? '',
         row['uid'] ?? '',
         row['disabled']?.toString() ?? '',
         ...UserRole.values
-            .map((role) => claims.contains(role) ? 'true' : 'false'),
+            .map((role) => roles.contains(role) ? 'true' : 'false'),
+        ...UserType.values.map((type_) => type == type_ ? 'true' : 'false'),
       ]);
     }).toList();
   }
@@ -96,6 +101,7 @@ class _AdminPageState extends State<AdminPage> {
     'uid',
     'disabled',
     for (var role in UserRole.values) role.name,
+    for (var type in UserType.values) type.name,
   ];
 
   Widget _buildPadded(Widget child) {
@@ -166,6 +172,12 @@ class _AdminPageState extends State<AdminPage> {
           default:
             throw ArgumentError('Invalid user type: $newType.');
         }
+        await callFunction(
+          // ignore: use_build_context_synchronously
+          context, // this function checks for mounted so it is safe
+          'setTypeClaim',
+          {'newType': newType.name, 'targetEmail': _selectedUserEmail},
+        );
       } else {
         debugPrint(
             "Change user type action not performed in admin page because context is not mounted.");
@@ -216,6 +228,7 @@ class _AdminPageState extends State<AdminPage> {
                 setState(() {
                   _selectedUserEmail = value;
                   _userRoles = null;
+                  _selectedUserType = null;
                   // debugPrint("_selectedUserEmail set to $value");
                 });
               },
@@ -301,232 +314,238 @@ class _AdminPageState extends State<AdminPage> {
                             },
                           ),
                         ),
+                        _buildPadded(Text("User Roles Controls:")),
                         _buildPadded(
-                          Consumer<GeneralUserService>(
-                            builder: (context, generalUserService, child) {
-                              return ElevatedButton(
-                                child: const Text(
-                                    "Change user type to Researcher"),
-                                onPressed: () async {
-                                  if (await showConfirmationDialog(context,
-                                      'Are your sure you want to make $_selectedUserEmail a Researcher?')) {
-                                    await changeUserType(
-                                        UserType.researcher_type);
-                                  }
-                                },
-                              );
-                            },
+                          Padding(
+                            padding: EdgeInsetsGeometry.only(left: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text("Assign Parent Role"),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to assign the Parent role to $_selectedUserEmail?')) {
+                                        await _callRoleFunction(
+                                            'giveParentClaim');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text("Remove Parent Role"),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to remove the Parent role from $_selectedUserEmail?')) {
+                                        await _callRoleFunction(
+                                            'removeParentClaim');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                      child:
+                                          const Text('Assign Researcher Role'),
+                                      onPressed: () async {
+                                        if (await showConfirmationDialog(
+                                            context,
+                                            'Are your sure you want to give the Researcher role to $_selectedUserEmail?')) {
+                                          _callRoleFunction(
+                                              'giveResearcherClaim');
+                                        }
+                                      }),
+                                ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text('Remove Researcher Role'),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to remove the Researcher role from $_selectedUserEmail?')) {
+                                        _callRoleFunction(
+                                            'removeResearcherClaim');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text('Assign Admin Role'),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to give the Admin role to $_selectedUserEmail?')) {
+                                        _callRoleFunction('giveAdminClaim');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text('Remove Admin Role'),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to remove the Admin role from $_selectedUserEmail?')) {
+                                        _callRoleFunction('removeAdminClaim');
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         _buildPadded(
-                          Consumer<GeneralUserService>(
-                            builder: (context, generalUserService, child) {
-                              return ElevatedButton(
-                                child: const Text("Change user type to Parent"),
-                                onPressed: () async {
-                                  if (await showConfirmationDialog(context,
-                                      'Are your sure you want to make $_selectedUserEmail a Parent?')) {
-                                    await changeUserType(UserType.parent_type);
-                                  }
-                                },
-                              );
-                            },
+                          Text('User Type Controls:'),
+                        ),
+                        _buildPadded(
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text(
+                                        "Change user type to Researcher"),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to make $_selectedUserEmail a Researcher?')) {
+                                        await changeUserType(
+                                            UserType.researcher_type);
+                                      }
+                                    },
+                                  ),
+                                ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text(
+                                        "Change user type to Parent"),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to make $_selectedUserEmail a Parent?')) {
+                                        await changeUserType(
+                                            UserType.parent_type);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        // TODO: add a button here to make a user a parnet and one to make them a researcher or use a dropdown and a single button to change user type.
+                        _buildPadded(Text("Email UID Data Controls:")),
                         _buildPadded(
-                          ElevatedButton(
-                            child: const Text("Assign Parent Role"),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to assign the Parent role to $_selectedUserEmail?')) {
-                                await _callRoleFunction('giveParentClaim');
-                              }
-                            },
-                          ),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text("Remove Parent Role"),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to remove the Parent role from $_selectedUserEmail?')) {
-                                await _callRoleFunction('removeParentClaim');
-                              }
-                            },
-                          ),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                              child: const Text('Assign Researcher Role'),
-                              onPressed: () async {
-                                if (await showConfirmationDialog(context,
-                                    'Are your sure you want to give the Researcher role to $_selectedUserEmail?')) {
-                                  _callRoleFunction('giveResearcherClaim');
-                                }
-                              }),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text('Remove Researcher Role'),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to remove the Researcher role from $_selectedUserEmail?')) {
-                                _callRoleFunction('removeResearcherClaim');
-                              }
-                            },
-                          ),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text('Assign Admin Role'),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to give the Admin role to $_selectedUserEmail?')) {
-                                _callRoleFunction('giveAdminClaim');
-                              }
-                            },
-                          ),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text('Remove Admin Role'),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to remove the Admin role from $_selectedUserEmail?')) {
-                                _callRoleFunction('removeAdminClaim');
-                              }
-                            },
-                          ),
-                        ),
-                        // TODO: currently this only sets the type claim but does not move the user to the correct database. Update that to be fixed.
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text('Set Parent Type'),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to set the Parent type for $_selectedUserEmail?')) {
-                                // ignore: use_build_context_synchronously
-                                await callFunction(context, 'setTypeClaim', {
-                                  'newType': UserType.parent_type.name,
-                                  'targetEmail': _selectedUserEmail,
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text('Set Researcher Type'),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'Are your sure you want to set the Researcher type for $_selectedUserEmail?')) {
-                                // ignore: use_build_context_synchronously
-                                await callFunction(context, 'setTypeClaim', {
-                                  'newType': UserType.researcher_type.name,
-                                  'targetEmail': _selectedUserEmail,
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                        _buildPadded(
-                          ElevatedButton(
-                            child: const Text('Get Email-UID Data'),
-                            onPressed: () async {
-                              if (await showConfirmationDialog(context,
-                                  'This will query all email and uid data and return it as a csv. Continue?')) {
-                                // TODO: do I need to check this context here?
-                                var userData = await callFunction(
-                                    context, 'getEmailUIDTable', {});
-                                if (userData != null) {
-                                  // List<Map<String, dynamic>>
-                                  // debugPrint(
-                                  //     "userData received: ${userData['users']}");
-                                  // debugPrint("");
-                                  // // print the type of users
-                                  // debugPrint(
-                                  //     "users type: ${userData['users'].runtimeType}");
-                                  // // print the type of users['users'].first
-                                  // debugPrint(
-                                  //     "users[0] type: ${userData['users'][0].runtimeType}");
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ElevatedButton(
+                                  child: const Text('Get Email-UID Data'),
+                                  onPressed: () async {
+                                    if (await showConfirmationDialog(context,
+                                        'This will query all email and uid data and return it as a csv. Continue?')) {
+                                      // TODO: do I need to check this context here?
+                                      var userData = await callFunction(
+                                          context, 'getEmailUIDTable', {});
+                                      if (userData != null) {
+                                        // List<Map<String, dynamic>>
+                                        // debugPrint(
+                                        //     "userData received: ${userData['users']}");
+                                        // debugPrint("");
+                                        // // print the type of users
+                                        // debugPrint(
+                                        //     "users type: ${userData['users'].runtimeType}");
+                                        // // print the type of users['users'].first
+                                        // debugPrint(
+                                        //     "users[0] type: ${userData['users'][0].runtimeType}");
 
-                                  // // print the type of the objects in userDats.first
-                                  // debugPrint("");
-                                  // userData['users'].forEach((key, value) {
-                                  //   debugPrint(
-                                  //       "userData.first key: $key value: $value");
-                                  //   debugPrint(
-                                  //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
-                                  // });
+                                        // // print the type of the objects in userDats.first
+                                        // debugPrint("");
+                                        // userData['users'].forEach((key, value) {
+                                        //   debugPrint(
+                                        //       "userData.first key: $key value: $value");
+                                        //   debugPrint(
+                                        //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
+                                        // });
 
-                                  List<Map<String, dynamic>> users =
-                                      (userData['users'] as List)
-                                          .map<Map<String, dynamic>>((user) {
-                                    final rawMap =
-                                        user as Map<Object?, Object?>;
-                                    final userMap =
-                                        convertToMapStringDynamic(rawMap);
+                                        List<Map<String, dynamic>> users =
+                                            (userData['users'] as List)
+                                                .map<Map<String, dynamic>>(
+                                                    (user) {
+                                          final rawMap =
+                                              user as Map<Object?, Object?>;
+                                          final userMap =
+                                              convertToMapStringDynamic(rawMap);
 
-                                    if (userMap['customClaims'] != null) {
-                                      userMap['customClaims'] =
-                                          getUserRolesFromClaims(
-                                              userMap['customClaims']);
+                                          // add roles and type to the user map
+                                          if (userMap['customClaims'] != null) {
+                                            userMap['roles'] =
+                                                getUserRolesFromClaims(
+                                                    userMap['customClaims']);
+                                            userMap['type'] =
+                                                getUserTypeFromClaims(
+                                                    userMap['customClaims']);
+                                          }
+
+                                          return userMap;
+                                        }).toList();
+
+                                        // debugPrint("userData received: $users");
+                                        // debugPrint("");
+                                        // // print the type of users
+                                        // debugPrint("users type: ${users.runtimeType}");
+                                        // // print the type of users['users'].first
+                                        // debugPrint(
+                                        //     "users[0] type: ${users[0].runtimeType}");
+
+                                        // // print the type of the objects in userDats.first
+                                        // debugPrint("");
+                                        // users.first.forEach((key, value) {
+                                        //   debugPrint(
+                                        //       "userData.first key: $key value: $value");
+                                        //   debugPrint(
+                                        //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
+                                        // });
+                                        // debugPrint("");
+
+                                        setState(() {
+                                          _userData = users;
+                                        });
+
+                                        final dataList =
+                                            _convertUserDataToLineList(users);
+
+                                        // debugPrint("userData received: $dataList");
+                                        // debugPrint("");
+                                        // // print the type of dataList
+                                        // debugPrint(
+                                        //     "dataList type: ${dataList.runtimeType}");
+                                        // // print the type of dataList['dataList'].first
+                                        // debugPrint(
+                                        //     "dataList[0] type: ${dataList[0].runtimeType}");
+
+                                        // // print the type of the objects in userDats.first
+                                        // debugPrint("");
+                                        // for (var value in dataList.first) {
+                                        //   debugPrint("userData value: $value");
+                                        //   debugPrint(
+                                        //       "\t\tuserData valuetype: ${value.runtimeType} ");
+                                        // }
+                                        // debugPrint("");
+
+                                        downloadAsCSV(
+                                            header, dataList, "UserUIDData");
+                                      } else {
+                                        debugPrint("No user data received");
+                                      }
                                     }
-
-                                    return userMap;
-                                  }).toList();
-
-                                  // debugPrint("userData received: $users");
-                                  // debugPrint("");
-                                  // // print the type of users
-                                  // debugPrint("users type: ${users.runtimeType}");
-                                  // // print the type of users['users'].first
-                                  // debugPrint(
-                                  //     "users[0] type: ${users[0].runtimeType}");
-
-                                  // // print the type of the objects in userDats.first
-                                  // debugPrint("");
-                                  // users.first.forEach((key, value) {
-                                  //   debugPrint(
-                                  //       "userData.first key: $key value: $value");
-                                  //   debugPrint(
-                                  //       "\t\tuserData.first valuetype: ${value.runtimeType} ");
-                                  // });
-                                  // debugPrint("");
-
-                                  setState(() {
-                                    _userData = users;
-                                  });
-
-                                  final dataList =
-                                      _convertUserDataToLineList(users);
-
-                                  // debugPrint("userData received: $dataList");
-                                  // debugPrint("");
-                                  // // print the type of dataList
-                                  // debugPrint(
-                                  //     "dataList type: ${dataList.runtimeType}");
-                                  // // print the type of dataList['dataList'].first
-                                  // debugPrint(
-                                  //     "dataList[0] type: ${dataList[0].runtimeType}");
-
-                                  // // print the type of the objects in userDats.first
-                                  // debugPrint("");
-                                  // for (var value in dataList.first) {
-                                  //   debugPrint("userData value: $value");
-                                  //   debugPrint(
-                                  //       "\t\tuserData valuetype: ${value.runtimeType} ");
-                                  // }
-                                  // debugPrint("");
-
-                                  downloadAsCSV(
-                                      header, dataList, "UserUIDData");
-                                } else {
-                                  debugPrint("No user data received");
-                                }
-                              }
-                            },
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -540,7 +559,7 @@ class _AdminPageState extends State<AdminPage> {
                           return ListTile(
                             title: Text(_userData[index]['email'] ?? ''),
                             subtitle: Text(
-                                'UID: ${_userData[index]['uid'] ?? ''}, Roles: ${_userData[index]['customClaims'].toString()}${_userData[index]['disabled'] ? '  -  (User is disabled.)' : ''}'),
+                                'UID: ${_userData[index]['uid'] ?? ''}, Roles: ${_userData[index]['roles'].toString()}, Type: ${_userData[index]['type']}${_userData[index]['disabled'] ? '  -  (User is disabled.)' : ''}'),
                           );
                         },
                       ),

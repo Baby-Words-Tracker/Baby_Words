@@ -25,11 +25,11 @@ Future<Map<String, dynamic>?> callFunctionWithThrow(
 
 Future<Map<String, dynamic>?> callFunction(
   BuildContext context,
-  String functionName,
-  Map<String, dynamic> arguments,
-) async {
+  String functionName, [
+  Map<String, dynamic>? arguments,
+]) async {
   try {
-    return await callFunctionWithThrow(context, functionName, arguments);
+    return await callFunctionWithThrow(context, functionName, arguments ?? {});
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(context)
