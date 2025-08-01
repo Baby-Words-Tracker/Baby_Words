@@ -1,12 +1,16 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:baby_words_tracker/util/collection_name.dart';
 import 'package:baby_words_tracker/util/time_utils.dart';
 
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class WordTracker {
-  static String collectionName = 'WordTracker';
+  static CollectionName collectionName = CollectionName(
+    'WordTracker',
+    demoPrefix: "",
+  );
   static String videoIDFieldName = 'videoID';
 
   final String? id; // The word being tracked, e.g., "mama", "dada"

@@ -1,9 +1,9 @@
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
 import 'package:baby_words_tracker/util/check_and_update_word.dart';
-import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/services.dart';
 
-void buildWordBank(WordDataService wordDataService) async {
+void buildWordBank(TypeAwareWordDataService wordDataService) async {
   List<String> words = List.empty(growable: true);
   final csvString = await rootBundle.loadString('assets/data.csv');
 

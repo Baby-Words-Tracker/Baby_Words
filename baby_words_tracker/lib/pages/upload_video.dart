@@ -1,13 +1,16 @@
-import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
-import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:flutter/material.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
-import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/video/video_functions.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/video/video_functions.dart';
+
+import 'package:flutter/material.dart';
+
 import 'package:path/path.dart' as path;
+
+import 'package:provider/provider.dart';
 
 class UploadVideoPage extends StatefulWidget {
   static const routeName = '/uploadvideo';
@@ -22,7 +25,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, ChildDataService,
+    return Consumer3<LocalizationService, TypeAwareChildDataService,
             CurrentChildrenService>(
         builder: (context, localizationService, childService,
             currentChildrenService, child) {

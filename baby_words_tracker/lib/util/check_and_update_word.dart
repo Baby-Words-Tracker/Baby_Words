@@ -1,14 +1,15 @@
+import 'dart:convert';
+
+import 'package:baby_words_tracker/data/models/word.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
 import 'package:baby_words_tracker/exceptions/document_creation_failed_exception.dart';
 import 'package:baby_words_tracker/exceptions/document_update_failed_exception.dart';
 import 'package:baby_words_tracker/exceptions/network_failure_exception.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/models/word.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:convert';
 
 class WikiWordData {
   final String word;
@@ -161,7 +162,7 @@ Future<String?> getWordDefinition(
 /// Throws [DocumentUpdateFailedException] if the word could not be updated.
 Future<bool> checkAndUpdateWord(
   String word,
-  WordDataService wordDataService, {
+  TypeAwareWordDataService wordDataService, {
   LanguageCode targetLanguage = LanguageCode.en,
   Set<LanguageCode> languagesToRetrieve = const {
     LanguageCode.en,

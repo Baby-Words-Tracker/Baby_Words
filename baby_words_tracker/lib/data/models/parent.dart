@@ -3,11 +3,12 @@ import 'dart:convert';
 
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/i_user_model.dart';
+import 'package:baby_words_tracker/util/collection_name.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:collection/collection.dart';
 
 class Parent extends IUserModel {
-  static String collectionName = 'Parent';
+  static CollectionName collectionName = CollectionName('Parent');
 
   final LanguageCode language;
   final List<String> childIDs;

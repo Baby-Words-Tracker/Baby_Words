@@ -1,23 +1,27 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
-import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:baby_words_tracker/util/graph_type.dart';
-import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:baby_words_tracker/util/graph_type.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
+
+import 'package:collection/collection.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'package:provider/provider.dart';
+
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 final List<GraphType> graphsWithLength = [
   GraphType.newWordsPerDay
@@ -97,7 +101,7 @@ class _StatsPageState extends State<StatsPage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Center(
-            child: Consumer2<LocalizationService, WordTrackerDataService>(
+            child: Consumer2<LocalizationService, TypeAwareWordTrackerDataService>(
                 // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
                 builder: (context, localizationService, trackerService, child) {
               return Column(
@@ -117,9 +121,9 @@ class _StatsPageState extends State<StatsPage> {
                   // Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
                   graphSwitcher(
                       graphType,
-                      context.read<ChildDataService>(),
-                      context.read<WordDataService>(),
-                      context.read<WordTrackerDataService>(),
+                      context.read<TypeAwareChildDataService>(),
+                      context.read<TypeAwareWordDataService>(),
+                      context.read<TypeAwareWordTrackerDataService>(),
                       graphLength,
                       graphCache,
                       id: currChildId!),
@@ -147,8 +151,8 @@ class _StatsPageState extends State<StatsPage> {
 
 //Queries the database and returns the words learned over the past `days` days as time series data
 Future<List<List<WordTracker>>> getTimeSeriesNewWords(
-    ChildDataService childService,
-    WordTrackerDataService trackerService,
+    TypeAwareChildDataService childService,
+    TypeAwareWordTrackerDataService trackerService,
     int days,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
   //for the number of days, grab the amount of words learned
@@ -166,9 +170,9 @@ Future<List<List<WordTracker>>> getTimeSeriesNewWords(
 // Returns: Widget, the graph to be displayed
 Widget graphSwitcher(
     GraphType type,
-    ChildDataService childService,
-    WordDataService wordService,
-    WordTrackerDataService trackerService,
+    TypeAwareChildDataService childService,
+    TypeAwareWordDataService wordService,
+    TypeAwareWordTrackerDataService trackerService,
     int days,
     Map<(GraphType, int, String), dynamic> cache,
     {String id =
@@ -190,8 +194,8 @@ Widget graphSwitcher(
 //Integrates with cache to prevent over querying. Data will only update upon reloading the page
 //Returns: List<(int, PartOfSpeech)>, a list of tuples containing the number of words and the part of speech
 Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
-    ChildDataService childService,
-    WordDataService wordService,
+    TypeAwareChildDataService childService,
+    TypeAwareWordDataService wordService,
     Map<(GraphType, int, String), dynamic> cache,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
   if (cache.containsKey((GraphType.wordsByPartOfSpeech, -1, id))) {
@@ -233,8 +237,8 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
 //Turns the info about the number of words learned by part of speech into a chart
 //Returns: Widget, the graph to be displayed
 FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
-    ChildDataService childService,
-    WordDataService wordService,
+    TypeAwareChildDataService childService,
+    TypeAwareWordDataService wordService,
     Map<(GraphType, int, String), dynamic> cache,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) {
   return FutureBuilder<List<(int, PartOfSpeech)>>(
@@ -283,8 +287,8 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
 //Integrates with cache to prevent over querying. Data will only update upon reloading the page
 //Returns: List<(int, DateTime)>, a list of tuples containing the number of words and their associated date
 Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(
-    ChildDataService childService,
-    WordTrackerDataService trackerService,
+    TypeAwareChildDataService childService,
+    TypeAwareWordTrackerDataService trackerService,
     int days,
     Map<(GraphType, int, String), dynamic> cache,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
@@ -321,8 +325,8 @@ Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(
 //Turns the info from the past `days` days into a chart showing the amount of words learned per day
 //Returns: Widget, the graph to be displayed
 FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(
-    ChildDataService childService,
-    WordTrackerDataService trackerService,
+    TypeAwareChildDataService childService,
+    TypeAwareWordTrackerDataService trackerService,
     int days,
     Map<(GraphType, int, String), dynamic> cache,
     {String id = "gz1Qe32xJcF0oRGmhw7f"}) {
@@ -463,7 +467,8 @@ Consumer graphTypeSelectDropdown(
 // Returns a FutureBuilder that builds a text widget declaring the number of words
 FutureBuilder<int> wordsKnownFeature(BuildContext context, String currChildId) {
   return FutureBuilder<int>(
-      future: context.read<ChildDataService>().getNumWords(currChildId),
+      future:
+          context.read<TypeAwareChildDataService>().getNumWords(currChildId),
       builder: (context, numWords) {
         return Text("Your child knows ${numWords.data} words!");
       });
@@ -474,8 +479,10 @@ FutureBuilder<int> wordsKnownFeature(BuildContext context, String currChildId) {
 // ---------------------
 
 Future<void>
-    addThisManyDaysWorthOfExampleDataToTestChildInALinearIncreasingFormat(int n,
-        WordTrackerDataService trackerService) //testing function FIXME:remove
+    addThisManyDaysWorthOfExampleDataToTestChildInALinearIncreasingFormat(
+  int n,
+  TypeAwareWordTrackerDataService trackerService,
+) //testing function FIXME:remove
 async {
   DateTime now = DateTime.now();
   for (var i = 0; i < n; i++) {

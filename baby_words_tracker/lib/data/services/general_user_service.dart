@@ -1,70 +1,75 @@
-import 'package:baby_words_tracker/data/type_aware_services/type_aware_parent_data_service.dart';
-import 'package:baby_words_tracker/data/type_aware_services/type_aware_researcher_data_service.dart';
-import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_parent_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_researcher_data_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
-import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
-
-import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
+import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
+import 'package:baby_words_tracker/util/collection_name.dart';
 import 'package:baby_words_tracker/util/pair.dart';
+import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type_collection_mapper.dart';
 import 'package:flutter/foundation.dart';
 
 class GeneralUserService {
+  final FirestoreRepository _firestoreRepository = FirestoreRepository();
+
   final TypeAwareParentDataService _parentDataService;
   final TypeAwareResearcherDataService _researcherDataService;
-  final FirestoreRepository _firestoreRepository = FirestoreRepository();
+  final AuthenticationService _authenticationService;
 
   GeneralUserService(
       {required TypeAwareParentDataService parentDataService,
-      required TypeAwareResearcherDataService researcherDataService})
+      required TypeAwareResearcherDataService researcherDataService,
+      required AuthenticationService authenticationService})
       : _parentDataService = parentDataService,
-        _researcherDataService = researcherDataService;
+        _researcherDataService = researcherDataService,
+        _authenticationService = authenticationService;
 
   Future<Pair<dynamic, UserType>> createUser(
       {required UserType userType,
       required String id,
       String? email,
       String? name}) async {
-    if (userType == UserType.parent) {
+    if (userType == UserType.parent_type) {
       final parent = await _parentDataService.createParent(Parent(id: id));
       if (parent != null) {
-        return Pair(parent, UserType.parent);
+        return Pair(parent, UserType.parent_type);
       }
-    } else if (userType == UserType.researcher) {
+    } else if (userType == UserType.researcher_type) {
       final researcher = await _researcherDataService
           .createResearcher(Researcher(id: id, email: email, name: name));
       if (researcher != null) {
-        return Pair(researcher, UserType.researcher);
+        return Pair(researcher, UserType.researcher_type);
       }
     }
 
-    return Pair(null, UserType.unauthenticated);
+    return Pair(null, UserType.unauthenticated_type);
   }
 
   Future<Pair<dynamic, UserType>> _queryUserByType(
       UserType type, String userId) async {
     switch (type) {
-      case UserType.parent:
+      case UserType.parent_type:
         final parent = await _parentDataService.getParent(userId);
         if (parent != null) {
-          return Pair(parent, UserType.parent);
+          return Pair(parent, type);
         }
         break;
-      case UserType.researcher:
+      case UserType.researcher_type:
         final researcher = await _researcherDataService.getResearcher(userId);
         if (researcher != null) {
-          return Pair(researcher, UserType.researcher);
+          return Pair(researcher, type);
         }
         break;
       default:
-        return Pair(null, UserType.unauthenticated);
+        return Pair(null, UserType.unauthenticated_type);
     }
-    return Pair(null, UserType.unauthenticated);
+    return Pair(null, UserType.unauthenticated_type);
   }
 
   // TODO: remove logging here, I am just being safe since this is still kind of new
@@ -74,7 +79,7 @@ class GeneralUserService {
         "GeneralUserService: getUser() id: $userId, expectedType: $expectedType");
 
     // if there is no expected type, run simultaneous queries
-    if (expectedType == null || expectedType == UserType.unauthenticated) {
+    if (expectedType == null || expectedType == UserType.unauthenticated_type) {
       debugPrint("GeneralUserService: getUser() running simultaneous queries");
       // run both queries simultaneously
       final results = await Future.wait([
@@ -85,9 +90,9 @@ class GeneralUserService {
       debugPrint(
           "GeneralUserService: getUser() simultaneous queries results: $results");
       if (results[1] != null) {
-        return Pair(results[1], UserType.researcher);
+        return Pair(results[1], UserType.researcher_type);
       } else if (results[0] != null) {
-        return Pair(results[0], UserType.parent);
+        return Pair(results[0], UserType.parent_type);
       }
     } else {
       // else run the query for the expected type then any other types
@@ -102,66 +107,72 @@ class GeneralUserService {
 
       debugPrint(
           "GeneralUserService: getUser() expected type not found, running query for other types");
-      if (expectedType != UserType.parent) {
+      if (expectedType != UserType.parent_type) {
         final parent = await _parentDataService.getParent(userId);
         debugPrint("GeneralUserService: getUser() parent: $parent");
         if (parent != null) {
-          return Pair(parent, UserType.parent);
+          return Pair(parent, UserType.parent_type);
         }
       }
 
-      if (expectedType != UserType.researcher) {
+      if (expectedType != UserType.researcher_type) {
         final researcher = await _researcherDataService.getResearcher(userId);
         debugPrint("GeneralUserService: getUser() researcher: $researcher");
         if (researcher != null) {
-          return Pair(researcher, UserType.researcher);
+          return Pair(researcher, UserType.researcher_type);
         }
       }
     }
 
     debugPrint("GeneralUserService: getUser() no user found");
-    return Pair(null,
-        UserType.unauthenticated); // if no user found return unauthenticated
+    return Pair(
+        null,
+        UserType
+            .unauthenticated_type); // if no user found return unauthenticated
   }
 
+  /// Returns a user listener for the given userId and expected type.
+  /// If the expected type is null, it will return a listener for the user type
+  /// that is currently stored in the database.
+  /// If the user is not found, it will return a null listener and the unauthenticated type.
+  /// If the user is found, it will return a listener for the user type
+  /// and the user type.
   Future<Pair<IDocumentListener?, UserType>> getUserListener(String userId,
       {UserType? expectedListenerType}) async {
-    if (expectedListenerType == UserType.unauthenticated ||
-        expectedListenerType == null) {
-      debugPrint("GeneralUserService: getUserListener() expectedType is null");
-      Pair<dynamic, UserType> result =
-          await getUser(userId, expectedType: expectedListenerType);
-      expectedListenerType = result.second;
-      debugPrint(
-          "GeneralUserService: getUserListener() expectedListenerType: $expectedListenerType");
-    }
+    Pair<dynamic, UserType> searchResult =
+        await getUser(userId, expectedType: expectedListenerType);
+    final UserType actualUserType = searchResult.second;
+    debugPrint(
+        "GeneralUserService: getUserListener() expectedListenerType: $expectedListenerType");
 
-    switch (expectedListenerType) {
-      case UserType.researcher:
+    switch (actualUserType) {
+      case UserType.researcher_type:
         return Pair(
           _researcherDataService.getUserListener(userId),
-          UserType.researcher,
+          actualUserType,
         );
-      case UserType.parent:
+      case UserType.parent_type:
         return Pair(
           _parentDataService.getUserListener(userId),
-          UserType.parent,
+          actualUserType,
         );
       default:
-        return Pair(null, UserType.unauthenticated);
+        return Pair(null, UserType.unauthenticated_type);
     }
   }
 
-  Future<Pair<dynamic, UserType>?> changeUserType(
+  Future<Pair<dynamic, UserType>?> changeUserStorageType(
       String userId, UserType newType,
       {UserType? expectedType}) async {
     debugPrint(
-        "GeneralUserService: changeUserType() userId: $userId, newType: $newType");
+        "GeneralUserService: changeUserStorageLocationType() userId: $userId, newType: $newType");
 
     // set collection names based on user types
-    List<String> fromCollections = UserTypeCollectionMapper.allCollectionNames;
-    String? expectedCollection = expectedType?.collectionName;
-    String? toCollection = newType.collectionName;
+    List<CollectionName> fromCollections =
+        UserTypeCollectionMapper.allCollectionNames;
+    CollectionName? expectedCollection =
+        expectedType?.collectionName; // TODO: make demo aware
+    CollectionName? toCollection = newType.collectionName;
 
     if (toCollection == null) {
       throw ArgumentError(
@@ -171,9 +182,20 @@ class GeneralUserService {
     // Move the document to the new collection using a transaction
     late final Pair<DataWithId, String>? newUser;
     try {
-      newUser = await _firestoreRepository.changeUserType(
-          userId, fromCollections, toCollection,
-          expectedCollectionName: expectedCollection);
+      newUser = await _firestoreRepository.changeUserStorageType(
+          userId,
+          fromCollections
+              .map(
+                (name) => name.demoAwareCollectionName(
+                  _authenticationService.isDemoUser,
+                ),
+              )
+              .toList(),
+          toCollection.demoAwareCollectionName(
+            _authenticationService.isDemoUser,
+          ),
+          expectedCollectionName: expectedCollection
+              ?.demoAwareCollectionName(_authenticationService.isDemoUser));
     } on DocumentNotFoundException catch (e) {
       debugPrint("GeneralUserService: User not found: $e");
       return null;
@@ -191,9 +213,9 @@ class GeneralUserService {
           "GeneralUserService: changeUserType() user moved successfully");
       // return the new user
       switch (newType) {
-        case UserType.parent:
+        case UserType.parent_type:
           return Pair(Parent.fromDataWithId(newUser.first), newType);
-        case UserType.researcher:
+        case UserType.researcher_type:
           return Pair(Researcher.fromDataWithId(newUser.first), newType);
         default:
           throw ActionFailedException(
@@ -206,7 +228,7 @@ class GeneralUserService {
       {UserType? userType}) async {
     debugPrint(
         "GeneralUserService: setPrivacyPolicyAccepted() userId: $userId, accepted: $accepted");
-    if (userType == null || userType == UserType.unauthenticated) {
+    if (userType == null || userType == UserType.unauthenticated_type) {
       debugPrint(
           "GeneralUserService: setPrivacyPolicyAccepted() expectedType is null, getting user type");
       Pair<dynamic, UserType> user = await getUser(userId);
@@ -222,8 +244,7 @@ class GeneralUserService {
     }
 
     switch (userType) {
-      case UserType.parent:
-      case UserType.demo_parent:
+      case UserType.parent_type:
         bool success = await _parentDataService.updateParent(
           userId,
           acceptedPrivacyPolicy: accepted,
@@ -235,8 +256,7 @@ class GeneralUserService {
               "GeneralUserService: setPrivacyPolicyAccepted() failed to update parent");
         }
         return success;
-      case UserType.researcher:
-      case UserType.demo_researcher:
+      case UserType.researcher_type:
         bool success = await _researcherDataService.updateResearcher(
           userId,
           acceptedPrivacyPolicy: accepted,

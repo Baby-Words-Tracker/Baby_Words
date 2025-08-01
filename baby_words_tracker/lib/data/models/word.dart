@@ -2,13 +2,17 @@
 
 import 'dart:convert';
 
+import 'package:baby_words_tracker/util/collection_name.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:collection/collection.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class Word {
-  static String collectionName = 'Word';
+  static CollectionName collectionName = CollectionName(
+    'Word',
+    demoPrefix: "",
+  );
 
   final String word;
   final Set<LanguageCode> languageCodes;
@@ -40,8 +44,7 @@ class Word {
     return <String, dynamic>{
       'languageCodes': languageCodes.map((x) => x.name).toList(),
       'partOfSpeech': partOfSpeech.map((langCodeKey, posVal) =>
-          MapEntry(langCodeKey.name,
-              posVal.name)), // partOfSpeech.name,
+          MapEntry(langCodeKey.name, posVal.name)), // partOfSpeech.name,
       'needsProcessing': needsProcessing,
     };
   }

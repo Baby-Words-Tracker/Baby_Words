@@ -1,7 +1,8 @@
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:collection/collection.dart';
@@ -15,21 +16,25 @@ class CurrentChildrenService extends ChangeNotifier {
   int _childIndex = 0;
   bool _dataRetrieved = false;
 
+  final AuthenticationService _authenticationService;
   final UserModelService _userService;
-  final ChildDataService _childService;
+  final TypeAwareChildDataService _childService;
 
   int getChildIndex() {
     return _childIndex;
   }
 
   CurrentChildrenService({
+    required AuthenticationService authenticationService,
     required UserModelService userService,
-    required ChildDataService childService,
-  })  : _userService = userService,
+    required TypeAwareChildDataService childService,
+  })  : _authenticationService = authenticationService,
+        _userService = userService,
         _childService = childService {
     _parentSynchronizer = SafeSynchronizer(() async {
       Parent? parent = _userService.parent;
-      if (_userService.userType != UserType.parent || parent == null) {
+      if (_authenticationService.userType != UserType.parent_type ||
+          parent == null) {
         _children.clear();
         _childIndex = 0;
         _dataRetrieved = false;

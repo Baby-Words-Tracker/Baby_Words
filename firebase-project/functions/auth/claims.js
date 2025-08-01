@@ -55,12 +55,13 @@ async function getUserRecordByEmail(targetEmail) {
  * @param {Role} newRole The role to assign to the user
  * @param {Role} minimumRole The minimum role required to perform the action
  * @param {UserRecord} targetUser The UID of the user to assign the role to
- * @param {Object} request The request associated with the https call
+ * @param {https.CallableRequest} request The request associated
+ *  with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
 async function giveClaim(newRole, minimumRole, targetUser, request) {
-  checkAuthentication(request.data);
+  checkAuthentication(request);
 
   const roleName = newRole.value.description;
 
@@ -87,12 +88,13 @@ async function giveClaim(newRole, minimumRole, targetUser, request) {
  * @param {Role} role The role to remove from the user
  * @param {Role} minimumRole The minimum role required to perform the action
  * @param {UserRecord} targetUser The UID of the user to remove the role from
- * @param {Object} request The request object associated with the https call
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
 async function removeClaim(role, minimumRole, targetUser, request) {
-  checkAuthentication(request.data);
+  checkAuthentication(request);
 
   const roleName = role.value.description;
 
@@ -119,12 +121,13 @@ async function removeClaim(role, minimumRole, targetUser, request) {
  * @param {Type} newType The role to assign to the user
  * @param {Role} minimumRole The minimum role required to perform the action
  * @param {UserRecord} targetUser The UID of the user to assign the role to
- * @param {Object} request The request associated with the https call
+ * @param {https.CallableRequest} request The request associated with
+ *  the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
 async function setTypeClaim(newType, minimumRole, targetUser, request) {
-  checkAuthentication(request.data);
+  checkAuthentication(request);
 
   const typeName = newType.value.description;
 
@@ -158,7 +161,8 @@ async function setTypeClaim(newType, minimumRole, targetUser, request) {
  * @param {Role} role The role to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
- * @param {Object} request The request object associated witht he https request
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
@@ -178,7 +182,8 @@ async function giveClaimByUID(role, minimumRole, targetUid, request) {
  * @param {Role} role The role to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
- * @param {Object} req The request object associated witht he https request
+ * @param {https.CallableRequest} req The request object associated
+ *  with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
@@ -198,7 +203,8 @@ async function giveClaimByEmail(role, minimumRole, targetEmail, req) {
  * @param {Role} role The role to remove
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
- * @param {Object} request The request object associated with the https call
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
@@ -218,7 +224,8 @@ async function removeClaimByUID(role, minimumRole, targetUid, request) {
  * @param {Role} role The role to remove
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
- * @param {Object} request The request object associated with the https call
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https call
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
@@ -238,7 +245,8 @@ async function removeClaimByEmail(role, minimumRole, targetEmail, request) {
  * @param {Type} type The type to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetUid The target user's uid
- * @param {Object} request The request object associated witht he https request
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
@@ -258,7 +266,8 @@ async function setTypeClaimByUID(type, minimumRole, targetUid, request) {
  * @param {Type} type The type to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
- * @param {Object} req The request object associated witht he https request
+ * @param {https.CallableRequest} req The request object associated
+ *  with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */

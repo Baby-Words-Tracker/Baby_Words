@@ -1,14 +1,16 @@
+import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/data/models/parent.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_parent_data_service.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/util/ui_utils.dart';
+
+import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   static const routeName = '/settings';
@@ -90,7 +92,7 @@ class _AddSettingsPage extends State<SettingsPage> {
                                     context,
                                     listen: false)
                                 .parent!;
-                            Provider.of<ParentDataService>(context,
+                            Provider.of<TypeAwareParentDataService>(context,
                                     listen: false)
                                 .updateParent(parent.id, language: newLanguage);
 

@@ -1,8 +1,9 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_word.dart';
@@ -32,9 +33,8 @@ class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController fileTextController = TextEditingController();
   List<String> parsedWords = [];
 
-  late final ChildDataService _childDataService;
-  late final WordDataService _wordDataService;
-  late final WordTrackerDataService _wordTrackerDataService;
+  late final TypeAwareWordDataService _wordDataService;
+  late final TypeAwareWordTrackerDataService _wordTrackerDataService;
 
   bool _initialized = false;
 
@@ -44,10 +44,14 @@ class _AddTextPageState extends State<AddTextPage> {
     super.didChangeDependencies();
 
     if (!_initialized) {
-      _childDataService = Provider.of<ChildDataService>(context, listen: false);
-      _wordDataService = Provider.of<WordDataService>(context, listen: false);
-      _wordTrackerDataService =
-          Provider.of<WordTrackerDataService>(context, listen: false);
+      _wordDataService = Provider.of<TypeAwareWordDataService>(
+        context,
+        listen: false,
+      );
+      _wordTrackerDataService = Provider.of<TypeAwareWordTrackerDataService>(
+        context,
+        listen: false,
+      );
       _initialized = true;
     }
   }
@@ -250,10 +254,9 @@ class _AddTextPageState extends State<AddTextPage> {
   Future<bool> addWordToChild(
     String childId,
     String word,
-    WordTrackerDataService trackerService, {
+    TypeAwareWordTrackerDataService trackerService, {
     String? videoId,
   }) async {
-
     return await trackerService.addOrUpdateWordTracker(
         childId,
         word,
@@ -268,7 +271,7 @@ class _AddTextPageState extends State<AddTextPage> {
     String childId,
     String word,
     String filePath,
-    ChildDataService childService,
+    TypeAwareChildDataService childService,
   ) async {
     if (await childService.addVideo(childId, word, path.basename(filePath)) ==
         false) {

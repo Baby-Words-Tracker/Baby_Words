@@ -1,4 +1,7 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/data/models/word.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
@@ -21,14 +24,32 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   FieldLabel? selectedField;
   String? selectedEntry;
   List<WordInstance> wordInstances = [];
-  final FirestoreDataTableSource _dataSource = FirestoreDataTableSource();
+
+  late final AuthenticationService _authenticationService;
+  late final FirestoreDataTableSource _dataSource;
 
   bool _isLoading = true;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    _fetchWordTrackers();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _authenticationService = Provider.of<AuthenticationService>(
+        context,
+        listen: false,
+      );
+
+      _dataSource = FirestoreDataTableSource(
+        authenticationService: _authenticationService,
+      );
+
+      _fetchWordTrackers();
+
+      _initialized = true;
+
+      debugPrint("ResearcherHomePage: ResearcherHomePage initialized");
+    }
   }
 
   void _fetchWordTrackers() async {
@@ -269,12 +290,28 @@ class FirestoreDataTableSource extends DataTableSource {
   List<WordInstance> _wordInstances = [];
   List<WordInstance> _filteredInstances = [];
 
+  // final TypeAwareWordDataService _wordDataService;
+  final AuthenticationService _authenticationService;
+
+  FirestoreDataTableSource({
+    // required TypeAwareWordDataService wordDataService,
+    required AuthenticationService authenticationService,
+  }) :
+        // _wordDataService = wordDataService,
+        _authenticationService = authenticationService;
+
   Future<void> fetchData() async {
     try {
       debugPrint('Querying Firestore...');
 
-      QuerySnapshot childSnapshot =
-          await FirebaseFirestore.instance.collection('Child').get();
+      // TODO: change this to use the data services
+      QuerySnapshot childSnapshot = await FirebaseFirestore.instance
+          .collection(
+            Child.collectionName.demoAwareCollectionName(
+              _authenticationService.isDemoUser,
+            ),
+          )
+          .get();
       List<Future<void>> fetchTasks = [];
 
       List<WordInstance> tempInstances = [];
@@ -293,15 +330,23 @@ class FirestoreDataTableSource extends DataTableSource {
               childAge--;
             }
 
-            QuerySnapshot wordTrackerSnapshot =
-                await childDoc.reference.collection('WordTracker').get();
+            // TODO: change this to use a data service instead of direct collection names
+            QuerySnapshot wordTrackerSnapshot = await childDoc.reference
+                .collection(
+                  WordTracker.collectionName.demoAwareCollectionName(
+                      _authenticationService.isDemoUser),
+                )
+                .get();
             List<Future<void>> wordFetchTasks = [];
 
             for (var wordDoc in wordTrackerSnapshot.docs) {
               wordFetchTasks.add(() async {
                 try {
+                  // TODO: Change this to use the data services
                   DocumentSnapshot posDoc = await FirebaseFirestore.instance
-                      .collection('Word')
+                      .collection(Word.collectionName.demoAwareCollectionName(
+                        _authenticationService.isDemoUser,
+                      ))
                       .doc(wordDoc.id)
                       .get();
                   var posData = posDoc['partOfSpeech'];

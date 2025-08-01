@@ -11,22 +11,10 @@ class ParentDataService {
 
   ParentDataService(this._firestoreRepository);
 
-  String _parentCollectionName(bool useDemoCollection) {
-    return useDemoCollection
-        ? "demo_${Parent.collectionName}"
-        : Parent.collectionName;
-  }
-
-  String _childCollectionName(bool useDemoCollection) {
-    return useDemoCollection
-        ? "demo_${Child.collectionName}"
-        : Child.collectionName;
-  }
-
   //Parent services
   Future<Parent?> createParent(Parent parent, bool useDemoCollection) async {
     String? returnId = await _firestoreRepository.createWithId(
-        _parentCollectionName(useDemoCollection),
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection),
         parent.id,
         parent.toMap(),
         true);
@@ -46,7 +34,7 @@ class ParentDataService {
 
   Future<Parent?> getParent(String id, bool useDemoCollection) async {
     final parent = await _firestoreRepository.read(
-        _parentCollectionName(useDemoCollection), id);
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection), id);
     if (parent == null) {
       debugPrint("ParentDataService: Failed to get parent by ID");
       return null;
@@ -56,7 +44,9 @@ class ParentDataService {
 
   Future<Parent?> getParentByEmail(String email, bool useDemoCollection) async {
     final parentList = await _firestoreRepository.queryByField(
-        _parentCollectionName(useDemoCollection), "email", email,
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection),
+        "email",
+        email,
         limit: 1);
     if (parentList.isEmpty) {
       debugPrint("ParentDataService: Failed to get parent by email");
@@ -68,7 +58,8 @@ class ParentDataService {
   Future<List<Parent>> getMultipleParents(
       List<String> ids, bool useDemoCollection) async {
     return (await _firestoreRepository.readMultiple(
-            _parentCollectionName(useDemoCollection), ids))
+            Parent.collectionName.demoAwareCollectionName(useDemoCollection),
+            ids))
         .map((doc) => Parent.fromDataWithId(doc))
         .toList();
   }
@@ -96,7 +87,9 @@ class ParentDataService {
       consentDate: consentDate,
     );
     bool success = await _firestoreRepository.update(
-        _parentCollectionName(useDemoCollection), id, updateData);
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection),
+        id,
+        updateData);
 
     if (!success) {
       return false;
@@ -108,7 +101,7 @@ class ParentDataService {
   // TODO: this function may also have to delete children or
   //  store them in a data structure so we don't accrue hanging data.
   // Future<bool> deleteParent(String id, bool useDemoCollection) async {
-  //   bool success = await fireRepo.delete(_parentCollectionName(useDemoCollection), id);
+  //   bool success = await fireRepo.delete(Parent.collectionName.demoAwareCollectionName(useDemoCollection), id);
   //   if (!success) {
   //     return false;
   //   }
@@ -118,12 +111,12 @@ class ParentDataService {
   Future<void> addChildToParent(
       String parentId, String childId, bool useDemoCollection) async {
     await _firestoreRepository.appendToArrayField(
-        _parentCollectionName(useDemoCollection),
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection),
         parentId,
         "childIDs",
         childId);
     await _firestoreRepository.appendToArrayField(
-        _childCollectionName(useDemoCollection),
+        Child.collectionName.demoAwareCollectionName(useDemoCollection),
         childId,
         "parentIDs",
         parentId);
@@ -131,13 +124,14 @@ class ParentDataService {
 
   Future<List<Child>> getChildList(String id, bool useDemoCollection) async {
     final object = await _firestoreRepository.read(
-        _parentCollectionName(useDemoCollection), id);
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection), id);
     List<Child> children = List.empty(growable: true);
     if (object == null) return children;
 
     final parent = Parent.fromDataWithId(object);
     final List<DataWithId> data = await _firestoreRepository.readMultiple(
-        _childCollectionName(useDemoCollection), parent.childIDs);
+        Child.collectionName.demoAwareCollectionName(useDemoCollection),
+        parent.childIDs);
 
     for (DataWithId child in data) {
       children.add(Child.fromDataWithId(child));
@@ -147,7 +141,7 @@ class ParentDataService {
 
   Future<LanguageCode?> getLanguage(String id, bool useDemoCollection) async {
     final object = await _firestoreRepository.read(
-        _parentCollectionName(useDemoCollection), id);
+        Parent.collectionName.demoAwareCollectionName(useDemoCollection), id);
 
     if (object == null) {
       debugPrint("unable to get parent language");
@@ -159,7 +153,8 @@ class ParentDataService {
 
   IDocumentListener<Parent> getUserListener(String id, bool useDemoCollection) {
     return _firestoreRepository.getDocumentListener<Parent>(
-      path: '${_parentCollectionName(useDemoCollection)}/$id',
+      path:
+          '${Parent.collectionName.demoAwareCollectionName(useDemoCollection)}/$id',
       convertDataWithId: (data) => Parent.fromDataWithId(data),
     );
   }

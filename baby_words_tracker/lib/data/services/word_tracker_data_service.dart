@@ -9,17 +9,11 @@ class WordTrackerDataService {
 
   WordTrackerDataService(this._firestoreRepository);
 
-  String _childCollectionName(bool useDemoCollection) {
-    return useDemoCollection
-        ? "demo_${Child.collectionName}"
-        : Child.collectionName;
-  }
-
   Future<WordTracker?> createWordTracker(
     String childId,
     String word,
     WordTracker tracker,
-    bool isDemoType,
+    bool useDemoCollection,
   ) async {
     if (tracker.id == null) {
       debugPrint("Error: tracker ID is null");
@@ -27,9 +21,9 @@ class WordTrackerDataService {
     }
 
     final bool result = await _firestoreRepository.addOrUpdateWordTracker(
-      _childCollectionName(isDemoType),
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
       childId,
-      WordTracker.collectionName,
+      WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
       tracker.id!,
       tracker,
     );
@@ -45,7 +39,7 @@ class WordTrackerDataService {
   Future<bool> updateWordTracker(
     String childId,
     String wordID,
-    bool isDemoType, {
+    bool useDemoCollection, {
     DateTime? firstUtterance,
     String? videoID,
   }) async {
@@ -55,9 +49,9 @@ class WordTrackerDataService {
     );
 
     final bool result = await _firestoreRepository.updateSubcollectionDocument(
-        _childCollectionName(isDemoType),
+        Child.collectionName.demoAwareCollectionName(useDemoCollection),
         childId,
-        WordTracker.collectionName,
+        WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
         wordID,
         updateMap);
 
@@ -73,12 +67,12 @@ class WordTrackerDataService {
     String childId,
     String wordId,
     WordTracker wordTracker,
-    bool isDemoType,
+    bool useDemoCollection,
   ) async {
     final bool sucess = await _firestoreRepository.addOrUpdateWordTracker(
-      _childCollectionName(isDemoType),
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
       childId,
-      WordTracker.collectionName,
+      WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
       wordId,
       wordTracker,
     );
@@ -93,12 +87,12 @@ class WordTrackerDataService {
   Future<WordTracker?> getWordTracker(
     String childId,
     String id,
-    bool isDemoType,
+    bool useDemoCollection,
   ) async {
     final word = await _firestoreRepository.readSubcollection(
-        _childCollectionName(isDemoType),
+        Child.collectionName.demoAwareCollectionName(useDemoCollection),
         childId,
-        WordTracker.collectionName,
+        WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
         id);
     if (word == null) return null;
     return WordTracker.fromDataWithId(word);
@@ -107,13 +101,14 @@ class WordTrackerDataService {
   Future<List<WordTracker>> getWordsFromTime(
     String childId,
     DateTime time,
-    bool isDemoType,
+    bool useDemoCollection,
   ) async {
     final List<DataWithId> data =
         await _firestoreRepository.subFieldGreaterThan(
-            _childCollectionName(isDemoType),
+            Child.collectionName.demoAwareCollectionName(useDemoCollection),
             childId,
-            WordTracker.collectionName,
+            WordTracker.collectionName
+                .demoAwareCollectionName(useDemoCollection),
             "firstUtterance",
             time);
 
@@ -128,7 +123,7 @@ class WordTrackerDataService {
   Future<List<WordTracker>> getWordsFromDate(
     String childId,
     DateTime date,
-    bool isDemoType,
+    bool useDemoCollection,
   ) async {
     // Calculate start and end of the day for the given date
     DateTime startOfDay = DateTime(date.year, date.month, date.day);
@@ -138,9 +133,9 @@ class WordTrackerDataService {
 
     final List<DataWithId> data =
         await _firestoreRepository.subQueryByDateRange(
-      _childCollectionName(isDemoType),
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
       childId,
-      WordTracker.collectionName,
+      WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
       "firstUtterance",
       startOfDay,
       endOfDay,
@@ -156,7 +151,7 @@ class WordTrackerDataService {
     String childId,
     DateTime date,
     int range,
-    bool isDemoType,
+    bool useDemoCollection,
   ) async {
     // Calculate start and end of the day for the given date
     DateTime startOfDateRange = DateTime(date.year, date.month, date.day);
@@ -166,9 +161,9 @@ class WordTrackerDataService {
 
     final List<DataWithId> data =
         await _firestoreRepository.subQueryByDateRange(
-      _childCollectionName(isDemoType),
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
       childId,
-      WordTracker.collectionName,
+      WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
       "firstUtterance",
       startOfDateRange,
       endOfDateRange,

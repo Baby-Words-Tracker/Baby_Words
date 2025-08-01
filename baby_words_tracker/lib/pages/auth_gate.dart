@@ -1,21 +1,22 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'dart:io' as io; // For checking platform
+
+import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/l10n/localization_service.dart';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' as io; // For checking platform
-
-import 'researcher_home_page.dart';
 import 'home_page.dart';
+import 'researcher_home_page.dart';
 
+// TODO: every account needs to be given the right type so it can get through this page
 class AuthGate extends StatefulWidget {
   static const routeName = '/authGate';
   const AuthGate({super.key});
@@ -27,7 +28,7 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   static final _privacyPolicyCheckSynchronizer =
       SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
-  late final UserModelService _userModelService;
+  late final AuthenticationService _authenticationService;
 
   bool _initialized = false;
 
@@ -35,8 +36,11 @@ class _AuthGateState extends State<AuthGate> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      _userModelService = Provider.of<UserModelService>(context, listen: false);
-      _userModelService.addListener(_consentListener);
+      _authenticationService = Provider.of<AuthenticationService>(
+        context,
+        listen: false,
+      );
+      _authenticationService.addListener(_consentListener);
 
       _initialized = true;
 
@@ -48,7 +52,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void dispose() {
     debugPrint("AuthGate: Disposing AuthGate");
-    _userModelService.removeListener(_consentListener);
+    _authenticationService.removeListener(_consentListener);
     super.dispose();
   }
 
@@ -80,11 +84,15 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     var localizationService =
         Provider.of<LocalizationService>(context, listen: true);
+    // TODO: this streambuilder might be a bit problematic.
+    //  It listens to a similar stream to the one in AuthenticationService
+    //  and then also listens to AuthentiationService. There is probably a
+    //  better more robust way to do this.
     return StreamBuilder<User?>(
       stream: Provider.of<FirebaseAuth>(context).authStateChanges(),
       builder: (context, snapshot) {
-        final userModelService =
-            Provider.of<UserModelService>(context, listen: true);
+        final authenticationService =
+            Provider.of<AuthenticationService>(context, listen: true);
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
@@ -99,7 +107,7 @@ class _AuthGateState extends State<AuthGate> {
             ),
           );
         } else if (!snapshot.hasData ||
-            (userModelService.userType == UserType.unauthenticated ||
+            (authenticationService.userType == UserType.unauthenticated_type ||
                 !checkPrivacyPolicy(context))) {
           return buildSignInScreen(
             context,
@@ -111,19 +119,15 @@ class _AuthGateState extends State<AuthGate> {
         // Add user to database on first login
         User? user = snapshot.data;
 
-        return Consumer<UserModelService>(
-          builder: (context, userModelService, child) {
-            if (user == null) {
-              throw Exception('User is null in auth_gate');
-            } else if (userModelService.userType == UserType.parent) {
-              return const HomePage();
-            } else if (userModelService.userType == UserType.researcher) {
-              return const ResearcherHomePage();
-            } else {
-              throw Exception('Unexpected user state occured');
-            }
-          },
-        );
+        if (user == null) {
+          throw Exception('User is null in auth_gate');
+        } else if (authenticationService.userType == UserType.parent_type) {
+          return const HomePage();
+        } else if (authenticationService.userType == UserType.researcher_type) {
+          return const ResearcherHomePage();
+        } else {
+          throw Exception('Unexpected user state occured');
+        }
       },
     );
   }

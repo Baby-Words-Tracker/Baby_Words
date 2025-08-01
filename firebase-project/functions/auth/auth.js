@@ -15,20 +15,22 @@ const {UserRecord} = require("firebase-admin/auth");
 
 /**
  * checks if the user is authenticated
- * @param {Object} data the data object
+ * @param {https.CallableRequest} request the request object sent
+ *  to the onCall functions
  * @return {boolean} true if the user is authenticated, false otherwise
  */
-function isAuthenticated(data) {
-  return !!data.auth;
+function isAuthenticated(request) {
+  return !!request.auth;
 }
 
 /**
  * checks if the user is authenticated
- * @param {Object} data the data object from the request
+ * @param {https.CallableRequest} request the request object sent
+ *  to the onCall function
  * @throws {https.HttpsError} if the user is not authenticated
  */
-function checkAuthentication(data) {
-  if (!isAuthenticated(data)) {
+function checkAuthentication(request) {
+  if (!isAuthenticated(request)) {
     throw new https.HttpsError(
         "unauthenticated", "User must be authenticated");
   } else {
@@ -38,7 +40,7 @@ function checkAuthentication(data) {
 
 /**
  * checks if the user is at least the minimum role
- * @param {Object} request the request object
+ * @param {https.CallableRequest} request the request object
  * @param {Role} minimumRole the minimum role required to perform the action
  * @return {boolean} true if the user is at least the minimum role,
  *   false otherwise
@@ -50,7 +52,7 @@ function isAtLeast(request, minimumRole) {
 
 /**
  * checks if the user is at least the minimum role
- * @param {Object} request the request object
+ * @param {https.CallableRequest} request the request object
  * @param {Role} minimumRole the minimum role required to perform the action
  * @param {boolean} disallowDemo if true, the user must not be a demo user
  * @throws {https.HttpsError} if the user does not have the minimum role

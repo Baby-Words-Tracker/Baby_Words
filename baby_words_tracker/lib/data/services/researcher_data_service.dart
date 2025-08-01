@@ -8,19 +8,13 @@ class ResearcherDataService {
 
   ResearcherDataService(this._firestoreRepository);
 
-  String _researcherCollectionName(bool isDemoType) {
-    return isDemoType
-        ? "demo_${Researcher.collectionName}"
-        : Researcher.collectionName;
-  }
-
   //Reseacher services
   Future<Researcher?> createResearcher(
     Researcher researcher,
     bool isDemoType,
   ) async {
     String? returnId = await _firestoreRepository.createWithId(
-        _researcherCollectionName(isDemoType),
+        Researcher.collectionName.demoAwareCollectionName(isDemoType),
         researcher.id,
         researcher.toMap(),
         true);
@@ -40,7 +34,7 @@ class ResearcherDataService {
 
   Future<Researcher?> getResearcher(String id, bool isDemoType) async {
     final researcher = await _firestoreRepository.read(
-        _researcherCollectionName(isDemoType), id);
+        Researcher.collectionName.demoAwareCollectionName(isDemoType), id);
     if (researcher == null) {
       debugPrint("ResearcherDataService: Failed to get researcher by ID");
       return null;
@@ -51,7 +45,9 @@ class ResearcherDataService {
   Future<Researcher?> getResearcherByEmail(
       String email, bool isDemoType) async {
     final researcherList = await _firestoreRepository.queryByField(
-        _researcherCollectionName(isDemoType), "email", email,
+        Researcher.collectionName.demoAwareCollectionName(isDemoType),
+        "email",
+        email,
         limit: 1);
     if (researcherList.isEmpty) {
       return null;
@@ -62,7 +58,7 @@ class ResearcherDataService {
   Future<List<Researcher>> getMultipleResearchers(
       List<String> ids, bool isDemoType) async {
     return (await _firestoreRepository.readMultiple(
-            _researcherCollectionName(isDemoType), ids))
+            Researcher.collectionName.demoAwareCollectionName(isDemoType), ids))
         .map((doc) => Researcher.fromDataWithId(doc))
         .toList();
   }
@@ -88,7 +84,10 @@ class ResearcherDataService {
       consentDate: consentDate,
     );
     bool success = await _firestoreRepository.update(
-        _researcherCollectionName(isDemoType), id, updateData);
+      Researcher.collectionName.demoAwareCollectionName(isDemoType),
+      id,
+      updateData,
+    );
 
     if (!success) {
       return false;
@@ -99,7 +98,7 @@ class ResearcherDataService {
 
   Future<bool> deleteResearcher(String id, bool isDemoType) async {
     bool success = await _firestoreRepository.delete(
-      _researcherCollectionName(isDemoType),
+      Researcher.collectionName.demoAwareCollectionName(isDemoType),
       id,
     );
 
@@ -112,7 +111,8 @@ class ResearcherDataService {
 
   IDocumentListener<Researcher> getUserListener(String id, bool isDemoType) {
     return _firestoreRepository.getDocumentListener<Researcher>(
-      path: '${_researcherCollectionName(isDemoType)}/$id',
+      path:
+          '${Researcher.collectionName.demoAwareCollectionName(isDemoType)}/$id',
       convertDataWithId: (data) => Researcher.fromDataWithId(data),
     );
   }

@@ -11,10 +11,16 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_parent_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_researcher_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 
 //L10n
+// ignore: unused_import
 import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+// ignore: unused_import
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
@@ -31,6 +37,7 @@ import 'pages/display_video_page.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
+// ignore: unused_import
 import 'package:baby_words_tracker/util/check_emulators.dart';
 
 // Firebase
@@ -60,24 +67,55 @@ void main() async {
       // Provider used for dependency injection of database functions and configurations
       MultiProvider(
         providers: [
-          Provider(
-            create: (_) => ChildDataService(FirestoreRepository()),
+          Provider<FirebaseAuth>(
+            create: (_) => FirebaseAuth.instance,
+            lazy: false,
+          ),
+          ChangeNotifierProvider<AuthenticationService>(
+            create: (context) => AuthenticationService(
+                Provider.of<FirebaseAuth>(context, listen: false)),
             lazy: false,
           ),
           Provider(
-            create: (_) => ParentDataService(FirestoreRepository()),
+            create: (context) => TypeAwareChildDataService(
+              childDataService: ChildDataService(FirestoreRepository()),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+            ),
             lazy: false,
           ),
           Provider(
-            create: (_) => ResearcherDataService(FirestoreRepository()),
+            create: (context) => TypeAwareParentDataService(
+              parentDataService: ParentDataService(FirestoreRepository()),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+            ),
             lazy: false,
           ),
           Provider(
-            create: (_) => WordDataService(FirestoreRepository()),
+            create: (context) => TypeAwareResearcherDataService(
+              researcherDataService:
+                  ResearcherDataService(FirestoreRepository()),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+            ),
             lazy: false,
           ),
           Provider(
-            create: (_) => WordTrackerDataService(FirestoreRepository()),
+            create: (context) => TypeAwareWordDataService(
+              wordDataService: WordDataService(FirestoreRepository()),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+            ),
+            lazy: false,
+          ),
+          Provider(
+            create: (context) => TypeAwareWordTrackerDataService(
+              wordTrackerDataService:
+                  WordTrackerDataService(FirestoreRepository()),
+              authenticationService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+            ),
             lazy: false,
           ),
           ChangeNotifierProvider(
@@ -86,18 +124,20 @@ void main() async {
           ),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
-              parentDataService:
-                  Provider.of<ParentDataService>(context, listen: false),
+              parentDataService: Provider.of<TypeAwareParentDataService>(
+                context,
+                listen: false,
+              ),
               researcherDataService:
-                  Provider.of<ResearcherDataService>(context, listen: false),
+                  Provider.of<TypeAwareResearcherDataService>(
+                context,
+                listen: false,
+              ),
+              authenticationService: Provider.of<AuthenticationService>(
+                context,
+                listen: false,
+              ),
             ),
-          ),
-          Provider<FirebaseAuth>(
-            create: (_) => FirebaseAuth.instance,
-          ),
-          ChangeNotifierProvider<AuthenticationService>(
-            create: (context) => AuthenticationService(
-                Provider.of<FirebaseAuth>(context, listen: false)),
           ),
           ChangeNotifierProvider<UserModelService>(
             create: (context) => UserModelService(
@@ -110,10 +150,18 @@ void main() async {
           ),
           ChangeNotifierProvider(
             create: (context) => CurrentChildrenService(
-              childService:
-                  Provider.of<ChildDataService>(context, listen: false),
-              userService:
-                  Provider.of<UserModelService>(context, listen: false),
+              authenticationService: Provider.of<AuthenticationService>(
+                context,
+                listen: false,
+              ),
+              childService: Provider.of<TypeAwareChildDataService>(
+                context,
+                listen: false,
+              ),
+              userService: Provider.of<UserModelService>(
+                context,
+                listen: false,
+              ),
             ),
             lazy: false,
           ),

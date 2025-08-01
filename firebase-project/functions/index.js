@@ -22,7 +22,14 @@ const {checkIsAtLeast, checkAuthentication, checkDemoStatusesMatch} = require(".
 const auth = require("firebase-functions/v1/auth");
 
 // v2 functions
-const https = require("firebase-functions/v2/https");
+const {
+  onCall,
+  HttpsError,
+  // eslint-disable-next-line no-unused-vars
+  CallableResponse,
+  // eslint-disable-next-line no-unused-vars
+  CallableRequest,
+} = require("firebase-functions/v2/https");
 
 // path
 const path = require("path");
@@ -57,27 +64,28 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
  */
 function checkEmpty(variable, variableName) {
   if (!variable) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "invalid-argument", `Target user ${variableName} is required`);
   }
 }
 
 /**
  * Assigns the 'parent' role to the target user
- * @param {https.CallableResponse<unknown>} req the data object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableRequest} req the data object
+ * @param {CallableResponse} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target UID is not provided,
+ * @throws {HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveParentClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.giveParentClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    await giveClaimByEmail(Role.parent, Role.admin, targetEmail, req);
+    // TODO: fix check authentication. It blocks all requests
+    checkAuthentication(request);
+    await giveClaimByEmail(Role.parent, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to assign parent role: ${error}`);
     return {
@@ -94,20 +102,20 @@ exports.giveParentClaim = https.onCall(async (req, context) => {
 
 /**
  * Removes the 'parent' role from the target user
- * @param {https.CallableResponse<unknown>} req the data object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableResponse<unknown>} req the data object
+ * @param {CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target UID is not provided,
+ * @throws {HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeParentClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.removeParentClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    await removeClaimByEmail(Role.parent, Role.admin, targetEmail, req);
+    checkAuthentication(request);
+    await removeClaimByEmail(Role.parent, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to remove parent role: ${error}`);
     return {
@@ -124,21 +132,21 @@ exports.removeParentClaim = https.onCall(async (req, context) => {
 
 /**
  * Assigns the 'researcher' role to the target user
- * @param {https.CallableResponse<unknown>} req the data object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableResponse<unknown>} req the data object
+ * @param {CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target UID is not provided,
+ * @throws {HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveResearcherClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.giveResearcherClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   // Assign the 'researcher' role to the target user
   try {
-    checkAuthentication(req.data);
-    await giveClaimByEmail(Role.researcher, Role.admin, targetEmail, req);
+    checkAuthentication(request);
+    await giveClaimByEmail(Role.researcher, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to assign researcher role: ${error}`);
     return {
@@ -155,20 +163,20 @@ exports.giveResearcherClaim = https.onCall(async (req, context) => {
 
 /**
  * Removes the 'researcher' role from the target user
- * @param {https.CallableResponse<unknown>} req the request object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableResponse<unknown>} req the request object
+ * @param {CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target UID is not provided,
+ * @throws {HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeResearcherClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.removeResearcherClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    await removeClaimByEmail(Role.researcher, Role.admin, targetEmail, req);
+    checkAuthentication(request);
+    await removeClaimByEmail(Role.researcher, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to remove researcher role: ${error}`);
     return {
@@ -185,20 +193,20 @@ exports.removeResearcherClaim = https.onCall(async (req, context) => {
 
 /**
  * Assigns the 'admin' role to the target user
- * @param {https.CallableResponse<unknown>} req the data object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableResponse<unknown>} req the data object
+ * @param {CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target UID is not provided,
+ * @throws {HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.giveAdminClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.giveAdminClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    await giveClaimByEmail(Role.admin, Role.admin, targetEmail, req);
+    checkAuthentication(request);
+    await giveClaimByEmail(Role.admin, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to assign admin role: ${error}`);
     return {
@@ -215,20 +223,20 @@ exports.giveAdminClaim = https.onCall(async (req, context) => {
 
 /**
  * Removes the 'admin' role from the target user
- * @param {https.CallableResponse<unknown>} req the data object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableResponse<unknown>} req the data object
+ * @param {CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target UID is not provided,
+ * @throws {HttpsError} if the target UID is not provided,
  * if the user is not authenticated,
  * or if the user does not have the minimum role
  */
-exports.removeAdminClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.removeAdminClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    await removeClaimByEmail(Role.admin, Role.admin, targetEmail, req);
+    checkAuthentication(request);
+    await removeClaimByEmail(Role.admin, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to remove admin role: ${error}`);
     return {
@@ -243,20 +251,21 @@ exports.removeAdminClaim = https.onCall(async (req, context) => {
   };
 });
 
-exports.giveDemoClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.giveDemoClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    const isDemo = isDemoRoleFromToken(req.auth.token);
+    checkAuthentication(request);
+    const isDemo = isDemoRoleFromToken(request.auth.token);
     if (isDemo) {
-      logger.info(`Demo user ${req.auth.uid} attempted to assign demo role`);
+      // eslint-disable-next-line max-len
+      logger.info(`Demo user ${request.auth.uid} attempted to assign demo role`);
       return {
         message: `Demo users cannot assign or remove the demo role.`,
       };
     } else {
-      giveClaimByEmail(Role.demo, Role.admin, targetEmail, req);
+      giveClaimByEmail(Role.demo, Role.admin, targetEmail, request);
     }
   } catch (error) {
     logger.error(`Failed to set role by email: ${error}`);
@@ -273,20 +282,21 @@ exports.giveDemoClaim = https.onCall(async (req, context) => {
   };
 });
 
-exports.removeDemoClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.removeDemoClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    const isDemo = isDemoRoleFromToken(req.auth.token);
+    checkAuthentication(request);
+    const isDemo = isDemoRoleFromToken(request.auth.token);
     if (isDemo) {
-      logger.info(`Demo user ${req.auth.uid} attempted to remove demo role`);
+      // eslint-disable-next-line max-len
+      logger.info(`Demo user ${request.auth.uid} attempted to remove demo role`);
       return {
         message: `Demo users cannot assign or remove the demo role.`,
       };
     } else {
-      removeClaimByEmail(Role.demo, Role.admin, targetEmail, req);
+      removeClaimByEmail(Role.demo, Role.admin, targetEmail, request);
     }
   } catch (error) {
     logger.error(`Failed to remove role by email: ${error}`);
@@ -302,23 +312,23 @@ exports.removeDemoClaim = https.onCall(async (req, context) => {
   };
 });
 
-exports.setTypeClaim = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
-  const newTypeString = req.data.newType;
+exports.setTypeClaim = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
+  const newTypeString = request.data.newType;
   checkEmpty(targetEmail, "targetEmail");
   checkEmpty(newTypeString, "newType");
 
   const newType = getTypeFromString(newTypeString);
   if (newType === Type.unauthenticated) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "invalid-argument",
         "Cannot set type to unauthenticated",
     );
   }
 
   try {
-    checkAuthentication(req.data);
-    setTypeClaimByEmail(newType, Role.admin, targetEmail, req);
+    checkAuthentication(request);
+    setTypeClaimByEmail(newType, Role.admin, targetEmail, request);
   } catch (error) {
     logger.error(`Failed to set type by email: ${error}`);
     return {
@@ -335,26 +345,26 @@ exports.setTypeClaim = https.onCall(async (req, context) => {
 // TODO: test if a parent can add a child they don't own to someone else
 /**
  * Assigns a child to another parent
- * @param {https.CallableResponse<unknown>} req the data object
- * @param {https.CallableResponse<unknown>} context the context object
+ * @param {CallableResponse<unknown>} req the data object
+ * @param {CallableResponse<unknown>} context the context object
  * @return {Promise<{message: string}>} the success message
- * @throws {https.HttpsError} if the target email or child UID is not provided,
+ * @throws {HttpsError} if the target email or child UID is not provided,
  *  if the user is not authenticated,
  *  if the user is not already a parent of the child,
  *  or if the user does not have the minimum role
  */
-exports.addChildToOtherParent = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
-  const childUid = req.data.childUid;
+exports.addChildToOtherParent = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
+  const childUid = request.data.childUid;
 
-  const uid = req.auth.uid;
+  const uid = request.auth.uid;
   checkEmpty(uid, "uid");
 
   checkEmpty(targetEmail, "targetEmail");
   checkEmpty(childUid, "childUid");
 
   if (targetEmail.length > 100) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "invalid-argument",
         "Target email is too long",
     );
@@ -364,16 +374,16 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   try {
-    checkAuthentication(req.data);
-    checkIsAtLeast(req, Role.parent);
+    checkAuthentication(request);
+    checkIsAtLeast(request, Role.parent);
 
-    const isDemoUser = isDemoRoleFromToken(req.auth.token);
+    const isDemoUser = isDemoRoleFromToken(request.auth.token);
     let parentCollection;
     let childCollection;
 
     if (isDemoUser) {
-      parentCollection = db.collection("Demo_Parent");
-      childCollection = db.collection("Demo_Child");
+      parentCollection = db.collection("demo_Parent");
+      childCollection = db.collection("demo_Child");
     } else {
       parentCollection = db.collection("Parent");
       childCollection = db.collection("Child");
@@ -385,7 +395,7 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
       targetUserRecord = await getAuth().getUserByEmail(targetEmail);
       targetUid = targetUserRecord.uid;
     } catch (error) {
-      throw new https.HttpsError(
+      throw new HttpsError(
           "not-found",
           `Target parent does not exist: ${error}`,
       );
@@ -394,9 +404,9 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
     if (isDemoUser) {
       const targetIsDemoUser = isDemoRoleFromToken(targetUserRecord.token);
       if (!targetIsDemoUser) {
-        logger.info(`Demo user ${req.auth.uid} ` +
+        logger.info(`Demo user ${request.auth.uid} ` +
           `attempted to assign child to non-demo user`);
-        throw new https.HttpsError(
+        throw new HttpsError(
             "permission-denied",
             "Demo users can only interact with other demo users.",
         );
@@ -404,18 +414,18 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
     }
 
     await db.runTransaction(async (transaction) => {
-      const userRef = parentCollection.doc(req.auth.uid);
+      const userRef = parentCollection.doc(request.auth.uid);
       const userSnapshot = await transaction.get(userRef);
 
       if (!userSnapshot.exists) {
-        throw new https.HttpsError(
+        throw new HttpsError(
             "not-found",
             "User document not found",
         );
       }
 
       if (!userSnapshot.data().childIDs.includes(childUid)) {
-        throw new https.HttpsError(
+        throw new HttpsError(
             "permission-denied",
             // eslint-disable-next-line max-len
             "You do must be a parent of the child to assign them to another parent. (1)",
@@ -427,7 +437,7 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
       const parentSnapshot = await transaction.get(parentRef);
 
       if (!parentSnapshot.exists) {
-        throw new https.HttpsError(
+        throw new HttpsError(
             "not-found",
             "Target parent document not found",
         );
@@ -437,14 +447,14 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
       const childSnapshot = await transaction.get(childRef);
 
       if (!childSnapshot.exists) {
-        throw new https.HttpsError(
+        throw new HttpsError(
             "not-found",
             "Child document not found",
         );
       }
 
       if (!childSnapshot.data().parentIDs.includes(uid)) {
-        throw new https.HttpsError(
+        throw new HttpsError(
             "permission-denied",
             // eslint-disable-next-line max-len
             "You do must be a parent of the child to assign them to another parent. (2)",
@@ -472,19 +482,19 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   };
 });
 
-exports.getUserIdByEmail = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.getUserIdByEmail = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
   checkEmpty(targetEmail, "targetEmail");
   try {
-    checkIsAtLeast(req, Role.admin);
+    checkIsAtLeast(request, Role.admin);
     // Fetch the user record by email
     const userRecord = await getAuth().getUserByEmail(targetEmail);
-    checkDemoStatusesMatch(req, userRecord);
+    checkDemoStatusesMatch(request, userRecord);
     // Return the user's UID
     return {userId: userRecord.uid};
   } catch (error) {
     logger.error("Error fetching user UID by email:", error);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "not-found",
         `Failed to fetch user UID by email: ${error}`,
     );
@@ -492,19 +502,19 @@ exports.getUserIdByEmail = https.onCall(async (req, context) => {
 });
 
 // TODO: decide if this needs to be demo accessible at all
-exports.getUserCustomClaims = https.onCall(async (req, context) => {
-  const targetEmail = req.data.targetEmail;
+exports.getUserCustomClaims = onCall(async (request, context) => {
+  const targetEmail = request.data.targetEmail;
 
   checkEmpty(targetEmail, "targetEmail");
 
   try {
-    checkAuthentication(req.data);
-    checkIsAtLeast(req, Role.admin);
+    checkAuthentication(request);
+    checkIsAtLeast(request, Role.admin);
 
     // Fetch the custom claims of the selected user
     const selectedUserRecord = await admin.auth().getUserByEmail(targetEmail);
 
-    checkDemoStatusesMatch(req, selectedUserRecord);
+    checkDemoStatusesMatch(request, selectedUserRecord);
 
     // Return the user's custom claims
     return selectedUserRecord.customClaims != null ?
@@ -512,28 +522,28 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
            {};
   } catch (error) {
     logger.error("Error fetching user custom claims:", error);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "not-found",
         `Failed to fetch user custom claims error: ${error}`);
   }
 });
 
-exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
-  logger.log(`Current filename passed: ${req.data.fileName}`);
+exports.generateSignedUploadUrl = onCall(async (request) => {
+  logger.log(`Current filename passed: ${request.data.fileName}`);
 
   try {
-    checkAuthentication(req.data);
-    checkIsAtLeast(req, Role.parent);
+    checkAuthentication(request);
+    checkIsAtLeast(request, Role.parent);
   } catch (error) {
     logger.error(`User does not have permission to upload: ${error}`);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "permission-denied",
         `User does not have permission to upload: ${error}`,
     );
   }
 
   // code to validate the file name
-  const rawFileName = req.data.fileName;
+  const rawFileName = request.data.fileName;
 
   // Reject obviously bad characters
   if (
@@ -542,8 +552,8 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
       rawFileName.includes("..")
   ) {
     // eslint-disable-next-line max-len
-    logger.info(`User ${req.auth.uid} attempted illegal file name: ${rawFileName}`);
-    throw new https.HttpsError(
+    logger.info(`User ${request.auth.uid} attempted illegal file name: ${rawFileName}`);
+    throw new HttpsError(
         "invalid-argument",
         "Filename cannot be an address",
     );
@@ -551,7 +561,7 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
 
   // Ensure the file name contains only valid characters
   if (!/^[a-zA-Z0-9._-]+$/.test(rawFileName)) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "invalid-argument",
         "Invalid characters in file name",
     );
@@ -561,17 +571,17 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
   //    if videos are stored in a different format
   // Ensure the file name ends with .mp4
   if (!rawFileName.toLowerCase().endsWith(".mp4")) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "invalid-argument",
         "File extension must be .mp4",
     );
   }
 
   // Ensure normalized path is within user directory
-  const userId = req.auth.uid;
+  const userId = request.auth.uid;
   const filePath = path.posix.normalize(`${userId}/${rawFileName}`);
   if (!filePath.startsWith(`${userId}/`)) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "permission-denied",
         "Illegal file path traversal attempt",
     );
@@ -598,24 +608,24 @@ exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
     // res.status(200).send({url});
     return {url};
   } catch (error) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "not-found",
         // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+        `Error generating signed url: ${error}, filename : ${request.data.fileName}`,
     );
   }
 });
 
 // TODO: verify that this function is secure
-exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
-  logger.log(`Current filename passed: ${req.data.fileName}`);
+exports.generateSignedDownloadUrl = onCall(async (request, context) => {
+  logger.log(`Current filename passed: ${request.data.fileName}`);
 
   try {
-    checkAuthentication(req.data);
-    checkIsAtLeast(req, Role.parent);
+    checkAuthentication(request);
+    checkIsAtLeast(context, Role.parent);
   } catch (error) {
     logger.error(`User does not have permission to upload: ${error}`);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "permission-denied",
         `User does not have permission to upload: ${error}`,
     );
@@ -625,7 +635,7 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
   const bucketName = "baby-words-tracker-media";
 
   // code to validate the file name
-  const rawFileName = req.data.fileName;
+  const rawFileName = request.data.fileName;
 
   // Reject obviously bad characters
   if (
@@ -633,16 +643,16 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
       rawFileName.includes("/") ||
       rawFileName.includes("..")
   ) {
-    throw new https.HttpsError("invalid-argument", "Invalid file name");
+    throw new HttpsError("invalid-argument", "Invalid file name");
   }
 
   // Ensure normalized path is within user directory
-  const userId = req.auth.uid;
+  const userId = request.auth.uid;
   const filePath = path.posix.normalize(`${userId}/${rawFileName}`);
   if (!filePath.startsWith(`${userId}/`)) {
     // eslint-disable-next-line max-len
     logger.info(`User ${userId} attempted illegal file path traversal: ${filePath}`);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "permission-denied",
         "Illegal file path traversal attempt",
     );
@@ -663,19 +673,32 @@ exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
     // res.status(200).send({url});
     return {url};
   } catch (error) {
-    throw new https.HttpsError(
+    throw new HttpsError(
         "not-found",
         // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
+        `Error generating signed url: ${error}, filename : ${request.data.fileName}`,
     );
   }
 });
 
 // !!! note: this function should only be called by admin users.
-// Make sure to call checkIsAtLeast(req, Role.admin); before using it
+// Make sure to call checkIsAtLeast(request, Role.admin); before using it
 const listAllUsers = async (nextPageToken) => {
   const users = [];
   logger.info("Listing all users...");
+
+  // try {
+  //   checkAuthentication(request);
+  //   checkIsAtLeast(request, Role.admin);
+  // } catch (error) {
+  // eslint-disable-next-line max-len
+  //   logger.error(`User ${request.auth.uid} does not have permission to list users: ${error}`);
+  //   throw new HttpsError(
+  //       "permission-denied",
+  // eslint-disable-next-line max-len
+  //       `User ${request.auth.uid} does not have permission to list users: ${error}`,
+  //   );
+  // }
 
   try {
     // List batch of users, 1000 at a time.
@@ -719,7 +742,7 @@ const listAllUsers = async (nextPageToken) => {
     }
   } catch (error) {
     logger.error("Error listing users:", error);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "internal",
         `Error listing users: ${error}`,
     );
@@ -730,10 +753,11 @@ const listAllUsers = async (nextPageToken) => {
   return users;
 };
 
-exports.getEmailUIDTable = https.onCall(async (req, context) => {
-  logger.info(`getEmailUIDTable called from account ID: ${req.auth.uid}`);
+exports.getEmailUIDTable = onCall(async (request, context) => {
+  logger.info(`getEmailUIDTable called from account ID: ${request.auth.uid}`);
   try {
-    checkIsAtLeast(req, Role.admin, true);
+    checkAuthentication(request);
+    checkIsAtLeast(request, Role.admin, true);
 
     // Start listing users from the beginning, 1000 at a time.
     const users = await listAllUsers();
@@ -743,7 +767,7 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
     };
   } catch (error) {
     logger.error(`Error listing users: ${error}`);
-    throw new https.HttpsError(
+    throw new HttpsError(
         "internal",
         `Error getting user list: ${error}`,
     );

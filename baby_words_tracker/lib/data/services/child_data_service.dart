@@ -10,12 +10,6 @@ class ChildDataService {
 
   ChildDataService(this._firebaseRepo);
 
-  String _childCollectionName(bool useDemoCollection) {
-    return useDemoCollection
-        ? "demo_${Child.collectionName}"
-        : Child.collectionName;
-  }
-
   //child services
   Future<Child?> createChild(
     DateTime cBirthDay,
@@ -32,7 +26,8 @@ class ChildDataService {
         wordCount: cWordCount,
         parentIDs: cParentIDs);
     String? returnId = await _firebaseRepo.create(
-        _childCollectionName(useDemoCollection), object.toMap());
+        Child.collectionName.demoAwareCollectionName(useDemoCollection),
+        object.toMap());
 
     if (returnId == null) {
       return null;
@@ -42,8 +37,10 @@ class ChildDataService {
   }
 
   Future<Child?> getChild(String id, bool useDemoCollection) async {
-    final child =
-        await _firebaseRepo.read(_childCollectionName(useDemoCollection), id);
+    final child = await _firebaseRepo.read(
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
+      id,
+    );
     if (child == null) return null;
     return Child.fromDataWithId(child);
   }
@@ -53,14 +50,18 @@ class ChildDataService {
     bool useDemoCollection,
   ) async {
     return (await _firebaseRepo.readMultiple(
-            _childCollectionName(useDemoCollection), ids))
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
+      ids,
+    ))
         .map((doc) => Child.fromDataWithId(doc))
         .toList();
   }
 
   Future<int> getNumWords(String id, bool useDemoCollection) async {
-    final object =
-        await _firebaseRepo.read(_childCollectionName(useDemoCollection), id);
+    final object = await _firebaseRepo.read(
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
+      id,
+    );
     if (object == null) return 0;
 
     final child = Child.fromDataWithId(object);
@@ -75,8 +76,8 @@ class ChildDataService {
   ) async {
     debugPrint("Video Filename to be added: $fileName");
     return await _firebaseRepo.updateFieldForSubcollection(
-        _childCollectionName(useDemoCollection),
-        WordTracker.collectionName,
+        Child.collectionName.demoAwareCollectionName(useDemoCollection),
+        WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
         id,
         word,
         "videoID",
@@ -87,8 +88,10 @@ class ChildDataService {
     String id,
     bool useDemoCollection,
   ) async {
-    final object =
-        await _firebaseRepo.read(_childCollectionName(useDemoCollection), id);
+    final object = await _firebaseRepo.read(
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
+      id,
+    );
     if (object == null) return null;
 
     final child = Child.fromDataWithId(object);
@@ -100,9 +103,10 @@ class ChildDataService {
     bool useDemoCollection,
   ) async {
     final List<DataWithId> docs = await _firebaseRepo.readAllFromSubcollection(
-        _childCollectionName(useDemoCollection),
-        id,
-        WordTracker.collectionName);
+      Child.collectionName.demoAwareCollectionName(useDemoCollection),
+      id,
+      WordTracker.collectionName.demoAwareCollectionName(useDemoCollection),
+    );
 
     List<WordTracker> words = List.empty(growable: true);
     for (DataWithId doc in docs) {

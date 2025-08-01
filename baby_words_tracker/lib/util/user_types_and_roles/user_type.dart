@@ -15,11 +15,11 @@ extension UserTypeExtension on UserType {
   String get displayName {
     switch (this) {
       case UserType.parent_type:
-        return 'Parent';
+        return 'Parent Type';
       case UserType.researcher_type:
-        return 'Researcher';
+        return 'Researcher Type';
       case UserType.unauthenticated_type:
-        return 'Unauthenticated';
+        return 'Unauthenticated Type';
     }
   }
 }

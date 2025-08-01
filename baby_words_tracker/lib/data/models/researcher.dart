@@ -2,9 +2,10 @@
 import 'dart:convert';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/i_user_model.dart';
+import 'package:baby_words_tracker/util/collection_name.dart';
 
 class Researcher extends IUserModel {
-  static String collectionName = 'Researcher';
+  static CollectionName collectionName = CollectionName('Researcher');
 
   // final String id;
   final String? email;

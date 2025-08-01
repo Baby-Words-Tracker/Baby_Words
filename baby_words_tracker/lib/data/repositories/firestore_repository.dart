@@ -657,7 +657,7 @@ class FirestoreRepository {
     }
   }
 
-  Future<Pair<DataWithId, String>?> changeUserType(String userId,
+  Future<Pair<DataWithId, String>?> changeUserStorageType(String userId,
       List<String> possibleFromCollections, String newCollectionName,
       {String? expectedCollectionName}) async {
     try {
@@ -681,6 +681,7 @@ class FirestoreRepository {
           // Move the document to the new collection using a transaction
           debugPrint(
               "FirestoreRepository: changeUserType() moving user $userId from ${currentUserDataWithIdAndCollection.second} to $newCollectionName with data: ${currentUserDataWithIdAndCollection.first.data}");
+          /// TODO: this will need to include subcollections in the future if we add those to parent, researcher, or some other user model
           final newUser = await moveDocumentWithoutSubcollections(userId,
               currentUserDataWithIdAndCollection.second, newCollectionName);
 

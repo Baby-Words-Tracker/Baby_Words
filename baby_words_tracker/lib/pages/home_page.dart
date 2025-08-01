@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 import 'package:baby_words_tracker/exceptions/document_creation_failed_exception.dart';
 import 'package:baby_words_tracker/exceptions/document_update_failed_exception.dart';
 import 'package:baby_words_tracker/exceptions/network_failure_exception.dart';
@@ -18,10 +19,14 @@ import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/video/video_functions.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'package:path/path.dart' as path;
+
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -36,9 +41,9 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
   final TextEditingController fileTextController = TextEditingController();
 
-  late final ChildDataService _childDataService;
-  late final WordDataService _wordDataService;
-  late final WordTrackerDataService _wordTrackerDataService;
+  late final TypeAwareWordDataService _wordDataService;
+  late final TypeAwareWordTrackerDataService _wordTrackerDataService;
+  late final AuthenticationService _authenticationService;
 
   bool _initialized = false;
 
@@ -46,12 +51,15 @@ class _HomePageState extends State<HomePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      _childDataService = Provider.of<ChildDataService>(context, listen: false);
-      _wordDataService = Provider.of<WordDataService>(context, listen: false);
+      _wordDataService =
+          Provider.of<TypeAwareWordDataService>(context, listen: false);
       _wordTrackerDataService =
-          Provider.of<WordTrackerDataService>(context, listen: false);
+          Provider.of<TypeAwareWordTrackerDataService>(context, listen: false);
+      _authenticationService =
+          Provider.of<AuthenticationService>(context, listen: false);
       _initialized = true;
-      debugPrint("HomePage: Initialized ChildDataService and WordDataService");
+      debugPrint(
+          "HomePage: Initialized WordDataService and WordTrackerDataService");
     }
   }
 
@@ -324,7 +332,10 @@ class _HomePageState extends State<HomePage> {
                   children: <Widget>[
                     // number of words known by child line
                     StreamBuilder<int?>(
-                      stream: getNumWords(childID),
+                      stream: getNumWords(
+                        childID,
+                        _authenticationService,
+                      ),
                       builder:
                           (BuildContext context, AsyncSnapshot<int?> snapshot) {
                         String message;
@@ -380,7 +391,10 @@ class _HomePageState extends State<HomePage> {
                                 height: 150,
                                 alignment: Alignment.center,
                                 child: StreamBuilder<String?>(
-                                  stream: getRecentWordTracker(childID),
+                                  stream: getRecentWordTracker(
+                                    childID,
+                                    _authenticationService,
+                                  ),
                                   builder: (BuildContext context,
                                       AsyncSnapshot<String?> snapshot) {
                                     String? word = snapshot.data;
@@ -455,7 +469,10 @@ class _HomePageState extends State<HomePage> {
                                 height: 150,
                                 alignment: Alignment.center,
                                 child: StreamBuilder<int?>(
-                                  stream: getPastWeekWordTrackers(childID),
+                                  stream: getPastWeekWordTrackers(
+                                    childID,
+                                    _authenticationService,
+                                  ),
                                   builder: (BuildContext context,
                                       AsyncSnapshot<int?> snapshot) {
                                     return Center(
@@ -598,7 +615,7 @@ class _HomePageState extends State<HomePage> {
 Future<bool> addWordToChild(
   String childId,
   String word,
-  WordTrackerDataService trackerService, {
+  TypeAwareWordTrackerDataService trackerService, {
   String? videoId,
 }) async {
   return await trackerService.addOrUpdateWordTracker(
@@ -616,7 +633,7 @@ Future<void> addVideoToWord(
   String childId,
   String word,
   String filePath,
-  ChildDataService childService,
+  TypeAwareChildDataService childService,
 ) async {
   if (await childService.addVideo(childId, word, path.basename(filePath)) ==
       false) {
@@ -626,11 +643,22 @@ Future<void> addVideoToWord(
   }
 }
 
-Stream<String?> getRecentWordTracker(String childId) {
+// TODO: change this to use a data service instead of collection names directly?
+//  (could be overly complex for these specific cases)
+Stream<String?> getRecentWordTracker(
+  String childId,
+  AuthenticationService authenticationService,
+) {
   return FirebaseFirestore.instance
-      .collection('Child')
+      .collection(
+        Child.collectionName
+            .demoAwareCollectionName(authenticationService.isDemoUser),
+      )
       .doc(childId)
-      .collection('WordTracker')
+      .collection(
+        WordTracker.collectionName
+            .demoAwareCollectionName(authenticationService.isDemoUser),
+      )
       .orderBy('firstUtterance', descending: true)
       .limit(1)
       .snapshots()
@@ -638,22 +666,37 @@ Stream<String?> getRecentWordTracker(String childId) {
           snapshot.docs.isNotEmpty ? snapshot.docs.first.id : null);
 }
 
-Stream<int?> getPastWeekWordTrackers(String childId) {
+Stream<int?> getPastWeekWordTrackers(
+  String childId,
+  AuthenticationService authenticationService,
+) {
   final lastWeek = DateTime.now().subtract(const Duration(days: 7));
 
   return FirebaseFirestore.instance
-      .collection('Child')
+      .collection(
+        Child.collectionName
+            .demoAwareCollectionName(authenticationService.isDemoUser),
+      )
       .doc(childId)
-      .collection('WordTracker')
+      .collection(
+        WordTracker.collectionName
+            .demoAwareCollectionName(authenticationService.isDemoUser),
+      )
       .orderBy('firstUtterance', descending: true)
       .where('firstUtterance', isGreaterThanOrEqualTo: lastWeek)
       .snapshots()
       .map((snapshot) => snapshot.docs.length);
 }
 
-Stream<int?> getNumWords(String childId) {
+Stream<int?> getNumWords(
+  String childId,
+  AuthenticationService authenticationService,
+) {
   return FirebaseFirestore.instance
-      .collection('Child')
+      .collection(
+        Child.collectionName
+            .demoAwareCollectionName(authenticationService.isDemoUser),
+      )
       .doc(childId)
       .snapshots()
       .map((snapshot) => snapshot.data()?['wordCount'] as int);

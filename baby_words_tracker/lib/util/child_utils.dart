@@ -1,16 +1,13 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_parent_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
@@ -183,11 +180,11 @@ Consumer addCurrentChildToOtherParentFeature(
 Future<void> addChildToCurrParent(BuildContext context, String name,
     DateTime bday, List<LanguageCode> langauges) async {
   Parent? currParent = context.read<UserModelService>().parent;
-  final ParentDataService parentDataService =
-      context.read<ParentDataService>(); // get the parent data service
+  final TypeAwareParentDataService parentDataService =
+      context.read<TypeAwareParentDataService>(); // get the parent data service
   if (currParent != null) {
     Child? child = await context
-        .read<ChildDataService>()
+        .read<TypeAwareChildDataService>()
         .createChild(DateTime.now(), name, langauges, 0, [currParent.id]);
     parentDataService.addChildToParent(currParent.id, child?.id ?? "aaaa");
   }
@@ -280,7 +277,7 @@ Consumer childAddingFeature(
 Future<bool> addWordToChild(
   String childId,
   String word,
-  WordTrackerDataService trackerService, {
+  TypeAwareWordTrackerDataService trackerService, {
   String? videoId,
 }) async {
   return await trackerService.addOrUpdateWordTracker(
@@ -297,7 +294,7 @@ Column wordAddingFeature(
     BuildContext context,
     TextEditingController wordTextController,
     TextEditingController idController,
-    WordTrackerDataService trackerService) {
+    TypeAwareWordTrackerDataService trackerService) {
   return Column(
     children: [
       TextField(

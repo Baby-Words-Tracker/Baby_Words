@@ -108,7 +108,7 @@ class _AdminPageState extends State<AdminPage> {
   // TODO: change this to use a cloud function instead of multiple calls
   Future<void> changeUserType(UserType newType) async {
     Map<String, dynamic>? data;
-    if (newType == UserType.unauthenticated) {
+    if (newType == UserType.unauthenticated_type) {
       throw ArgumentError(
           'Invalid user type: $newType. Unauthenticated is not allowed.');
     }
@@ -151,26 +151,17 @@ class _AdminPageState extends State<AdminPage> {
     final String userId = data['userId'] as String;
     try {
       if (mounted) {
+        // TODO: update this
         switch (newType) {
-          case UserType.parent:
+          case UserType.parent_type:
             await _callRoleFunction('giveParentClaim');
             await _callRoleFunction('removeResearcherClaim');
-            await _generalUserService.changeUserType(userId, newType);
+            await _generalUserService.changeUserStorageType(userId, newType);
             break;
-          case UserType.researcher:
+          case UserType.researcher_type:
             await _callRoleFunction('giveResearcherClaim');
             await _callRoleFunction('removeParentClaim');
-            await _generalUserService.changeUserType(userId, newType);
-            break;
-          case UserType.demo_parent:
-            await _callRoleFunction('giveDemoParentClaim');
-            await _callRoleFunction('removeDemoResearcherClaim');
-            await _generalUserService.changeUserType(userId, newType);
-            break;
-          case UserType.demo_researcher:
-            await _callRoleFunction('giveDemoResearcherClaim');
-            await _callRoleFunction('removeDemoParentClaim');
-            await _generalUserService.changeUserType(userId, newType);
+            await _generalUserService.changeUserStorageType(userId, newType);
             break;
           default:
             throw ArgumentError('Invalid user type: $newType.');
@@ -319,7 +310,8 @@ class _AdminPageState extends State<AdminPage> {
                                 onPressed: () async {
                                   if (await showConfirmationDialog(context,
                                       'Are your sure you want to make $_selectedUserEmail a Researcher?')) {
-                                    await changeUserType(UserType.researcher);
+                                    await changeUserType(
+                                        UserType.researcher_type);
                                   }
                                 },
                               );
@@ -334,7 +326,7 @@ class _AdminPageState extends State<AdminPage> {
                                 onPressed: () async {
                                   if (await showConfirmationDialog(context,
                                       'Are your sure you want to make $_selectedUserEmail a Parent?')) {
-                                    await changeUserType(UserType.parent);
+                                    await changeUserType(UserType.parent_type);
                                   }
                                 },
                               );
@@ -403,6 +395,37 @@ class _AdminPageState extends State<AdminPage> {
                               if (await showConfirmationDialog(context,
                                   'Are your sure you want to remove the Admin role from $_selectedUserEmail?')) {
                                 _callRoleFunction('removeAdminClaim');
+                              }
+                            },
+                          ),
+                        ),
+                        // TODO: currently this only sets the type claim but does not move the user to the correct database. Update that to be fixed.
+                        _buildPadded(
+                          ElevatedButton(
+                            child: const Text('Set Parent Type'),
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context,
+                                  'Are your sure you want to set the Parent type for $_selectedUserEmail?')) {
+                                // ignore: use_build_context_synchronously
+                                await callFunction(context, 'setTypeClaim', {
+                                  'newType': UserType.parent_type.name,
+                                  'targetEmail': _selectedUserEmail,
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        _buildPadded(
+                          ElevatedButton(
+                            child: const Text('Set Researcher Type'),
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context,
+                                  'Are your sure you want to set the Researcher type for $_selectedUserEmail?')) {
+                                // ignore: use_build_context_synchronously
+                                await callFunction(context, 'setTypeClaim', {
+                                  'newType': UserType.researcher_type.name,
+                                  'targetEmail': _selectedUserEmail,
+                                });
                               }
                             },
                           ),

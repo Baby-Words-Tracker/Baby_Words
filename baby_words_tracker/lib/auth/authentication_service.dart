@@ -17,35 +17,40 @@ class AuthenticationService extends ChangeNotifier {
   bool _isDemoUser = false;
 
   AuthenticationService(this._firebaseAuthInstance) {
-    _safeSynchronizer = SafeSynchronizer(_fetchCustomClaims);
+    _safeSynchronizer =
+        SafeSynchronizer(_fetchCustomClaims, queueFunctionCalls: true);
 
     _firebaseAuthInstance.userChanges().listen((User? user) {
       debugPrint("AuthenticationService: User change detected");
 
       if ((_user == null && user != null) ||
-          (_user != null && user == null) ||
-          _user?.uid != user?.uid ||
-          _user?.email != user?.email) {
+              (_user != null && user == null) ||
+              _user?.uid != user?.uid ||
+              _user?.email != user?.email ||
+              _user?.toString() !=
+                  user?.toString() // This line should check for nay changes to the user. It may need to be modified/verified, but notifications here are not extremeley important
+          ) {
         debugPrint(
             'AuthenticationService: User update -> uid:${user?.uid} email: ${user?.email} displayName: ${user?.displayName}');
+        debugPrint(
+            'AuthenticationService: User custom claims -> ${user?.getIdTokenResult().then((value) => value.claims)}');
 
         _user = user;
         _safeSynchronizer.safeSynchronize().then((_) {
           debugPrint(
               'AuthenticationService: User update processed, notifying listeners');
-          notifyListeners(); // Only notify listeners if relevant fields have changed
-        }).catchError((e) {
           debugPrint(
-              'AuthenticationService: Error during user update processing: $e');
-          notifyListeners(); // Notify listeners even if there was an error because _user has changed
+              'AuthenticationService: User type: ${_userType.displayName}, roles: ${_userRoles.map((role) => role.name).join(', ')}');
+          notifyListeners(); // Only notify listeners if relevant fields have changed
         });
-      } else {
+      }
+      // in this case, the user has not changed in some measurable way even though the listener was triggered, so we don't notiy by default.
+      else {
         debugPrint(
             'AuthenticationService: No Change -> uid:${_user?.uid} email: ${_user?.email} displayName: ${_user?.displayName}');
         _user = user;
+        _safeSynchronizer.safeSynchronize();
       }
-
-      // _safeSynchronizer.safeSynchronize();
     });
   }
 
@@ -61,6 +66,7 @@ class AuthenticationService extends ChangeNotifier {
               'AuthenticationService: Custom claims updated with new values');
           _userRoles = getUserRolesFromClaims(_customClaims);
           _userType = getUserTypeFromClaims(_customClaims);
+          // _userType = UserType.researcher_type;
           _isDemoUser = isDemoRoleFromClaims(_customClaims);
 
           notifyListeners();

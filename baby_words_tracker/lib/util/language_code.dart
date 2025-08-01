@@ -70,9 +70,6 @@ extension LanguageCodeExtension on LanguageCode {
         return "ru";
       case LanguageCode.unknown:
         return "unknown";
-      // ignore: unreachable_switch_default
-      default:
-        return "Unknown";
     }
   }
 

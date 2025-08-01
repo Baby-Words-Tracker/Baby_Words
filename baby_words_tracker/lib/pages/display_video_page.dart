@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
@@ -39,7 +40,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
 
   /// Fetch video metadata from Firestore
   Future<void> fetchVideos(
-    ChildDataService childService,
+    TypeAwareChildDataService childService,
     CurrentChildrenService currentChildrenService,
   ) async {
     setState(() {
@@ -130,7 +131,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final childService = context.read<ChildDataService>();
+    final childService = context.read<TypeAwareChildDataService>();
     final currentChildService = context.read<CurrentChildrenService>();
     final currentChild = context.watch<CurrentChildrenService>().getCurrChild();
 
