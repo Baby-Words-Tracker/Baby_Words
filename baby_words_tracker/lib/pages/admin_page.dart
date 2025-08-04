@@ -6,6 +6,7 @@ import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -551,7 +552,8 @@ class _AdminPageState extends State<AdminPage> {
                       ],
                     ),
                   ),
-                  if (_userData.isNotEmpty)
+                  // TODO: allow this view for ipads
+                  if (kIsWeb && _userData.isNotEmpty)
                     Expanded(
                       child: ListView.builder(
                         itemCount: _userData.length,
