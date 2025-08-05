@@ -178,8 +178,7 @@ class _AuthGateState extends State<AuthGate> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      Provider.of<AuthenticationService>(context, listen: false)
-                          .signOut();
+                      _authenticationService.signOut();
                     },
                     child: const Text('Sign Out and Retry'),
                   ),
