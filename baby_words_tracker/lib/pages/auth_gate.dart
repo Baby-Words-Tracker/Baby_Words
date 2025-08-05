@@ -32,6 +32,7 @@ class _AuthGateState extends State<AuthGate> {
   static final _privacyPolicyCheckSynchronizer =
       SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
   late final AuthenticationService _authenticationService;
+  late final UserModelService _userModelService;
 
   bool _initialized = false;
 
@@ -43,7 +44,12 @@ class _AuthGateState extends State<AuthGate> {
         context,
         listen: false,
       );
-      _authenticationService.addListener(_consentListener);
+
+      _userModelService = Provider.of<UserModelService>(
+        context,
+        listen: false,
+      );
+      _userModelService.addListener(_consentListener);
 
       _initialized = true;
 
@@ -55,7 +61,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void dispose() {
     debugPrint("AuthGate: Disposing AuthGate");
-    _authenticationService.removeListener(_consentListener);
+    _userModelService.removeListener(_consentListener);
     super.dispose();
   }
 
@@ -68,9 +74,14 @@ class _AuthGateState extends State<AuthGate> {
       return;
     }
 
-    _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
+    _privacyPolicyCheckSynchronizer.safeSynchronize([
+      context,
+      _userModelService,
+      _authenticationService,
+    ]).catchError((e) {
       debugPrint(
           "AuthGate: Error checking privacy policy in callback: $e\n${e.stackTrace}");
+      _authenticationService.signOut();
     });
   }
 
@@ -94,44 +105,88 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: Provider.of<FirebaseAuth>(context).authStateChanges(),
       builder: (context, snapshot) {
-        final authenticationService =
-            Provider.of<AuthenticationService>(context, listen: true);
-        final userModelService =
-            Provider.of<UserModelService>(context, listen: true);
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          String errorMessage = snapshot.error.toString();
+        try {
+          final authenticationService =
+              Provider.of<AuthenticationService>(context, listen: true);
+          final userModelService =
+              Provider.of<UserModelService>(context, listen: true);
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            String errorMessage = snapshot.error.toString();
+            debugPrint("AuthGate: Stream error: $errorMessage");
+            return Scaffold(
+              body: Center(
+                child: Text('An error occurred: $errorMessage'),
+              ),
+            );
+          } else if (!snapshot.hasData ||
+              snapshot.data == null ||
+              (authenticationService.userType ==
+                      UserType.unauthenticated_type ||
+                  !((checkPrivacyPolicy(userModelService) ?? false) == true))) {
+            return buildSignInScreen(
+              context,
+              localizationService,
+              _getPlatformKey(),
+            );
+          }
+
+          // Add user to database on first login
+          User? user = snapshot.data;
+
+          if (user == null) {
+            debugPrint(
+                'AuthGate: User is null despite hasData being true, redirecting to sign in');
+            return buildSignInScreen(
+              context,
+              localizationService,
+              _getPlatformKey(),
+            );
+          } else if (authenticationService.userType == UserType.parent_type) {
+            return const HomePage();
+          } else if (authenticationService.userType ==
+              UserType.researcher_type) {
+            return const ResearcherHomePage();
+          } else {
+            debugPrint(
+                'AuthGate: Unexpected user state occurred - userType: ${authenticationService.userType}, signing out');
+            authenticationService.signOut();
+            return buildSignInScreen(
+              context,
+              localizationService,
+              _getPlatformKey(),
+            );
+          }
+        } catch (e, stackTrace) {
+          debugPrint(
+              'AuthGate: Unexpected error in StreamBuilder: $e\n$stackTrace');
           return Scaffold(
             body: Center(
-              child: Text('An error occurred: $errorMessage'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text('Authentication Error'),
+                  const SizedBox(height: 8),
+                  Text('$e'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Provider.of<AuthenticationService>(context, listen: false)
+                          .signOut();
+                    },
+                    child: const Text('Sign Out and Retry'),
+                  ),
+                ],
+              ),
             ),
           );
-        } else if (!snapshot.hasData ||
-            (authenticationService.userType == UserType.unauthenticated_type ||
-                !checkPrivacyPolicy(userModelService))) {
-          return buildSignInScreen(
-            context,
-            localizationService,
-            _getPlatformKey(),
-          );
-        }
-
-        // Add user to database on first login
-        User? user = snapshot.data;
-
-        if (user == null) {
-          throw Exception('User is null in auth_gate');
-        } else if (authenticationService.userType == UserType.parent_type) {
-          return const HomePage();
-        } else if (authenticationService.userType == UserType.researcher_type) {
-          return const ResearcherHomePage();
-        } else {
-          throw Exception('Unexpected user state occured');
         }
       },
     );

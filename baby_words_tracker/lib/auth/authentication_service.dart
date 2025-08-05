@@ -96,6 +96,7 @@ class AuthenticationService extends ChangeNotifier {
 
   Future<void> signOut() async {
     try {
+      debugPrint("AuthenticationService: Signing out user");
       _user = null;
       _customClaims = null;
       _userRoles = [UserRole.unauthenticated];

@@ -5,13 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-Future<void> getUserConsent(BuildContext context) async {
+Future<void> getUserConsent(
+  BuildContext context,
+  UserModelService userModelService,
+  AuthenticationService authenticationService,
+) async {
   debugPrint("PrivacyPolicyUtils: Getting user consent");
   try {
-    final hasAccepted = checkPrivacyPolicy(context.read<UserModelService>());
-    if (hasAccepted) {
+    final hasAccepted = checkPrivacyPolicy(userModelService);
+    if (hasAccepted == true) {
       debugPrint(
           "PrivacyPolicyUtils: User has already accepted privacy policy, no action needed");
+    } else if (hasAccepted == null) {
+      debugPrint(
+          "PrivacyPolicyUtils: User consent status is unknown since account is inaccessible, giving no prompt.");
     } else {
       if (!context.mounted) {
         debugPrint(
@@ -57,7 +64,10 @@ Future<void> getUserConsent(BuildContext context) async {
             actions: <Widget>[
               TextButton(
                 child: const Text('Deny'),
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () {
+                  authenticationService.signOut();
+                  Navigator.of(context).pop(false);
+                },
               ),
               TextButton(
                 child: const Text('Accept'),
@@ -94,7 +104,7 @@ Future<void> getUserConsent(BuildContext context) async {
   }
 }
 
-bool checkPrivacyPolicy(UserModelService userModelService) {
+bool? checkPrivacyPolicy(UserModelService userModelService) {
   debugPrint("PrivacyPolicyUtils: Checking privacy policy");
   try {
     final currentUserModel = userModelService.getCurrentUserModel();
@@ -105,8 +115,8 @@ bool checkPrivacyPolicy(UserModelService userModelService) {
       return hasAccepted;
     } else {
       debugPrint(
-          "PrivacyPolicyUtils: User is not authenticated, returning true since no check is needed");
-      return true;
+          "PrivacyPolicyUtils: User is not authenticated, returning null since the status is unknown");
+      return null;
     }
   } catch (e, stack) {
     debugPrint("PrivacyPolicyUtils: Error checking privacy policy: $e\n$stack");
