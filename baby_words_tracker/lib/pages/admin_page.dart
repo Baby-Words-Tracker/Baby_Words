@@ -433,22 +433,6 @@ class _AdminPageState extends State<AdminPage> {
                                     },
                                   ),
                                 ),
-                                _buildPadded(
-                                  ElevatedButton(
-                                    child: const Text("Set All Demo Status"),
-                                    onPressed: () async {
-                                      if (await showConfirmationDialog(context,
-                                          'Are your sure you want to set demo status for all users?')) {
-                                        await callFunction(
-                                          // ignore: use_build_context_synchronously
-                                          context,
-                                          'setAllDemoStatus',
-                                          {},
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ),
                               ],
                             ),
                           ),

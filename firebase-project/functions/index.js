@@ -15,7 +15,7 @@ const {isDemoRoleFromClaimsList} = require("./auth/demo_role.js");
 // eslint-disable-next-line max-len
 const {Type, getTypeFromString} = require("./auth/types");
 // eslint-disable-next-line max-len
-const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail, setDemoClaimByEmail} = require("./auth/claims");
+const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail} = require("./auth/claims");
 // eslint-disable-next-line max-len
 const {checkIsAtLeast, checkAuthentication, checkDemoStatusesMatch} = require("./auth/auth.js");
 
@@ -884,45 +884,45 @@ exports.getEmailUIDTable = onCall(async (request, context) => {
  * if the user does not have the minimum role, or
  * if there is an error listing users
  */
-exports.setAllDemoStatus = onCall(async (request) => {
-  logger.info(`setAllDemoStatus called from account ID: ${request.auth.uid}`);
-  try {
-    checkAuthentication(request);
-    checkIsAtLeast(request, Role.admin, true);
+// exports.setAllDemoStatus = onCall(async (request) => {
+//   logger.info(`setAllDemoStatus called from account ID: ` +
+//     `${request.auth.uid}`);
+//   try {
+//     checkAuthentication(request);
+//     checkIsAtLeast(request, Role.admin, true);
 
-    // Start listing users from the beginning, 1000 at a time.
-    const userRecords = await listAllUsers(request);
+//     // Start listing users from the beginning, 1000 at a time.
+//     const userRecords = await listAllUsers(request);
 
-    for (const user of userRecords) {
-      const isDemo = isDemoRoleFromClaimsList(user.customClaims);
-      if (isDemo) {
-        logger.info(`setAllDemoStatus(): User ${user.email} is a demo user, 
-          no action necessary...`);
-      } else {
-        logger.info(`setAllDemoStatus(): User ${user.email} is not a demo user,
-           will set demo status to false...`);
+//     for (const user of userRecords) {
+//       const isDemo = isDemoRoleFromClaimsList(user.customClaims);
+//       if (isDemo) {
+//         logger.info(`setAllDemoStatus(): User ${user.email} is a demo user,
+//           no action necessary...`);
+//       } else {
+//         logger.info(`setAllDemoStatus(): User ${user.email} is not a " +
+//                   "demo user, will set demo status to false...`);
+//         logger.info(`setAllDemoStatus(): Setting demo status
+//            for user ${user.email} to ${isDemo}...`);
 
-        logger.info(`setAllDemoStatus(): Setting demo status
-           for user ${user.email} to ${isDemo}...`);
+//         await setDemoClaimByEmail(isDemo, Role.admin, user.email, request);
 
-        await setDemoClaimByEmail(isDemo, Role.admin, user.email, request);
+//         logger.info(`setAllDemoStatus(): User ${user.email}'s
+//            demo status has been set to ${isDemo}.`);
+//       }
+//     }
 
-        logger.info(`setAllDemoStatus(): User ${user.email}'s
-           demo status has been set to ${isDemo}.`);
-      }
-    }
+//     logger.info("setAllDemoStatus(): All demo statuses " +
+//       "have been set successfully.");
 
-    logger.info("setAllDemoStatus(): All demo statuses " +
-      "have been set successfully.");
-
-    return {
-      message: "All demo statuses have been set successfully.",
-    };
-  } catch (error) {
-    logger.error(`Error setting demo status: ${error}`);
-    throw new HttpsError(
-        "internal",
-        `Error setting demo status: ${error}`,
-    );
-  }
-});
+//     return {
+//       message: "All demo statuses have been set successfully.",
+//     };
+//   } catch (error) {
+//     logger.error(`Error setting demo status: ${error}`);
+//     throw new HttpsError(
+//         "internal",
+//         `Error setting demo status: ${error}`,
+//     );
+//   }
+// });
