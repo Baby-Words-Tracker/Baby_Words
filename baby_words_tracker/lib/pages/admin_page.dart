@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/demo_role.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -22,8 +23,6 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   final TextEditingController _searchController = TextEditingController();
-
-  UserType? _selectedUserType;
 
   String _selectedUserEmail = '';
 
@@ -75,6 +74,7 @@ class _AdminPageState extends State<AdminPage> {
     return userData.map((row) {
       final roles = row['roles'] as List<UserRole>? ?? [];
       final type = row['type'] as UserType? ?? UserType.unauthenticated_type;
+      final isDemoRole = row['isDemoRole'] as bool? ?? false;
       return List<String>.from([
         row['email'] ?? '',
         row['uid'] ?? '',
@@ -82,6 +82,7 @@ class _AdminPageState extends State<AdminPage> {
         ...UserRole.values
             .map((role) => roles.contains(role) ? 'true' : 'false'),
         ...UserType.values.map((type_) => type == type_ ? 'true' : 'false'),
+        isDemoRole ? 'true' : 'false',
       ]);
     }).toList();
   }
@@ -103,6 +104,7 @@ class _AdminPageState extends State<AdminPage> {
     'disabled',
     for (var role in UserRole.values) role.name,
     for (var type in UserType.values) type.name,
+    for (var demoRole in DemoRole.values) demoRole.name,
   ];
 
   Widget _buildPadded(Widget child) {
@@ -229,7 +231,6 @@ class _AdminPageState extends State<AdminPage> {
                 setState(() {
                   _selectedUserEmail = value;
                   _userRoles = null;
-                  _selectedUserType = null;
                   // debugPrint("_selectedUserEmail set to $value");
                 });
               },
@@ -432,6 +433,22 @@ class _AdminPageState extends State<AdminPage> {
                                     },
                                   ),
                                 ),
+                                _buildPadded(
+                                  ElevatedButton(
+                                    child: const Text("Set All Demo Status"),
+                                    onPressed: () async {
+                                      if (await showConfirmationDialog(context,
+                                          'Are your sure you want to set demo status for all users?')) {
+                                        await callFunction(
+                                          // ignore: use_build_context_synchronously
+                                          context,
+                                          'setAllDemoStatus',
+                                          {},
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -488,6 +505,9 @@ class _AdminPageState extends State<AdminPage> {
                                                     userMap['customClaims']);
                                             userMap['type'] =
                                                 getUserTypeFromClaims(
+                                                    userMap['customClaims']);
+                                            userMap['isDemoRole'] =
+                                                isDemoRoleFromClaims(
                                                     userMap['customClaims']);
                                           }
 
@@ -561,7 +581,7 @@ class _AdminPageState extends State<AdminPage> {
                           return ListTile(
                             title: Text(_userData[index]['email'] ?? ''),
                             subtitle: Text(
-                                'UID: ${_userData[index]['uid'] ?? ''}, Roles: ${_userData[index]['roles'].toString()}, Type: ${_userData[index]['type']}${_userData[index]['disabled'] ? '  -  (User is disabled.)' : ''}'),
+                                'UID: ${_userData[index]['uid'] ?? ''}, Roles: ${_userData[index]['roles'].toString()}, Type: ${_userData[index]['type']}, Demo: ${_userData[index]['isDemoRole'] ? 'true' : 'false'} ${_userData[index]['disabled'] ? '  -  (User is disabled.)' : ''}'),
                           );
                         },
                       ),

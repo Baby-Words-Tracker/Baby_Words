@@ -32,15 +32,13 @@ class AuthenticationService extends ChangeNotifier {
           ) {
         debugPrint(
             'AuthenticationService: User update -> uid:${user?.uid} email: ${user?.email} displayName: ${user?.displayName}');
-        debugPrint(
-            'AuthenticationService: User custom claims -> ${user?.getIdTokenResult().then((value) => value.claims)}');
 
         _user = user;
         _safeSynchronizer.safeSynchronize().then((_) {
           debugPrint(
               'AuthenticationService: User update processed, notifying listeners');
           debugPrint(
-              'AuthenticationService: User type: ${_userType.displayName}, roles: ${_userRoles.map((role) => role.name).join(', ')}');
+              'AuthenticationService: User type: ${_userType.displayName}, roles: ${_userRoles.map((role) => role.name).join(', ')}, isDemoUser: $_isDemoUser');
           notifyListeners(); // Only notify listeners if relevant fields have changed
         });
       }

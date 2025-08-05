@@ -1,20 +1,23 @@
 import 'dart:io' as io; // For checking platform
 
 import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/home_page.dart';
+import 'package:baby_words_tracker/pages/researcher_home_page.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
+
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:provider/provider.dart';
 
-import 'home_page.dart';
-import 'researcher_home_page.dart';
+import 'package:provider/provider.dart';
 
 // TODO: every account needs to be given the right type so it can get through this page
 class AuthGate extends StatefulWidget {
@@ -93,6 +96,8 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, snapshot) {
         final authenticationService =
             Provider.of<AuthenticationService>(context, listen: true);
+        final userModelService =
+            Provider.of<UserModelService>(context, listen: true);
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
@@ -108,7 +113,7 @@ class _AuthGateState extends State<AuthGate> {
           );
         } else if (!snapshot.hasData ||
             (authenticationService.userType == UserType.unauthenticated_type ||
-                !checkPrivacyPolicy(context))) {
+                !checkPrivacyPolicy(userModelService))) {
           return buildSignInScreen(
             context,
             localizationService,

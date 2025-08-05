@@ -15,7 +15,7 @@ const {isDemoRoleFromClaimsList} = require("./auth/demo_role.js");
 // eslint-disable-next-line max-len
 const {Type, getTypeFromString} = require("./auth/types");
 // eslint-disable-next-line max-len
-const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail} = require("./auth/claims");
+const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail, setDemoClaimByEmail} = require("./auth/claims");
 // eslint-disable-next-line max-len
 const {checkIsAtLeast, checkAuthentication, checkDemoStatusesMatch} = require("./auth/auth.js");
 
@@ -692,6 +692,9 @@ exports.generateSignedDownloadUrl = onCall(async (request, context) => {
  *  It's output must be sanitized before being returned.
  * @param {CallableRequest} request The request object containing the auth token
  * @param {string} nextPageToken The page token from the previous listUsers call
+ *   Should be empty for the first call.
+ *   This is used to paginate through the list of users.
+ *   If not provided, it will start from the beginning.
  * @return {Promise<UserRecord[]>} A promise that resolves
  *  to an array of UserRecord objects
  */
@@ -832,26 +835,27 @@ exports.getEmailUIDTable = onCall(async (request, context) => {
 //       const userRoles = getAllRolesFromClaimsList(user.customClaims);
 //       let typeToSet = Type.unauthenticated_type;
 //       if (userRoles.includes(Role.researcher)) {
-// eslint-disable-next-line max-len
-//         logger.info(`setAllUserTypes(): User ${user.email} is a researcher, will set type to researcher...`);
+//         logger.info(`setAllUserTypes(): User ${user.email} is a researcher,
+//            will set type to researcher...`);
 //         typeToSet = Type.researcher_type;
 //       } else if (userRoles.includes(Role.parent)) {
-// eslint-disable-next-line max-len
-//         logger.info(`setAllUserTypes(): User ${user.email} is a parent, will set type to parent...`);
+//         logger.info(`setAllUserTypes(): User ${user.email} is a parent,
+//            will set type to parent...`);
 //         typeToSet = Type.parent_type;
 //       } else {
-// eslint-disable-next-line max-len
-//         logger.warn(`setAllUserTypes(): User ${user.email} is not a parent or researcher, will set type to parent and set claims to parent...`);
+//         logger.warn(`setAllUserTypes(): User ${user.email} is not a parent
+//            or researcher, will set type and claims to parent...`);
 //         await giveClaimByEmail(Role.parent, Role.admin, user.email, request);
 //         typeToSet = Type.parent_type;
 //       }
 
-// eslint-disable-next-line max-len
-//       logger.info(`setAllUserTypes(): Setting type for user ${user.email} to ${typeToSet.value.description}...`);
+//       logger.info(`setAllUserTypes(): Setting type for user
+//          ${user.email} to ${typeToSet.value.description}...`);
 
 //       await setTypeClaimByEmail(typeToSet, Role.admin, user.email, request);
-// eslint-disable-next-line max-len
-//       logger.info(`setAllUserTypes(): User ${user.email} has been set to type ${typeToSet.value.description}.`);
+
+//       logger.info(`setAllUserTypes(): User ${user.email}
+//          has been set to type ${typeToSet.value.description}.`);
 //     }
 
 //     return {
@@ -865,3 +869,60 @@ exports.getEmailUIDTable = onCall(async (request, context) => {
 //     );
 //   }
 // });
+
+/**
+ * Sets the demo status for all users in the system.
+ * This function checks each user for demo status.
+ * If they are a demo user, it changes nothing.
+ * If they are not a demo user, it sets their demo status to false.
+ *
+ * This function was created during restructuring of demo roles
+ *  and should not be called again unless the demo role is changed.
+ * It is here for reference only.
+ * @param {CallableRequest} request The request object containing the auth token
+ * @throws {HttpsError} if the user is not authenticated,
+ * if the user does not have the minimum role, or
+ * if there is an error listing users
+ */
+exports.setAllDemoStatus = onCall(async (request) => {
+  logger.info(`setAllDemoStatus called from account ID: ${request.auth.uid}`);
+  try {
+    checkAuthentication(request);
+    checkIsAtLeast(request, Role.admin, true);
+
+    // Start listing users from the beginning, 1000 at a time.
+    const userRecords = await listAllUsers(request);
+
+    for (const user of userRecords) {
+      const isDemo = isDemoRoleFromClaimsList(user.customClaims);
+      if (isDemo) {
+        logger.info(`setAllDemoStatus(): User ${user.email} is a demo user, 
+          no action necessary...`);
+      } else {
+        logger.info(`setAllDemoStatus(): User ${user.email} is not a demo user,
+           will set demo status to false...`);
+
+        logger.info(`setAllDemoStatus(): Setting demo status
+           for user ${user.email} to ${isDemo}...`);
+
+        await setDemoClaimByEmail(isDemo, Role.admin, user.email, request);
+
+        logger.info(`setAllDemoStatus(): User ${user.email}'s
+           demo status has been set to ${isDemo}.`);
+      }
+    }
+
+    logger.info("setAllDemoStatus(): All demo statuses " +
+      "have been set successfully.");
+
+    return {
+      message: "All demo statuses have been set successfully.",
+    };
+  } catch (error) {
+    logger.error(`Error setting demo status: ${error}`);
+    throw new HttpsError(
+        "internal",
+        `Error setting demo status: ${error}`,
+    );
+  }
+});

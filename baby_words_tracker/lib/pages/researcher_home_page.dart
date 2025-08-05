@@ -2,6 +2,8 @@ import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
+import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
@@ -27,6 +29,8 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
   late final AuthenticationService _authenticationService;
   late final FirestoreDataTableSource _dataSource;
+  late final TypeAwareWordTrackerDataService _wordTrackerDataService;
+  late final TypeAwareWordDataService _wordDataService;
 
   bool _isLoading = true;
   bool _initialized = false;
@@ -36,6 +40,16 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     super.didChangeDependencies();
     if (!_initialized) {
       _authenticationService = Provider.of<AuthenticationService>(
+        context,
+        listen: false,
+      );
+
+      _wordTrackerDataService = Provider.of<TypeAwareWordTrackerDataService>(
+        context,
+        listen: false,
+      );
+
+      _wordDataService = Provider.of<TypeAwareWordDataService>(
         context,
         listen: false,
       );
@@ -54,7 +68,7 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
   void _fetchWordTrackers() async {
     setState(() => _isLoading = true);
-    await _dataSource.fetchData();
+    await _dataSource.fetchData(_wordDataService);
     if (!mounted) return;
     final newData = _dataSource.getAllData();
 
@@ -300,7 +314,8 @@ class FirestoreDataTableSource extends DataTableSource {
         // _wordDataService = wordDataService,
         _authenticationService = authenticationService;
 
-  Future<void> fetchData() async {
+  // TODO: this needs to be turned into a paginated fetch and moved to the data services instead of direct firestore access
+  Future<void> fetchData(TypeAwareWordDataService wordDataService) async {
     try {
       debugPrint('Querying Firestore...');
 
@@ -378,6 +393,8 @@ class FirestoreDataTableSource extends DataTableSource {
             }
             await Future.wait(wordFetchTasks);
           } catch (e) {
+            // TODO: fix this error. Currently this is failing with the message:
+            //  Bad state: field "language" does not exist within the DocumentSnapshotPlatform
             debugPrint('Error processing Child ${childDoc.id}: $e');
           }
         }());

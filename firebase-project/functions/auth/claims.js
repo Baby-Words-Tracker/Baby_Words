@@ -8,6 +8,7 @@ const https = require("firebase-functions/v2/https");
 // authentication functions
 // eslint-disable-next-line max-len
 const {checkAuthentication, checkIsAtLeast, checkDemoStatusesMatch} = require("./auth");
+const {DemoRole} = require("./demo_role");
 
 /**
  * Gets a users record by uid
@@ -157,6 +158,35 @@ async function setTypeClaim(newType, minimumRole, targetUser, request) {
 }
 
 /**
+ * Sets the demo status claim for a user to either true or false
+ * @param {boolean} isDemo Whether the user is a demo user
+ * @param {Role} minimumRole The minimum role required to perform the action
+ * @param {UserRecord} targetUser The user to set the demo status for
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https call
+ */
+async function setDemoClaim(isDemo, minimumRole, targetUser, request) {
+  checkAuthentication(request);
+
+  checkDemoStatusesMatch(request, targetUser);
+
+  try {
+    checkIsAtLeast(request, minimumRole);
+
+    const currentClaims = targetUser.customClaims || {};
+
+    currentClaims[DemoRole.demo.value.description] = isDemo;
+
+    // Set the demo status claim for the target user
+    await getAuth().setCustomUserClaims(targetUser.uid, currentClaims);
+  } catch (error) {
+    // Handle errors (e.g., user not found, failed to set claims)
+    throw new https.HttpsError(
+        "internal", `Failed to set demo status to ${isDemo} for user`, error);
+  }
+}
+
+/**
  * Assign a claim to a user by UID
  * @param {Role} role The role to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
@@ -266,19 +296,61 @@ async function setTypeClaimByUID(type, minimumRole, targetUid, request) {
  * @param {Type} type The type to give
  * @param {Role} minimumRole The minimum role to allow to perform the action
  * @param {String} targetEmail The target user's email
- * @param {https.CallableRequest} req The request object associated
+ * @param {https.CallableRequest} request The request object associated
  *  with the https request
  * @throws {https.HttpsError} if the user does not have the minimum role
  *  or is not authenticated
  */
-async function setTypeClaimByEmail(type, minimumRole, targetEmail, req) {
+async function setTypeClaimByEmail(type, minimumRole, targetEmail, request) {
   try {
     const targetUser = await getUserRecordByEmail(targetEmail);
-    await setTypeClaim(type, minimumRole, targetUser, req);
+    await setTypeClaim(type, minimumRole, targetUser, request);
   } catch (error) {
     // Handle errors (e.g., user not found, failed to set claims)
     throw new https.HttpsError(
         "internal", "Error: Failed to assign type by email; Error:", error);
+  }
+}
+
+/**
+ * Sets the demo status claim for a user to either true or false
+ * @param {boolean} isDemo Whether the user is a demo user
+ * @param {Role} minimumRole The minimum role to allow to perform the action
+ * @param {String} targetUid The target user's uid
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https request
+ * @throws {https.HttpsError} if the user does not have the minimum role
+ *  or is not authenticated
+ */
+async function setDemoClaimByUID(isDemo, minimumRole, targetUid, request) {
+  try {
+    const targetUser = await getUserRecordByUID(targetUid);
+    await setDemoClaim(isDemo, minimumRole, targetUser, request);
+  } catch (error) {
+    // Handle errors (e.g., user not found, failed to set claims)
+    throw new https.HttpsError(
+        "internal", "Error: Failed to set demo status by UID; Error:", error);
+  }
+}
+
+/**
+ * Sets the demo status claim for a user by email to either true or false
+ * @param {boolean} isDemo Whether the user is a demo user
+ * @param {Role} minimumRole The minimum role to allow to perform the action
+ * @param {String} targetEmail The target user's email
+ * @param {https.CallableRequest} request The request object associated
+ *  with the https request
+ * @throws {https.HttpsError} if the user does not have the minimum role
+ *  or is not authenticated
+ */
+async function setDemoClaimByEmail(isDemo, minimumRole, targetEmail, request) {
+  try {
+    const targetUser = await getUserRecordByEmail(targetEmail);
+    await setDemoClaim(isDemo, minimumRole, targetUser, request);
+  } catch (error) {
+    // Handle errors (e.g., user not found, failed to set claims)
+    throw new https.HttpsError(
+        "internal", "Error: Failed to set demo status by email; Error:", error);
   }
 }
 
@@ -291,4 +363,6 @@ module.exports = {
   removeClaimByUID,
   setTypeClaimByEmail,
   setTypeClaimByUID,
+  setDemoClaimByEmail,
+  setDemoClaimByUID,
 };

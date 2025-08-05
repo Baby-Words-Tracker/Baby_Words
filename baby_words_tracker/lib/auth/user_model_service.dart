@@ -21,6 +21,7 @@ class UserModelService extends ChangeNotifier {
   final GeneralUserService _generalUserService;
 
   IDocumentListener? _listener;
+  UserType _listenedType = UserType.unauthenticated_type;
 
   int i = 0;
   int localI = 0;
@@ -57,15 +58,16 @@ class UserModelService extends ChangeNotifier {
         return;
       }
       // else if the signed in user has changed, synchronize the user model
-      else if (_getCurrentUserModelId() != _authenticationService.userId) {
+      else if (_getCurrentUserModelId() != _authenticationService.userId ||
+          _authenticationService.userType != _listenedType) {
         final targetUserId = _authenticationService.userId!;
         debugPrint(
             "UserModelService: $localI: ${_authenticationService.userType.displayName} user authenticated, but not synchronized (UserType: ${_authenticationService.userType})");
 
-        UserType? listenedType = await _updateUserModelListener(targetUserId);
+        _listenedType = await _updateUserModelListener(targetUserId);
 
         // create a new user document if one does not exist
-        if (listenedType == null) {
+        if (_listenedType == UserType.unauthenticated_type) {
           debugPrint(
               "UserModelService: $localI: Creating new user -> email: ${_authenticationService.userEmail} | userName: ${_authenticationService.userName} | userType: ${_authenticationService.userType.name}");
 
@@ -79,7 +81,7 @@ class UserModelService extends ChangeNotifier {
               "UserModelService: $localI: user created -> ${user.first} | ${user.second}");
           if (user.first != null) {
             debugPrint("UserModelService: $localI: new User model created");
-            listenedType = await _updateUserModelListener(targetUserId);
+            _listenedType = await _updateUserModelListener(targetUserId);
             if (user.second != _defaultUserType) {
               debugPrint(
                   "Warning: UserModelService: User type mismatch, expected $_defaultUserType, got ${user.second}");
@@ -110,6 +112,9 @@ class UserModelService extends ChangeNotifier {
 
   IUserModel? getCurrentUserModel() {
     final data = _listener?.data;
+    // TODO: is this type check  necessary?
+    //  It adds safety for when things update,
+    //  but it may be unecessary. Need testing.
     switch (_authenticationService.userType) {
       case UserType.parent_type:
         return data is Parent ? data : null;
@@ -127,13 +132,14 @@ class UserModelService extends ChangeNotifier {
   void _unathenticateUser() {
     _listener?.dispose();
     _listener = null;
+    _listenedType = UserType.unauthenticated_type;
     debugPrint(
         "UserModelService: User unauthenticated, listener disposed, notifying listeners");
     notifyListeners();
   }
 
   // TODO: fix this it is a nightmare. Its still kind of a nightmare but it works for now
-  Future<UserType?> _updateUserModelListener(String userId) async {
+  Future<UserType> _updateUserModelListener(String userId) async {
     debugPrint("UserModelService: Updating user type and listener");
     // get a listener for the user model as well as the current user type in storage
     Pair<IDocumentListener?, UserType> listenerTypePair =
@@ -152,7 +158,7 @@ class UserModelService extends ChangeNotifier {
     if (listenerTypePair.first == null) {
       debugPrint("User does not have an existing document. Returning null");
       _replaceListener(listenerTypePair.first, listenerTypePair.second);
-      return null;
+      return UserType.unauthenticated_type;
     }
 
     final currentUserModel = getCurrentUserModel();
@@ -186,6 +192,7 @@ class UserModelService extends ChangeNotifier {
 
     _listener?.dispose();
     _listener = listener;
+    _listenedType = userType;
     debugPrint("UserModelService: Listener replaced: $_listener.");
 
     // This line is important! This makes the class react to changes in the listener's data and notify its listeners.
@@ -207,7 +214,7 @@ class UserModelService extends ChangeNotifier {
   }
 
   Parent? get parent {
-    if (_authenticationService.userType != UserType.parent_type) {
+    if (getCurrentUserModel() is! Parent) {
       debugPrint("UserModelService: User is not a parent, returning null");
       return null;
     }
@@ -215,7 +222,7 @@ class UserModelService extends ChangeNotifier {
   }
 
   Researcher? get researcher {
-    if (_authenticationService.userType != UserType.researcher_type) {
+    if (getCurrentUserModel() is! Researcher) {
       debugPrint("UserModelService: User is not a researcher, returning null");
       return null;
     }

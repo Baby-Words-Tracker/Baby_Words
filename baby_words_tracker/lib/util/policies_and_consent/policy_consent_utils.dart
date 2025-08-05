@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 Future<void> getUserConsent(BuildContext context) async {
   debugPrint("PrivacyPolicyUtils: Getting user consent");
   try {
-    final hasAccepted = checkPrivacyPolicy(context);
+    final hasAccepted = checkPrivacyPolicy(context.read<UserModelService>());
     if (hasAccepted) {
       debugPrint(
           "PrivacyPolicyUtils: User has already accepted privacy policy, no action needed");
@@ -94,11 +94,10 @@ Future<void> getUserConsent(BuildContext context) async {
   }
 }
 
-bool checkPrivacyPolicy(BuildContext context) {
+bool checkPrivacyPolicy(UserModelService userModelService) {
   debugPrint("PrivacyPolicyUtils: Checking privacy policy");
   try {
-    final currentUserModel =
-        context.read<UserModelService>().getCurrentUserModel();
+    final currentUserModel = userModelService.getCurrentUserModel();
     if (currentUserModel != null) {
       final hasAccepted = currentUserModel.acceptedPrivacyPolicy;
       debugPrint(
