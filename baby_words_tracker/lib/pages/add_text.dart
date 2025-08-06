@@ -74,7 +74,7 @@ class _AddTextPageState extends State<AddTextPage> {
     // than having to individually change instances of widgets.
 
     return Consumer3<LocalizationService, AuthenticationService,
-            ChildDataService>(
+            TypeAwareChildDataService>(
         builder: (context, localizationService, authenticationService,
             childService, child) {
       return Scaffold(

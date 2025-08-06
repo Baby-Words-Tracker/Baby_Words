@@ -215,7 +215,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, ChildDataService,
+    return Consumer3<LocalizationService, TypeAwareChildDataService,
         CurrentChildrenService>(
       builder: (context, localizationService, childService,
           currentChildrenService, child) {
