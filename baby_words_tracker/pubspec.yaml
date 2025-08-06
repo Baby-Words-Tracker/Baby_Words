@@ -38,7 +38,7 @@ dependencies:
   provider: ^6.0.5
 
   # adds syncfusion and csv for graph figures
-  syncfusion_flutter_charts: ^29.2.8
+  syncfusion_flutter_charts: ^30.1.42
   csv: ^6.0.0
 
   # The following adds the Cupertino Icons font to your application.
@@ -46,14 +46,14 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # add firebase, firestore, cloud function, and firebase auth dependencies
-  firebase_core: ^3.10.1
-  cloud_firestore: ^5.6.2
-  firebase_auth: ^5.4.1
-  firebase_ui_auth: ^1.16.1
-  google_sign_in: ^6.2.2
-  firebase_ui_oauth_google: ^1.4.1
-  cloud_functions: ^5.3.4
-  firebase_ui_localizations: ^1.2.0
+  firebase_core: ^4.0.0
+  cloud_firestore: ^6.0.0
+  firebase_auth: ^6.0.0
+  firebase_ui_auth: ^3.0.0
+  google_sign_in: ^6.3.0
+  firebase_ui_oauth_google: ^2.0.0
+  cloud_functions: ^6.0.0
+  firebase_ui_localizations: ^2.0.0
 
   # add flutter_svg for scalable graphics support
   flutter_svg: ^2.2.0
