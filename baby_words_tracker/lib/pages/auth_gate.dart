@@ -1,4 +1,5 @@
 import 'dart:io' as io; // For checking platform
+// import 'dart:ui';
 
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
@@ -7,6 +8,7 @@ import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/researcher_home_page.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
+import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
@@ -21,7 +23,7 @@ import 'package:provider/provider.dart';
 
 // TODO: every account needs to be given the right type so it can get through this page
 class AuthGate extends StatefulWidget {
-  static const routeName = '/authGate';
+  static const routeName = '/';
   const AuthGate({super.key});
 
   @override
@@ -130,9 +132,10 @@ class _AuthGateState extends State<AuthGate> {
                       UserType.unauthenticated_type ||
                   !((checkPrivacyPolicy(userModelService) ?? false) == true))) {
             return buildSignInScreen(
-              context,
-              localizationService,
-              _getPlatformKey(),
+              context: context,
+              localizationService: localizationService,
+              authenticationService: authenticationService,
+              platformKey: _getPlatformKey(),
             );
           }
 
@@ -143,23 +146,33 @@ class _AuthGateState extends State<AuthGate> {
             debugPrint(
                 'AuthGate: User is null despite hasData being true, redirecting to sign in');
             return buildSignInScreen(
-              context,
-              localizationService,
-              _getPlatformKey(),
+              context: context,
+              localizationService: localizationService,
+              authenticationService: authenticationService,
+              platformKey: _getPlatformKey(),
             );
           } else if (authenticationService.userType == UserType.parent_type) {
-            return const HomePage();
+            debugPrint('AuthGate: User is a parent, navigating to HomePage');
+            // add a frame callback to push the next route after the circular progress indicator is sown
+            return loadToNextPage(
+              context,
+              HomePage.routeName,
+            );
           } else if (authenticationService.userType ==
               UserType.researcher_type) {
-            return const ResearcherHomePage();
+            return loadToNextPage(
+              context,
+              ResearcherHomePage.routeName,
+            );
           } else {
             debugPrint(
                 'AuthGate: Unexpected user state occurred - userType: ${authenticationService.userType}, signing out');
             authenticationService.signOut();
             return buildSignInScreen(
-              context,
-              localizationService,
-              _getPlatformKey(),
+              context: context,
+              localizationService: localizationService,
+              authenticationService: authenticationService,
+              platformKey: _getPlatformKey(),
             );
           }
         } catch (e, stackTrace) {
@@ -192,8 +205,12 @@ class _AuthGateState extends State<AuthGate> {
   }
 }
 
-Widget buildSignInScreen(BuildContext context,
-    LocalizationService localizationService, String platformKey) {
+Widget buildSignInScreen({
+  required BuildContext context,
+  required LocalizationService localizationService,
+  required AuthenticationService authenticationService,
+  required String platformKey,
+}) {
   return SignInScreen(
     providers: [
       EmailAuthProvider(),

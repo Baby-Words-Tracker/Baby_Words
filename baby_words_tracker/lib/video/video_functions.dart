@@ -24,13 +24,13 @@ Future<String?> getSignedUploadUrl(String filename) async {
   }
 }
 
-Future<String?> getSignedDownloadUrl(String filename) async {
+Future<String?> getSignedDownloadUrl(String fileName) async {
   HttpsCallable function =
       FirebaseFunctions.instance.httpsCallable("generateSignedDownloadUrl");
 
   try {
-    debugPrint("FileName in getSignedDownloadUrl: $filename");
-    final response = await function.call({'fileName': filename});
+    debugPrint("FileName in getSignedDownloadUrl: $fileName");
+    final response = await function.call({'fileName': fileName});
     debugPrint('Signed URL: ${response.data['url']}');
     return response.data['url'];
   } catch (e) {

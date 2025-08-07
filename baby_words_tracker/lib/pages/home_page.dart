@@ -30,7 +30,7 @@ import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
-  static const routeName = '/';
+  static const routeName = '/Parent';
   const HomePage({super.key});
 
   @override

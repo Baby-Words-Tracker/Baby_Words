@@ -20,6 +20,7 @@ import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_trac
 // ignore: unused_import
 import 'package:baby_words_tracker/l10n/localization.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/researcher_home_page.dart';
 // ignore: unused_import
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -192,15 +193,23 @@ class MyApp extends StatelessWidget {
             AuthGate.routeName, // Set the initial route to force user to login
         routes: {
           //Navigate app using named routes
+          // Auth
+          AuthGate.routeName: (context) => const AuthGate(),
+
+          // Parent Home and Pages
           HomePage.routeName: (context) => const HomePage(),
           StatsPage.routeName: (context) => const StatsPage(),
           AddTextPage.routeName: (context) => const AddTextPage(),
-          AuthGate.routeName: (context) => const AuthGate(),
           DisplayVideoPage.routeName: (context) => const DisplayVideoPage(),
-          ProfilePage.routeName: (context) => const ProfilePage(),
           SettingsPage.routeName: (context) => const SettingsPage(),
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),
+
+          // Researcher Home and Pages
+          ResearcherHomePage.routeName: (context) => const ResearcherHomePage(),
           AdminPage.routeName: (context) => const AdminPage(),
+
+          // Shared Pages
+          ProfilePage.routeName: (context) => const ProfilePage(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),
@@ -208,6 +217,7 @@ class MyApp extends StatelessWidget {
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           FirebaseUILocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [
           Locale('en', 'US'),

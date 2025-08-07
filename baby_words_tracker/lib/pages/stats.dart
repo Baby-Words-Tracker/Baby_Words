@@ -67,8 +67,26 @@ class _StatsPageState extends State<StatsPage> {
   @override
   Widget build(BuildContext context) {
     Parent? currParent = context.read<UserModelService>().parent;
+    // TODOO: fix this this is a big issue rn
     if (currParent == null) {
-      return const Text("Invalid User Type");
+      return Scaffold(
+        appBar: TopBar(
+          pageName:
+              context.read<LocalizationService>().translate("learning_summary"),
+        ),
+        backgroundColor: const Color(0xFF828A8F),
+        body: const Center(
+          child: Text(
+            "An error occurred while loading the stats page. Please refresh the page or try again later.",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        bottomNavigationBar: CustomBottomBar(StatsPage.routeName),
+      );
     }
 
     Child? currChild = context
@@ -87,7 +105,17 @@ class _StatsPageState extends State<StatsPage> {
             pageName: context
                 .read<LocalizationService>()
                 .translate("learning_summary")),
-        body: const Text("Please create a child before viewing stats"),
+        backgroundColor: const Color(0xFF828A8F),
+        body: const Center(
+          child: Text(
+            "Please create a child before viewing stats",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
         bottomNavigationBar: CustomBottomBar(StatsPage.routeName),
       );
     }
@@ -101,7 +129,8 @@ class _StatsPageState extends State<StatsPage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Center(
-            child: Consumer2<LocalizationService, TypeAwareWordTrackerDataService>(
+            child: Consumer2<LocalizationService,
+                    TypeAwareWordTrackerDataService>(
                 // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
                 builder: (context, localizationService, trackerService, child) {
               return Column(
@@ -258,8 +287,7 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
 
         return Consumer<LocalizationService>(
             builder: (context, localizationService, child) {
-          return Container(
-              child: SfCartesianChart(
+          return SfCartesianChart(
             backgroundColor: Colors.white,
             plotAreaBackgroundColor: Colors.white,
             palette: const [
@@ -278,7 +306,7 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
                 // borderWidth: 2, // Capstone Gray
               )
             ],
-          ));
+          );
         });
       });
 }

@@ -2,10 +2,10 @@
  * A role object to model authentication
  * Note: the ending _type is reserved for user and any role with a
  * value ending in _type will be deleted when type is changed.
- * @typedef {Object} Role
+ * @typedef {Object} DemoRole
  * @property {Symbol} value the role value
  * @property {number} order the order of the role
- * @property {Role} demo marks a user as a demo user.
+ * @property {DemoRole} demo marks a user as a demo user.
  *  This role is a marker separate from other roles.
  *  It will not be detected by the getRoleFromClaimsList function
  *  and must be checked using isDemoRoleFromClaimsList.

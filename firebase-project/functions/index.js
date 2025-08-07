@@ -9,15 +9,17 @@ const {getAuth, UserRecord} = require("firebase-admin/auth");
 const {Storage} = require("@google-cloud/storage");
 
 // Import our auth module
-// eslint-disable-next-line max-len
 const {Role} = require("./auth/roles.js");
+const {DemoRole} = require("./auth/demo_role.js");
 const {isDemoRoleFromClaimsList} = require("./auth/demo_role.js");
 // eslint-disable-next-line max-len
 const {Type, getTypeFromString} = require("./auth/types");
 // eslint-disable-next-line max-len
-const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail} = require("./auth/claims");
-// eslint-disable-next-line max-len
 const {checkIsAtLeast, checkAuthentication, checkDemoStatusesMatch} = require("./auth/auth.js");
+
+// claims
+// eslint-disable-next-line max-len
+const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail, setDemoClaimByEmail} = require("./auth/claims");
 
 // functions
 // v1 functions
@@ -51,9 +53,9 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
   try {
     // Set the custom claim 'parent' to true
     await getAuth().setCustomUserClaims(user.uid, {parent: true,
-      parent_type: true});
+      parent_type: true, demo: false});
 
-    logger.log(`Custom claim set for user ${user.uid}`);
+    logger.info(`Custom claim set for user ${user.uid}`);
   } catch (error) {
     logger.error(`Error setting custom claim: ${error}`);
   }
@@ -210,13 +212,15 @@ exports.giveAdminClaim = onCall(async (request, context) => {
     checkAuthentication(request);
     await giveClaimByEmail(Role.admin, Role.admin, targetEmail, request);
   } catch (error) {
-    logger.error(`Failed to assign admin role: ${error}`);
+    logger.info(`Failed to assign admin role: ${error}`);
     return {
       message: `Failed to assign the ${Role.admin.value.description}` +
         ` role to user with error: ${error}`,
     };
   }
 
+  logger.info(`User ${targetEmail} has been assigned the role` +
+    ` ${Role.admin.value.description}.`);
   return {
     message: `User ${targetEmail} has been assigned the` +
       ` ${Role.admin.value.description} role.`,
@@ -240,13 +244,15 @@ exports.removeAdminClaim = onCall(async (request, context) => {
     checkAuthentication(request);
     await removeClaimByEmail(Role.admin, Role.admin, targetEmail, request);
   } catch (error) {
-    logger.error(`Failed to remove admin role: ${error}`);
+    logger.info(`Failed to remove admin role: ${error}`);
     return {
       message: `Failed to remove the ${Role.admin.value.description}` +
         ` role from user with error: ${error}`,
     };
   }
 
+  logger.info(`User ${targetEmail} has been removed from the role` +
+    ` ${Role.admin.value.description}.`);
   return {
     message: `User ${targetEmail} has been removed from the` +
       ` ${Role.admin.value.description} role.`,
@@ -262,12 +268,12 @@ exports.giveDemoClaim = onCall(async (request, context) => {
     const isDemo = isDemoRoleFromClaimsList(request.auth.token);
     if (isDemo) {
       // eslint-disable-next-line max-len
-      logger.info(`Demo user ${request.auth.uid} attempted to assign demo role`);
+      logger.warn(`Demo user ${request.auth.uid} attempted to assign demo role`);
       return {
         message: `Demo users cannot assign or remove the demo role.`,
       };
     } else {
-      giveClaimByEmail(Role.demo, Role.admin, targetEmail, request);
+      setDemoClaimByEmail(true, Role.admin, targetEmail, request);
     }
   } catch (error) {
     logger.error(`Failed to set role by email: ${error}`);
@@ -277,10 +283,10 @@ exports.giveDemoClaim = onCall(async (request, context) => {
   }
 
   logger.info(`User ${targetEmail} has been set to the role` +
-   ` ${Role.demo.value.description}.`);
+   ` ${DemoRole.demo.value.description}.`);
   return {
     message: `User ${targetEmail} has been set to the role` +
-     ` ${Role.demo.value.description}.`,
+     ` ${DemoRole.demo.value.description}.`,
   };
 });
 
@@ -298,7 +304,7 @@ exports.removeDemoClaim = onCall(async (request, context) => {
         message: `Demo users cannot assign or remove the demo role.`,
       };
     } else {
-      removeClaimByEmail(Role.demo, Role.admin, targetEmail, request);
+      setDemoClaimByEmail(false, Role.admin, targetEmail, request);
     }
   } catch (error) {
     logger.error(`Failed to remove role by email: ${error}`);
@@ -307,10 +313,10 @@ exports.removeDemoClaim = onCall(async (request, context) => {
     };
   }
   logger.info(`User ${targetEmail} has been removed from the role` +
-   ` ${Role.demo.value.description}.`);
+   ` ${DemoRole.demo.value.description}.`);
   return {
     message: `User ${targetEmail} has been removed from the role` +
-     ` ${Role.demo.value.description}.`,
+     ` ${DemoRole.demo.value.description}.`,
   };
 });
 
@@ -612,24 +618,25 @@ exports.generateSignedUploadUrl = onCall(async (request) => {
   } catch (error) {
     throw new HttpsError(
         "not-found",
-        // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${request.data.fileName}`,
+        `Error generating signed upload url: ${error}, `+
+        `filename : ${request.data.fileName}`,
     );
   }
 });
 
 // TODO: verify that this function is secure
 exports.generateSignedDownloadUrl = onCall(async (request, context) => {
-  logger.log(`Current filename passed: ${request.data.fileName}`);
+  const fileName = request.data.fileName;
+  checkEmpty(fileName, "fileName");
 
   try {
     checkAuthentication(request);
-    checkIsAtLeast(context, Role.parent);
+    checkIsAtLeast(request, Role.parent);
   } catch (error) {
-    logger.error(`User does not have permission to upload: ${error}`);
+    logger.error(`User does not have permission to download: ${error}`);
     throw new HttpsError(
         "permission-denied",
-        `User does not have permission to upload: ${error}`,
+        `User does not have permission to download: ${error}`,
     );
   }
 
@@ -678,7 +685,8 @@ exports.generateSignedDownloadUrl = onCall(async (request, context) => {
     throw new HttpsError(
         "not-found",
         // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${request.data.fileName}`,
+        `Error generating signed download url: ${error}, ` +
+        `filename : ${request.data.fileName}`,
     );
   }
 });

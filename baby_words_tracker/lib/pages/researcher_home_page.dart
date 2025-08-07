@@ -3,9 +3,9 @@ import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_data_service.dart';
-import 'package:baby_words_tracker/data/type_aware_services/type_aware_word_tracker_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
+import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/user_types_and_roles/user_roles.dart';
@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ResearcherHomePage extends StatefulWidget {
+  static const routeName = '/Researcher';
+
   const ResearcherHomePage({super.key});
 
   @override
@@ -34,42 +36,42 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
 
   late final AuthenticationService _authenticationService;
   late final FirestoreDataTableSource _dataSource;
-  late final TypeAwareWordTrackerDataService _wordTrackerDataService;
   late final TypeAwareWordDataService _wordDataService;
 
   bool _isLoading = true;
   bool _initialized = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _authenticationService = Provider.of<AuthenticationService>(
-        context,
-        listen: false,
-      );
+  void initState() {
+    super.initState();
+    _fetchWordTrackers();
+    _authenticationService = Provider.of<AuthenticationService>(
+      context,
+      listen: false,
+    );
 
-      _wordTrackerDataService = Provider.of<TypeAwareWordTrackerDataService>(
-        context,
-        listen: false,
-      );
+    _wordDataService = Provider.of<TypeAwareWordDataService>(
+      context,
+      listen: false,
+    );
 
-      _wordDataService = Provider.of<TypeAwareWordDataService>(
-        context,
-        listen: false,
-      );
+    _dataSource = FirestoreDataTableSource(
+      authenticationService: _authenticationService,
+    );
 
-      _dataSource = FirestoreDataTableSource(
-        authenticationService: _authenticationService,
-      );
-
-      _fetchWordTrackers();
-
-      _initialized = true;
-
-      debugPrint("ResearcherHomePage: ResearcherHomePage initialized");
-    }
+    _fetchWordTrackers();
+    debugPrint("ResearcherHomePage: ResearcherHomePage initialized");
   }
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   if (!_initialized) {
+  //     _initialized = true;
+
+  //     debugPrint("ResearcherHomePage: ResearcherHomePage initialized");
+  //   }
+  // }
 
   void _fetchWordTrackers() async {
     setState(() => _isLoading = true);
@@ -123,26 +125,6 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<ProfileScreen>(
-                  builder: (context) => ProfileScreen(
-                    appBar: AppBar(
-                      title: const Text('User Profile'),
-                    ),
-                    actions: [
-                      SignedOutAction((context) {
-                        Navigator.of(context).pop();
-                      })
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
           Consumer<AuthenticationService>(
             builder: (context, authenticationService, config) {
               if (authenticationService.roles.contains(UserRole.admin)) {
@@ -156,6 +138,15 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                   width: 5,
                 );
               }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                ProfilePage.routeName,
+              );
             },
           ),
         ],

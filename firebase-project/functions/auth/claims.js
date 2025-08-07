@@ -3,12 +3,14 @@ const {getAuth} = require("firebase-admin/auth");
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
-// const {logger} = require("firebase-functions");
+const {logger} = require("firebase-functions");
 
 // authentication functions
 // eslint-disable-next-line max-len
 const {checkAuthentication, checkIsAtLeast, checkDemoStatusesMatch} = require("./auth");
 const {DemoRole} = require("./demo_role");
+// eslint-disable-next-line no-unused-vars
+const {Role} = require("./roles");
 
 /**
  * Gets a users record by uid
@@ -175,6 +177,8 @@ async function setDemoClaim(isDemo, minimumRole, targetUser, request) {
 
     const currentClaims = targetUser.customClaims || {};
 
+    logger.debug(`${request.auth.uid} Setting demo status to `+
+      `${isDemo} for user ${targetUser.uid}`);
     currentClaims[DemoRole.demo.value.description] = isDemo;
 
     // Set the demo status claim for the target user

@@ -59,3 +59,11 @@ Future<bool> showConfirmationDialog(BuildContext context, String message,
       ) ??
       false;
 }
+
+Widget loadToNextPage(BuildContext context, String nextPageRouteName) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.of(context).pushReplacementNamed(nextPageRouteName);
+  });
+
+  return const Center(child: CircularProgressIndicator());
+}

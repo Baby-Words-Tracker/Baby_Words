@@ -257,9 +257,9 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
                         },
                       ),
                       Expanded(
-                        child: _playerWidget != null &&
+                        child: (_playerWidget != null &&
                                 _controller != null &&
-                                _chewieController != null
+                                _chewieController != null)
                             ? AspectRatio(
                                 aspectRatio: _controller!.value.aspectRatio,
                                 child: _playerWidget!,

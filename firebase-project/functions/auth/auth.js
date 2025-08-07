@@ -74,6 +74,9 @@ function checkIsAtLeast(request, minimumRole, disallowDemo = false) {
         "permission-denied",
         "You do not have permission to perform this action.",
     );
+  } else {
+    logger.info(`User has at least the `+
+      `${minimumRole.value.description} role.`);
   }
 }
 
@@ -110,6 +113,8 @@ function checkDemoStatusesMatch(request, targetUserRecord) {
         "Demo users can only interact with other demo users.",
     );
   }
+  // If we reach this point, the demo statuses match
+  logger.debug(`Demo statuses match for user and target.`);
 }
 
 // Export all functions
