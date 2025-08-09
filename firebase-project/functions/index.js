@@ -17,6 +17,9 @@ const {Type, getTypeFromString} = require("./auth/types");
 // eslint-disable-next-line max-len
 const {checkIsAtLeast, checkAuthentication, checkDemoStatusesMatch} = require("./auth/auth.js");
 
+// Import the data module
+const {CollectionName} = require("./data/collection_name.js");
+
 // claims
 // eslint-disable-next-line max-len
 const {giveClaimByEmail, removeClaimByEmail, setTypeClaimByEmail, setDemoClaimByEmail} = require("./auth/claims");
@@ -43,7 +46,8 @@ admin.initializeApp();
 const db = admin.firestore();
 const storage = new Storage();
 
-// TODO: make these functions more generic/concise
+// TODO: make role functions more generic/concise
+// TODO: deploy one collection changes
 
 /**
  * Adds the Parent claim to the user when they are created
@@ -390,11 +394,11 @@ exports.addChildToOtherParent = onCall(async (request, context) => {
     let childCollection;
 
     if (isDemoUser) {
-      parentCollection = db.collection("demo_Parent");
-      childCollection = db.collection("demo_Child");
+      parentCollection = db.collection(CollectionName.parent.demoName);
+      childCollection = db.collection(CollectionName.child.demoName);
     } else {
-      parentCollection = db.collection("Parent");
-      childCollection = db.collection("Child");
+      parentCollection = db.collection(CollectionName.parent.name);
+      childCollection = db.collection(CollectionName.child.name);
     }
 
     let targetUserRecord;
