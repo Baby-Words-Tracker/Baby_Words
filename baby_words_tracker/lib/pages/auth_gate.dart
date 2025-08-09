@@ -128,9 +128,9 @@ class _AuthGateState extends State<AuthGate> {
             );
           } else if (!snapshot.hasData ||
               snapshot.data == null ||
-              (authenticationService.userType ==
-                      UserType.unauthenticated_type ||
-                  !((checkPrivacyPolicy(userModelService) ?? false) == true))) {
+              !authenticationService.isAuthenticated ||
+              !(checkPrivacyPolicy(userModelService, authenticationService) ??
+                  false)) {
             return buildSignInScreen(
               context: context,
               localizationService: localizationService,

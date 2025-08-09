@@ -1,5 +1,10 @@
-// make sure to update user_type_collection_mapper.dart when adding user types
-// make sure to update changeUserType from admin_page.dart when adding user types
+/// Update requirements:
+/// You must update user_type_collection_mapper.dart when adding user types
+/// You must update changeUserType from admin_page.dart when adding user types
+/// You must update the Firestore rules to account for the new user type
+/// You must update the corresponding types.js object in the firebase functions under firebase-project/functions
+/// If removing a type, migration for the user documents in the database will likely be required.
+/// 
 /// An enum to represent the different user types in the app.
 /// Each user should only have one type at a time in their claims
 enum UserType {

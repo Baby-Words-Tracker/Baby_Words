@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/i_user_model.dart';
 import 'package:baby_words_tracker/util/collection_name.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 
 class Researcher extends IUserModel {
-  static CollectionName collectionName = CollectionName('Researcher');
+  static CollectionName get collectionName => IUserModel.collectionName;
 
   // final String id;
   final String? email;
@@ -17,6 +18,7 @@ class Researcher extends IUserModel {
 
   Researcher({
     required super.id,
+    super.userType = UserType.researcher_type,
     this.email,
     this.name,
     this.institution,
@@ -24,11 +26,11 @@ class Researcher extends IUserModel {
     super.acceptedPrivacyPolicy = false,
     super.policyVersion,
     super.consentDate,
-    super.isDemo = false,
   });
 
   Researcher copyWith({
     String? id,
+    UserType? userType,
     String? email,
     String? name,
     String? institution,
@@ -36,10 +38,10 @@ class Researcher extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
-    bool? isDemo,
   }) {
     return Researcher(
       id: id ?? this.id,
+      userType: userType ?? this.userType,
       email: email ?? this.email,
       name: name ?? this.name,
       institution: institution ?? this.institution,
@@ -48,7 +50,6 @@ class Researcher extends IUserModel {
           acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
       policyVersion: policyVersion ?? this.policyVersion,
       consentDate: consentDate ?? this.consentDate,
-      isDemo: isDemo ?? this.isDemo,
     );
   }
 
@@ -66,6 +67,7 @@ class Researcher extends IUserModel {
   factory Researcher.fromMap(Map<String, dynamic> map) {
     return Researcher(
       id: IUserModel.fromMapId(map),
+      userType: IUserModel.fromMapUserType(map),
       email: map['email'] as String?,
       name: map['name'] as String?,
       institution: map['institution'] as String?,
@@ -73,7 +75,6 @@ class Researcher extends IUserModel {
       acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
       policyVersion: IUserModel.fromMapPolicyVersion(map),
       consentDate: IUserModel.fromMapConsentDate(map),
-      isDemo: IUserModel.fromMapIsDemo(map),
     );
   }
 
@@ -96,7 +97,6 @@ class Researcher extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
-    bool? isDemo,
   }) {
     Map<String, dynamic> updateData = <String, dynamic>{};
     if (email != null) updateData['email'] = email;
@@ -109,7 +109,6 @@ class Researcher extends IUserModel {
         acceptedPrivacyPolicy: acceptedPrivacyPolicy,
         policyVersion: policyVersion,
         consentDate: consentDate,
-        isDemo: isDemo,
       ),
     );
 
@@ -118,7 +117,8 @@ class Researcher extends IUserModel {
 
   @override
   String toString() {
-    return 'Researcher(${super.toString()}, email: $email, name: $name, institution: $institution, phoneNumber: $phoneNumber)';
+    return 'Researcher(${super.toString()}, email: $email, name: $name, '
+        'institution: $institution, phoneNumber: $phoneNumber)';
   }
 
   @override

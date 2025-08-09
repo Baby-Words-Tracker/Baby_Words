@@ -5,10 +5,11 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/i_user_model.dart';
 import 'package:baby_words_tracker/util/collection_name.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/user_types_and_roles/user_type.dart';
 import 'package:collection/collection.dart';
 
 class Parent extends IUserModel {
-  static CollectionName collectionName = CollectionName('Parent');
+  static CollectionName get collectionName => IUserModel.collectionName;
 
   final LanguageCode language;
   final List<String> childIDs;
@@ -19,6 +20,7 @@ class Parent extends IUserModel {
 
   Parent({
     required super.id,
+    super.userType = UserType.parent_type,
     this.language = LanguageCode.en,
     List<String>? childIDs,
     this.consentFormComplete = false,
@@ -27,11 +29,11 @@ class Parent extends IUserModel {
     super.acceptedPrivacyPolicy = false,
     super.policyVersion,
     super.consentDate,
-    super.isDemo = false,
   }) : childIDs = childIDs ?? [];
 
   Parent copyWith({
     String? id,
+    UserType? userType,
     LanguageCode? language,
     List<String>? childIDs,
     bool? consentFormComplete,
@@ -40,10 +42,10 @@ class Parent extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
-    bool? isDemo,
   }) {
     return Parent(
       id: id ?? this.id,
+      userType: userType ?? this.userType,
       language: language ?? this.language,
       childIDs: childIDs ?? this.childIDs,
       consentFormComplete: this.consentFormComplete,
@@ -53,7 +55,6 @@ class Parent extends IUserModel {
           acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
       policyVersion: policyVersion ?? this.policyVersion,
       consentDate: consentDate ?? this.consentDate,
-      isDemo: isDemo ?? this.isDemo,
     );
   }
 
@@ -72,6 +73,7 @@ class Parent extends IUserModel {
   factory Parent.fromMap(Map<String, dynamic> map) {
     return Parent(
       id: IUserModel.fromMapId(map),
+      userType: IUserModel.fromMapUserType(map),
       language: map['language'] == null
           ? LanguageCode.en
           : LanguageCode.values.firstWhere((e) => e.name == map['language']),
@@ -85,7 +87,6 @@ class Parent extends IUserModel {
       acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
       policyVersion: IUserModel.fromMapPolicyVersion(map),
       consentDate: IUserModel.fromMapConsentDate(map),
-      isDemo: IUserModel.fromMapIsDemo(map),
     );
   }
 
@@ -109,7 +110,6 @@ class Parent extends IUserModel {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
-    bool? isDemo,
   }) {
     Map<String, dynamic> map = {};
 
@@ -129,7 +129,6 @@ class Parent extends IUserModel {
       acceptedPrivacyPolicy: acceptedPrivacyPolicy,
       policyVersion: policyVersion,
       consentDate: consentDate,
-      isDemo: isDemo,
     ));
 
     return map;
@@ -137,7 +136,10 @@ class Parent extends IUserModel {
 
   @override
   String toString() {
-    return 'Parent(${super.toString()}, childIDs: $childIDs, language: $language, consentFormComplete: $consentFormComplete, demographicSurveyComplete: $demographicSurveyComplete, preStudySurveyComplete: $preStudySurveyComplete)';
+    return 'Parent(${super.toString()}, childIDs: $childIDs, '
+        'language: $language, consentFormComplete: $consentFormComplete, '
+        'demographicSurveyComplete: $demographicSurveyComplete, '
+        'preStudySurveyComplete: $preStudySurveyComplete)';
   }
 
   @override

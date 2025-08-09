@@ -12,7 +12,8 @@ Future<void> getUserConsent(
 ) async {
   debugPrint("PrivacyPolicyUtils: Getting user consent");
   try {
-    final hasAccepted = checkPrivacyPolicy(userModelService);
+    final hasAccepted =
+        checkPrivacyPolicy(userModelService, authenticationService);
     if (hasAccepted == true) {
       debugPrint(
           "PrivacyPolicyUtils: User has already accepted privacy policy, no action needed");
@@ -104,7 +105,8 @@ Future<void> getUserConsent(
   }
 }
 
-bool? checkPrivacyPolicy(UserModelService userModelService) {
+bool? checkPrivacyPolicy(UserModelService userModelService,
+    AuthenticationService authenticationService) {
   debugPrint("PrivacyPolicyUtils: Checking privacy policy");
   try {
     final currentUserModel = userModelService.getCurrentUserModel();
@@ -113,9 +115,17 @@ bool? checkPrivacyPolicy(UserModelService userModelService) {
       debugPrint(
           "PrivacyPolicyUtils: User ${currentUserModel.id} has accepted privacy policy: $hasAccepted");
       return hasAccepted;
-    } else {
+    } else if (authenticationService.isAuthenticated) {
+      debugPrint(
+          "PrivacyPolicyUtils: User is authenticated, but has no document");
+      return false;
+    } else if (!authenticationService.isAuthenticated) {
       debugPrint(
           "PrivacyPolicyUtils: User is not authenticated, returning null since the status is unknown");
+      return null;
+    } else {
+      debugPrint(
+          "PrivacyPolicyUtils: error: This location should not be reached! returning null since status is unknown.");
       return null;
     }
   } catch (e, stack) {
