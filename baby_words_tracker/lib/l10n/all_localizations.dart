@@ -74,8 +74,8 @@ class AllLocalizations {
       "child_not_added": "Failed to Add Child",
       "add_child_failed": "Failed to add your child, please try again.",
       "invalid_type": "Invalid Type",
-      "access_child": "access to your child",
-      "grant_permission": "Are you sure you want to give parent with email",
+      "access_child": " access to your child",
+      "grant_permission": "Are you sure you want to give parent with email ",
       "No": "No",
       "Yes": "Yes",
 
