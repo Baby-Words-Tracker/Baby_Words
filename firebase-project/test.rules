@@ -1,0 +1,203 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  	// Helper Functions ---------------------
+    // check auth
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // user role checks
+    function isParentRole() {
+    	return request.auth.token.parent == true;
+    }
+    
+    function isResearcherRole() {
+    	return request.auth.token.researcher == true;
+    }
+
+    function isAdminRole() {
+    	return request.auth.token.admin == true;
+    }
+    
+    function isDemoRole() {
+    	return request.auth.token.demo == true;
+    }
+
+    function isAtLeastResearcher() {
+      return isResearcherRole() || isAdminRole();
+    }
+    
+    // verify that a parent is the parent of a child
+    function isAuthenticatedParent(childDoc) {
+      let parentIds = get(/databases/$(database)/documents/Child/$(childDoc)).data.parentIDs;
+      return request.auth.uid in parentIds;
+    }
+    
+    function isAuthenticatedDemoParent(childDoc) {
+    	let parentIds = get(/databases/$(database)/documents/demo_Child/$(childDoc)).data.parentIDs;
+    	return request.auth.uid in parentIds;
+    }
+    
+    // user type check functions
+    function userIsParentType() {
+    	return request.auth.token.parent_type == true;
+    }
+    
+    function userIsResearcherType() {
+    	return request.auth.token.researcher_type == true;
+    }
+    
+    // document type check functions
+    function currentDocumentIsParentType() {
+    	return resource.data.userType == "parent_type";
+    }
+    
+    function currentDocumentIsResearcherType() {
+    	return resource.data.userType == "researcher_type";
+    }
+    
+    // Requsted documents can be requested for creation or updated.
+    // request represents the change document.
+    function requestedDocumentIsParentType() {
+    	return request.resource.data.userType == "parent_type";
+    }
+    
+    function requestedDocumentIsResearcherType() {
+    	return request.resource.data.userType == "researcher_type";
+    }
+    
+    // verify that a document's type or updated type matches a users type
+    function userTypeMatchesCurrentDocumentType() {
+    	return (userIsParentType() && currentDocumentIsParentType()) ||
+      			 (userIsResearcherType() && currentDocumentIsResearcherType())
+    }
+    
+    function userTypeMatchesRequestedDocumentType() {
+    	return (userIsParentType() && requestedDocumentIsParentType()) ||
+      			 (userIsResearcherType() && requestedDocumentIsResearcherType())
+    }
+    
+    function requestedDocumentTypeMatchesCurrentDocumentType() {
+      return request.resource.data.userType == resource.data.userType;
+    }
+
+    
+    // Rules for both databases ---------------------
+    
+    //allow anyone to read or update the word bank
+    match /Word/{word} {
+    	allow read, create, update: if isSignedIn();
+    }
+    
+    
+    // Rules for prod database ---------------------
+    match /{document=**} {
+  		allow read, write: if isSignedIn() && isAdminRole() && !isDemoRole();
+  	}
+    
+    //    Rules for single user database in prod
+    match /User/{userId} {
+  
+      // Read permissions
+      allow read: if isSignedIn() && !isDemoRole() &&
+      						  ((isAtLeastResearcher() && requestedDocumentIsParentType())
+                    || request.auth.uid == userId);
+
+      // Write permissions - prevent changing type
+      allow update: if isSignedIn() && !isDemoRole() &&
+      								request.auth.uid == userId &&
+                      requestedDocumentTypeMatchesCurrentDocumentType() &&
+                      userTypeMatchesRequestedDocumentType();
+
+      // Create - enforce type from custom claims
+      allow create: if isSignedIn() && !isDemoRole() &&
+      								request.auth.uid == request.resource.id &&
+                      userTypeMatchesRequestedDocumentType();
+    }
+    
+    //allow user to access parent information that matches their email
+    // Update read to get here and in all casess where listing is not necessary
+    match /Parent/{parentDoc} {
+    	allow read, update: if isSignedIn() && request.auth.uid == parentDoc && !isDemoRole();
+      
+      allow read: if isSignedIn() && isAtLeastResearcher() && !isDemoRole();
+      
+    	// Allow creation of new Parent documents if the user's email matches the provided email
+  		allow create: if isSignedIn() && request.auth.uid == request.resource.id && !isDemoRole();
+    }
+    
+    match /Child/{childDoc} {
+    	allow read, update: if isSignedIn() && isAuthenticatedParent(childDoc) && !isDemoRole();
+      
+      allow read: if isSignedIn() && isAtLeastResearcher() && !isDemoRole();
+      
+      allow create: if isSignedIn() && !isDemoRole();
+
+      allow delete: if false;
+    }
+    
+    //allow any child to create and read words maybe add upgrade?
+    match /Child/{childDoc}/WordTracker/{word_tracker} {
+      // check this later
+      allow update, create, write, read: if isSignedIn() && isAuthenticatedParent(childDoc) && !isDemoRole();
+
+      allow read: if isSignedIn() && isAtLeastResearcher() && !isDemoRole();
+
+      allow delete: if false;
+    }
+    
+    //allow user to access research information that matches their uid
+    match /Researcher/{researcherDoc} {
+    	allow read, write: if isSignedIn() && request.auth.uid == researcherDoc && !isDemoRole();
+
+    	// Allow creation of new Parent documents if the user's email matches the provided email
+  		allow create: if isSignedIn() && request.auth.uid == request.resource.id && !isDemoRole();      
+    }
+    
+    
+    // Rules for demo database ----------------    
+    match /{collection}/{document=**} {
+      allow read, write: if collection.matches('demo_.*') && isAdminRole();
+    }
+    
+    //allow user to access parent information that matches their email
+    match /demo_Parent/{parentDoc} {
+    	allow read, update: if isSignedIn() && request.auth.uid == parentDoc && isDemoRole();
+      
+      allow read: if isSignedIn() && isAtLeastResearcher() && isDemoRole();
+      
+    	// Allow creation of new Parent documents if the user's email matches the provided email
+  		allow create: if isSignedIn() && request.auth.uid == request.resource.id && isDemoRole();
+    }
+    
+    match /demo_Child/{childDoc} {
+    	allow read, update: if isSignedIn() && isAuthenticatedDemoParent(childDoc) && isDemoRole();
+      
+      allow read: if isSignedIn() && isAtLeastResearcher() && isDemoRole();
+      
+      allow create: if isSignedIn() && isDemoRole();
+
+      allow delete: if false;
+    }
+    
+    //allow any child to create and read words maybe add upgrade?
+    	match /demo_Child/{childDoc}/WordTracker/{word_tracker} {
+      	// check this later
+      	allow update, create, write, read: if isSignedIn() && isAuthenticatedDemoParent(childDoc) && isDemoRole();
+        
+        allow read: if isSignedIn() && isAtLeastResearcher() && isDemoRole();
+        
+        allow delete: if false;
+      }
+    
+    //allow user to access research information that matches their uid
+    match /demo_Researcher/{researcherDoc} {
+    	allow read, write: if isSignedIn() && request.auth.uid == researcherDoc && isDemoRole();
+
+    	// Allow creation of new Parent documents if the user's email matches the provided email
+  		allow create: if isSignedIn() && request.auth.uid == request.resource.id && isDemoRole();      
+    }
+  }
+}
