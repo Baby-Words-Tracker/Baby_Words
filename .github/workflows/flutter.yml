@@ -22,18 +22,31 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: 'stable'  # Use latest stable Flutter version
 
       - name: Install dependencies
         working-directory: baby_words_tracker
         run: flutter pub get
 
-      # Consider passing '--fatal-infos' for slightly stricter analysis.
+      # Analyze with fatal-infos to catch important issues
       - name: Analyze project source
         working-directory: baby_words_tracker
-        run: flutter analyze
+        run: flutter analyze --fatal-infos
 
       # Run tests - Flutter projects use 'flutter test'
       - name: Run tests
         working-directory: baby_words_tracker
         run: flutter test
+
+      # Verify builds work for different platforms
+      - name: Build APK (Android)
+        working-directory: baby_words_tracker
+        run: flutter build apk --debug
+
+      - name: Build Web
+        working-directory: baby_words_tracker
+        run: flutter build web
+
+      - name: Build iOS (requires macOS runner)
+        working-directory: baby_words_tracker
+        run: flutter build ios --no-codesign
