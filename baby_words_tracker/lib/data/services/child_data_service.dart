@@ -1,12 +1,16 @@
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
 class ChildDataService extends ChangeNotifier {
-  static final firebaseRepo = FirestoreRepository();
+  final IFirestoreRepository firebaseRepo;
+
+  ChildDataService({IFirestoreRepository? repository}) 
+      : firebaseRepo = repository ?? FirestoreRepository();
 
   //child services
   Future<Child?> createChild(

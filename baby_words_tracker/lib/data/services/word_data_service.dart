@@ -1,9 +1,13 @@
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class WordDataService extends ChangeNotifier {
-  static final fireRepo = FirestoreRepository();
+  final IFirestoreRepository fireRepo;
+
+  WordDataService({IFirestoreRepository? repository}) 
+      : fireRepo = repository ?? FirestoreRepository();
 
   //word services
   Future<Word?> createWord(Word word) async {

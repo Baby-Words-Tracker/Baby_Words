@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/exceptions/document_not_found_exception.dart';
 import 'package:baby_words_tracker/data/listeners/firestore_document_listener.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:baby_words_tracker/util/pair.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,10 +13,11 @@ import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
-class FirestoreRepository {
-  static final database = FirebaseFirestore.instance;
+class FirestoreRepository implements IFirestoreRepository {
+  final FirebaseFirestore database;
 
-  FirestoreRepository() {
+  FirestoreRepository({FirebaseFirestore? firestore}) 
+      : database = firestore ?? FirebaseFirestore.instance {
     database.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
@@ -701,6 +703,29 @@ class FirestoreRepository {
     } catch (e) {
       debugPrint("changeUserType: $e");
       return null;
+    }
+  }
+
+  @override
+  Future<bool> batchUpdate(Map<String, Map<String, dynamic>> updates) async {
+    try {
+      final batch = database.batch();
+      
+      for (final entry in updates.entries) {
+        final parts = entry.key.split('/');
+        if (parts.length >= 2) {
+          final collection = parts[0];
+          final docId = parts[1];
+          final docRef = database.collection(collection).doc(docId);
+          batch.update(docRef, entry.value);
+        }
+      }
+      
+      await batch.commit();
+      return true;
+    } catch (e) {
+      debugPrint("Error in batch update: $e");
+      return false;
     }
   }
 }
