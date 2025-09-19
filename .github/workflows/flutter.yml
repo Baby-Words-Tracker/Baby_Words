@@ -1,0 +1,45 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Flutter CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Flutter SDK
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'  # Use a stable Flutter version
+          channel: 'stable'
+
+      - name: Install dependencies
+        working-directory: baby_words_tracker
+        run: flutter pub get
+
+      # Verify the use of 'flutter format' on each commit.
+      - name: Verify formatting
+        working-directory: baby_words_tracker
+        run: flutter format --output=none --set-exit-if-changed .
+
+      # Consider passing '--fatal-infos' for slightly stricter analysis.
+      - name: Analyze project source
+        working-directory: baby_words_tracker
+        run: flutter analyze
+
+      # Run tests - Flutter projects use 'flutter test'
+      - name: Run tests
+        working-directory: baby_words_tracker
+        run: flutter test
