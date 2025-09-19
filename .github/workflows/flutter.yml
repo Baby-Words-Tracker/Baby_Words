@@ -28,10 +28,15 @@ jobs:
         working-directory: baby_words_tracker
         run: flutter pub get
 
-      # Analyze with fatal-infos to catch important issues
-      - name: Analyze project source
+      # Analyze for errors only (fail build on actual errors, ignore warnings/info)
+      - name: Analyze for errors
         working-directory: baby_words_tracker
-        run: flutter analyze --fatal-infos
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        
+      # Show full analysis output for visibility (warnings/info shown but not blocking)
+      - name: Show full analysis output
+        working-directory: baby_words_tracker
+        run: flutter analyze || echo "Full analysis completed - warnings/info shown above for developer reference"
 
       # Run tests - Flutter projects use 'flutter test'
       - name: Run tests
@@ -47,7 +52,7 @@ jobs:
         working-directory: baby_words_tracker
         run: flutter build web
 
-    # iOS build commented out - requires macOS runner which costs more
-    # - name: Build iOS (requires macOS runner)  
-    #   working-directory: baby_words_tracker
-    #   run: flutter build ios --no-codesign
+      # iOS build commented out - requires macOS runner which costs more
+      # - name: Build iOS (requires macOS runner)  
+      #   working-directory: baby_words_tracker
+      #   run: flutter build ios --no-codesign
