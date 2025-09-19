@@ -2,10 +2,14 @@ import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class WordTrackerDataService {
-  static final fireRepo = FirestoreRepository();
+  final IFirestoreRepository fireRepo;
+
+  WordTrackerDataService({IFirestoreRepository? repository}) 
+      : fireRepo = repository ?? FirestoreRepository();
 
   Future<WordTracker?> createWordTracker(
     String childId,

@@ -3,11 +3,15 @@ import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
 class ParentDataService extends ChangeNotifier {
-  static final _firestoreRepository = FirestoreRepository();
+  final IFirestoreRepository _firestoreRepository;
+
+  ParentDataService({IFirestoreRepository? repository}) 
+      : _firestoreRepository = repository ?? FirestoreRepository();
 
   //Parent services
   Future<Parent?> createParent(Parent parent) async {

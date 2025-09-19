@@ -1,10 +1,14 @@
 import 'package:baby_words_tracker/data/listeners/i_document_listener.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class ResearcherDataService extends ChangeNotifier {
-  static final _firestoreRepository = FirestoreRepository();
+  final IFirestoreRepository _firestoreRepository;
+
+  ResearcherDataService({IFirestoreRepository? repository}) 
+      : _firestoreRepository = repository ?? FirestoreRepository();
 
   //Reseacher services
   Future<Researcher?> createResearcher(Researcher researcher) async {

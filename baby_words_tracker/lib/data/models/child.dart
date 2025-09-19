@@ -48,7 +48,7 @@ class Child {
     return <String, dynamic>{
       'birthday': birthday,
       'name': name,
-      'language': language.map((i) => i.name).toList(),
+      'languageCodes': language.map((i) => i.name).toList(),
       wordCountFieldName: wordCount,
       'parentIDs': parentIDs as List<dynamic>,
     };
@@ -68,7 +68,7 @@ class Child {
           [],
       wordCount: (map[wordCountFieldName] ?? 0) as int,
       parentIDs:
-          (map['parentIDS'] as List<dynamic>?)?.whereType<String>().toList() ??
+          (map['parentIDs'] as List<dynamic>?)?.whereType<String>().toList() ??
               [],
     );
   }

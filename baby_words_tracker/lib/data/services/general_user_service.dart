@@ -4,6 +4,7 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
+import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
@@ -17,13 +18,15 @@ import 'package:flutter/foundation.dart';
 class GeneralUserService {
   final ParentDataService _parentDataService;
   final ResearcherDataService _researcherDataService;
-  final FirestoreRepository _firestoreRepository = FirestoreRepository();
+  final IFirestoreRepository _firestoreRepository;
 
-  GeneralUserService(
-      {required ParentDataService parentDataService,
-      required ResearcherDataService researcherDataService})
-      : _parentDataService = parentDataService,
-        _researcherDataService = researcherDataService;
+  GeneralUserService({
+    required ParentDataService parentDataService,
+    required ResearcherDataService researcherDataService,
+    IFirestoreRepository? repository,
+  })  : _parentDataService = parentDataService,
+        _researcherDataService = researcherDataService,
+        _firestoreRepository = repository ?? FirestoreRepository();
 
   Future<Pair<dynamic, UserType>> createUser(
       {required UserType userType,
