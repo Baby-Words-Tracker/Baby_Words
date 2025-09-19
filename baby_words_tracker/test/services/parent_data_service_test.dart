@@ -326,6 +326,7 @@ void main() {
       service.removeListener(listener);
       
       // Listener should be removed successfully
+      // ignore: invalid_use_of_protected_member
       expect(service.hasListeners, isFalse);
     });
   });

@@ -47,6 +47,7 @@ jobs:
         working-directory: baby_words_tracker
         run: flutter build web
 
-      - name: Build iOS (requires macOS runner)
-        working-directory: baby_words_tracker
-        run: flutter build ios --no-codesign
+    # iOS build commented out - requires macOS runner which costs more
+    # - name: Build iOS (requires macOS runner)  
+    #   working-directory: baby_words_tracker
+    #   run: flutter build ios --no-codesign

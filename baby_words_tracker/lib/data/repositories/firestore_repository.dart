@@ -24,6 +24,7 @@ class FirestoreRepository implements IFirestoreRepository {
     );
   }
 
+  @override
   Future<String?> create(
       String collectionName, Map<String, dynamic> data) async {
     try {
@@ -36,6 +37,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<String?> createWithId(
       String collectionName, String docId, Map<String, dynamic> data,
       [bool merge = false]) async {
@@ -85,6 +87,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<DataWithId?> read(String collectionName, String docId) async {
     try {
       final docRef = database.collection(collectionName).doc(docId);
@@ -101,6 +104,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<DataWithId?> readSubcollection(String collectionName, String docId,
       String subcollectionName, String subId) async {
     try {
@@ -121,6 +125,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<List<DataWithId>> readMultiple(
       String collectionName, List<String> docIds) async {
     try {
@@ -161,6 +166,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<List<DataWithId>> readAllFromSubcollection(
       String parentCollection, String parentId, String subCollection) async {
     try {
@@ -237,6 +243,7 @@ class FirestoreRepository implements IFirestoreRepository {
     return FirebaseFirestore.instance.doc(path);
   }
 
+  @override
   FirestoreDocumentListener<T> getDocumentListener<T>({
     required String path,
     required T Function(DataWithId) convertDataWithId,
@@ -248,6 +255,7 @@ class FirestoreRepository implements IFirestoreRepository {
   }
 
   //TODO: should this return the new object or just bool?
+  @override
   Future<bool> update(
       String collectionName, String docId, Map<String, dynamic> data) async {
     try {
@@ -273,6 +281,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<bool> updateSubcollectionDocument(
       String collectionName,
       String docId,
@@ -294,6 +303,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<bool> updateFieldForSubcollection(
       String collectionName,
       String subcollectionName,
@@ -329,6 +339,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<bool> appendToArrayField(
       String collectionName, String docID, String field, dynamic value) async {
     try {
@@ -417,6 +428,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<bool> delete(String collectionName, String docId) async {
     try {
       final docRef = database.collection(collectionName).doc(docId);
@@ -428,6 +440,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<List<DataWithId>> queryByField(
       String collectionName, String field, dynamic value,
       {int? limit}) async {
@@ -464,6 +477,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<List<DataWithId>> subQueryByDateRange(
       String collectionName,
       String docId,
@@ -507,6 +521,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<List<DataWithId>> subFieldGreaterThan(String collectionName,
       String docId, String subcollection, String field, dynamic value) async {
     try {
@@ -577,6 +592,7 @@ class FirestoreRepository implements IFirestoreRepository {
   }
 
   /// Helper function to create workd tracker. This is specialized so that it cannot be used elsewhere because it should not be
+  @override
   Future<bool> addOrUpdateWordTracker(
     String collectionName,
     String childID,
@@ -659,6 +675,7 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
   Future<Pair<DataWithId, String>?> changeUserType(String userId,
       List<String> possibleFromCollections, String newCollectionName,
       {String? expectedCollectionName}) async {
