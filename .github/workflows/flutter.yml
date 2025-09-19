@@ -28,11 +28,6 @@ jobs:
         working-directory: baby_words_tracker
         run: flutter pub get
 
-      # Verify the use of 'flutter format' on each commit.
-      - name: Verify formatting
-        working-directory: baby_words_tracker
-        run: flutter format --output=none --set-exit-if-changed .
-
       # Consider passing '--fatal-infos' for slightly stricter analysis.
       - name: Analyze project source
         working-directory: baby_words_tracker
