@@ -1,0 +1,54 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Flutter CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Flutter SDK
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'  # Use latest stable Flutter version
+
+      - name: Install dependencies
+        working-directory: baby_words_tracker
+        run: flutter pub get
+
+      # Analyze with fatal-infos to catch important issues
+      - name: Analyze project source
+        working-directory: baby_words_tracker
+        run: flutter analyze --fatal-infos
+
+      # Run tests - Flutter projects use 'flutter test'
+      - name: Run tests
+        working-directory: baby_words_tracker
+        run: flutter test
+
+      # Verify builds work for different platforms
+      - name: Build APK (Android)
+        working-directory: baby_words_tracker
+        run: flutter build apk --debug
+
+      - name: Build Web
+        working-directory: baby_words_tracker
+        run: flutter build web
+
+      # iOS build commented out - requires macOS runner which costs more
+      # - name: Build iOS (requires macOS runner)  
+      #   working-directory: baby_words_tracker
+      #   run: flutter build ios --no-codesign
+

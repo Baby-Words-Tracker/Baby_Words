@@ -412,7 +412,8 @@ class _AdminPageState extends State<AdminPage> {
                               if (await showConfirmationDialog(context,
                                       'This will query all email and uid data and return it as a csv. Continue?') ??
                                   false) {
-                                // TODO: do I need to check this context here?
+                                // Check if context is still mounted before using it
+                                if (!context.mounted) return;
                                 var userData = await callFunction(
                                     context, 'getEmailUIDTable', {});
                                 if (userData != null) {

@@ -111,8 +111,11 @@ Future<void> addCurrentChildToOtherParent(
       }).then(
     (confirmed) {
       if (confirmed != null && confirmed) {
-        callAddChildToOtherParentCloudFunction(
-            context, currChildID!, otherParentEmail);
+        // Check if context is still mounted before using it after async operation
+        if (context.mounted) {
+          callAddChildToOtherParentCloudFunction(
+              context, currChildID!, otherParentEmail);
+        }
       } else {
         return;
       }
