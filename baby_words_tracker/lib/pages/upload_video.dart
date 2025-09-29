@@ -29,7 +29,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: TopBar(pageName: localizationService.translate("upload_video")),
-        bottomNavigationBar: CustomBottomBar(UploadVideoPage.routeName),
+        bottomNavigationBar: const CustomBottomBar(UploadVideoPage.routeName),
         body: Column(
           children: [
             const SizedBox(

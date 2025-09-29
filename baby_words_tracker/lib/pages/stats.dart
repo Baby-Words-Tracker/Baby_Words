@@ -92,7 +92,7 @@ class _StatsPageState extends State<StatsPage> {
           pageName: context
               .read<LocalizationService>()
               .translate("learning_summary")),
-      bottomNavigationBar: CustomBottomBar(StatsPage.routeName),
+      bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

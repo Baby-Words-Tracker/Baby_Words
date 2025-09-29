@@ -314,7 +314,7 @@ class _HomePageState extends State<HomePage> {
         return Scaffold(
           backgroundColor: const Color(0xFF828A8F),
           appBar: TopBar(pageName: localizationService.translate("word_buds")),
-          bottomNavigationBar: CustomBottomBar(HomePage.routeName),
+          bottomNavigationBar: const CustomBottomBar(HomePage.routeName),
           body: Stack(children: [
             Padding(
               padding: const EdgeInsets.all(16.0),

@@ -120,8 +120,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'WordBuds Root',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 124, 11, 11)),
           useMaterial3: true,
+          navigationBarTheme: const NavigationBarThemeData(
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            iconTheme: WidgetStatePropertyAll(
+              IconThemeData(size: 36),
+            ),
+          ),
         ),
         initialRoute:
             AuthGate.routeName, // Set the initial route to force user to login
