@@ -123,9 +123,9 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 124, 11, 11)),
           useMaterial3: true,
           navigationBarTheme: const NavigationBarThemeData(
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, //Hides icon labels
             iconTheme: WidgetStatePropertyAll(
-              IconThemeData(size: 36),
+              IconThemeData(size: 36), //36 for larger icons, default is 24
             ),
           ),
         ),
