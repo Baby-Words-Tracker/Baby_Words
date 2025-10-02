@@ -26,6 +26,7 @@ import 'pages/home_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
 import 'pages/display_video_page.dart';
+import 'package:baby_words_tracker/pages/survey_page.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
@@ -136,6 +137,7 @@ class MyApp extends StatelessWidget {
           SettingsPage.routeName: (context) => const SettingsPage(),
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),
           AdminPage.routeName: (context) => const AdminPage(),
+          SurveyPage.routeName: (context) => const SurveyPage(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),

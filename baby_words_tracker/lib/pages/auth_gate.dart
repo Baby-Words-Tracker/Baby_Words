@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/pages/survey_page.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
@@ -15,6 +16,8 @@ import 'dart:io' as io; // For checking platform
 
 import 'researcher_home_page.dart';
 import 'home_page.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthGate extends StatefulWidget {
   static const routeName = '/authGate';
@@ -136,6 +139,21 @@ Widget buildSignInScreen(BuildContext context,
       EmailAuthProvider(),
       GoogleProvider(clientId: platformKey),
     ],
+    actions: [
+    AuthStateChangeAction<SignedIn>((context, state) async{
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final docRef = FirebaseFirestore.instance.collection('Parent').doc(user.uid);
+      final docSnapshot = await docRef.get();
+      final status = await docSnapshot.get('preStudySurveyComplete');
+      print("Survey status: $status");
+      if (status){
+        Navigator.pushReplacementNamed(context, HomePage.routeName);
+      }else{
+        Navigator.pushReplacementNamed(context, SurveyPage.routeName);
+      }
+    }),
+  ],
     headerBuilder: (context, constraints, shrinkOffset) {
       return Padding(
         padding: const EdgeInsets.all(20),
