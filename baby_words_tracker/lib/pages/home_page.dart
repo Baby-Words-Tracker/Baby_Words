@@ -350,11 +350,16 @@ class _HomePageState extends State<HomePage> {
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 message,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: theme.textTheme.headlineMedium
+                                        ?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ) ??
+                                    TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                             ),
                           ),
@@ -516,11 +521,18 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Center(
-                      child: Text(localizationService.translate("child_said"),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold)),
+                      child: Text(
+                        localizationService.translate("child_said"),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ) ??
+                            TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
                     ),
                     TextField(
                       controller: _controller,

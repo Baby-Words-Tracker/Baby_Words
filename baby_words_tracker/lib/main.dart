@@ -118,11 +118,11 @@ class MyApp extends StatelessWidget {
     Provider.of<UserModelService>(context, listen: false);
 
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFFD64545),
+      seedColor: const Color.fromARGB(255, 0, 0, 0),
       brightness: Brightness.light,
     );
     final darkColorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFFD64545),
+      seedColor: const Color.fromARGB(255, 0, 0, 0),
       brightness: Brightness.dark,
     );
 
