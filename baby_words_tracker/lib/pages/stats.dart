@@ -198,10 +198,23 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
     return cache[(GraphType.wordsByPartOfSpeech, -1, id)];
   }
   Map<PartOfSpeech, int> data = <PartOfSpeech, int>{};
+
   //for the number of days, grab the amount of words learned
   List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
+
+  // Extract all word IDs from trackers
+  List<String> wordIds = allWordsFromChild
+      .where((tracker) => tracker.id != null)
+      .map((tracker) => tracker.id!)
+      .toList();
+
+  // Batch fetch all words
+  List<Word> words = await wordService.getMultipleWords(wordIds);
+
+  Map<String, Word> wordMap = {for (var word in words) word.word: word};
+
   for (var tracker in allWordsFromChild) {
-    Word currWord = await wordService.getWord(tracker.id ?? "invalid id") ??
+    Word currWord = wordMap[tracker.id ?? "invalid id"] ??
         Word(
             word: "Invalid Word",
             languageCodes: <LanguageCode>{},
