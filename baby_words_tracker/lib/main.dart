@@ -117,16 +117,76 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<UserModelService>(context, listen: false);
 
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFFD64545),
+      brightness: Brightness.light,
+    );
+
     return MaterialApp(
         title: 'WordBuds Root',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 124, 11, 11)),
+          colorScheme: colorScheme,
           useMaterial3: true,
-          navigationBarTheme: const NavigationBarThemeData(
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, //Hides icon labels
-            iconTheme: WidgetStatePropertyAll(
-              IconThemeData(size: 36), //36 for larger icons, default is 24
+          scaffoldBackgroundColor: colorScheme.surface,
+          appBarTheme: AppBarTheme(
+            backgroundColor: colorScheme.surface,
+            foregroundColor: colorScheme.onSurface,
+            elevation: 0,
+            titleTextStyle: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          cardTheme: CardThemeData(
+            color: colorScheme.surface,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            backgroundColor: colorScheme.surface,
+            indicatorColor: colorScheme.primaryContainer,
+            elevation: 0,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+              (states) {
+                final selected = states.contains(WidgetState.selected);
+                return IconThemeData(
+                  size: selected ? 34 : 30,
+                  color: selected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                );
+              },
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+            ),
+            hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
         ),
         initialRoute:

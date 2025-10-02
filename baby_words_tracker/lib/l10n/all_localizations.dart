@@ -90,6 +90,7 @@ class AllLocalizations {
 
       //top bar
       "curr_child": "Current child: ",
+      "select_child": "Select Child",
     },
     'es': {
       "add_words": "Añadir Palabras",
@@ -157,6 +158,7 @@ class AllLocalizations {
       "words_in_past_week": "Palabras aprendidas la semana pasada:",
       "go_to_settings": "Vaya a la configuración para agregar un niño",
       "curr_child": "Niño actual: ",
+      "select_child": "Seleccionar niño",
 
       //admin page
       "admin_page": "Pagina de Administrador",
