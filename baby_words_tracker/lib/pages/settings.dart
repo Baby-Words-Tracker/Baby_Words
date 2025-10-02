@@ -29,10 +29,11 @@ class _AddSettingsPage extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Consumer<LocalizationService>(
       builder: (context, localizationService, child) {
+        final theme = Theme.of(context);
         bool _isSpanish =
             localizationService.getLocaleCode() == LanguageCode.es;
         return Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: theme.colorScheme.surface,
             appBar: TopBar(
               pageName: localizationService.translate("settings"),
             ),

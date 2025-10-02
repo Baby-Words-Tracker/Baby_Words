@@ -78,6 +78,7 @@ class _StatsPageState extends State<StatsPage> {
 
     if (currChildId == null) {
       return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         // Small error handling page, could be beautified
         appBar: TopBar(
             pageName: context
@@ -88,6 +89,7 @@ class _StatsPageState extends State<StatsPage> {
       );
     }
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: TopBar(
           pageName: context
               .read<LocalizationService>()
@@ -496,5 +498,4 @@ async {
 
 
 // below this is the testing word adding functionality
-
 

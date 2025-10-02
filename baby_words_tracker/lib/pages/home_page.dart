@@ -311,8 +311,10 @@ class _HomePageState extends State<HomePage> {
         Child? currChild = currentChildrenService.getCurrChild();
         String childID = currChild?.id ?? "error";
 
+        final theme = Theme.of(context);
+
         return Scaffold(
-          backgroundColor: const Color(0xFF828A8F),
+          backgroundColor: theme.colorScheme.surface,
           appBar: TopBar(pageName: localizationService.translate("word_buds")),
           bottomNavigationBar: const CustomBottomBar(HomePage.routeName),
           body: Stack(children: [
