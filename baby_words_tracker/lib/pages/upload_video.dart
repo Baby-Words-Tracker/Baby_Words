@@ -26,10 +26,12 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
             CurrentChildrenService>(
         builder: (context, localizationService, childService,
             currentChildrenService, child) {
+      final theme = Theme.of(context);
+
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         appBar: TopBar(pageName: localizationService.translate("upload_video")),
-        bottomNavigationBar: CustomBottomBar(UploadVideoPage.routeName),
+        bottomNavigationBar: const CustomBottomBar(UploadVideoPage.routeName),
         body: Column(
           children: [
             const SizedBox(

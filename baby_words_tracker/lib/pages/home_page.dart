@@ -311,10 +311,12 @@ class _HomePageState extends State<HomePage> {
         Child? currChild = currentChildrenService.getCurrChild();
         String childID = currChild?.id ?? "error";
 
+        final theme = Theme.of(context);
+
         return Scaffold(
-          backgroundColor: const Color(0xFF828A8F),
+          backgroundColor: theme.colorScheme.surface,
           appBar: TopBar(pageName: localizationService.translate("word_buds")),
-          bottomNavigationBar: CustomBottomBar(HomePage.routeName),
+          bottomNavigationBar: const CustomBottomBar(HomePage.routeName),
           body: Stack(children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -348,11 +350,16 @@ class _HomePageState extends State<HomePage> {
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 message,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: theme.textTheme.headlineMedium
+                                        ?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ) ??
+                                    TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                             ),
                           ),
@@ -514,11 +521,18 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Center(
-                      child: Text(localizationService.translate("child_said"),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold)),
+                      child: Text(
+                        localizationService.translate("child_said"),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ) ??
+                            TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
                     ),
                     TextField(
                       controller: _controller,

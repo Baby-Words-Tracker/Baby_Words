@@ -222,7 +222,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
         return Scaffold(
           backgroundColor: const Color(0xFF828A8F),
           appBar: TopBar(pageName: localizationService.translate("add_words")),
-          bottomNavigationBar: CustomBottomBar(DisplayVideoPage.routeName),
+          bottomNavigationBar: const CustomBottomBar(DisplayVideoPage.routeName),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : Center(
