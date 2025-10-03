@@ -75,6 +75,8 @@ dependencies:
   # video_compress: ^3.1.4
   # ffmpeg_kit_flutter_new: ^1.6.1
 
+  webview_flutter: ^4.0.0 #For adding webview if user survey needs to be embedded
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

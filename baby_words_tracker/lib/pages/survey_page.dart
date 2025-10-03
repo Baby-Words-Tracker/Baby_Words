@@ -10,11 +10,12 @@ import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 
 class SurveyPage extends StatelessWidget {
   static const routeName = '/survey'; // Route name for navigation
-
   const SurveyPage({super.key});
 
   @override
@@ -23,7 +24,7 @@ class SurveyPage extends StatelessWidget {
       appBar: TopBar(
             pageName: context
                 .read<LocalizationService>()
-                .translate("user_survey")),
+                .translate("")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -48,13 +49,16 @@ class SurveyPage extends StatelessWidget {
               child: Padding(padding: const EdgeInsets.all(8.0),
               child: SizedBox(
                 width: double.infinity,
-                height: 400,
-                child: const Center(
-                  child: Text("Form placeholder", style: TextStyle(color: Colors.blueGrey))
-                ),
+                height: 600,
+                child: SizedBox(
+                  height: 600,
+                  child: WebViewWidget(controller: WebViewController()
+                  ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                  ..loadRequest(Uri.parse("https://forms.gle/2Z9DpNMYR2Ly1dEW8"))),),
               ),
               ),
             ),
+            const SizedBox(height:15),
             ElevatedButton(
               onPressed: () async {
                 final user = FirebaseAuth.instance.currentUser;
