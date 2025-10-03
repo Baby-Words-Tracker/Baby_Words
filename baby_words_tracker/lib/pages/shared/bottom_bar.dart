@@ -1,93 +1,87 @@
+import 'package:baby_words_tracker/l10n/localization_service.dart'; //important for translation
 import 'package:baby_words_tracker/pages/display_video_page.dart';
 import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/stats.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class CustomBottomBar extends StatefulWidget {
-  final String currPage;
+class CustomBottomBar extends StatelessWidget {
+  final String currentRoute;
 
-  const CustomBottomBar(this.currPage, {super.key});
- 
-  @override
-  State<CustomBottomBar> createState() => _CustomBottomBarState();
-}
+  const CustomBottomBar(this.currentRoute, {super.key});
 
-class _CustomBottomBarState extends State<CustomBottomBar> {
+  static const _navItems = <_NavigationItem>[
+    _NavigationItem(
+      routeName: HomePage.routeName,
+      icon: Icons.home,
+      labelKey: 'home_page',
+    ),
+    _NavigationItem(
+      routeName: DisplayVideoPage.routeName,
+      icon: Icons.video_camera_front,
+      labelKey: 'upload_video',
+    ),
+    _NavigationItem(
+      routeName: StatsPage.routeName,
+      icon: Icons.bar_chart_outlined,
+      labelKey: 'view_stats',
+    ),
+    _NavigationItem(
+      routeName: SettingsPage.routeName,
+      icon: Icons.settings_rounded,
+      labelKey: 'settings',
+    ),
+  ];
+
+  int _resolveSelectedIndex() {
+    final idx =
+        _navItems.indexWhere((item) => item.routeName == currentRoute);
+    return idx >= 0 ? idx : 0;
+  }
+
+  void _handleDestinationTap(BuildContext context, int index) {
+    final target = _navItems[index];
+
+    //avoids redundant navigation
+    if (currentRoute == target.routeName) {
+      return;
+    }
+    Navigator.of(context).pushReplacementNamed(target.routeName);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return createBottomBar(context, widget.currPage);
+    return Consumer<LocalizationService>(
+      builder: (context, localizationService, _) {
+        final selectedIndex = _resolveSelectedIndex();
+
+        return NavigationBar(
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (index) =>
+              _handleDestinationTap(context, index),
+          destinations: _navItems
+              .map(
+                (item) => NavigationDestination(
+                  icon: Icon(item.icon),
+                  label: localizationService.translate(item.labelKey),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
   }
 }
 
-// Bottom Bar Widget
-// In its own file to save clutter
-// Allows page name to be passed in to deactivate the button for the current page
-Widget createBottomBar(BuildContext context, String currPage) {
-  return BottomAppBar(
-    color: const Color(0xFF9E1B32),
-    child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: const Icon(
-                Icons.home,
-                color: Colors.white,
-                size: 40.0,
-              ),
-              onPressed: () {
-                if (currPage != HomePage.routeName) {
-                  Navigator.pushNamed(context, HomePage.routeName);
-                }
-              },
-            ),
-            IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: const Icon(
-                  Icons.video_camera_front,
-                  color: Colors.white,
-                  size: 40.0,
-                ),
-                onPressed: () {
-                  if (currPage != DisplayVideoPage.routeName) {
-                    Navigator.pushNamed(context, DisplayVideoPage.routeName);
-                  }
-                }),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: const Icon(
-                Icons.bar_chart_outlined,
-                color: Colors.white,
-                size: 40.0,
-              ),
-              onPressed: () {
-                if (currPage != StatsPage.routeName) {
-                  Navigator.pushNamed(context, StatsPage.routeName);
-                }
-              },
-            ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: const Icon(
-                Icons.settings_rounded,
-                color: Colors.white,
-                size: 40.0,
-              ),
-              onPressed: () {
-                if (currPage != "settings") {
-                  Navigator.pushNamed(context, SettingsPage.routeName);
-                }
-              },
-            ),
-          ],
-        )),
-  );
+class _NavigationItem {
+  final String routeName;
+  final IconData icon;
+  final String labelKey;
+
+  const _NavigationItem({
+    required this.routeName,
+    required this.icon,
+    required this.labelKey,
+  });
 }

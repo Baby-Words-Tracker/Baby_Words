@@ -118,12 +118,149 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<UserModelService>(context, listen: false);
 
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: const Color.fromARGB(255, 0, 0, 0),
+      brightness: Brightness.light,
+    );
+    final darkColorScheme = ColorScheme.fromSeed(
+      seedColor: const Color.fromARGB(255, 0, 0, 0),
+      brightness: Brightness.dark,
+    );
+
     return MaterialApp(
         title: 'WordBuds Root',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+          colorScheme: colorScheme,
           useMaterial3: true,
+          scaffoldBackgroundColor: colorScheme.surface,
+          appBarTheme: AppBarTheme(
+            backgroundColor: colorScheme.surface,
+            foregroundColor: colorScheme.onSurface,
+            elevation: 0,
+            titleTextStyle: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          cardTheme: CardThemeData(
+            color: colorScheme.surface,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            backgroundColor: colorScheme.surface,
+            indicatorColor: colorScheme.primaryContainer,
+            elevation: 0,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+              (states) {
+                final selected = states.contains(WidgetState.selected);
+                return IconThemeData(
+                  size: selected ? 34 : 30,
+                  color: selected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                );
+              },
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+            ),
+            hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+          ),
         ),
+        darkTheme: ThemeData(
+          colorScheme: darkColorScheme,
+          useMaterial3: true,
+          scaffoldBackgroundColor: darkColorScheme.surface,
+          appBarTheme: AppBarTheme(
+            backgroundColor: darkColorScheme.surface,
+            foregroundColor: darkColorScheme.onSurface,
+            elevation: 0,
+            titleTextStyle: TextStyle(
+              color: darkColorScheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          cardTheme: CardThemeData(
+            color: darkColorScheme.surface,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            backgroundColor: darkColorScheme.surface,
+            indicatorColor: darkColorScheme.primaryContainer,
+            elevation: 0,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+              (states) {
+                final selected = states.contains(WidgetState.selected);
+                return IconThemeData(
+                  size: selected ? 34 : 30,
+                  color: selected
+                      ? darkColorScheme.onPrimaryContainer
+                      : darkColorScheme.onSurfaceVariant,
+                );
+              },
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: darkColorScheme.primary,
+              foregroundColor: darkColorScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: darkColorScheme.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  BorderSide(color: darkColorScheme.primary, width: 1.5),
+            ),
+            hintStyle: TextStyle(color: darkColorScheme.onSurfaceVariant),
+          ),
+        ),
+        themeMode: ThemeMode.system, // Set light or dark mode based on system settings
         initialRoute:
             AuthGate.routeName, // Set the initial route to force user to login
         routes: {
