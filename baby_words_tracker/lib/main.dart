@@ -118,38 +118,42 @@ class MyApp extends StatelessWidget {
     Provider.of<UserModelService>(context, listen: false);
 
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color.fromARGB(255, 0, 0, 0),
+      seedColor: const Color(0xFFD64545),
       brightness: Brightness.light,
     );
     final darkColorScheme = ColorScheme.fromSeed(
-      seedColor: const Color.fromARGB(255, 0, 0, 0),
+      seedColor: const Color(0xFFD64545),
       brightness: Brightness.dark,
     );
 
     return MaterialApp(
         title: 'WordBuds Root',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: colorScheme,
           useMaterial3: true,
+          platform: TargetPlatform.iOS,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
           scaffoldBackgroundColor: colorScheme.surface,
           appBarTheme: AppBarTheme(
             backgroundColor: colorScheme.surface,
             foregroundColor: colorScheme.onSurface,
             elevation: 0,
-            titleTextStyle: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+            titleTextStyle: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
             ),
           ),
           cardTheme: CardThemeData(
             color: colorScheme.surface,
-            elevation: 2,
+            elevation: 1,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
             ),
+            margin: const EdgeInsets.symmetric(vertical: 8),
           ),
           navigationBarTheme: NavigationBarThemeData(
+            height: 68,
             backgroundColor: colorScheme.surface,
             indicatorColor: colorScheme.primaryContainer,
             elevation: 0,
@@ -158,7 +162,7 @@ class MyApp extends StatelessWidget {
               (states) {
                 final selected = states.contains(WidgetState.selected);
                 return IconThemeData(
-                  size: selected ? 34 : 30,
+                  size: selected ? 28 : 26,
                   color: selected
                       ? colorScheme.onPrimaryContainer
                       : colorScheme.onSurfaceVariant,
@@ -166,29 +170,32 @@ class MyApp extends StatelessWidget {
               },
             ),
           ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              elevation: 0,
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+              shape: const StadiumBorder(),
               padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: colorScheme.surfaceContainerHighest,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide(color: colorScheme.primary, width: 1),
             ),
             hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
@@ -196,6 +203,8 @@ class MyApp extends StatelessWidget {
         darkTheme: ThemeData(
           colorScheme: darkColorScheme,
           useMaterial3: true,
+          platform: TargetPlatform.iOS,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
           scaffoldBackgroundColor: darkColorScheme.surface,
           appBarTheme: AppBarTheme(
             backgroundColor: darkColorScheme.surface,
@@ -231,30 +240,33 @@ class MyApp extends StatelessWidget {
               },
             ),
           ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              elevation: 0,
               backgroundColor: darkColorScheme.primary,
               foregroundColor: darkColorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
+              shape: const StadiumBorder(),
               padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: darkColorScheme.surfaceContainerHighest,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide:
-                  BorderSide(color: darkColorScheme.primary, width: 1.5),
+                  BorderSide(color: darkColorScheme.primary, width: 1),
             ),
             hintStyle: TextStyle(color: darkColorScheme.onSurfaceVariant),
           ),
