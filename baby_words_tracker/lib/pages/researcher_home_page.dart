@@ -64,8 +64,10 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
           .changeLocale(LanguageCode.en);
     }
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Row(
           children: [
