@@ -128,14 +128,20 @@ Consumer addCurrentChildToOtherParentFeature(
     BuildContext context, TextEditingController otherParentEmailController) {
   return Consumer<LocalizationService>(
       builder: (context, localizationService, child) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(localizationService.translate("child_to_new_parent"),
-            style: const TextStyle(
-                fontSize: 27.0,
-                color: Color(0xFF9E1B32),
-                fontWeight: FontWeight.bold)),
+        Text(
+          localizationService.translate("child_to_new_parent"),
+          style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w700) ??
+              TextStyle(
+                  fontSize: 27,
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 20.0),
         TextField(
           controller: otherParentEmailController,

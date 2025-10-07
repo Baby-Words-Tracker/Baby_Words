@@ -48,34 +48,48 @@ class _AddSettingsPage extends State<SettingsPage> {
                     height: 25.0,
                   ),
                   Center(
-                    child: Text(localizationService.translate("settings"),
-                        style: const TextStyle(
-                            fontSize: 32.0,
-                            color: Color(0xFF9E1B32),
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      localizationService.translate("settings"),
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w700) ??
+                          TextStyle(
+                              fontSize: 32,
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w700),
+                    ),
                   ),
                   const SizedBox(
                     height: 60,
                   ),
-                  Text(localizationService.translate("parent_settings"),
-                      style: const TextStyle(
-                          fontSize: 27.0,
-                          color: Color(0xFF9E1B32),
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    localizationService.translate("parent_settings"),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w700) ??
+                        TextStyle(
+                            fontSize: 27,
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 20.0),
                   Row(
                     //change language switch
                     children: [
-                      Text(localizationService.translate("select_language"),
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                            color: Color(0xFF9E1B32),
-                            fontWeight: FontWeight.bold,
-                          )),
+                      Text(
+                        localizationService.translate("select_language"),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600) ??
+                            TextStyle(
+                                fontSize: 18,
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(width: 50.0),
-                      const Text(
+                      Text(
                         'English',
-                        style: TextStyle(fontSize: 16),
+                        style: theme.textTheme.bodyMedium,
                       ),
                       Switch(
                         value: _isSpanish,
@@ -100,9 +114,9 @@ class _AddSettingsPage extends State<SettingsPage> {
                           });
                         },
                       ),
-                      const Text(
+                      Text(
                         'Español',
-                        style: TextStyle(fontSize: 16),
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -134,14 +148,20 @@ class _AddSettingsPage extends State<SettingsPage> {
       List<LanguageCode> selectedLanguages) {
     return Consumer<LocalizationService>(
         builder: (context, localizationService, child) {
+      final theme = Theme.of(context);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(localizationService.translate("add_child"),
-              style: const TextStyle(
-                  fontSize: 27.0,
-                  color: Color(0xFF9E1B32),
-                  fontWeight: FontWeight.bold)),
+          Text(
+            localizationService.translate("add_child"),
+            style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700) ??
+                TextStyle(
+                    fontSize: 27,
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 20.0),
           TextField(
             controller: nameController,
@@ -169,14 +189,21 @@ class _AddSettingsPage extends State<SettingsPage> {
             ),
           ),
           const SizedBox(height: 20.0),
-          Text(localizationService.translate("select_language"),
-              style: const TextStyle(
-                fontSize: 18.0,
-                color: Color(0xFF9E1B32),
-                fontWeight: FontWeight.bold,
-              )),
+          Text(
+            localizationService.translate("select_language"),
+            style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600) ??
+                TextStyle(
+                    fontSize: 18,
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600),
+          ),
           CheckboxListTile(
-            title: const Text("English"),
+            title: Text(
+              "English",
+              style: theme.textTheme.bodyLarge,
+            ),
             value: selectedLanguages.contains(LanguageCode.en),
             onChanged: (bool? value) {
               setState(() {
@@ -189,7 +216,10 @@ class _AddSettingsPage extends State<SettingsPage> {
             },
           ),
           CheckboxListTile(
-            title: const Text("Español"),
+            title: Text(
+              "Español",
+              style: theme.textTheme.bodyLarge,
+            ),
             value: selectedLanguages.contains(LanguageCode.es),
             onChanged: (bool? value) {
               setState(() {
