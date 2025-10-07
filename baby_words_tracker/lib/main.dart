@@ -132,7 +132,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: colorScheme,
           useMaterial3: true,
-          platform: TargetPlatform.iOS,
+          //platform: TargetPlatform.iOS,
           visualDensity: VisualDensity.adaptivePlatformDensity,
           textTheme: _buildTextTheme(ThemeData.light().textTheme, colorScheme),
           scaffoldBackgroundColor: colorScheme.surface,
