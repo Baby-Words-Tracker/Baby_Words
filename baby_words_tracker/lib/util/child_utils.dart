@@ -145,45 +145,35 @@ Consumer addCurrentChildToOtherParentFeature(
         const SizedBox(height: 20.0),
         TextField(
           controller: otherParentEmailController,
+          keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
-            //border: OutlineInputBorder(),
+            labelText: localizationService.translate("choose_email"),
             hintText: localizationService.translate("choose_email"),
-            hintStyle: const TextStyle(color: Colors.white),
-            filled: true,
-            fillColor: const Color(0xFF9E1B32),
+            suffixIcon: Icon(
+              Icons.alternate_email,
+              color: theme.colorScheme.primary,
+            ),
           ),
         ),
         const SizedBox(height: 20.0),
-        Center(
-            child: OutlinedButton(
-          onPressed: () {
-            if (otherParentEmailController.text !=
-                "") //add the word to the child with the id, or the default testing child if no input
-            {
-              //add child
-              addCurrentChildToOtherParent(
-                  context, otherParentEmailController.text);
-            } else {
-              //failed to add indicator //FIXME: better error checking
-              showAlertMessage(
-                  context,
-                  localizationService.translate("child_not_added"),
-                  localizationService.translate("no_email"));
-            }
-            otherParentEmailController.clear();
-          },
-          style: OutlinedButton.styleFrom(
-            backgroundColor: const Color(0xFF828A8F),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            side: const BorderSide(color: Colors.white, width: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () {
+              if (otherParentEmailController.text.isNotEmpty) {
+                addCurrentChildToOtherParent(
+                    context, otherParentEmailController.text);
+              } else {
+                showAlertMessage(
+                    context,
+                    localizationService.translate("child_not_added"),
+                    localizationService.translate("no_email"));
+              }
+              otherParentEmailController.clear();
+            },
+            child: Text(localizationService.translate("submit")),
           ),
-          child: Text(localizationService.translate("submit"),
-              style: TextStyle(fontSize: 18)),
-        )),
+        ),
       ],
     );
   });
@@ -220,12 +210,8 @@ Consumer childAddingFeature(
         TextField(
           controller: nameController,
           decoration: InputDecoration(
-            //border: OutlineInputBorder(),
-            hintText:
-                localizationService.translate("choose_name"), //'Choose Name..',
-            hintStyle: const TextStyle(color: Colors.white),
-            filled: true,
-            fillColor: const Color(0xFF9E1B32),
+            labelText: localizationService.translate("choose_name"),
+            hintText: localizationService.translate("choose_name"),
           ),
         ),
         TextField(

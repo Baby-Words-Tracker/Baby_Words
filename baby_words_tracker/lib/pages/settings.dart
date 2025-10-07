@@ -166,12 +166,8 @@ class _AddSettingsPage extends State<SettingsPage> {
           TextField(
             controller: nameController,
             decoration: InputDecoration(
-              //border: OutlineInputBorder(),
-              hintText: localizationService
-                  .translate("choose_name"), //'Choose Name..',
-              hintStyle: const TextStyle(color: Colors.white),
-              filled: true,
-              fillColor: const Color(0xFF9E1B32),
+              labelText: localizationService.translate("choose_name"),
+              hintText: localizationService.translate("choose_name"),
             ),
           ),
           const SizedBox(height: 20.0),
@@ -180,12 +176,12 @@ class _AddSettingsPage extends State<SettingsPage> {
             onTap: () => selectDate(context, dateController),
             readOnly: true,
             decoration: InputDecoration(
-              //border: OutlineInputBorder(),
-              hintText: localizationService
-                  .translate("choose_birthday"), //'Tap to Choose Birthday..',
-              hintStyle: const TextStyle(color: Colors.white),
-              filled: true,
-              fillColor: const Color(0xFF9E1B32),
+              labelText: localizationService.translate("choose_birthday"),
+              hintText: localizationService.translate("choose_birthday"),
+              suffixIcon: Icon(
+                Icons.calendar_today_rounded,
+                color: theme.colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(height: 20.0),
@@ -235,43 +231,29 @@ class _AddSettingsPage extends State<SettingsPage> {
             },
           ),
           const SizedBox(height: 20.0),
-          Center(
-              child: OutlinedButton(
-            onPressed: () {
-              if (nameController.text != "" && dateController.text != "") {
-                //add child
-                addChildToCurrParent(context, nameController.text,
-                    DateTime.parse(dateController.text), selectedLanguages);
-                //added indicator
-                showAlertMessage(
-                    context,
-                    localizationService.translate("child_added"),
-                    localizationService.translate(
-                        "add_child_success")); //"Child Added!", "Successfully added your child!");
-              } else {
-                //failed to add indicator //FIXME: better error checking
-                showAlertMessage(
-                    context,
-                    localizationService
-                        .translate("child_not_added"), //"Child Add Failed",
-                    localizationService.translate(
-                        "add_child_failed")); //"Failed to add yoour child, please try again.");
-              }
-              nameController.clear();
-              dateController.clear();
-            },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: const Color(0xFF828A8F),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              side: const BorderSide(color: Colors.white, width: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {
+                if (nameController.text != "" && dateController.text != "") {
+                  addChildToCurrParent(context, nameController.text,
+                      DateTime.parse(dateController.text), selectedLanguages);
+                  showAlertMessage(
+                      context,
+                      localizationService.translate("child_added"),
+                      localizationService.translate("add_child_success"));
+                } else {
+                  showAlertMessage(
+                      context,
+                      localizationService.translate("child_not_added"),
+                      localizationService.translate("add_child_failed"));
+                }
+                nameController.clear();
+                dateController.clear();
+              },
+              child: Text(localizationService.translate("submit")),
             ),
-            child: Text(localizationService.translate("submit"),
-                style: const TextStyle(fontSize: 18)),
-          )),
+          ),
         ],
       );
     });
