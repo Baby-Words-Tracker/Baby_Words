@@ -149,8 +149,10 @@ Widget buildSignInScreen(BuildContext context,
       print("Survey status: $status");
       if (status){
         Navigator.pushReplacementNamed(context, HomePage.routeName);
-      }else{
+      }else if (status == false){
         Navigator.pushReplacementNamed(context, SurveyPage.routeName);
+      } else {
+        Navigator.pushReplacementNamed(context, HomePage.routeName);
       }
     }),
   ],
