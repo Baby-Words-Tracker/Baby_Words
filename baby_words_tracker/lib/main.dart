@@ -118,38 +118,43 @@ class MyApp extends StatelessWidget {
     Provider.of<UserModelService>(context, listen: false);
 
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color.fromARGB(255, 0, 0, 0),
+      seedColor: const Color(0xFFD64545),
       brightness: Brightness.light,
     );
     final darkColorScheme = ColorScheme.fromSeed(
-      seedColor: const Color.fromARGB(255, 0, 0, 0),
+      seedColor: const Color(0xFFD64545),
       brightness: Brightness.dark,
     );
 
     return MaterialApp(
         title: 'WordBuds Root',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: colorScheme,
           useMaterial3: true,
+          //platform: TargetPlatform.iOS,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          textTheme: _buildTextTheme(ThemeData.light().textTheme, colorScheme),
           scaffoldBackgroundColor: colorScheme.surface,
           appBarTheme: AppBarTheme(
             backgroundColor: colorScheme.surface,
             foregroundColor: colorScheme.onSurface,
             elevation: 0,
-            titleTextStyle: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+            titleTextStyle: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
             ),
           ),
           cardTheme: CardThemeData(
             color: colorScheme.surface,
-            elevation: 2,
+            elevation: 1,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
             ),
+            margin: const EdgeInsets.symmetric(vertical: 8),
           ),
           navigationBarTheme: NavigationBarThemeData(
+            height: 68,
             backgroundColor: colorScheme.surface,
             indicatorColor: colorScheme.primaryContainer,
             elevation: 0,
@@ -158,7 +163,7 @@ class MyApp extends StatelessWidget {
               (states) {
                 final selected = states.contains(WidgetState.selected);
                 return IconThemeData(
-                  size: selected ? 34 : 30,
+                  size: selected ? 28 : 26,
                   color: selected
                       ? colorScheme.onPrimaryContainer
                       : colorScheme.onSurfaceVariant,
@@ -166,29 +171,32 @@ class MyApp extends StatelessWidget {
               },
             ),
           ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              elevation: 0,
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+              shape: const StadiumBorder(),
               padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: colorScheme.surfaceContainerHighest,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide(color: colorScheme.primary, width: 1),
             ),
             hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
@@ -196,6 +204,10 @@ class MyApp extends StatelessWidget {
         darkTheme: ThemeData(
           colorScheme: darkColorScheme,
           useMaterial3: true,
+          platform: TargetPlatform.iOS,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          textTheme:
+              _buildTextTheme(ThemeData.dark().textTheme, darkColorScheme),
           scaffoldBackgroundColor: darkColorScheme.surface,
           appBarTheme: AppBarTheme(
             backgroundColor: darkColorScheme.surface,
@@ -231,30 +243,33 @@ class MyApp extends StatelessWidget {
               },
             ),
           ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              elevation: 0,
               backgroundColor: darkColorScheme.primary,
               foregroundColor: darkColorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
+              shape: const StadiumBorder(),
               padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: darkColorScheme.surfaceContainerHighest,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide:
-                  BorderSide(color: darkColorScheme.primary, width: 1.5),
+                  BorderSide(color: darkColorScheme.primary, width: 1),
             ),
             hintStyle: TextStyle(color: darkColorScheme.onSurfaceVariant),
           ),
@@ -286,4 +301,46 @@ class MyApp extends StatelessWidget {
           Locale('es'),
         ]);
   }
+}
+
+TextTheme _buildTextTheme(TextTheme base, ColorScheme colorScheme) {
+  return base.copyWith(
+    displayLarge: base.displayLarge?.copyWith(
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+    ),
+    headlineLarge: base.headlineLarge?.copyWith(
+      fontSize: 34,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+    ),
+    headlineMedium: base.headlineMedium?.copyWith(
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
+    ),
+    titleLarge: base.titleLarge?.copyWith(
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+    ),
+    titleMedium: base.titleMedium?.copyWith(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+    ),
+    bodyLarge: base.bodyLarge?.copyWith(
+      fontSize: 17,
+      height: 1.4,
+    ),
+    bodyMedium: base.bodyMedium?.copyWith(
+      fontSize: 16,
+      height: 1.4,
+    ),
+    labelLarge: base.labelLarge?.copyWith(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.2,
+    ),
+  ).apply(
+    bodyColor: colorScheme.onSurface,
+    displayColor: colorScheme.onSurface,
+  );
 }

@@ -351,15 +351,8 @@ class _HomePageState extends State<HomePage> {
                               child: Text(
                                 message,
                                 style: theme.textTheme.headlineMedium
-                                        ?.copyWith(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.bold,
-                                    ) ??
-                                    TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                        ?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold) ??
+                                    TextStyle(color: theme.colorScheme.onSurface, fontSize: 32, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -378,7 +371,7 @@ class _HomePageState extends State<HomePage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            color: Colors.white,
+                            color: theme.colorScheme.surfaceContainerHighest,
                             elevation: 5,
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -400,14 +393,10 @@ class _HomePageState extends State<HomePage> {
                                           Text(
                                             // TODO: translate this
                                             "Last learned word is:",
-                                            // localizationService
-                                            //     .translate("most_recent"),
                                             textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: Color(0xFF9E1B32),
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                            style: theme.textTheme.titleMedium
+                                                    ?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w600) ??
+                                                TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
                                           ),
                                           if (snapshot.connectionState ==
                                               ConnectionState.waiting)
@@ -419,23 +408,19 @@ class _HomePageState extends State<HomePage> {
                                               fit: BoxFit.contain,
                                               child: Text(
                                                 word.capitalizeOrNA(),
-                                                style: const TextStyle(
-                                                  color: Color(0xFF9E1B32),
-                                                  fontSize: 40,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                                style: theme.textTheme.headlineMedium
+                                                        ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
+                                                    TextStyle(color: theme.colorScheme.primary, fontSize: 34, fontWeight: FontWeight.w700),
                                               ),
                                             ),
                                           if (snapshot.connectionState !=
                                                   ConnectionState.waiting &&
                                               !snapshot.hasData)
-                                            const Text(
+                                            Text(
                                               "N/A",
-                                              style: TextStyle(
-                                                color: Color(0xFF9E1B32),
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                              style: theme.textTheme.titleLarge
+                                                      ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
+                                                  TextStyle(color: theme.colorScheme.primary, fontSize: 20, fontWeight: FontWeight.w700),
                                             ),
                                         ],
                                       ),
@@ -453,7 +438,7 @@ class _HomePageState extends State<HomePage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            color: Colors.white,
+                            color: theme.colorScheme.surfaceContainerHighest,
                             elevation: 5,
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -474,12 +459,10 @@ class _HomePageState extends State<HomePage> {
                                           Text(
                                             localizationService.translate(
                                                 "words_in_past_week"),
-                                            style: const TextStyle(
-                                              color: Color(0xFF9E1B32),
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
                                             textAlign: TextAlign.center,
+                                            style: theme.textTheme.titleMedium
+                                                    ?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w600) ??
+                                                TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
                                           ),
                                           if (snapshot.connectionState ==
                                               ConnectionState.waiting)
@@ -491,23 +474,19 @@ class _HomePageState extends State<HomePage> {
                                               fit: BoxFit.contain,
                                               child: Text(
                                                 "${snapshot.data ?? 0}",
-                                                style: const TextStyle(
-                                                  color: Color(0xFF9E1B32),
-                                                  fontSize: 40,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                                style: theme.textTheme.headlineMedium
+                                                        ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
+                                                    TextStyle(color: theme.colorScheme.primary, fontSize: 34, fontWeight: FontWeight.w700),
                                               ),
                                             ),
                                           if (snapshot.connectionState !=
                                                   ConnectionState.waiting &&
                                               !snapshot.hasData)
-                                            const Text(
+                                            Text(
                                               "N/A",
-                                              style: TextStyle(
-                                                color: Color(0xFF9E1B32),
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                              style: theme.textTheme.titleLarge
+                                                      ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
+                                                  TextStyle(color: theme.colorScheme.primary, fontSize: 20, fontWeight: FontWeight.w700),
                                             ),
                                         ],
                                       ),
@@ -523,34 +502,18 @@ class _HomePageState extends State<HomePage> {
                     Center(
                       child: Text(
                         localizationService.translate("child_said"),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ) ??
-                            TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: theme.textTheme.titleLarge
+                                ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold) ??
+                            TextStyle(color: theme.colorScheme.primary, fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
                     TextField(
                       controller: _controller,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
+                        labelText: localizationService.translate("child_said"),
                         hintText: localizationService.translate("enter_text"),
-                        hintStyle: const TextStyle(color: Colors.white),
-                        filled: true,
-                        fillColor: const Color(0xFF9E1B32),
-                        border: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.black),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.black,
-                            width: 1.5,
-                          ),
-                        ),
-                        // hoverColor: Colors.white,
                       ),
                       onSubmitted: (_) => _addCurrentWords(
                         currentChildrenService,
@@ -564,40 +527,32 @@ class _HomePageState extends State<HomePage> {
                       Center(
                         child: TextField(
                           controller: fileTextController,
-                          onTap: () => selectFile(fileTextController),
                           readOnly: true,
+                          onTap: () => selectFile(fileTextController),
                           decoration: InputDecoration(
-                            //border: OutlineInputBorder(),
-                            hintText:
+                            labelText:
                                 localizationService.translate("choose_file"),
-                            hintStyle: const TextStyle(color: Colors.white),
-                            filled: true,
-                            fillColor: const Color(0xFF9E1B32),
+                            suffixIcon: Icon(
+                              Icons.attach_file,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
                         ),
                       ),
                     const SizedBox(
                       height: 5,
                     ),
-                    Center(
-                        child: OutlinedButton(
-                      onPressed: () => _addCurrentWords(
-                        currentChildrenService,
-                        localizationService,
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: const Color(0xFF828A8F),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => _addCurrentWords(
+                          currentChildrenService,
+                          localizationService,
                         ),
-                        side: const BorderSide(color: Colors.white, width: 2),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 25, vertical: 0),
+                        child: Text(
+                            localizationService.translate("submit")),
                       ),
-                      child: Text(localizationService.translate("submit"),
-                          style: const TextStyle(fontSize: 18)),
-                    )),
+                    ),
                   ],
                 ),
               ),

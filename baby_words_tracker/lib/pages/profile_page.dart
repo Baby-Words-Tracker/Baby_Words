@@ -12,9 +12,21 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LocalizationService>(
         builder: (context, localizationService, child) {
+      final theme = Theme.of(context);
       return ProfileScreen(
         appBar: AppBar(
-          title: Text(localizationService.translate("profile")),
+          backgroundColor: theme.colorScheme.surface,
+          elevation: 0,
+          title: Text(
+            localizationService.translate("profile"),
+            style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ) ??
+                const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
         ),
         actions: [
           SignedOutAction((context) {
