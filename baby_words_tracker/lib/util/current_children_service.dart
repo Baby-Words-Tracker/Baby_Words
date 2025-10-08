@@ -1,5 +1,5 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:baby_words_tracker/auth/new_user_model_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
@@ -17,7 +17,7 @@ class CurrentChildrenService extends ChangeNotifier {
   bool _dataRetrieved = false;
 
   final UserModelService _userService;
-  final NewUserModelService? _newUserService;
+  final UserProfileModelService? _userProfileService;
   final ChildDataService _childService;
 
   int getChildIndex() {
@@ -26,15 +26,15 @@ class CurrentChildrenService extends ChangeNotifier {
 
   CurrentChildrenService({
     required UserModelService userService,
-    NewUserModelService? newUserService,
+    UserProfileModelService? userProfileService,
     required ChildDataService childService,
   })  : _userService = userService,
-        _newUserService = newUserService,
+        _userProfileService = userProfileService,
         _childService = childService {
     _parentSynchronizer = SafeSynchronizer(() async {
       // Try new system first
-      if (_newUserService != null) {
-        final profile = _newUserService.userProfile;
+      if (_userProfileService != null) {
+        final profile = _userProfileService.userProfile;
         if (profile != null && profile.isParent && profile.childIDs.isNotEmpty) {
           return updateChildrenFromIds(profile.childIDs);
         }
@@ -53,7 +53,7 @@ class CurrentChildrenService extends ChangeNotifier {
       }
     });
     _userService.addListener(_parentSynchronizer.safeSynchronize);
-    _newUserService?.addListener(_parentSynchronizer.safeSynchronize);
+    _userProfileService?.addListener(_parentSynchronizer.safeSynchronize);
   }
 
   List<Child>? getCurrChildren() {

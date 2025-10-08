@@ -3,7 +3,7 @@ import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:baby_words_tracker/auth/new_user_model_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
@@ -104,11 +104,11 @@ class _AddSettingsPage extends State<SettingsPage> {
                           }
                           
                           // Try new system first
-                          final newUserModelService = Provider.of<NewUserModelService>(
+                          final userProfileModelService = Provider.of<UserProfileModelService>(
                               context, listen: false);
                           final userProfileService = Provider.of<UserProfileService>(
                               context, listen: false);
-                          final userId = newUserModelService.userProfile?.id;
+                          final userId = userProfileModelService.userProfile?.id;
                           
                           if (userId != null) {
                             // Update language preference in UserProfile

@@ -128,15 +128,18 @@ class UserProfileService extends ChangeNotifier {
   }
   
   /// Enable 2FA
-  Future<bool> enable2FA(String userId, {bool isDemo = false}) async {
-    return updateUserProfile(
-      userId,
-      {
-        'twoFactorEnabled': true,
-        'twoFactorEnabledAt': DateTime.now(),
-      },
-      isDemo: isDemo,
-    );
+  Future<bool> enable2FA(String userId, {String? phoneNumber, bool isDemo = false}) async {
+    final updates = {
+      'twoFactorEnabled': true,
+      'twoFactorEnabledAt': DateTime.now(),
+    };
+    
+    // Optionally save phone number if provided
+    if (phoneNumber != null) {
+      updates['phoneNumber'] = phoneNumber;
+    }
+    
+    return updateUserProfile(userId, updates, isDemo: isDemo);
   }
   
   /// Disable 2FA

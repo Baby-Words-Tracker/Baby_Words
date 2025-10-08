@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 /// Manages user profile data and synchronization with authentication state
 /// Replaces the old UserModelService with cleaner UserProfile-based logic
-class NewUserModelService extends ChangeNotifier {
+class UserProfileModelService extends ChangeNotifier {
   late final SafeSynchronizer _synchronizer;
 
   UserProfile? _userProfile;
@@ -18,7 +18,7 @@ class NewUserModelService extends ChangeNotifier {
 
   int _syncCounter = 0;
 
-  NewUserModelService({
+  UserProfileModelService({
     required AuthenticationService authenticationService,
     required UserProfileService userProfileService,
   })  : _authenticationService = authenticationService,
@@ -26,9 +26,9 @@ class NewUserModelService extends ChangeNotifier {
     _synchronizer = SafeSynchronizer(_synchronizeUser);
 
     _authenticationService.addListener(() {
-      debugPrint("NewUserModelService: Auth change detected, triggering resync");
+      debugPrint("UserProfileModelService: Auth change detected, triggering resync");
       _synchronizer.safeSynchronize().catchError((e) {
-        debugPrint("NewUserModelService: Error during sync: $e\n${e.stackTrace}");
+        debugPrint("UserProfileModelService: Error during sync: $e\n${e.stackTrace}");
       });
     });
   }
@@ -36,14 +36,14 @@ class NewUserModelService extends ChangeNotifier {
   /// Synchronize user profile with authentication state
   Future<void> _synchronizeUser() async {
     final syncId = ++_syncCounter;
-    debugPrint("NewUserModelService [$syncId]: Starting synchronization");
+    debugPrint("UserProfileModelService [$syncId]: Starting synchronization");
 
     try {
       // Not authenticated - clear profile
       if (!_authenticationService.isAuthenticated ||
           _authenticationService.userId == null) {
         _unauthenticateUser();
-        debugPrint("NewUserModelService [$syncId]: User not authenticated");
+        debugPrint("UserProfileModelService [$syncId]: User not authenticated");
         return;
       }
 
@@ -54,16 +54,16 @@ class NewUserModelService extends ChangeNotifier {
       final isDemo = customClaims['demo'] == true;
 
       // Try to get existing profile
-      debugPrint("NewUserModelService [$syncId]: Fetching profile for $userId");
+      debugPrint("UserProfileModelService [$syncId]: Fetching profile for $userId");
       UserProfile? profile = await _userProfileService.getUserProfile(
         userId,
         isDemo: isDemo,
       );
-      debugPrint("NewUserModelService [$syncId]: Profile fetched: ${profile != null}");
+      debugPrint("UserProfileModelService [$syncId]: Profile fetched: ${profile != null}");
 
       // If profile doesn't exist, create it
       if (profile == null) {
-        debugPrint("NewUserModelService [$syncId]: Creating new UserProfile for $userId");
+        debugPrint("UserProfileModelService [$syncId]: Creating new UserProfile for $userId");
         
         profile = UserProfile(
           id: userId,
@@ -81,13 +81,13 @@ class NewUserModelService extends ChangeNotifier {
         }
       }
 
-      debugPrint("NewUserModelService [$syncId]: About to setup listener, current listener: ${_listener != null}");
+      debugPrint("UserProfileModelService [$syncId]: About to setup listener, current listener: ${_listener != null}");
       // Set up or refresh real-time listener FIRST
       if (_listener == null) {
         _setupListener(userId, isDemo: isDemo);
       }
       
-      debugPrint("NewUserModelService [$syncId]: Setting profile and notifying");
+      debugPrint("UserProfileModelService [$syncId]: Setting profile and notifying");
       // Set profile and notify (this ensures isAuthenticated returns true)
       // Mirror latest Firebase Auth displayName into UserProfile name if missing/stale
       final latestName = _authenticationService.userName;
@@ -105,20 +105,20 @@ class NewUserModelService extends ChangeNotifier {
       
       final roleName = _userProfile?.role.name ?? 'unknown';
       final statusName = _userProfile?.status.name ?? 'unknown';
-      debugPrint("NewUserModelService [$syncId]: Sync complete - $roleName ($statusName)");
+      debugPrint("UserProfileModelService [$syncId]: Sync complete - $roleName ($statusName)");
       
       // ALWAYS notify at the end to ensure UI updates
       notifyListeners();
-      debugPrint("NewUserModelService [$syncId]: notifyListeners() called");
+      debugPrint("UserProfileModelService [$syncId]: notifyListeners() called");
     } catch (e, stack) {
-      debugPrint("NewUserModelService [$syncId]: Sync failed: $e\n$stack");
+      debugPrint("UserProfileModelService [$syncId]: Sync failed: $e\n$stack");
       rethrow; // Let error bubble up for UI to handle
     }
   }
 
   /// Set up real-time listener for profile updates
   void _setupListener(String userId, {bool isDemo = false}) {
-    debugPrint("NewUserModelService: Setting up listener for $userId (demo: $isDemo)");
+    debugPrint("UserProfileModelService: Setting up listener for $userId (demo: $isDemo)");
     
     // Dispose old listener
     _listener?.dispose();
@@ -131,7 +131,7 @@ class NewUserModelService extends ChangeNotifier {
       final data = _listener!.data;
       
       if (data == null) {
-        debugPrint("NewUserModelService: Profile deleted or error, unauthenticating");
+        debugPrint("UserProfileModelService: Profile deleted or error, unauthenticating");
         _unauthenticateUser();
         return;
       }
@@ -139,14 +139,14 @@ class NewUserModelService extends ChangeNotifier {
       if (data is UserProfile) {
         // Update profile from listener
         _userProfile = data;
-        debugPrint("NewUserModelService: Profile updated from listener");
+        debugPrint("UserProfileModelService: Profile updated from listener");
         notifyListeners();
       }
     });
     
     // Wait for first document
     _listener!.waitForFirstDocument().then((_) {
-      debugPrint("NewUserModelService: First document received");
+      debugPrint("UserProfileModelService: First document received");
     });
   }
 
@@ -155,7 +155,7 @@ class NewUserModelService extends ChangeNotifier {
     _listener?.dispose();
     _listener = null;
     _userProfile = null;
-    debugPrint("NewUserModelService: User unauthenticated");
+    debugPrint("UserProfileModelService: User unauthenticated");
     notifyListeners();
   }
 
@@ -187,7 +187,7 @@ class NewUserModelService extends ChangeNotifier {
     bool accepted = true,
   }) async {
     if (_userProfile == null) {
-      debugPrint("NewUserModelService: Cannot accept policy - no profile");
+      debugPrint("UserProfileModelService: Cannot accept policy - no profile");
       return;
     }
 
@@ -201,7 +201,7 @@ class NewUserModelService extends ChangeNotifier {
   /// Mark survey as complete
   Future<void> completeSurvey({required String surveyVersion}) async {
     if (_userProfile == null) {
-      debugPrint("NewUserModelService: Cannot complete survey - no profile");
+      debugPrint("UserProfileModelService: Cannot complete survey - no profile");
       return;
     }
 
@@ -213,14 +213,15 @@ class NewUserModelService extends ChangeNotifier {
   }
 
   /// Enable 2FA
-  Future<void> enable2FA() async {
+  Future<void> enable2FA({String? phoneNumber}) async {
     if (_userProfile == null) {
-      debugPrint("NewUserModelService: Cannot enable 2FA - no profile");
+      debugPrint("UserProfileModelService: Cannot enable 2FA - no profile");
       return;
     }
 
     await _userProfileService.enable2FA(
       _userProfile!.id,
+      phoneNumber: phoneNumber,
       isDemo: isDemoUser,
     );
   }

@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "37552098276-62gnq8ula4275n94hoev1hdh6dd33vuc.apps.googleusercontent.com",
+          "client_id": "37552098276-hkn4orbdlo0b93t75a7cmorr8btpjs0a.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.baby_words_tracker",
-            "certificate_hash": "93765a07abcfb1a4445768b6add59917cbc36c76"
+            "certificate_hash": "dc4d1e10acad895b7f0fea9c60ffceabcada955f"
           }
         },
         {

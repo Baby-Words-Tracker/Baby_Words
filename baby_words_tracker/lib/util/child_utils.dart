@@ -1,4 +1,4 @@
-import 'package:baby_words_tracker/auth/new_user_model_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
@@ -55,10 +55,10 @@ Future<void> callAddChildToOtherParentCloudFunction(
 Future<void> addCurrentChildToOtherParent(
     BuildContext context, String otherParentEmail) async {
   // Use new user model service
-  final newUserModelService = context.read<NewUserModelService>();
-  final userId = newUserModelService.userProfile?.id;
+  final userProfileModelService = context.read<UserProfileModelService>();
+  final userId = userProfileModelService.userProfile?.id;
   
-  if (userId == null || !newUserModelService.isParent) {
+  if (userId == null || !userProfileModelService.isParent) {
     showAlertMessage(
         context, "Child Add Failed", "You're somehow not a parent?????");
     return;
@@ -182,11 +182,11 @@ Consumer addCurrentChildToOtherParentFeature(
 Future<void> addChildToCurrParent(BuildContext context, String name,
     DateTime bday, List<LanguageCode> langauges) async {
   // Use new user model service and user profile service
-  final newUserModelService = context.read<NewUserModelService>();
+  final userProfileModelService = context.read<UserProfileModelService>();
   final userProfileService = context.read<UserProfileService>();
-  final userId = newUserModelService.userProfile?.id;
+  final userId = userProfileModelService.userProfile?.id;
   
-  if (userId != null && newUserModelService.isParent) {
+  if (userId != null && userProfileModelService.isParent) {
     // Create child
     Child? child = await context
         .read<ChildDataService>()
@@ -202,7 +202,7 @@ Future<void> addChildToCurrParent(BuildContext context, String name,
         // Proactively refresh current children list for immediate UI update
         final currentChildrenService = context.read<CurrentChildrenService>();
         final updatedIds = List<String>.from(
-          newUserModelService.userProfile?.childIDs ?? const <String>[],
+          userProfileModelService.userProfile?.childIDs ?? const <String>[],
         )..add(childId);
         await currentChildrenService.updateChildrenFromIds(updatedIds);
       } catch (e) {

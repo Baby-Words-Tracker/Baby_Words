@@ -1,9 +1,14 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/auth/new_user_model_service.dart';
+import 'package:baby_words_tracker/auth/onboarding_flow_manager.dart';
+import 'package:baby_words_tracker/auth/tutorial_flow_manager.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/user_profile.dart';
-import 'package:baby_words_tracker/pages/required_survey_page.dart';
-import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
-import 'package:baby_words_tracker/util/safe_synchronizer.dart';
+import 'package:baby_words_tracker/pages/onboarding/email_verification_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/phone_verification_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/privacy_policy_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
+import 'package:baby_words_tracker/pages/tutorial/welcome_page.dart';
+import 'package:baby_words_tracker/pages/tutorial/add_first_child_page.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
@@ -28,58 +33,13 @@ class NewAuthGate extends StatefulWidget {
 }
 
 class _NewAuthGateState extends State<NewAuthGate> {
-  static final _privacyPolicyCheckSynchronizer =
-      SafeSynchronizer(getUserConsent, queueFunctionCalls: false);
-  late final NewUserModelService _userModelService;
-
-  bool _initialized = false;
-
+  // Track tutorial progress locally to handle welcome screen completion
+  bool _welcomeCompleted = false;
+  
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _userModelService = Provider.of<NewUserModelService>(context, listen: false);
-      _userModelService.addListener(_consentListener);
-
-      _initialized = true;
-
-      debugPrint("NewAuthGate: Listener added to NewUserModelService");
-      debugPrint("NewAuthGate: NewAuthGate initialized");
-    }
-  }
-
-  @override
-  void dispose() {
-    debugPrint("NewAuthGate: Disposing NewAuthGate");
-    _userModelService.removeListener(_consentListener);
-    super.dispose();
-  }
-
-  void _consentListener() {
-    if (!mounted) {
-      debugPrint("NewAuthGate: Listener triggered but not mounted");
-      return;
-    }
-
-    debugPrint("NewAuthGate: NewUserModelService listener triggered");
-
-    // Only check privacy policy if user is fully authenticated and synced
-    final userModelService = Provider.of<NewUserModelService>(context, listen: false);
-    final authService = Provider.of<AuthenticationService>(context, listen: false);
-
-    if (!authService.isAuthenticated) {
-      debugPrint("NewAuthGate: User not authenticated, skipping privacy check");
-      return;
-    }
-
-    if (!userModelService.isAuthenticated) {
-      debugPrint("NewAuthGate: User profile not loaded, skipping privacy check");
-      return;
-    }
-
-    _privacyPolicyCheckSynchronizer.safeSynchronize([context]).catchError((e) {
-      debugPrint("NewAuthGate: Error checking privacy policy: $e\n${e.stackTrace}");
-    });
+  void initState() {
+    super.initState();
+    debugPrint("NewAuthGate: Initialized with OnboardingFlowManager");
   }
 
   String _getPlatformKey() {
@@ -100,9 +60,12 @@ class _NewAuthGateState extends State<NewAuthGate> {
     var localizationService = Provider.of<LocalizationService>(context, listen: true);
 
     return StreamBuilder<User?>(
-      stream: Provider.of<FirebaseAuth>(context).authStateChanges(),
+      // Use userChanges() instead of authStateChanges() to detect email verification
+      // userChanges() fires when user properties change (email verified, display name, etc.)
+      // authStateChanges() only fires on sign-in/sign-out
+      stream: Provider.of<FirebaseAuth>(context).userChanges(),
       builder: (context, snapshot) {
-        final userModelService = Provider.of<NewUserModelService>(context, listen: true);
+        final userModelService = Provider.of<UserProfileModelService>(context, listen: true);
 
         // Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -143,7 +106,6 @@ class _NewAuthGateState extends State<NewAuthGate> {
         final profile = userModelService.userProfile!;
 
         debugPrint('NewAuthGate: Profile loaded - role: ${profile.role.name}, status: ${profile.status.name}');
-        debugPrint('NewAuthGate: Privacy: ${profile.acceptedPrivacyPolicy}, Survey: ${profile.surveyCompleted}, Children: ${profile.childIDs.length}');
 
         // ==================== PLATFORM CHECK ====================
         final currentPlatform = _getCurrentPlatform();
@@ -152,41 +114,73 @@ class _NewAuthGateState extends State<NewAuthGate> {
           return _buildPlatformMismatchScreen(context, profile, currentPlatform);
         }
 
-        // ==================== PRIVACY POLICY CHECK ====================
-        debugPrint('NewAuthGate: Privacy policy check - accepted: ${profile.acceptedPrivacyPolicy}');
-        if (!profile.acceptedPrivacyPolicy) {
-          // Privacy dialog will be shown by listener
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Checking privacy policy...'),
-                ],
-              ),
-            ),
-          );
+        // ==================== ONBOARDING FLOW CHECK ====================
+        // Use OnboardingFlowManager to determine which step user is on
+        final onboardingStep = OnboardingFlowManager.getCurrentStep(
+          firebaseUser: user,
+          userProfile: profile,
+        );
+        
+        debugPrint('NewAuthGate: Onboarding step: ${onboardingStep?.displayName ?? 'N/A'}');
+        debugPrint(OnboardingFlowManager.getDebugStatus(
+          firebaseUser: user,
+          userProfile: profile,
+        ));
+
+        // Show appropriate onboarding screen based on current step
+        switch (onboardingStep) {
+          case OnboardingStep.emailVerification:
+            return const EmailVerificationPage();
+          
+          case OnboardingStep.phoneVerification:
+            return const PhoneVerificationPage();
+          
+          case OnboardingStep.privacyPolicy:
+            return const PrivacyPolicyPage();
+          
+          case OnboardingStep.survey:
+            return const SurveyPage();
+          
+          case OnboardingStep.completed:
+            // Onboarding complete - check if tutorial is needed
+            break;
+          
+          case null:
+            // Should not happen, but handle gracefully
+            debugPrint('NewAuthGate: Warning - onboardingStep is null');
+            break;
         }
 
-        // ==================== SURVEY CHECK (Parents only) ====================
-        debugPrint('NewAuthGate: Survey check - requires: ${profile.requiresSurvey}, completed: ${profile.surveyCompleted}');
-        if (profile.requiresSurvey) {
-          return const RequiredSurveyPage();
-        }
-
-        // ==================== 2FA CHECK ====================
-        // TODO: Implement 2FA flow when ready
-        // For now, just log that it's required
-        if (profile.requires2FA) {
-          debugPrint('NewAuthGate: 2FA required for ${profile.id} (not yet implemented)');
-          // Will add 2FA screen later
+        // ==================== TUTORIAL FLOW CHECK ====================
+        // After onboarding, check if user needs tutorial (parents only)
+        final needsTutorial = TutorialFlowManager.needsTutorial(profile);
+        debugPrint('NewAuthGate: Needs tutorial: $needsTutorial, welcomeCompleted: $_welcomeCompleted');
+        
+        if (needsTutorial) {
+          final tutorialStep = TutorialFlowManager.getCurrentStep(profile);
+          debugPrint('NewAuthGate: Tutorial step: ${tutorialStep.displayName}');
+          debugPrint(TutorialFlowManager.getDebugStatus(profile));
+          
+          // Show welcome screen first (if not already completed)
+          if (!_welcomeCompleted) {
+            return WelcomePage(
+              onComplete: () {
+                setState(() {
+                  _welcomeCompleted = true;
+                });
+              },
+            );
+          }
+          
+          // After welcome, show add first child
+          return const AddFirstChildPage();
+          // When child is added, TutorialFlowManager.needsTutorial() will return false
+          // and user will proceed to home page
         }
 
         // ==================== ALL CHECKS PASSED ====================
         // Navigate to appropriate home screen based on role
-        return Consumer<NewUserModelService>(
+        return Consumer<UserProfileModelService>(
           builder: (context, userModelService, child) {
             if (user == null) {
               throw Exception('User is null in NewAuthGate');

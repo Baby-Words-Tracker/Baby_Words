@@ -1,6 +1,6 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:baby_words_tracker/auth/new_user_model_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
 import 'package:flutter/material.dart';
@@ -81,9 +81,9 @@ Future<void> getUserConsent(BuildContext context) async {
         
         // Try new system first, fall back to old if needed
         try {
-          final newUserModelService = context.read<NewUserModelService>();
+          final userProfileModelService = context.read<UserProfileModelService>();
           final userProfileService = context.read<UserProfileService>();
-          final userId = newUserModelService.userProfile?.id;
+          final userId = userProfileModelService.userProfile?.id;
           
           if (userId != null) {
             await userProfileService.updateUserProfile(

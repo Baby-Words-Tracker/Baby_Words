@@ -10,7 +10,7 @@ import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 // Auth
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
-import 'package:baby_words_tracker/auth/new_user_model_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 
 //L10n
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -20,7 +20,7 @@ import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 // Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/new_auth_gate.dart';
-import 'package:baby_words_tracker/pages/required_survey_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'pages/add_text.dart';
@@ -58,6 +58,7 @@ void main() async {
     
     // Connect to Firebase Emulators in debug mode, but not for production. Uncomment for development.
     // await setupFirebaseEmulators();
+    
     //can probably remove this once adding the change notifyers
     runApp(
       // Provider used for dependency injection of database functions and configurations
@@ -92,8 +93,8 @@ void main() async {
             create: (_) => UserProfileService(),
           ),
           // NEW: UserModelService using UserProfile
-          ChangeNotifierProvider<NewUserModelService>(
-            create: (context) => NewUserModelService(
+          ChangeNotifierProvider<UserProfileModelService>(
+            create: (context) => UserProfileModelService(
               authenticationService:
                   Provider.of<AuthenticationService>(context, listen: false),
               userProfileService:
@@ -117,8 +118,8 @@ void main() async {
                   Provider.of<ChildDataService>(context, listen: false),
               userService:
                   Provider.of<UserModelService>(context, listen: false),
-              newUserService:
-                  Provider.of<NewUserModelService>(context, listen: false),
+              userProfileService:
+                  Provider.of<UserProfileModelService>(context, listen: false),
             ),
             lazy: false,
           ),
@@ -137,7 +138,7 @@ class MyApp extends StatelessWidget {
   // Root widget
   @override
   Widget build(BuildContext context) {
-    Provider.of<UserModelService>(context, listen: false);
+    Provider.of<UserProfileModelService>(context, listen: false);
 
     final colorScheme = ColorScheme.fromSeed(
       seedColor: const Color(0xFFD64545),
@@ -306,7 +307,7 @@ class MyApp extends StatelessWidget {
           AddTextPage.routeName: (context) => const AddTextPage(),
           AuthGate.routeName: (context) => const AuthGate(), // OLD: Keep for reference
           NewAuthGate.routeName: (context) => const NewAuthGate(), // NEW
-          RequiredSurveyPage.routeName: (context) => const RequiredSurveyPage(), // NEW
+          SurveyPage.routeName: (context) => const SurveyPage(),
           DisplayVideoPage.routeName: (context) => const DisplayVideoPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
           SettingsPage.routeName: (context) => const SettingsPage(),
