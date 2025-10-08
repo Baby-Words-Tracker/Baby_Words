@@ -1,0 +1,214 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==================== HELPER FUNCTIONS ====================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getUserProfile() {
+      return get(/databases/$(database)/documents/UserProfile/$(request.auth.uid));
+    }
+    
+    function getUserRole() {
+      return getUserProfile().data.role;
+    }
+    
+    function getUserStatus() {
+      return getUserProfile().data.status;
+    }
+    
+    function isRole(role) {
+      return getUserRole() == role;
+    }
+    
+    function isStatus(status) {
+      return getUserStatus() == status;
+    }
+    
+    function isActive() {
+      return isStatus('active');
+    }
+    
+    function isDemo() {
+      return isStatus('demo');
+    }
+    
+    function isAdmin() {
+      return isRole('admin');
+    }
+    
+    function isResearcher() {
+      return isRole('researcher') || isAdmin();
+    }
+    
+    function isParent() {
+      return isRole('parent');
+    }
+    
+    function hasSurveyCompleted() {
+      return getUserProfile().data.surveyCompleted == true;
+    }
+    
+    // ==================== USER PROFILE COLLECTION ====================
+    
+    match /UserProfile/{userId} {
+      // Users can read their own profile
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      
+      // Admins can read any profile
+      allow read: if isSignedIn() && isAdmin();
+      
+      // Users can create their own profile (during registration)
+      // Must set role to 'parent' by default
+      allow create: if isSignedIn() && 
+                       request.auth.uid == userId &&
+                       request.resource.data.role == 'parent' &&
+                       request.resource.data.status == 'active';
+      
+      // Users can update their own profile
+      // Cannot change role or status (only admins can)
+      allow update: if isSignedIn() && 
+                       request.auth.uid == userId &&
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.status == resource.data.status;
+      
+      // Admins can update any profile (including role/status)
+      allow update: if isSignedIn() && isAdmin();
+      
+      // No deletes allowed
+      allow delete: if false;
+    }
+    
+    // ==================== GLOBAL WORD BANK ====================
+    
+    match /Word/{word} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+    
+    // ==================== CHILD DOCUMENTS ====================
+    
+    match /Child/{childId} {
+      function userOwnsChild() {
+        let profile = getUserProfile();
+        return request.auth.uid in resource.data.parentIDs &&
+               childId in profile.data.childIDs;
+      }
+      
+      function userOwnsRequestedChild() {
+        // For creation: just check that user is in the parentIDs
+        // (childIDs will be updated after child creation)
+        return request.auth.uid in request.resource.data.parentIDs;
+      }
+      
+      // Parents can read/update their own children
+      allow read, update: if isSignedIn() && isActive() && userOwnsChild();
+      
+      // Researchers can read all children (active users only)
+      allow read: if isSignedIn() && isActive() && isResearcher();
+      
+      // Parents can create children (must complete survey first)
+      allow create: if isSignedIn() && 
+                       isActive() && 
+                       isParent() &&
+                       hasSurveyCompleted() &&
+                       userOwnsRequestedChild();
+      
+      // No deletes allowed
+      allow delete: if false;
+      
+      // WordTracker subcollection
+      match /WordTracker/{wordId} {
+        function parentOwnsChild() {
+          let childDoc = get(/databases/$(database)/documents/Child/$(childId));
+          return request.auth.uid in childDoc.data.parentIDs;
+        }
+        
+        // Parents can manage their children's word trackers
+        allow read, write, create, update: if isSignedIn() && 
+                                              isActive() && 
+                                              parentOwnsChild();
+        
+        // Researchers can read
+        allow read: if isSignedIn() && isActive() && isResearcher();
+        
+        // No deletes allowed
+        allow delete: if false;
+      }
+    }
+    
+    // ==================== DEMO COLLECTIONS ====================
+    
+    match /demo_UserProfile/{userId} {
+      // Demo users can only access their own profile
+      allow read, update: if isSignedIn() && isDemo() && request.auth.uid == userId;
+      
+      // Demo users can create their profile
+      allow create: if isSignedIn() && 
+                       isDemo() &&
+                       request.auth.uid == userId &&
+                       request.resource.data.status == 'demo';
+      
+      // Admins can access all demo profiles
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+    
+    match /demo_Child/{childId} {
+      // Demo users can manage demo children
+      allow read, write: if isSignedIn() && isDemo();
+      
+      // Admins can access
+      allow read, write: if isSignedIn() && isAdmin();
+      
+      match /WordTracker/{wordId} {
+        allow read, write: if isSignedIn() && isDemo();
+        allow read, write: if isSignedIn() && isAdmin();
+      }
+    }
+    
+    // Admin-only: full access to all demo collections
+    match /demo_UserProfile/{document=**} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+    
+    match /demo_Child/{document=**} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+    
+    match /demo_WordTracker/{document=**} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+    
+    match /demo_Word/{document=**} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+    
+    // ==================== LEGACY COLLECTIONS (READ-ONLY) ====================
+    // Keep these for migration period, then remove after 30 days
+    
+    match /Parent/{parentId} {
+      allow read: if isSignedIn();
+      allow write: if false; // No more writes to old collection
+    }
+    
+    match /Researcher/{researcherId} {
+      allow read: if isSignedIn();
+      allow write: if false; // No more writes to old collection
+    }
+    
+    match /User/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false; // No more writes to old collection
+    }
+    
+    // ==================== FALLBACK: DENY ALL ====================
+    // This ensures anything not explicitly allowed is denied
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/policy_consent_utils.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
@@ -53,11 +54,25 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   void _consentListener() {
-    if (mounted) {
-      debugPrint("AuthGate: UserModelService listener triggered");
-    } else {
+    if (!mounted) {
       debugPrint(
           "AuthGate: UserModelService listener triggered but context is not mounted");
+      return;
+    }
+    
+    debugPrint("AuthGate: UserModelService listener triggered");
+    
+    // Only check privacy policy if user is fully authenticated and synced
+    final userModelService = Provider.of<UserModelService>(context, listen: false);
+    final authService = Provider.of<AuthenticationService>(context, listen: false);
+    
+    if (!authService.isAuthenticated) {
+      debugPrint("AuthGate: User not authenticated, skipping privacy check");
+      return;
+    }
+    
+    if (userModelService.userType == UserType.unauthenticated) {
+      debugPrint("AuthGate: User type still unauthenticated, skipping privacy check");
       return;
     }
 
@@ -85,22 +100,28 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, snapshot) {
         final userModelService =
             Provider.of<UserModelService>(context, listen: true);
+        
+        // Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
           );
-        } else if (snapshot.hasError) {
+        }
+        
+        // Error state
+        if (snapshot.hasError) {
           String errorMessage = snapshot.error.toString();
           return Scaffold(
             body: Center(
               child: Text('An error occurred: $errorMessage'),
             ),
           );
-        } else if (!snapshot.hasData ||
-            (userModelService.userType == UserType.unauthenticated ||
-                !checkPrivacyPolicy(context))) {
+        }
+        
+        // Not authenticated - show sign in
+        if (!snapshot.hasData) {
           return buildSignInScreen(
             context,
             localizationService,
@@ -108,9 +129,28 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
 
-        // Add user to database on first login
+        // User is authenticated - check sync status
         User? user = snapshot.data;
+        
+        // Still syncing user data
+        if (userModelService.userType == UserType.unauthenticated) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // Check privacy policy
+        if (!checkPrivacyPolicy(context)) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
+        // Fully authenticated and synced - show appropriate home page
         return Consumer<UserModelService>(
           builder: (context, userModelService, child) {
             if (user == null) {

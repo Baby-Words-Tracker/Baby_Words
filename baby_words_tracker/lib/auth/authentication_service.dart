@@ -20,7 +20,8 @@ class AuthenticationService extends ChangeNotifier {
       if ((_user == null && user != null) ||
           (_user != null && user == null) ||
           _user?.uid != user?.uid ||
-          _user?.email != user?.email) {
+          _user?.email != user?.email ||
+          _user?.displayName != user?.displayName) {
         debugPrint(
             'AuthenticationService: User update -> uid:${user?.uid} email: ${user?.email} displayName: ${user?.displayName}');
 

@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/auth/new_user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
@@ -16,6 +17,7 @@ class CurrentChildrenService extends ChangeNotifier {
   bool _dataRetrieved = false;
 
   final UserModelService _userService;
+  final NewUserModelService? _newUserService;
   final ChildDataService _childService;
 
   int getChildIndex() {
@@ -24,10 +26,21 @@ class CurrentChildrenService extends ChangeNotifier {
 
   CurrentChildrenService({
     required UserModelService userService,
+    NewUserModelService? newUserService,
     required ChildDataService childService,
   })  : _userService = userService,
+        _newUserService = newUserService,
         _childService = childService {
     _parentSynchronizer = SafeSynchronizer(() async {
+      // Try new system first
+      if (_newUserService != null) {
+        final profile = _newUserService.userProfile;
+        if (profile != null && profile.isParent && profile.childIDs.isNotEmpty) {
+          return updateChildrenFromIds(profile.childIDs);
+        }
+      }
+      
+      // Fallback to old system
       Parent? parent = _userService.parent;
       if (_userService.userType != UserType.parent || parent == null) {
         _children.clear();
@@ -40,6 +53,7 @@ class CurrentChildrenService extends ChangeNotifier {
       }
     });
     _userService.addListener(_parentSynchronizer.safeSynchronize);
+    _newUserService?.addListener(_parentSynchronizer.safeSynchronize);
   }
 
   List<Child>? getCurrChildren() {
@@ -56,6 +70,22 @@ class CurrentChildrenService extends ChangeNotifier {
   Future<void> updateChildren(Parent parent) async {
     List<Child> children =
         (await _childService.getMultipleChildren(parent.childIDs));
+    children.sortBy((child) => child.name);
+    _children = children;
+    _dataRetrieved = true;
+    notifyListeners();
+  }
+
+  Future<void> updateChildrenFromIds(List<String> childIDs) async {
+    if (childIDs.isEmpty) {
+      _children.clear();
+      _childIndex = 0;
+      _dataRetrieved = false;
+      notifyListeners();
+      return;
+    }
+    
+    List<Child> children = await _childService.getMultipleChildren(childIDs);
     children.sortBy((child) => child.name);
     _children = children;
     _dataRetrieved = true;

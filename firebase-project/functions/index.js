@@ -4,6 +4,7 @@ const {logger} = require("firebase-functions");
 // The Firebase Admin SDK to access Firestore.
 const admin = require("firebase-admin");
 const {getAuth} = require("firebase-admin/auth");
+const {FieldValue} = require("firebase-admin/firestore");
 
 const {Storage} = require("@google-cloud/storage");
 
@@ -12,6 +13,9 @@ const {Role} = require("./auth/roles");
 const {giveClaimByEmail, removeClaimByEmail} = require("./auth/claims");
 // eslint-disable-next-line max-len
 const {checkIsAtLeast} = require("./auth/auth.js");
+
+// Import migration functions
+const {migrateToUserProfile} = require("./migration");
 
 // functions
 // v1 functions
@@ -28,20 +32,38 @@ admin.initializeApp();
 const db = admin.firestore();
 const storage = new Storage();
 
+// Export migration function
+exports.migrateToUserProfile = migrateToUserProfile;
+
 // TODO: make these functions more generic/concise
 
 /**
- * Adds the Parent claim to the user when they are created
+ * Creates UserProfile and sets default claims when a new user is created
  * @param {auth.UserRecord} user the user object
  */
 exports.addDefaultClaim = auth.user().onCreate(async (user) => {
   try {
-    // Set the custom claim 'parent' to true
+    // Set the custom claim 'parent' to true (default role)
     await getAuth().setCustomUserClaims(user.uid, {parent: true});
-
     logger.log(`Custom claim set for user ${user.uid}`);
+
+    // Create UserProfile document in Firestore
+    await db.collection("UserProfile").doc(user.uid).set({
+      role: "parent", // Default role
+      status: "active",
+      email: user.email || null,
+      name: user.displayName || null,
+      emailVerified: user.emailVerified || false,
+      twoFactorEnabled: false,
+      acceptedPrivacyPolicy: false,
+      surveyCompleted: false,
+      childIDs: [],
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    logger.log(`UserProfile created for user ${user.uid}`);
   } catch (error) {
-    logger.error(`Error setting custom claim: ${error}`);
+    logger.error(`Error setting up new user ${user.uid}: ${error}`);
   }
 });
 

@@ -1,16 +1,13 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/auth/new_user_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
-import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
+import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
@@ -57,8 +54,11 @@ Future<void> callAddChildToOtherParentCloudFunction(
 
 Future<void> addCurrentChildToOtherParent(
     BuildContext context, String otherParentEmail) async {
-  Parent? currParent = context.read<UserModelService>().parent;
-  if (currParent == null) {
+  // Use new user model service
+  final newUserModelService = context.read<NewUserModelService>();
+  final userId = newUserModelService.userProfile?.id;
+  
+  if (userId == null || !newUserModelService.isParent) {
     showAlertMessage(
         context, "Child Add Failed", "You're somehow not a parent?????");
     return;
@@ -181,14 +181,41 @@ Consumer addCurrentChildToOtherParentFeature(
 
 Future<void> addChildToCurrParent(BuildContext context, String name,
     DateTime bday, List<LanguageCode> langauges) async {
-  Parent? currParent = context.read<UserModelService>().parent;
-  final ParentDataService parentDataService =
-      context.read<ParentDataService>(); // get the parent data service
-  if (currParent != null) {
+  // Use new user model service and user profile service
+  final newUserModelService = context.read<NewUserModelService>();
+  final userProfileService = context.read<UserProfileService>();
+  final userId = newUserModelService.userProfile?.id;
+  
+  if (userId != null && newUserModelService.isParent) {
+    // Create child
     Child? child = await context
         .read<ChildDataService>()
-        .createChild(DateTime.now(), name, langauges, 0, [currParent.id]);
-    parentDataService.addChildToParent(currParent.id, child?.id ?? "aaaa");
+        .createChild(DateTime.now(), name, langauges, 0, [userId]);
+    
+    // Add child ID to UserProfile instead of old Parent collection
+    final childId = child?.id;
+    if (childId != null) {
+      try {
+        await userProfileService.addChild(userId, childId);
+        debugPrint('Child $childId added to UserProfile $userId');
+
+        // Proactively refresh current children list for immediate UI update
+        final currentChildrenService = context.read<CurrentChildrenService>();
+        final updatedIds = List<String>.from(
+          newUserModelService.userProfile?.childIDs ?? const <String>[],
+        )..add(childId);
+        await currentChildrenService.updateChildrenFromIds(updatedIds);
+      } catch (e) {
+        debugPrint('Error adding child to UserProfile: $e');
+        // Fallback to old system if new one fails
+        try {
+          final parentDataService = context.read<ParentDataService>();
+          await parentDataService.addChildToParent(userId, childId);
+        } catch (e2) {
+          debugPrint('Fallback also failed: $e2');
+        }
+      }
+    }
   }
 }
 

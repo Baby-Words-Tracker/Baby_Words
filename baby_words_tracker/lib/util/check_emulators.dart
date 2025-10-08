@@ -11,8 +11,9 @@ enum EmulatorType { firestore, auth, functions }
 
 Future<dynamic> getEmulators() async {
   try {
+    final host = getEmulatorHost();
     final response =
-        await http.get(Uri.parse('http://localhost:4400/emulators'));
+        await http.get(Uri.parse('http://$host:4000/emulators'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     }
@@ -44,49 +45,30 @@ bool isEmulatorRunning(dynamic emulators, EmulatorType emulatorName) {
 Future<void> setupFirebaseEmulators() async {
   if (!kDebugMode) return; // Only run in debug mode
 
-  late final dynamic emulatorData;
-  try {
-    emulatorData = await getEmulators();
-  } catch (e) {
-    debugPrint(
-        'Failure to get emulator data likely indicates that no emulators are running: ${e.toString()}');
-    return;
-  }
-
   final localhost = getEmulatorHost();
+  debugPrint('Setting up Firebase Emulators with host: $localhost');
 
-  debugPrint(emulatorData.toString());
-
-  if (isEmulatorRunning(emulatorData, EmulatorType.firestore)) {
-    try {
-      FirebaseFirestore.instance.useFirestoreEmulator(localhost, 8080);
-      debugPrint('Connected to Firestore Emulator');
-    } catch (e) {
-      debugPrint('Error connecting to Firestore Emulator: $e');
-    }
-  } else {
-    debugPrint('Firestore Emulator is not running');
+  // Try to connect to each emulator
+  // If emulator is not running, these will fail silently or throw errors that we catch
+  
+  try {
+    FirebaseFirestore.instance.useFirestoreEmulator(localhost, 8080);
+    debugPrint('✅ Connected to Firestore Emulator at $localhost:8080');
+  } catch (e) {
+    debugPrint('⚠️ Could not connect to Firestore Emulator: $e');
   }
 
-  if (isEmulatorRunning(emulatorData, EmulatorType.auth)) {
-    try {
-      await FirebaseAuth.instance.useAuthEmulator(localhost, 9099);
-      debugPrint('Connected to Auth Emulator');
-    } catch (e) {
-      debugPrint('Error connecting to Auth Emulator: $e');
-    }
-  } else {
-    debugPrint('Auth Emulator is not running');
+  try {
+    await FirebaseAuth.instance.useAuthEmulator(localhost, 9099);
+    debugPrint('✅ Connected to Auth Emulator at $localhost:9099');
+  } catch (e) {
+    debugPrint('⚠️ Could not connect to Auth Emulator: $e');
   }
 
-  if (isEmulatorRunning(emulatorData, EmulatorType.functions)) {
-    try {
-      FirebaseFunctions.instance.useFunctionsEmulator(localhost, 5001);
-      debugPrint('Connected to Functions Emulator');
-    } catch (e) {
-      debugPrint('Error connecting to Functions Emulator: $e');
-    }
-  } else {
-    debugPrint('Functions Emulator is not running');
+  try {
+    FirebaseFunctions.instance.useFunctionsEmulator(localhost, 5001);
+    debugPrint('✅ Connected to Functions Emulator at $localhost:5001');
+  } catch (e) {
+    debugPrint('⚠️ Could not connect to Functions Emulator: $e');
   }
 }
