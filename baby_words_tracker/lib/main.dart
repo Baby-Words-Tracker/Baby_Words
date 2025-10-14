@@ -52,9 +52,21 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     debugPrint("Initializing Firebase");
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } else {
+        Firebase.app();
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'duplicate-app') {
+        Firebase.app();
+      } else {
+        rethrow;
+      }
+    }
     
     // Connect to Firebase Emulators in debug mode, but not for production. Uncomment for development.
     // await setupFirebaseEmulators();
