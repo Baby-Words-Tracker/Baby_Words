@@ -2,10 +2,10 @@
 const https = require("firebase-functions/v2/https");
 
 // The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const {logger} = require("firebase-functions");
+const { logger } = require("firebase-functions");
 
 // Role enum
-const {getRoleFromToken} = require("./roles");
+const { getRoleFromToken } = require("./roles");
 
 /**
  * checks if the user is authenticated
@@ -23,8 +23,7 @@ function isAuthenticated(data) {
  */
 function checkAuthentication(data) {
   if (!isAuthenticated(data)) {
-    throw new https.HttpsError(
-        "unauthenticated", "User must be authenticated");
+    throw new https.HttpsError("unauthenticated", "User must be authenticated");
   } else {
     logger.debug("User is authenticated.");
   }
@@ -39,7 +38,22 @@ function checkAuthentication(data) {
  */
 function isAtLeast(data, minimumRole) {
   const userRole = getRoleFromToken(data.auth.token);
-  return userRole.order <= minimumRole.order;
+  if (!userRole) {
+    return false;
+  }
+
+  const userPriority = userRole.priority ?? userRole.order;
+  const minimumPriority = minimumRole.priority ?? minimumRole.order;
+
+  if (userPriority === undefined || minimumPriority === undefined) {
+    logger.error("Role comparison failed due to missing priority/order", {
+      userRole,
+      minimumRole,
+    });
+    return false;
+  }
+
+  return userPriority <= minimumPriority;
 }
 
 /**
@@ -51,8 +65,8 @@ function isAtLeast(data, minimumRole) {
 function checkIsAtLeast(data, minimumRole) {
   if (!isAtLeast(data, minimumRole)) {
     throw new https.HttpsError(
-        "permission-denied",
-        "You do not have correct permissions.",
+      "permission-denied",
+      "You do not have correct permissions."
     );
   }
 }

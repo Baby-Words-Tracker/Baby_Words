@@ -1,6 +1,19 @@
 const {logger} = require("firebase-functions");
 const https = require("firebase-functions/v2/https");
 
+const splitName = (displayName) => {
+  if (!displayName || typeof displayName !== "string") {
+    return {firstName: null, lastName: null};
+  }
+  const parts = displayName.trim().split(/\s+/);
+  if (!parts.length) {
+    return {firstName: null, lastName: null};
+  }
+  const firstName = parts.shift();
+  const lastName = parts.length ? parts.join(" ") : null;
+  return {firstName, lastName};
+};
+
 /**
  * Migrates users from old Parent/Researcher collections to new UserProfile
  *
@@ -57,12 +70,17 @@ exports.migrateToUserProfile = https.onCall(async (req, context) => {
           continue;
         }
 
+        const nameFromParent = parentData.name || null;
+        const parsedParentName = splitName(nameFromParent);
+
         // Create UserProfile from Parent data
         const userProfile = {
           role: "parent",
           status: "active",
           email: null, // Will get from auth
-          name: null,
+          name: nameFromParent,
+          firstName: parsedParentName.firstName,
+          lastName: parsedParentName.lastName,
           emailVerified: false,
           twoFactorEnabled: false,
           acceptedPrivacyPolicy: parentData.acceptedPrivacyPolicy || false,
@@ -84,8 +102,19 @@ exports.migrateToUserProfile = https.onCall(async (req, context) => {
         // Get email from Firebase Auth
         try {
           const userRecord = await admin.auth().getUser(parentId);
-          userProfile.email = userRecord.email;
-          userProfile.name = userRecord.displayName;
+          if (!userProfile.email) {
+            userProfile.email = userRecord.email;
+          }
+          if (!userProfile.name && userRecord.displayName) {
+            userProfile.name = userRecord.displayName;
+          }
+          const parsedAuthName = splitName(userRecord.displayName);
+          if (!userProfile.firstName && parsedAuthName.firstName) {
+            userProfile.firstName = parsedAuthName.firstName;
+          }
+          if (!userProfile.lastName && parsedAuthName.lastName) {
+            userProfile.lastName = parsedAuthName.lastName;
+          }
           userProfile.emailVerified = userRecord.emailVerified;
         } catch (authError) {
           logger.warn(
@@ -133,11 +162,16 @@ exports.migrateToUserProfile = https.onCall(async (req, context) => {
           continue;
         }
 
+        const nameFromResearcher = researcherData.name || null;
+        const parsedResearcherName = splitName(nameFromResearcher);
+
         const userProfile = {
           role: "researcher",
           status: "active",
           email: researcherData.email || null,
-          name: researcherData.name || null,
+          name: nameFromResearcher,
+          firstName: parsedResearcherName.firstName,
+          lastName: parsedResearcherName.lastName,
           phoneNumber: researcherData.phoneNumber || null,
           institution: researcherData.institution || null,
           emailVerified: false,
@@ -157,17 +191,26 @@ exports.migrateToUserProfile = https.onCall(async (req, context) => {
         };
 
         // Get email from Firebase Auth if not set
-        if (!userProfile.email) {
-          try {
-            const userRecord = await admin.auth().getUser(researcherId);
+        try {
+          const userRecord = await admin.auth().getUser(researcherId);
+          if (!userProfile.email) {
             userProfile.email = userRecord.email;
-            userProfile.name = userProfile.name || userRecord.displayName;
-            userProfile.emailVerified = userRecord.emailVerified;
-          } catch (authError) {
-            logger.warn(
-                `Could not get auth data for ${researcherId}: ${authError}`,
-            );
           }
+          if (!userProfile.name && userRecord.displayName) {
+            userProfile.name = userRecord.displayName;
+          }
+          const parsedAuthName = splitName(userRecord.displayName);
+          if (!userProfile.firstName && parsedAuthName.firstName) {
+            userProfile.firstName = parsedAuthName.firstName;
+          }
+          if (!userProfile.lastName && parsedAuthName.lastName) {
+            userProfile.lastName = parsedAuthName.lastName;
+          }
+          userProfile.emailVerified = userRecord.emailVerified;
+        } catch (authError) {
+          logger.warn(
+              `Could not get auth data for ${researcherId}: ${authError}`,
+          );
         }
 
         if (!dryRun) {
@@ -215,4 +258,3 @@ exports.migrateToUserProfile = https.onCall(async (req, context) => {
     );
   }
 });
-

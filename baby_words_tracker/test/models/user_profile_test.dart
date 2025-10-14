@@ -156,6 +156,8 @@ void main() {
         status: UserStatus.active,
         email: 'test@example.com',
         name: 'Test User',
+        firstName: 'Test',
+        lastName: 'User',
         acceptedPrivacyPolicy: true,
         policyVersion: 'v1.0',
         surveyCompleted: true,
@@ -172,6 +174,8 @@ void main() {
       expect(reconstructedProfile.status, originalProfile.status);
       expect(reconstructedProfile.email, originalProfile.email);
       expect(reconstructedProfile.name, originalProfile.name);
+      expect(reconstructedProfile.firstName, originalProfile.firstName);
+      expect(reconstructedProfile.lastName, originalProfile.lastName);
       expect(reconstructedProfile.acceptedPrivacyPolicy, originalProfile.acceptedPrivacyPolicy);
       expect(reconstructedProfile.surveyCompleted, originalProfile.surveyCompleted);
       expect(reconstructedProfile.childIDs, originalProfile.childIDs);
@@ -181,10 +185,12 @@ void main() {
       final updateMap = UserProfile.createUpdateMap(
         surveyCompleted: true,
         surveyVersion: 'v1.0',
+        firstName: 'Updated',
       );
 
       expect(updateMap.containsKey('surveyCompleted'), true);
       expect(updateMap.containsKey('surveyVersion'), true);
+       expect(updateMap['firstName'], 'Updated');
       expect(updateMap.containsKey('updatedAt'), true);
       expect(updateMap.containsKey('email'), false);
       expect(updateMap.containsKey('name'), false);
@@ -195,17 +201,45 @@ void main() {
         id: 'test123',
         role: UserRole.parent,
         email: 'old@example.com',
+        firstName: 'Old',
+        lastName: 'Name',
       );
 
       final updated = original.copyWith(
         email: 'new@example.com',
+        firstName: 'New',
         surveyCompleted: true,
       );
 
       expect(updated.id, original.id);
       expect(updated.email, 'new@example.com');
+      expect(updated.firstName, 'New');
       expect(updated.surveyCompleted, true);
       expect(original.email, 'old@example.com'); // Original unchanged
+      expect(original.firstName, 'Old');
+    });
+
+    test('fullName falls back appropriately', () {
+      final profileWithBoth = UserProfile(
+        id: '1',
+        role: UserRole.parent,
+        firstName: 'Test',
+        lastName: 'User',
+      );
+      final profileWithOne = UserProfile(
+        id: '2',
+        role: UserRole.parent,
+        firstName: 'Single',
+      );
+      final profileWithNone = UserProfile(
+        id: '3',
+        role: UserRole.parent,
+        name: 'Legacy Name',
+      );
+
+      expect(profileWithBoth.fullName, 'Test User');
+      expect(profileWithOne.fullName, 'Single');
+      expect(profileWithNone.fullName, 'Legacy Name');
     });
 
     test('equality works correctly', () {
@@ -232,4 +266,3 @@ void main() {
     });
   });
 }
-

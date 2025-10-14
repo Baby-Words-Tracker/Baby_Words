@@ -1,6 +1,6 @@
 import 'dart:async';
+
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +19,6 @@ class EmailVerificationPage extends StatefulWidget {
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   bool _isResending = false;
   bool _isChecking = false;
-  bool _isSkipping = false;
   Timer? _autoCheckTimer;
 
   @override
@@ -27,7 +26,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     super.initState();
     // Send initial verification email
     _sendVerificationEmail(isInitial: true);
-    // Start auto-checking for verification
     _startAutoCheck();
   }
 
@@ -38,110 +36,68 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
   void _startAutoCheck() {
-    // Check every 3 seconds
-    _autoCheckTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (mounted) {
-        _checkEmailVerified(isManualCheck: false);
-      }
+    _autoCheckTimer?.cancel();
+    _autoCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _checkEmailVerified(silent: true);
     });
   }
 
-  Future<void> _checkEmailVerified({bool isManualCheck = true}) async {
+  Future<void> _checkEmailVerified({bool silent = false}) async {
     if (_isChecking) return;
-    
-    // Only show loading state for manual checks (button clicks)
-    // Auto-checks happen silently in background
-    if (isManualCheck && mounted) {
+
+    if (!silent) {
       setState(() {
         _isChecking = true;
       });
     }
 
+    var verified = false;
+    var hadError = false;
+
     try {
       final user = FirebaseAuth.instance.currentUser;
-      
+
       if (user != null) {
-        // Reload user to get latest verification status
         await user.reload();
-        
-        // Get fresh user object
         final freshUser = FirebaseAuth.instance.currentUser;
-        
+
         if (freshUser?.emailVerified == true) {
+          verified = true;
           debugPrint('✅ EmailVerificationPage: Email verified!');
-          
-          // Stop auto-checking
-          _autoCheckTimer?.cancel();
-          
-          // Reload to trigger userChanges() stream in AuthGate
-          // This will automatically advance to the next step
+
           await freshUser!.reload();
-          
+
           debugPrint('✅ AuthGate will now detect verification and advance');
-          
-          // The AuthGate's userChanges() stream will fire and move to next step
+        } else {
+          debugPrint('⏳ EmailVerificationPage: Email still unverified');
         }
       }
     } catch (e) {
+      hadError = true;
       debugPrint('❌ EmailVerificationPage: Error checking verification: $e');
-    } finally {
-      if (mounted && isManualCheck) {
-        setState(() {
-          _isChecking = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _forceVerifyEmail() async {
-    if (_isSkipping) return;
-
-    setState(() {
-      _isSkipping = true;
-    });
-
-    try {
-      // Call Cloud Function to force verify email (uses Admin SDK)
-      final functions = FirebaseFunctions.instance;
-      final callable = functions.httpsCallable('forceVerifyEmail');
-      
-      debugPrint('🚧 DEV: Calling forceVerifyEmail Cloud Function...');
-      final result = await callable.call();
-      
-      debugPrint('🚧 DEV: ${result.data['message']}');
-      
-      // Reload user to get updated emailVerified status
-      final user = FirebaseAuth.instance.currentUser;
-      await user?.reload();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email verified! (DEV MODE)'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-      
-      // The userChanges() stream will detect this and advance to next step
-      debugPrint('✅ Email verification skipped successfully');
-      
-    } catch (e) {
-      debugPrint('❌ Error forcing email verification: $e');
-      
-      if (mounted) {
+      if (mounted && !silent) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('Error checking verification: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isSkipping = false;
-        });
+        if (!silent) {
+          setState(() {
+            _isChecking = false;
+          });
+        }
+
+        if (!verified && !hadError && !silent) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Still waiting on verification. Check your inbox and try again.'),
+            ),
+          );
+        }
       }
     }
   }
@@ -200,12 +156,43 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verify Email'),
-        automaticallyImplyLeading: false,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to Sign In',
+          onPressed: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Return to Sign In'),
+                content: const Text(
+                  'Signing out will take you back to the sign-in screen so you can fix your email or start over.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Sign Out'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirmed == true && mounted) {
+              await context.read<AuthenticationService>().signOut();
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthenticationService>().signOut();
+            onPressed: () async {
+              await context.read<AuthenticationService>().signOut();
             },
             tooltip: 'Sign Out',
           ),
@@ -227,6 +214,36 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 32),
+                
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Account created successfully! Confirm your email to continue.',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 
                 // Title
                 Text(
@@ -280,27 +297,22 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 ),
                 const SizedBox(height: 32),
                 
-                // Auto-checking indicator (subtle, no rebuilding)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.sync,
-                      size: 16,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Auto-checking every 3 seconds',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+                FilledButton.icon(
+                  onPressed: _isChecking ? null : () => _checkEmailVerified(silent: false),
+                  icon: _isChecking
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.check_circle),
+                  label: Text(_isChecking ? 'Checking...' : 'I\'ve Verified My Email'),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
                 
                 // Resend button
                 OutlinedButton.icon(
@@ -316,27 +328,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 ),
                 
                 const SizedBox(height: 16),
-                
-                // Skip button (development only) - Actually verifies email using Cloud Function
-                FilledButton.icon(
-                  onPressed: _isSkipping ? null : _forceVerifyEmail,
-                  icon: _isSkipping
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Icon(Icons.verified),
-                  label: Text(_isSkipping ? 'Verifying...' : 'Skip - Verify Email (DEV ONLY)'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
                 
                 // Help text
                 Text(
@@ -386,4 +377,3 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     );
   }
 }
-

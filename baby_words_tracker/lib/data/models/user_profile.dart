@@ -69,6 +69,8 @@ class UserProfile {
   // Contact info
   final String? email;
   final String? name;
+  final String? firstName;
+  final String? lastName;
   final String? phoneNumber;
   final String? institution; // For researchers
   
@@ -101,6 +103,8 @@ class UserProfile {
     this.status = UserStatus.active,
     this.email,
     this.name,
+    this.firstName,
+    this.lastName,
     this.phoneNumber,
     this.institution,
     this.emailVerified = false,
@@ -125,6 +129,17 @@ class UserProfile {
   bool get isDemoUser => status == UserStatus.demo;
   bool get isActive => status == UserStatus.active;
   bool get isSuspended => status == UserStatus.suspended;
+
+  String get fullName {
+    if ((firstName == null || firstName!.isEmpty) &&
+        (lastName == null || lastName!.isEmpty)) {
+      return name ?? '';
+    }
+    if (firstName != null && lastName != null) {
+      return '$firstName $lastName'.trim();
+    }
+    return (firstName ?? lastName ?? '').trim();
+  }
   
   /// Check if user requires survey completion
   bool get requiresSurvey => isParent && !surveyCompleted;
@@ -151,6 +166,8 @@ class UserProfile {
     UserStatus? status,
     String? email,
     String? name,
+    String? firstName,
+    String? lastName,
     String? phoneNumber,
     String? institution,
     bool? emailVerified,
@@ -173,6 +190,8 @@ class UserProfile {
       status: status ?? this.status,
       email: email ?? this.email,
       name: name ?? this.name,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       institution: institution ?? this.institution,
       emailVerified: emailVerified ?? this.emailVerified,
@@ -197,6 +216,8 @@ class UserProfile {
       'status': status.name,
       'email': email,
       'name': name,
+      'firstName': firstName,
+      'lastName': lastName,
       'phoneNumber': phoneNumber,
       'institution': institution,
       'emailVerified': emailVerified,
@@ -222,6 +243,8 @@ class UserProfile {
       status: UserStatus.values.byName(map['status'] as String? ?? 'active'),
       email: map['email'] as String?,
       name: map['name'] as String?,
+      firstName: map['firstName'] as String?,
+      lastName: map['lastName'] as String?,
       phoneNumber: map['phoneNumber'] as String?,
       institution: map['institution'] as String?,
       emailVerified: map['emailVerified'] as bool? ?? false,
@@ -271,6 +294,8 @@ class UserProfile {
     UserStatus? status,
     String? email,
     String? name,
+    String? firstName,
+    String? lastName,
     String? phoneNumber,
     String? institution,
     bool? emailVerified,
@@ -293,6 +318,8 @@ class UserProfile {
     if (status != null) map['status'] = status.name;
     if (email != null) map['email'] = email;
     if (name != null) map['name'] = name;
+    if (firstName != null) map['firstName'] = firstName;
+    if (lastName != null) map['lastName'] = lastName;
     if (phoneNumber != null) map['phoneNumber'] = phoneNumber;
     if (institution != null) map['institution'] = institution;
     if (emailVerified != null) map['emailVerified'] = emailVerified;
@@ -318,7 +345,7 @@ class UserProfile {
 
   @override
   String toString() {
-    return 'UserProfile(id: $id, role: ${role.name}, status: ${status.name}, email: $email, surveyCompleted: $surveyCompleted, childIDs: ${childIDs.length})';
+    return 'UserProfile(id: $id, role: ${role.name}, status: ${status.name}, email: $email, name: $name, firstName: $firstName, lastName: $lastName, surveyCompleted: $surveyCompleted, childIDs: ${childIDs.length})';
   }
 
   @override
@@ -333,6 +360,8 @@ class UserProfile {
         other.status == status &&
         other.email == email &&
         other.name == name &&
+        other.firstName == firstName &&
+        other.lastName == lastName &&
         other.phoneNumber == phoneNumber &&
         other.institution == institution &&
         other.emailVerified == emailVerified &&
@@ -349,6 +378,8 @@ class UserProfile {
         status,
         email,
         name,
+        firstName,
+        lastName,
         phoneNumber,
         institution,
         emailVerified,
@@ -358,4 +389,3 @@ class UserProfile {
         const DeepCollectionEquality().hash(childIDs),
       ]);
 }
-

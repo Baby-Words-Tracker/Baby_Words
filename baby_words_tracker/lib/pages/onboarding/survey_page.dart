@@ -66,12 +66,43 @@ class _SurveyPageState extends State<SurveyPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Research Survey'),
-        automaticallyImplyLeading: false, // Can't go back without completing
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to Sign In',
+          onPressed: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Return to Sign In'),
+                content: const Text(
+                  'Signing out will take you back to the sign-in screen. You\'ll need to restart onboarding if you come back later.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Sign Out'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirmed == true && context.mounted) {
+              await context.read<AuthenticationService>().signOut();
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthenticationService>().signOut();
+            onPressed: () async {
+              await context.read<AuthenticationService>().signOut();
             },
             tooltip: 'Sign Out',
           ),
@@ -226,4 +257,3 @@ class _SurveyPageState extends State<SurveyPage> {
     );
   }
 }
-

@@ -65,12 +65,19 @@ class UserProfileModelService extends ChangeNotifier {
       if (profile == null) {
         debugPrint("UserProfileModelService [$syncId]: Creating new UserProfile for $userId");
         
+        final displayName = _authenticationService.userName;
+        final parsedName = displayName != null && displayName.isNotEmpty
+            ? _parseDisplayName(displayName)
+            : {'firstName': null, 'lastName': null};
+
         profile = UserProfile(
           id: userId,
           role: UserRole.parent, // Default role
           status: isDemo ? UserStatus.demo : UserStatus.active,
           email: _authenticationService.userEmail,
-          name: _authenticationService.userName,
+          name: displayName,
+          firstName: parsedName['firstName'],
+          lastName: parsedName['lastName'],
         );
 
         // Create with retry logic
@@ -89,19 +96,68 @@ class UserProfileModelService extends ChangeNotifier {
       
       debugPrint("UserProfileModelService [$syncId]: Setting profile and notifying");
       // Set profile and notify (this ensures isAuthenticated returns true)
-      // Mirror latest Firebase Auth displayName into UserProfile name if missing/stale
+      // Mirror latest Firebase Auth displayName into UserProfile name fields if stale
       final latestName = _authenticationService.userName;
-      if (latestName != null && latestName.isNotEmpty && profile.name != latestName) {
-        try {
-          await _userProfileService.updateUserProfile(profile.id, {
-            'name': latestName,
-          }, isDemo: isDemo);
-          profile = profile.copyWith(name: latestName);
-        } catch (_) {
-          // Best-effort; don't block auth flow on name sync failures
+      if (latestName != null && latestName.isNotEmpty) {
+        final parsedName = _parseDisplayName(latestName);
+        final Map<String, dynamic> updates = {};
+
+        if (profile.name != latestName) {
+          updates['name'] = latestName;
+        }
+        if ((profile.firstName == null || profile.firstName!.isEmpty) &&
+            parsedName['firstName'] != null &&
+            parsedName['firstName']!.isNotEmpty) {
+          updates['firstName'] = parsedName['firstName'];
+        }
+        if ((profile.lastName == null || profile.lastName!.isEmpty) &&
+            parsedName['lastName'] != null &&
+            parsedName['lastName']!.isNotEmpty) {
+          updates['lastName'] = parsedName['lastName'];
+        }
+
+        if (updates.isNotEmpty) {
+          try {
+            await _userProfileService.updateUserProfile(
+              profile.id,
+              updates,
+              isDemo: isDemo,
+            );
+            profile = profile.copyWith(
+              name: updates.containsKey('name')
+                  ? updates['name'] as String
+                  : profile.name,
+              firstName: updates.containsKey('firstName')
+                  ? updates['firstName'] as String
+                  : profile.firstName,
+              lastName: updates.containsKey('lastName')
+                  ? updates['lastName'] as String
+                  : profile.lastName,
+            );
+          } catch (_) {
+            // Best-effort; don't block auth flow on name sync failures
+          }
         }
       }
-      _userProfile = profile;
+
+      var currentProfile = profile!;
+
+      final firebaseEmailVerified =
+          _authenticationService.user?.emailVerified ?? false;
+      if (currentProfile.emailVerified != firebaseEmailVerified) {
+        try {
+          await _userProfileService.updateUserProfile(
+            currentProfile.id,
+            {'emailVerified': firebaseEmailVerified},
+            isDemo: isDemo,
+          );
+          currentProfile =
+              currentProfile.copyWith(emailVerified: firebaseEmailVerified);
+        } catch (_) {
+          // Ignore sync failures; listener will retry on next update
+        }
+      }
+      _userProfile = currentProfile;
       
       final roleName = _userProfile?.role.name ?? 'unknown';
       final statusName = _userProfile?.status.name ?? 'unknown';
@@ -231,10 +287,25 @@ class UserProfileModelService extends ChangeNotifier {
     return _userProfile?.canAccessPlatform(platform) ?? false;
   }
 
+  Map<String, String?> _parseDisplayName(String displayName) {
+    final trimmed = displayName.trim();
+    if (trimmed.isEmpty) {
+      return {'firstName': null, 'lastName': null};
+    }
+
+    final parts = trimmed.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return {'firstName': parts.first, 'lastName': null};
+    }
+
+    final first = parts.first;
+    final last = parts.sublist(1).join(' ');
+    return {'firstName': first, 'lastName': last};
+  }
+
   @override
   void dispose() {
     _listener?.dispose();
     super.dispose();
   }
 }
-

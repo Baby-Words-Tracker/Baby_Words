@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 /// Defines the sequence of onboarding steps for new users
 /// This makes it easy to add, remove, or reorder steps
 enum OnboardingStep {
+  profileInfo,
   emailVerification,
   phoneVerification,  // 2FA setup
   privacyPolicy,
@@ -13,6 +14,8 @@ enum OnboardingStep {
   
   String get displayName {
     switch (this) {
+      case OnboardingStep.profileInfo:
+        return 'Profile Details';
       case OnboardingStep.emailVerification:
         return 'Email Verification';
       case OnboardingStep.phoneVerification:
@@ -28,6 +31,8 @@ enum OnboardingStep {
   
   IconData get icon {
     switch (this) {
+      case OnboardingStep.profileInfo:
+        return Icons.person_outline;
       case OnboardingStep.emailVerification:
         return Icons.email_outlined;
       case OnboardingStep.phoneVerification:
@@ -56,31 +61,32 @@ class OnboardingFlowManager {
       return null;
     }
     
-    // Only check onboarding for parents (researchers/admins have different flow)
-    if (!userProfile.isParent) {
-      return OnboardingStep.completed;
+    // Collect required profile info for all users
+    final needsFirstName =
+        userProfile.firstName == null || userProfile.firstName!.isEmpty;
+    final needsLastName =
+        userProfile.lastName == null || userProfile.lastName!.isEmpty;
+    if (needsFirstName || needsLastName) {
+      return OnboardingStep.profileInfo;
     }
     
-    // Check steps in order
-    
-    // 1. Email verification (Firebase Auth)
+    // All roles must verify email
     if (!firebaseUser.emailVerified) {
       return OnboardingStep.emailVerification;
     }
     
-    // 2. Phone verification / 2FA setup
-    // Check if phone is verified in UserProfile
+    // Require two-factor setup for every user
     if (!userProfile.twoFactorEnabled) {
       return OnboardingStep.phoneVerification;
     }
     
-    // 3. Privacy policy acceptance
+    // Everyone must accept privacy policy
     if (!userProfile.acceptedPrivacyPolicy) {
       return OnboardingStep.privacyPolicy;
     }
     
-    // 4. Survey completion (parents only)
-    if (userProfile.requiresSurvey) {
+    // Only parents must complete research survey
+    if (userProfile.isParent && userProfile.requiresSurvey) {
       return OnboardingStep.survey;
     }
     
@@ -166,4 +172,3 @@ class OnboardingFlowManager {
     return 'OnboardingFlow: Step=${step?.displayName ?? 'N/A'}, Progress=${(progress * 100).toStringAsFixed(0)}%';
   }
 }
-

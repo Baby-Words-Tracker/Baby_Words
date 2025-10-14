@@ -9,8 +9,14 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    function userProfilePath() {
+      let primary = /databases/$(database)/documents/UserProfile/$(request.auth.uid);
+      let demo = /databases/$(database)/documents/demo_UserProfile/$(request.auth.uid);
+      return exists(primary) ? primary : demo;
+    }
+    
     function getUserProfile() {
-      return get(/databases/$(database)/documents/UserProfile/$(request.auth.uid));
+      return get(userProfilePath());
     }
     
     function getUserRole() {

@@ -5,6 +5,7 @@ import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/user_profile.dart';
 import 'package:baby_words_tracker/pages/onboarding/email_verification_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/phone_verification_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/profile_info_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/privacy_policy_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
 import 'package:baby_words_tracker/pages/tutorial/welcome_page.dart';
@@ -129,6 +130,9 @@ class _NewAuthGateState extends State<NewAuthGate> {
 
         // Show appropriate onboarding screen based on current step
         switch (onboardingStep) {
+          case OnboardingStep.profileInfo:
+            return const ProfileInfoPage();
+          
           case OnboardingStep.emailVerification:
             return const EmailVerificationPage();
           
@@ -260,11 +264,13 @@ class _NewAuthGateState extends State<NewAuthGate> {
     String suggestion;
 
     if (profile.isParent) {
-      message = 'Parent accounts can only be accessed from the mobile app.';
-      suggestion = 'Please download the mobile app to continue.';
+      message = 'Parents use the Baby Words mobile app to manage their account.';
+      suggestion =
+          'Download the mobile app to continue. If you are a researcher, contact support so we can authorize web access.';
     } else if (profile.isResearcher) {
-      message = 'Researcher accounts can only be accessed from the web.';
-      suggestion = 'Please visit our website to continue.';
+      message = 'Researcher dashboards are only available on the web.';
+      suggestion =
+          'Please contact support to confirm your researcher authorization or try signing in from a desktop browser.';
     } else {
       message = 'Your account cannot be accessed from this platform.';
       suggestion = 'Please contact support for assistance.';
@@ -349,4 +355,3 @@ class _NewAuthGateState extends State<NewAuthGate> {
     );
   }
 }
-

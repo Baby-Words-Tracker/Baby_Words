@@ -35,42 +35,6 @@ const storage = new Storage();
 // Export migration function
 exports.migrateToUserProfile = migrateToUserProfile;
 
-/**
- * DEV ONLY: Force verify email for testing
- * Allows skipping email verification during development
- */
-exports.forceVerifyEmail = https.onCall(async (request) => {
-  // Get the authenticated user
-  if (!request.auth) {
-    throw new https.HttpsError(
-        "unauthenticated",
-        "User must be authenticated",
-    );
-  }
-
-  const userId = request.auth.uid;
-
-  try {
-    // Update the user's emailVerified status
-    await getAuth().updateUser(userId, {
-      emailVerified: true,
-    });
-
-    logger.log(`🚧 DEV: Email verified for user ${userId}`);
-
-    return {
-      success: true,
-      message: "Email verified successfully (dev mode)",
-    };
-  } catch (error) {
-    logger.error(`Error verifying email for ${userId}:`, error);
-    throw new https.HttpsError(
-        "internal",
-        "Failed to verify email: " + error.message,
-    );
-  }
-});
-
 // TODO: make these functions more generic/concise
 
 /**
@@ -83,12 +47,27 @@ exports.addDefaultClaim = auth.user().onCreate(async (user) => {
     await getAuth().setCustomUserClaims(user.uid, {parent: true});
     logger.log(`Custom claim set for user ${user.uid}`);
 
+    const displayName = user.displayName || null;
+    let firstName = null;
+    let lastName = null;
+    if (displayName) {
+      const parts = displayName.trim().split(/\s+/);
+      if (parts.length > 0) {
+        firstName = parts.shift();
+        if (parts.length > 0) {
+          lastName = parts.join(" ");
+        }
+      }
+    }
+
     // Create UserProfile document in Firestore
     await db.collection("UserProfile").doc(user.uid).set({
       role: "parent", // Default role
       status: "active",
       email: user.email || null,
       name: user.displayName || null,
+      firstName,
+      lastName,
       emailVerified: user.emailVerified || false,
       twoFactorEnabled: false,
       acceptedPrivacyPolicy: false,

@@ -21,9 +21,10 @@ class AuthenticationService extends ChangeNotifier {
           (_user != null && user == null) ||
           _user?.uid != user?.uid ||
           _user?.email != user?.email ||
-          _user?.displayName != user?.displayName) {
+          _user?.displayName != user?.displayName ||
+          _user?.emailVerified != user?.emailVerified) {
         debugPrint(
-            'AuthenticationService: User update -> uid:${user?.uid} email: ${user?.email} displayName: ${user?.displayName}');
+            'AuthenticationService: User update -> uid:${user?.uid} email: ${user?.email} displayName: ${user?.displayName} emailVerified:${user?.emailVerified}');
 
         _user = user;
         notifyListeners(); // Only notify listeners if relevant fields have changed

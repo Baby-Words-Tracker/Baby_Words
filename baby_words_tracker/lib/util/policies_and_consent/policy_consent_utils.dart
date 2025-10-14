@@ -124,18 +124,28 @@ Future<void> getUserConsent(BuildContext context) async {
 bool checkPrivacyPolicy(BuildContext context) {
   debugPrint("PrivacyPolicyUtils: Checking privacy policy");
   try {
+    final userProfile =
+        context.read<UserProfileModelService>().userProfile;
+    if (userProfile != null) {
+      final hasAccepted = userProfile.acceptedPrivacyPolicy;
+      debugPrint(
+          "PrivacyPolicyUtils: User ${userProfile.id} has accepted privacy policy: $hasAccepted");
+      return hasAccepted;
+    }
+
+    // Fallback to legacy model during migration.
     final currentUserModel =
         context.read<UserModelService>().getCurrentUserModel();
     if (currentUserModel != null) {
       final hasAccepted = currentUserModel.acceptedPrivacyPolicy;
       debugPrint(
-          "PrivacyPolicyUtils: User ${currentUserModel.id} has accepted privacy policy: $hasAccepted");
+          "PrivacyPolicyUtils: Legacy user ${currentUserModel.id} acceptance: $hasAccepted");
       return hasAccepted;
-    } else {
-      debugPrint(
-          "PrivacyPolicyUtils: User model not loaded yet, returning false to wait for sync");
-      return false;
     }
+
+    debugPrint(
+        "PrivacyPolicyUtils: User profile not yet loaded, returning false to wait for sync");
+    return false;
   } catch (e, stack) {
     debugPrint("PrivacyPolicyUtils: Error checking privacy policy: $e\n$stack");
     return false;
