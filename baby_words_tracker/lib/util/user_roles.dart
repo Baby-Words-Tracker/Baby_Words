@@ -22,7 +22,7 @@ extension UserRoleExtension on UserRole {
       case UserRole.researcher:
         return 3;
       case UserRole.parent:
-        return 6;
+        return 5; 
       case UserRole.unauthenticated:
         return 100;
     }

@@ -71,7 +71,11 @@ class UserModelService extends ChangeNotifier {
           final List<UserRole> userRoles = customClaims != null
               ? getUserRolesFromClaims(customClaims)
               : [UserRole.unauthenticated];
-          final maxRole = userRoles.reduce((a, b) => a.index < b.index ? a : b);
+          
+          // Handle empty roles list (when custom claims haven't been set yet)
+          final maxRole = userRoles.isEmpty 
+              ? UserRole.parent // Default to parent if no roles found
+              : userRoles.reduce((a, b) => a.index < b.index ? a : b);
           final userType = maxRole.userType;
 
           debugPrint(

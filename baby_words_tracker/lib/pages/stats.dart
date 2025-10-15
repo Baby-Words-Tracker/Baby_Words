@@ -1,4 +1,4 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
@@ -11,7 +11,6 @@ import 'package:baby_words_tracker/util/graph_type.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
@@ -62,8 +61,9 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    Parent? currParent = context.read<UserModelService>().parent;
-    if (currParent == null) {
+    // Use new user model service
+    final userProfileModelService = context.read<UserProfileModelService>();
+    if (!userProfileModelService.isParent) {
       return const Text("Invalid User Type");
     }
 

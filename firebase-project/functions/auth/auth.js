@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
@@ -23,8 +24,7 @@ function isAuthenticated(data) {
  */
 function checkAuthentication(data) {
   if (!isAuthenticated(data)) {
-    throw new https.HttpsError(
-        "unauthenticated", "User must be authenticated");
+    throw new https.HttpsError("unauthenticated", "User must be authenticated");
   } else {
     logger.debug("User is authenticated.");
   }
@@ -39,7 +39,22 @@ function checkAuthentication(data) {
  */
 function isAtLeast(data, minimumRole) {
   const userRole = getRoleFromToken(data.auth.token);
-  return userRole.order <= minimumRole.order;
+  if (!userRole) {
+    return false;
+  }
+
+  const userPriority = userRole.priority !== undefined ? userRole.priority : userRole.order;
+  const minimumPriority = minimumRole.priority !== undefined ? minimumRole.priority : minimumRole.order;
+
+  if (userPriority === undefined || minimumPriority === undefined) {
+    logger.error("Role comparison failed due to missing priority/order", {
+      userRole,
+      minimumRole,
+    });
+    return false;
+  }
+
+  return userPriority <= minimumPriority;
 }
 
 /**
