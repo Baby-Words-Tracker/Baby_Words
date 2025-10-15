@@ -1,11 +1,12 @@
+/* eslint-disable max-len */
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
 // The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-const { logger } = require("firebase-functions");
+const {logger} = require("firebase-functions");
 
 // Role enum
-const { getRoleFromToken } = require("./roles");
+const {getRoleFromToken} = require("./roles");
 
 /**
  * checks if the user is authenticated
@@ -42,8 +43,8 @@ function isAtLeast(data, minimumRole) {
     return false;
   }
 
-  const userPriority = userRole.priority ?? userRole.order;
-  const minimumPriority = minimumRole.priority ?? minimumRole.order;
+  const userPriority = userRole.priority !== undefined ? userRole.priority : userRole.order;
+  const minimumPriority = minimumRole.priority !== undefined ? minimumRole.priority : minimumRole.order;
 
   if (userPriority === undefined || minimumPriority === undefined) {
     logger.error("Role comparison failed due to missing priority/order", {
@@ -65,8 +66,8 @@ function isAtLeast(data, minimumRole) {
 function checkIsAtLeast(data, minimumRole) {
   if (!isAtLeast(data, minimumRole)) {
     throw new https.HttpsError(
-      "permission-denied",
-      "You do not have correct permissions."
+        "permission-denied",
+        "You do not have correct permissions.",
     );
   }
 }
