@@ -1,10 +1,8 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
-import 'package:baby_words_tracker/util/html_view_registry.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -23,14 +21,12 @@ class _SurveyPageState extends State<SurveyPage> {
   static const _qualtricsUrl =
       'https://universityofalabama.az1.qualtrics.com/jfe/form/SV_5vYPatDEkugyDQy';
 
-  static int _viewTypeId = 0;
-
   bool _isSubmitting = false;
   bool _hasConsented = false;
   bool _isSurveyLoading = !kIsWeb;
+  String? _loadError;
 
   WebViewController? _webViewController;
-  String? _iframeViewType;
 
   @override
   void initState() {
@@ -41,49 +37,37 @@ class _SurveyPageState extends State<SurveyPage> {
   void _initializeSurveyView() {
     if (kIsWeb) {
       _isSurveyLoading = false;
-      final viewType = 'qualtrics-survey-${_viewTypeId++}';
-      _iframeViewType = viewType;
-
-      registerHtmlViewFactory(viewType, (int _) {
-        final element = html.IFrameElement()
-          ..src = _qualtricsUrl
-          ..style.border = '0'
-          ..style.width = '100%'
-          ..style.height = '100%';
-        return element;
-      });
-    } else {
-      final controller = WebViewController()
-        ..setBackgroundColor(Colors.transparent)
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageFinished: (_) {
-              if (mounted) {
-                setState(() {
-                  _isSurveyLoading = false;
-                });
-              }
-            },
-            onWebResourceError: (error) {
-              if (!mounted) return;
-              setState(() {
-                _isSurveyLoading = false;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Failed to load survey: ${error.description}',
-                  ),
-                ),
-              );
-            },
-          ),
-        )
-        ..loadRequest(Uri.parse(_qualtricsUrl));
-
-      _webViewController = controller;
+      return;
     }
+
+    final controller = WebViewController()
+      ..setBackgroundColor(Colors.transparent)
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (!mounted) return;
+            setState(() {
+              _isSurveyLoading = false;
+            });
+          },
+          onWebResourceError: (error) {
+            if (!mounted) return;
+            setState(() {
+              _isSurveyLoading = false;
+              _loadError = error.description;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to load survey: ${error.description}'),
+              ),
+            );
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(_qualtricsUrl));
+
+    _webViewController = controller;
   }
 
   Future<void> _completeSurvey() async {
@@ -210,7 +194,7 @@ class _SurveyPageState extends State<SurveyPage> {
                 const SizedBox(height: 24),
                 _SurveyContainer(
                   isLoading: _isSurveyLoading,
-                  iframeViewType: _iframeViewType,
+                  loadError: _loadError,
                   webViewController: _webViewController,
                 ),
                 const SizedBox(height: 12),
@@ -288,12 +272,12 @@ class _SurveyPageState extends State<SurveyPage> {
 class _SurveyContainer extends StatelessWidget {
   const _SurveyContainer({
     required this.isLoading,
-    required this.iframeViewType,
+    required this.loadError,
     required this.webViewController,
   });
 
   final bool isLoading;
-  final String? iframeViewType;
+  final String? loadError;
   final WebViewController? webViewController;
 
   @override
@@ -306,24 +290,50 @@ class _SurveyContainer extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
         height: 520,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: iframeViewType != null
-                  ? HtmlElementView(viewType: iframeViewType!)
-                  : (webViewController != null
-                      ? WebViewWidget(controller: webViewController!)
-                      : const SizedBox.shrink()),
-            ),
-            if (isLoading)
-              const Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: LinearProgressIndicator(),
+        child: kIsWeb
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'The research survey is available on the mobile app. '
+                    'Use the button above to open it in a new tab if needed.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: webViewController != null
+                        ? WebViewWidget(controller: webViewController!)
+                        : const SizedBox.shrink(),
+                  ),
+                  if (isLoading)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: LinearProgressIndicator(),
+                    ),
+                  if (loadError != null)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.05),
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'We had trouble loading the survey.\n'
+                          'Please try again or open it in your browser.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.red.shade700),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
       ),
     );
   }
