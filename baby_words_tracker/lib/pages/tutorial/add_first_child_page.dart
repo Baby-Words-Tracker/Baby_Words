@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 /// Shows helpful instructions and simplified UI
 class AddFirstChildPage extends StatefulWidget {
   static const routeName = '/tutorial/add-first-child';
-  
+
   const AddFirstChildPage({super.key});
 
   @override
@@ -17,9 +17,9 @@ class AddFirstChildPage extends StatefulWidget {
 class _AddFirstChildPageState extends State<AddFirstChildPage> {
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   DateTime? _selectedBirthday;
-  List<LanguageCode> _selectedLanguages = [LanguageCode.en];
+  final List<LanguageCode> _selectedLanguages = [LanguageCode.en];
   bool _isAdding = false;
 
   @override
@@ -36,7 +36,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
       lastDate: DateTime.now(),
       helpText: 'Select Birthday',
     );
-    
+
     if (picked != null && mounted) {
       setState(() {
         _selectedBirthday = picked;
@@ -68,9 +68,9 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
         _selectedBirthday!,
         _selectedLanguages,
       );
-      
+
       debugPrint('✅ First child added successfully!');
-      
+
       if (mounted) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -79,17 +79,17 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Give user a moment to see success message
         await Future.delayed(const Duration(seconds: 1));
-        
+
         // Tutorial is automatically complete when child is added
         // (TutorialFlowManager checks childIDs.isNotEmpty)
         // AuthGate will detect this and navigate to home
       }
     } catch (e) {
       debugPrint('❌ Error adding first child: $e');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -126,19 +126,19 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                 Text(
                   'Let\'s get started! 🎈',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 Text(
                   'Add your child to start tracking their language development',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                        color: Colors.grey[600],
+                      ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Name input
                 TextFormField(
                   controller: _nameController,
@@ -158,7 +158,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Birthday selector
                 InkWell(
                   onTap: _isAdding ? null : _selectBirthday,
@@ -170,7 +170,8 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                     ),
                     child: Text(
                       _selectedBirthday != null
-                          ? DateFormat('MMMM d, yyyy').format(_selectedBirthday!)
+                          ? DateFormat('MMMM d, yyyy')
+                              .format(_selectedBirthday!)
                           : 'Tap to select birthday',
                       style: TextStyle(
                         color: _selectedBirthday != null
@@ -181,7 +182,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Language selector
                 const Text(
                   'Primary Language(s)',
@@ -191,7 +192,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -203,9 +204,9 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                     // Add more as needed
                   ],
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Helper text
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -229,9 +230,9 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Add child button
                 FilledButton.icon(
                   onPressed: _isAdding ? null : _addChild,
@@ -241,7 +242,8 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : const Icon(Icons.check_circle),
@@ -250,15 +252,18 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Skip button (for shared children scenario)
                 TextButton(
-                  onPressed: _isAdding ? null : () {
-                    debugPrint('Tutorial: User skipped adding first child');
-                    Navigator.of(context).pushReplacementNamed('/');
-                  },
+                  onPressed: _isAdding
+                      ? null
+                      : () {
+                          debugPrint(
+                              'Tutorial: User skipped adding first child');
+                          Navigator.of(context).pushReplacementNamed('/');
+                        },
                   child: const Text('Skip - I\'ll add a child later'),
                 ),
               ],
@@ -271,23 +276,24 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
 
   Widget _buildLanguageChip(String label, LanguageCode code) {
     final isSelected = _selectedLanguages.contains(code);
-    
+
     return FilterChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: _isAdding ? null : (selected) {
-        setState(() {
-          if (selected) {
-            _selectedLanguages.add(code);
-          } else {
-            // Keep at least one language selected
-            if (_selectedLanguages.length > 1) {
-              _selectedLanguages.remove(code);
-            }
-          }
-        });
-      },
+      onSelected: _isAdding
+          ? null
+          : (selected) {
+              setState(() {
+                if (selected) {
+                  _selectedLanguages.add(code);
+                } else {
+                  // Keep at least one language selected
+                  if (_selectedLanguages.length > 1) {
+                    _selectedLanguages.remove(code);
+                  }
+                }
+              });
+            },
     );
   }
 }
-

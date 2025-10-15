@@ -92,7 +92,7 @@ class _TopBarState extends State<TopBar> {
             builder:
                 (context, localizationService, currentChildrenService, child) {
               final Color outlineColor =
-                  theme.colorScheme.outlineVariant.withOpacity(0.6);
+                  theme.colorScheme.outlineVariant.withValues(alpha: 0.6);
               final childMenuItems =
                   _loadParentAndChildren(currentChildrenService);
               final bool isLoading = !currentChildrenService.dataRetrieved;

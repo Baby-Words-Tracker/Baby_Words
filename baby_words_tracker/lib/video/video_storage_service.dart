@@ -57,6 +57,8 @@ class VideoStorageService extends ChangeNotifier {
     if (_parentId == null || _parentDirectory == null) return null;
     if (!await sourceFile.exists()) return null;
 
+    final key = LocalVideoEntry.composeKey(_parentId!, childId, wordId);
+    final previousEntry = _videos[key];
     final extension = p.extension(sourceFile.path).isEmpty
         ? '.mp4'
         : p.extension(sourceFile.path);
@@ -64,21 +66,48 @@ class VideoStorageService extends ChangeNotifier {
         '${childId}_${wordId}_${DateTime.now().millisecondsSinceEpoch}$extension';
     final destination = File(p.join(_parentDirectory!.path, fileName));
 
-    await destination.parent.create(recursive: true);
-    final copied = await sourceFile.copy(destination.path);
+    File? copied;
+    try {
+      await destination.parent.create(recursive: true);
+      copied = await sourceFile.copy(destination.path);
 
-    final entry = LocalVideoEntry(
-      parentId: _parentId!,
-      childId: childId,
-      wordId: wordId,
-      filePath: copied.path,
-      savedAt: DateTime.now(),
-    );
+      final newEntry = LocalVideoEntry(
+        parentId: _parentId!,
+        childId: childId,
+        wordId: wordId,
+        filePath: copied.path,
+        savedAt: DateTime.now(),
+      );
 
-    _videos[entry.key] = entry;
-    await _persistManifest();
-    notifyListeners();
-    return entry;
+      _videos[key] = newEntry;
+      await _persistManifest();
+
+      if (previousEntry != null &&
+          previousEntry.filePath != newEntry.filePath) {
+        final oldFile = File(previousEntry.filePath);
+        if (await oldFile.exists()) {
+          await oldFile.delete();
+        }
+      }
+
+      notifyListeners();
+      return newEntry;
+    } catch (e) {
+      debugPrint('VideoStorageService: failed to save video: $e');
+      if (copied != null && await copied.exists()) {
+        await copied.delete();
+      } else if (await destination.exists()) {
+        await destination.delete();
+      }
+
+      if (previousEntry != null) {
+        _videos[key] = previousEntry;
+      } else {
+        _videos.remove(key);
+      }
+
+      return null;
+    }
   }
 
   Future<File?> getVideoFile(String childId, String wordId) async {
@@ -110,8 +139,7 @@ class VideoStorageService extends ChangeNotifier {
   Future<void> _syncParentContext() async {
     if (!isFeatureEnabled) return;
     final profile = _userProfileModelService.userProfile;
-    final parentId =
-        profile != null && profile.isParent ? profile.id : null;
+    final parentId = profile != null && profile.isParent ? profile.id : null;
 
     if (parentId == null) {
       if (_parentId != null) {

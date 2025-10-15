@@ -68,7 +68,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     } catch (error) {
       debugPrint('UploadVideoPage: Failed to load words - $error');
       if (mounted) {
-        await showAlertMessage(
+        await showAlertIfMounted(
           context,
           'Unable to load words',
           'Please try again later.',
@@ -88,7 +88,8 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     VideoStorageService videoStorage,
   ) async {
     if (!videoStorage.isFeatureEnabled) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Video attachments are not available right now.",
@@ -106,13 +107,15 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
         _fileController.text = result.displayName;
       });
     } on VideoSelectionException catch (error) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         error.message,
       );
     } catch (_) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Something went wrong while selecting the video. Please try again.",
@@ -134,7 +137,8 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
   ) async {
     final childId = currentChildrenService.getCurrChild()?.id;
     if (childId == null) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Please add a child before attaching a video.",
@@ -143,7 +147,8 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     }
 
     if (_selectedWordId == null) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Select a word before attaching a video.",
@@ -152,7 +157,8 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     }
 
     if (_selectedVideo == null) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Choose a video to attach.",
@@ -161,7 +167,8 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     }
 
     if (!videoStorage.isReady) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "We couldn't store the video yet. Please try again after your profile finishes loading.",
@@ -179,14 +186,16 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
         wordId: _selectedWordId!,
         sourceFile: _selectedVideo!.file,
       );
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_added"),
         localizationService.translate("add_file_success"),
       );
       _clearSelection();
     } catch (_) {
-      await showAlertMessage(
+      if (!mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "We couldn't save the video. Please try again.",
@@ -213,8 +222,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
           backgroundColor: theme.colorScheme.surface,
           appBar:
               TopBar(pageName: localizationService.translate("upload_video")),
-          bottomNavigationBar:
-              const CustomBottomBar(UploadVideoPage.routeName),
+          bottomNavigationBar: const CustomBottomBar(UploadVideoPage.routeName),
           body: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -286,7 +294,8 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
       ),
       const SizedBox(height: 16),
       DropdownButtonFormField<String>(
-        value: _selectedWordId,
+        key: ValueKey(_selectedWordId),
+        initialValue: _selectedWordId,
         items: _words
             .where((word) => word.id != null)
             .map(

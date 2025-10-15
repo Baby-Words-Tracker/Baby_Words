@@ -308,8 +308,7 @@ class _AdminPageState extends State<AdminPage> {
                                     "Change user type to Researcher"),
                                 onPressed: () async {
                                   if (await showConfirmationDialog(context,
-                                          'Are your sure you want to make $_selectedUserEmail a Researcher?') ??
-                                      false) {
+                                      'Are your sure you want to make $_selectedUserEmail a Researcher?')) {
                                     await changeUserType(UserType.researcher);
                                   }
                                 },
@@ -324,8 +323,7 @@ class _AdminPageState extends State<AdminPage> {
                                 child: const Text("Change user type to Parent"),
                                 onPressed: () async {
                                   if (await showConfirmationDialog(context,
-                                          'Are your sure you want to make $_selectedUserEmail a Parent?') ??
-                                      false) {
+                                      'Are your sure you want to make $_selectedUserEmail a Parent?')) {
                                     await changeUserType(UserType.parent);
                                   }
                                 },
@@ -339,8 +337,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text("Assign Parent Role"),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to assign the Parent role to $_selectedUserEmail?') ??
-                                  false) {
+                                  'Are your sure you want to assign the Parent role to $_selectedUserEmail?')) {
                                 await _callRoleFunction('giveParentClaim');
                               }
                             },
@@ -351,8 +348,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text("Remove Parent Role"),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to remove the Parent role from $_selectedUserEmail?') ??
-                                  false) {
+                                  'Are your sure you want to remove the Parent role from $_selectedUserEmail?')) {
                                 await _callRoleFunction('removeParentClaim');
                               }
                             },
@@ -363,8 +359,7 @@ class _AdminPageState extends State<AdminPage> {
                               child: const Text('Assign Researcher Role'),
                               onPressed: () async {
                                 if (await showConfirmationDialog(context,
-                                        'Are your sure you want to give the Researcher role to $_selectedUserEmail?') ??
-                                    false) {
+                                    'Are your sure you want to give the Researcher role to $_selectedUserEmail?')) {
                                   _callRoleFunction('giveResearcherClaim');
                                 }
                               }),
@@ -374,8 +369,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Remove Researcher Role'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to remove the Researcher role from $_selectedUserEmail?') ??
-                                  false) {
+                                  'Are your sure you want to remove the Researcher role from $_selectedUserEmail?')) {
                                 _callRoleFunction('removeResearcherClaim');
                               }
                             },
@@ -386,8 +380,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Assign Admin Role'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to give the Admin role to $_selectedUserEmail?') ??
-                                  false) {
+                                  'Are your sure you want to give the Admin role to $_selectedUserEmail?')) {
                                 _callRoleFunction('giveAdminClaim');
                               }
                             },
@@ -398,8 +391,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Remove Admin Role'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'Are your sure you want to remove the Admin role from $_selectedUserEmail?') ??
-                                  false) {
+                                  'Are your sure you want to remove the Admin role from $_selectedUserEmail?')) {
                                 _callRoleFunction('removeAdminClaim');
                               }
                             },
@@ -410,8 +402,7 @@ class _AdminPageState extends State<AdminPage> {
                             child: const Text('Get Email-UID Data'),
                             onPressed: () async {
                               if (await showConfirmationDialog(context,
-                                      'This will query all email and uid data and return it as a csv. Continue?') ??
-                                  false) {
+                                  'This will query all email and uid data and return it as a csv. Continue?')) {
                                 // Check if context is still mounted before using it
                                 if (!context.mounted) return;
                                 var userData = await callFunction(

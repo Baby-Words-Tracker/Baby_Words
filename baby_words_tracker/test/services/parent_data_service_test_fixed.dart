@@ -14,7 +14,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ParentDataService(repository: mockRepo);
-      
+
       expect(service, isNotNull);
     });
 
@@ -22,7 +22,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ParentDataService(repository: mockRepo);
-      
+
       expect(service, isA<ChangeNotifier>());
     });
 
@@ -30,7 +30,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ParentDataService(repository: mockRepo);
-      
+
       expect(service.createParent, isA<Function>());
       expect(service.getParent, isA<Function>());
       expect(service.getParentByEmail, isA<Function>());
@@ -52,10 +52,10 @@ void main() {
       // Setup Firebase mocks
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
-      
+
       // Create mock repository with fake Firestore
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       // Inject the mock repository into the service!
       service = ParentDataService(repository: mockRepo);
     });
@@ -64,7 +64,8 @@ void main() {
       FirebaseTestHelpers.tearDown();
     });
 
-    test('should create parent successfully through service with real logic', () async {
+    test('should create parent successfully through service with real logic',
+        () async {
       // Arrange: Create a test parent
       final testParent = Parent(
         id: 'parent-test-123',
@@ -84,7 +85,8 @@ void main() {
       expect(createdParent.consentFormComplete, isFalse);
 
       // Verify it was actually persisted in fake Firestore
-      final doc = await fakeFirestore.collection('Parent').doc('parent-test-123').get();
+      final doc =
+          await fakeFirestore.collection('Parent').doc('parent-test-123').get();
       expect(doc.exists, isTrue);
       expect(doc.data()?['language'], equals('en'));
     });
@@ -125,7 +127,7 @@ void main() {
           language: testLanguages[i],
           childIDs: [],
         );
-        
+
         final createdParent = await service.createParent(parent);
         expect(createdParent, isNotNull);
         parentIds.add('parent-multi-$i');
@@ -136,10 +138,12 @@ void main() {
 
       // Assert: Verify all parents were retrieved correctly
       expect(parents, hasLength(3));
-      expect(parents.map((p) => p.language), containsAll([LanguageCode.en, LanguageCode.es, LanguageCode.fr]));
-      
+      expect(parents.map((p) => p.language),
+          containsAll([LanguageCode.en, LanguageCode.es, LanguageCode.fr]));
+
       // Verify specific parent properties
-      final englishParent = parents.firstWhere((p) => p.language == LanguageCode.en);
+      final englishParent =
+          parents.firstWhere((p) => p.language == LanguageCode.en);
       expect(englishParent.id, equals('parent-multi-0'));
     });
 
@@ -172,9 +176,12 @@ void main() {
       expect(updatedParent.childIDs, hasLength(2));
       expect(updatedParent.childIDs, contains('new-child'));
       expect(updatedParent.consentFormComplete, isTrue);
-      
+
       // Verify in fake Firestore
-      final doc = await fakeFirestore.collection('Parent').doc('parent-update-abc').get();
+      final doc = await fakeFirestore
+          .collection('Parent')
+          .doc('parent-update-abc')
+          .get();
       expect(doc.data()?['language'], equals('es'));
     });
 
@@ -206,7 +213,8 @@ void main() {
       expect(updatedParent!.childIDs, contains('child-link-123'));
 
       // Verify child has parent ID
-      final childDoc = await fakeFirestore.collection('Child').doc('child-link-123').get();
+      final childDoc =
+          await fakeFirestore.collection('Child').doc('child-link-123').get();
       expect(childDoc.data()?['parentIDs'], contains('parent-link-def'));
     });
 
@@ -244,7 +252,8 @@ void main() {
 
       // Assert: Verify children were retrieved
       expect(children, hasLength(2));
-      expect(children.map((c) => c.name), containsAll(['Child child-1', 'Child child-2']));
+      expect(children.map((c) => c.name),
+          containsAll(['Child child-1', 'Child child-2']));
     });
 
     test('should get parent language', () async {
@@ -294,7 +303,7 @@ void main() {
       final testService = ParentDataService(repository: mockRepo);
       expect(testService, isNotNull);
       expect(testService, isA<ChangeNotifier>());
-      
+
       // Note: Production service would be ParentDataService() without injection
       // but we can't test it here without Firebase initialization
     });
@@ -305,12 +314,8 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ParentDataService(repository: mockRepo);
-      var notificationCount = 0;
-      
-      service.addListener(() {
-        notificationCount++;
-      });
-      
+      service.addListener(() {});
+
       expect(service, isA<ChangeNotifier>());
     });
 
@@ -318,15 +323,11 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ParentDataService(repository: mockRepo);
-      var notificationCount = 0;
-      
-      void listener() {
-        notificationCount++;
-      }
-      
+      void listener() {}
+
       service.addListener(listener);
       service.removeListener(listener);
-      
+
       // Listener should be removed successfully
       // ignore: invalid_use_of_protected_member
       expect(service.hasListeners, isFalse);

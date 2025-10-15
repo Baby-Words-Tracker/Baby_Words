@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/foundation.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
@@ -7,11 +6,8 @@ import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/models/researcher.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
-import 'package:baby_words_tracker/util/pair.dart';
-import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 
 import '../test_helpers/firebase_test_helpers.dart';
-import '../test_helpers/mock_data.dart';
 import '../test_helpers/mock_firestore_repository.dart';
 
 void main() {
@@ -21,13 +17,13 @@ void main() {
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final parentService = ParentDataService(repository: mockRepo);
       final researcherService = ResearcherDataService(repository: mockRepo);
-      
+
       final service = GeneralUserService(
         parentDataService: parentService,
         researcherDataService: researcherService,
         repository: mockRepo,
       );
-      
+
       expect(service, isNotNull);
     });
 
@@ -36,13 +32,13 @@ void main() {
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final parentService = ParentDataService(repository: mockRepo);
       final researcherService = ResearcherDataService(repository: mockRepo);
-      
+
       final service = GeneralUserService(
         parentDataService: parentService,
         researcherDataService: researcherService,
         repository: mockRepo,
       );
-      
+
       expect(service.createUser, isA<Function>());
       expect(service.getUser, isA<Function>());
       expect(service.getUserListener, isA<Function>());
@@ -63,11 +59,11 @@ void main() {
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       // Create dependent services with the same mock repository
       parentService = ParentDataService(repository: mockRepo);
       researcherService = ResearcherDataService(repository: mockRepo);
-      
+
       // Create the service under test
       service = GeneralUserService(
         parentDataService: parentService,
@@ -103,7 +99,8 @@ void main() {
         expect(result.second, equals(UserType.researcher));
         expect(result.first, isA<Researcher>());
         expect((result.first as Researcher).id, equals('test-researcher-123'));
-        expect((result.first as Researcher).email, equals('researcher@test.com'));
+        expect(
+            (result.first as Researcher).email, equals('researcher@test.com'));
         expect((result.first as Researcher).name, equals('Test Researcher'));
       });
 
@@ -128,7 +125,8 @@ void main() {
         );
 
         // Get the user with expected type
-        final result = await service.getUser(parentId, expectedType: UserType.parent);
+        final result =
+            await service.getUser(parentId, expectedType: UserType.parent);
 
         expect(result.second, equals(UserType.parent));
         expect(result.first, isA<Parent>());
@@ -146,14 +144,16 @@ void main() {
         );
 
         // Get the user with expected type
-        final result = await service.getUser(researcherId, expectedType: UserType.researcher);
+        final result = await service.getUser(researcherId,
+            expectedType: UserType.researcher);
 
         expect(result.second, equals(UserType.researcher));
         expect(result.first, isA<Researcher>());
         expect((result.first as Researcher).id, equals(researcherId));
       });
 
-      test('should find user without expected type (simultaneous queries)', () async {
+      test('should find user without expected type (simultaneous queries)',
+          () async {
         // Create a parent first
         const parentId = 'test-parent-simultaneous-123';
         await service.createUser(
@@ -176,7 +176,8 @@ void main() {
         expect(result.first, isNull);
       });
 
-      test('should fallback to other types when expected type not found', () async {
+      test('should fallback to other types when expected type not found',
+          () async {
         // Create a parent
         const userId = 'test-user-fallback-123';
         await service.createUser(
@@ -185,7 +186,8 @@ void main() {
         );
 
         // Try to get as researcher first, should fallback to parent
-        final result = await service.getUser(userId, expectedType: UserType.researcher);
+        final result =
+            await service.getUser(userId, expectedType: UserType.researcher);
 
         expect(result.second, equals(UserType.parent));
         expect(result.first, isA<Parent>());
@@ -202,7 +204,8 @@ void main() {
           id: parentId,
         );
 
-        final result = await service.setPrivacyPolicyAccepted(parentId, true, userType: UserType.parent);
+        final result = await service.setPrivacyPolicyAccepted(parentId, true,
+            userType: UserType.parent);
 
         expect(result, isTrue);
       });
@@ -217,12 +220,15 @@ void main() {
           name: 'Test Researcher',
         );
 
-        final result = await service.setPrivacyPolicyAccepted(researcherId, true, userType: UserType.researcher);
+        final result = await service.setPrivacyPolicyAccepted(
+            researcherId, true,
+            userType: UserType.researcher);
 
         expect(result, isTrue);
       });
 
-      test('should determine user type automatically when not provided', () async {
+      test('should determine user type automatically when not provided',
+          () async {
         // Create a parent first
         const parentId = 'test-parent-auto-type-123';
         await service.createUser(
@@ -237,7 +243,8 @@ void main() {
       });
 
       test('should return false for non-existent user', () async {
-        final result = await service.setPrivacyPolicyAccepted('non-existent-user-123', true);
+        final result = await service.setPrivacyPolicyAccepted(
+            'non-existent-user-123', true);
 
         expect(result, isFalse);
       });
@@ -251,7 +258,8 @@ void main() {
         expect(result.first, isNull);
       });
 
-      test('should handle simultaneous queries with both types missing', () async {
+      test('should handle simultaneous queries with both types missing',
+          () async {
         final result = await service.getUser('completely-missing-user-123');
 
         expect(result.second, equals(UserType.unauthenticated));
@@ -271,10 +279,10 @@ void main() {
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       parentService = ParentDataService(repository: mockRepo);
       researcherService = ResearcherDataService(repository: mockRepo);
-      
+
       service = GeneralUserService(
         parentDataService: parentService,
         researcherDataService: researcherService,
@@ -286,9 +294,10 @@ void main() {
       FirebaseTestHelpers.tearDown();
     });
 
-    test('should handle complete user workflow - create, get, update privacy', () async {
+    test('should handle complete user workflow - create, get, update privacy',
+        () async {
       const userId = 'test-workflow-user-123';
-      
+
       // Step 1: Create user
       final createResult = await service.createUser(
         userType: UserType.parent,
@@ -296,17 +305,18 @@ void main() {
       );
       expect(createResult.second, equals(UserType.parent));
       expect(createResult.first, isA<Parent>());
-      
+
       // Step 2: Get user
       final getResult = await service.getUser(userId);
       expect(getResult.second, equals(UserType.parent));
       expect(getResult.first, isA<Parent>());
       expect((getResult.first as Parent).id, equals(userId));
-      
+
       // Step 3: Update privacy policy
-      final privacyResult = await service.setPrivacyPolicyAccepted(userId, true);
+      final privacyResult =
+          await service.setPrivacyPolicyAccepted(userId, true);
       expect(privacyResult, isTrue);
-      
+
       // Step 4: Verify user still exists
       final finalGetResult = await service.getUser(userId);
       expect(finalGetResult.second, equals(UserType.parent));
@@ -315,21 +325,24 @@ void main() {
 
     test('should handle user type preference correctly', () async {
       const userId = 'test-preference-user-123';
-      
+
       // Create a parent
       await service.createUser(
         userType: UserType.parent,
         id: userId,
       );
-      
+
       // Test getting with correct expected type (fast path)
-      final correctTypeResult = await service.getUser(userId, expectedType: UserType.parent);
+      final correctTypeResult =
+          await service.getUser(userId, expectedType: UserType.parent);
       expect(correctTypeResult.second, equals(UserType.parent));
-      
+
       // Test getting with wrong expected type (should fallback)
-      final wrongTypeResult = await service.getUser(userId, expectedType: UserType.researcher);
-      expect(wrongTypeResult.second, equals(UserType.parent)); // Should still find as parent
-      
+      final wrongTypeResult =
+          await service.getUser(userId, expectedType: UserType.researcher);
+      expect(wrongTypeResult.second,
+          equals(UserType.parent)); // Should still find as parent
+
       // Test getting with no expected type (simultaneous queries)
       final noTypeResult = await service.getUser(userId);
       expect(noTypeResult.second, equals(UserType.parent));

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
@@ -62,8 +60,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
     });
 
     try {
-      final file =
-          await videoStorage.getVideoFile(entry.childId, entry.wordId);
+      final file = await videoStorage.getVideoFile(entry.childId, entry.wordId);
       if (file == null) {
         setState(() {
           _initError =
@@ -142,8 +139,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
       return;
     }
 
-    final hasSelection =
-        entries.any((entry) => entry.key == _selectedVideoKey);
+    final hasSelection = entries.any((entry) => entry.key == _selectedVideoKey);
 
     if (!hasSelection) {
       final firstEntry = entries.first;
@@ -246,7 +242,8 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DropdownButtonFormField<String>(
-          value: _selectedVideoKey,
+          key: ValueKey(_selectedVideoKey),
+          initialValue: _selectedVideoKey,
           items: entries
               .map(
                 (entry) => DropdownMenuItem<String>(

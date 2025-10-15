@@ -4,5 +4,5 @@ class FeatureFlags {
   FeatureFlags._();
 
   /// Enables the parent-only, on-device video workflow.
-  static const bool parentLocalVideos = false;
+  static const bool parentLocalVideos = true;
 }

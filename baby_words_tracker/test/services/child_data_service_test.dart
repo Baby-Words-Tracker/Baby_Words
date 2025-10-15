@@ -1,13 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mockito/mockito.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 
 import '../test_helpers/firebase_test_helpers.dart';
-import '../test_helpers/mock_data.dart';
 import '../test_helpers/mock_firestore_repository.dart';
 
 void main() {
@@ -17,7 +14,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ChildDataService(repository: mockRepo);
-      
+
       expect(service, isNotNull);
     });
 
@@ -25,7 +22,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ChildDataService(repository: mockRepo);
-      
+
       expect(service, isA<ChangeNotifier>());
     });
 
@@ -33,7 +30,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ChildDataService(repository: mockRepo);
-      
+
       expect(service.createChild, isA<Function>());
       expect(service.getChild, isA<Function>());
       expect(service.getMultipleChildren, isA<Function>());
@@ -49,9 +46,9 @@ void main() {
       // Setup Firebase mocks
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
-      
+
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       service = ChildDataService(repository: mockRepo);
     });
 
@@ -59,7 +56,8 @@ void main() {
       FirebaseTestHelpers.tearDown();
     });
 
-    test('should create child successfully through service with real logic', () async {
+    test('should create child successfully through service with real logic',
+        () async {
       // Act: Test actual service business logic
       final child = await service.createChild(
         DateTime(2020, 1, 15),
@@ -80,7 +78,7 @@ void main() {
       final storedChild = await service.getChild(child.id!);
       expect(storedChild, isNotNull);
       expect(storedChild!.name, equals('Service Test Child'));
-      
+
       final doc = await fakeFirestore.collection('Child').doc(child.id!).get();
       expect(doc.exists, isTrue);
       expect(doc.data()?['name'], equals('Service Test Child'));
@@ -216,14 +214,14 @@ void main() {
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ChildDataService(repository: mockRepo);
       var notificationCount = 0;
-      
+
       service.addListener(() {
         notificationCount++;
       });
 
       // Verify listener is set up
       expect(notificationCount, equals(0));
-      
+
       // In a real implementation, calling service methods that change data
       // would trigger notifyListeners() and increment the count
     });
@@ -233,14 +231,14 @@ void main() {
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ChildDataService(repository: mockRepo);
       var notificationCount = 0;
-      
+
       void listener() {
         notificationCount++;
       }
-      
+
       service.addListener(listener);
       service.removeListener(listener);
-      
+
       // Verify listener was removed successfully
       expect(notificationCount, equals(0));
     });

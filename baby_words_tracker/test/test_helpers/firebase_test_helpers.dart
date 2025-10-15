@@ -1,5 +1,4 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mockito/mockito.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +19,7 @@ class FirebaseTestHelpers {
     mockAuth = MockFirebaseAuth();
     mockUser = MockUser();
     mockApp = MockFirebaseApp();
-    
+
     // Setup default auth mocks
     when(mockAuth.currentUser).thenReturn(mockUser);
     when(mockUser.uid).thenReturn('test-user-123');
@@ -33,13 +32,10 @@ class FirebaseTestHelpers {
   static Future<void> setupTestData() async {
     // Add mock children
     for (final child in MockData.mockChildren) {
-      await fakeFirestore
-          .collection('Child')
-          .doc(child.id)
-          .set(child.toMap());
+      await fakeFirestore.collection('Child').doc(child.id).set(child.toMap());
     }
 
-    // Add mock parents  
+    // Add mock parents
     for (final parent in MockData.mockParents) {
       await fakeFirestore
           .collection('Parent')
@@ -49,10 +45,7 @@ class FirebaseTestHelpers {
 
     // Add mock words
     for (final word in MockData.mockWords) {
-      await fakeFirestore
-          .collection('Word')
-          .doc(word.word)
-          .set(word.toMap());
+      await fakeFirestore.collection('Word').doc(word.word).set(word.toMap());
     }
   }
 
@@ -105,13 +98,13 @@ class FirebaseTestHelpers {
   static FakeFirebaseFirestore createCustomFirestore(
       Map<String, Map<String, dynamic>> collections) {
     final firestore = FakeFirebaseFirestore();
-    
+
     collections.forEach((collectionPath, documents) async {
       documents.forEach((docId, data) async {
         await firestore.collection(collectionPath).doc(docId).set(data);
       });
     });
-    
+
     return firestore;
   }
 
@@ -123,11 +116,12 @@ class FirebaseTestHelpers {
     Map<String, dynamic> expectedData,
   ) async {
     final doc = await firestore.collection(collection).doc(docId).get();
-    expect(doc.exists, isTrue, reason: 'Document $collection/$docId should exist');
-    
+    expect(doc.exists, isTrue,
+        reason: 'Document $collection/$docId should exist');
+
     expectedData.forEach((key, value) {
-      expect(doc.data()?[key], equals(value), 
-        reason: 'Field $key should match expected value');
+      expect(doc.data()?[key], equals(value),
+          reason: 'Field $key should match expected value');
     });
   }
 
@@ -139,7 +133,7 @@ class FirebaseTestHelpers {
   ) async {
     final querySnapshot = await firestore.collection(collection).get();
     expect(querySnapshot.docs.length, equals(expectedSize),
-      reason: 'Collection $collection should have $expectedSize documents');
+        reason: 'Collection $collection should have $expectedSize documents');
   }
 
   /// Create a test user with specific properties

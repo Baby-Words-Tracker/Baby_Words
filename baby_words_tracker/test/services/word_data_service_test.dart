@@ -15,7 +15,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordDataService(repository: mockRepo);
-      
+
       expect(service, isNotNull);
     });
 
@@ -23,7 +23,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordDataService(repository: mockRepo);
-      
+
       expect(service, isA<ChangeNotifier>());
     });
 
@@ -31,7 +31,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordDataService(repository: mockRepo);
-      
+
       expect(service.createWord, isA<Function>());
       expect(service.getWord, isA<Function>());
       expect(service.getMultipleWords, isA<Function>());
@@ -48,10 +48,10 @@ void main() {
       // Setup Firebase mocks
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
-      
+
       // Create mock repository with fake Firestore
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       // ✅ Inject the mock repository into the service!
       service = WordDataService(repository: mockRepo);
     });
@@ -60,7 +60,8 @@ void main() {
       FirebaseTestHelpers.tearDown();
     });
 
-    test('should create word successfully through service with real logic', () async {
+    test('should create word successfully through service with real logic',
+        () async {
       // Arrange: Create a test word
       final testWord = Word(
         word: 'hello',
@@ -76,7 +77,8 @@ void main() {
       expect(createdWord, isNotNull);
       expect(createdWord!.word, equals('hello'));
       expect(createdWord.languageCodes, contains(LanguageCode.en));
-      expect(createdWord.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.noun));
+      expect(
+          createdWord.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.noun));
       expect(createdWord.needsProcessing, isFalse);
 
       // ✅ Verify it was actually persisted in fake Firestore
@@ -124,7 +126,7 @@ void main() {
           partOfSpeech: {LanguageCode.en: PartOfSpeech.noun},
           needsProcessing: i == 1, // Only 'dog' needs processing
         );
-        
+
         final createdWord = await service.createWord(word);
         expect(createdWord, isNotNull);
         wordIds.add(testWords[i]);
@@ -136,11 +138,11 @@ void main() {
       // Assert: Verify all words were retrieved correctly
       expect(words, hasLength(3));
       expect(words.map((w) => w.word), containsAll(['cat', 'dog', 'bird']));
-      
+
       // Verify specific word properties
       final dog = words.firstWhere((w) => w.word == 'dog');
       expect(dog.needsProcessing, isTrue);
-      
+
       final cat = words.firstWhere((w) => w.word == 'cat');
       expect(cat.needsProcessing, isFalse);
     });
@@ -167,9 +169,10 @@ void main() {
       final updatedWord = await service.getWord('update_test');
       expect(updatedWord, isNotNull);
       expect(updatedWord!.needsProcessing, isFalse);
-      
+
       // Verify in fake Firestore
-      final doc = await fakeFirestore.collection('Word').doc('update_test').get();
+      final doc =
+          await fakeFirestore.collection('Word').doc('update_test').get();
       expect(doc.data()?['needsProcessing'], isFalse);
     });
 
@@ -240,9 +243,12 @@ void main() {
       expect(retrieved, isNotNull);
       expect(retrieved!.languageCodes, hasLength(3));
       expect(retrieved.partOfSpeech, hasLength(3));
-      expect(retrieved.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.noun));
-      expect(retrieved.partOfSpeech[LanguageCode.es], equals(PartOfSpeech.verb));
-      expect(retrieved.partOfSpeech[LanguageCode.fr], equals(PartOfSpeech.adjective));
+      expect(
+          retrieved.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.noun));
+      expect(
+          retrieved.partOfSpeech[LanguageCode.es], equals(PartOfSpeech.verb));
+      expect(retrieved.partOfSpeech[LanguageCode.fr],
+          equals(PartOfSpeech.adjective));
     });
 
     test('dependency injection concept demonstration', () {
@@ -250,7 +256,7 @@ void main() {
       final testService = WordDataService(repository: mockRepo);
       expect(testService, isNotNull);
       expect(testService, isA<ChangeNotifier>());
-      
+
       // Note: Production service would be WordDataService() without injection
       // but we can't test it here without Firebase initialization
     });
@@ -261,15 +267,11 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordDataService(repository: mockRepo);
-      var notificationCount = 0;
-      
-      service.addListener(() {
-        notificationCount++;
-      });
-      
+      service.addListener(() {});
+
       // In a real implementation, calling service methods that change data
       // would trigger notifyListeners() and increment the count
-      
+
       // Since we verified this works in the main tests above, this is just structure demo
       expect(service, isA<ChangeNotifier>());
     });
@@ -278,15 +280,11 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordDataService(repository: mockRepo);
-      var notificationCount = 0;
-      
-      void listener() {
-        notificationCount++;
-      }
-      
+      void listener() {}
+
       service.addListener(listener);
       service.removeListener(listener);
-      
+
       // Listener should be removed successfully
       // ignore: invalid_use_of_protected_member
       expect(service.hasListeners, isFalse);
