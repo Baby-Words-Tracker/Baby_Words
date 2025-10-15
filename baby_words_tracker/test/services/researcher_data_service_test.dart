@@ -13,7 +13,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ResearcherDataService(repository: mockRepo);
-      
+
       expect(service, isNotNull);
     });
 
@@ -21,7 +21,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ResearcherDataService(repository: mockRepo);
-      
+
       expect(service, isA<ChangeNotifier>());
     });
 
@@ -29,7 +29,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ResearcherDataService(repository: mockRepo);
-      
+
       expect(service.createResearcher, isA<Function>());
       expect(service.getResearcher, isA<Function>());
       expect(service.getResearcherByEmail, isA<Function>());
@@ -47,10 +47,10 @@ void main() {
       // Setup Firebase mocks
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
-      
+
       // Create mock repository with fake Firestore
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       // Inject the mock repository into the service!
       service = ResearcherDataService(repository: mockRepo);
     });
@@ -59,7 +59,9 @@ void main() {
       FirebaseTestHelpers.tearDown();
     });
 
-    test('should create researcher successfully through service with real logic', () async {
+    test(
+        'should create researcher successfully through service with real logic',
+        () async {
       // Arrange: Create a test researcher
       final testResearcher = Researcher(
         id: 'researcher-test-123',
@@ -77,7 +79,10 @@ void main() {
       expect(createdResearcher.name, equals('Dr. Test Researcher'));
 
       // Verify it was actually persisted in fake Firestore
-      final doc = await fakeFirestore.collection('Researcher').doc('researcher-test-123').get();
+      final doc = await fakeFirestore
+          .collection('Researcher')
+          .doc('researcher-test-123')
+          .get();
       expect(doc.exists, isTrue);
       expect(doc.data()?['email'], equals('test.researcher@university.edu'));
       expect(doc.data()?['name'], equals('Dr. Test Researcher'));
@@ -95,7 +100,8 @@ void main() {
       expect(createdResearcher, isNotNull);
 
       // Act: Retrieve it by ID
-      final retrievedResearcher = await service.getResearcher('researcher-retrieve-456');
+      final retrievedResearcher =
+          await service.getResearcher('researcher-retrieve-456');
 
       // Assert: Verify correct data was retrieved
       expect(retrievedResearcher, isNotNull);
@@ -115,12 +121,14 @@ void main() {
       await service.createResearcher(testResearcher);
 
       // Act: Retrieve it by email
-      final retrievedResearcher = await service.getResearcherByEmail('unique.researcher@institute.edu');
+      final retrievedResearcher =
+          await service.getResearcherByEmail('unique.researcher@institute.edu');
 
       // Assert: Verify correct researcher was found
       expect(retrievedResearcher, isNotNull);
       expect(retrievedResearcher!.id, equals('researcher-email-789'));
-      expect(retrievedResearcher.email, equals('unique.researcher@institute.edu'));
+      expect(
+          retrievedResearcher.email, equals('unique.researcher@institute.edu'));
       expect(retrievedResearcher.name, equals('Dr. Email Test'));
     });
 
@@ -128,7 +136,7 @@ void main() {
       final researcherIds = <String>[];
       final testResearchers = [
         'Dr. First Researcher',
-        'Prof. Second Researcher', 
+        'Prof. Second Researcher',
         'Dr. Third Researcher'
       ];
 
@@ -139,7 +147,7 @@ void main() {
           email: 'researcher$i@academia.edu',
           name: testResearchers[i],
         );
-        
+
         final createdResearcher = await service.createResearcher(researcher);
         expect(createdResearcher, isNotNull);
         researcherIds.add('researcher-multi-$i');
@@ -150,14 +158,17 @@ void main() {
 
       // Assert: Verify all researchers were retrieved correctly
       expect(researchers, hasLength(3));
-      expect(researchers.map((r) => r.name), containsAll([
-        'Dr. First Researcher',
-        'Prof. Second Researcher',
-        'Dr. Third Researcher'
-      ]));
-      
+      expect(
+          researchers.map((r) => r.name),
+          containsAll([
+            'Dr. First Researcher',
+            'Prof. Second Researcher',
+            'Dr. Third Researcher'
+          ]));
+
       // Verify specific researcher properties
-      final firstResearcher = researchers.firstWhere((r) => r.name == 'Dr. First Researcher');
+      final firstResearcher =
+          researchers.firstWhere((r) => r.name == 'Dr. First Researcher');
       expect(firstResearcher.email, equals('researcher0@academia.edu'));
     });
 
@@ -182,13 +193,17 @@ void main() {
       expect(updated, isTrue);
 
       // Verify the update persisted
-      final updatedResearcher = await service.getResearcher('researcher-update-abc');
+      final updatedResearcher =
+          await service.getResearcher('researcher-update-abc');
       expect(updatedResearcher, isNotNull);
       expect(updatedResearcher!.name, equals('Dr. Updated Name'));
       expect(updatedResearcher.email, equals('updated@research.edu'));
-      
+
       // Verify in fake Firestore
-      final doc = await fakeFirestore.collection('Researcher').doc('researcher-update-abc').get();
+      final doc = await fakeFirestore
+          .collection('Researcher')
+          .doc('researcher-update-abc')
+          .get();
       expect(doc.data()?['name'], equals('Dr. Updated Name'));
       expect(doc.data()?['email'], equals('updated@research.edu'));
     });
@@ -196,7 +211,8 @@ void main() {
     test('should handle non-existent researcher gracefully', () async {
       // Act: Try to get a researcher that doesn't exist
       final result = await service.getResearcher('non-existent-researcher');
-      final emailResult = await service.getResearcherByEmail('nonexistent@research.edu');
+      final emailResult =
+          await service.getResearcherByEmail('nonexistent@research.edu');
 
       // Assert: Should handle gracefully
       expect(result, isNull);
@@ -257,7 +273,7 @@ void main() {
       final minimalResearcher = Researcher(
         id: 'minimal-researcher',
         email: null, // Optional field
-        name: null,  // Optional field
+        name: null, // Optional field
       );
 
       // Act: Create and retrieve minimal researcher
@@ -278,7 +294,7 @@ void main() {
       final testService = ResearcherDataService(repository: mockRepo);
       expect(testService, isNotNull);
       expect(testService, isA<ChangeNotifier>());
-      
+
       // Note: Production service would be ResearcherDataService() without injection
       // but we can't test it here without Firebase initialization
     });
@@ -289,12 +305,8 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ResearcherDataService(repository: mockRepo);
-      var notificationCount = 0;
-      
-      service.addListener(() {
-        notificationCount++;
-      });
-      
+      service.addListener(() {});
+
       // In a real implementation, calling service methods that change data
       // would trigger notifyListeners() and increment the count
       expect(service, isA<ChangeNotifier>());
@@ -304,15 +316,11 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = ResearcherDataService(repository: mockRepo);
-      var notificationCount = 0;
-      
-      void listener() {
-        notificationCount++;
-      }
-      
+      void listener() {}
+
       service.addListener(listener);
       service.removeListener(listener);
-      
+
       // Listener should be removed successfully
       // ignore: invalid_use_of_protected_member
       expect(service.hasListeners, isFalse);

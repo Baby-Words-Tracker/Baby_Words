@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 /// Sends verification email and waits for user to verify
 class EmailVerificationPage extends StatefulWidget {
   static const routeName = '/onboarding/email-verification';
-  
+
   const EmailVerificationPage({super.key});
 
   @override
@@ -94,7 +94,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         if (!verified && !hadError && !silent) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Still waiting on verification. Check your inbox and try again.'),
+              content: Text(
+                  'Still waiting on verification. Check your inbox and try again.'),
             ),
           );
         }
@@ -111,10 +112,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
     try {
       final user = FirebaseAuth.instance.currentUser;
-      
+
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-        
+
         if (mounted && !isInitial) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -123,14 +124,16 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             ),
           );
         }
-        
-        debugPrint('📧 EmailVerificationPage: Verification email sent to ${user.email}');
+
+        debugPrint(
+            '📧 EmailVerificationPage: Verification email sent to ${user.email}');
         debugPrint('📧 Check your email inbox and click the verification link');
         debugPrint('📧 After clicking the link, return to this screen');
       }
     } catch (e) {
-      debugPrint('❌ EmailVerificationPage: Error sending verification email: $e');
-      
+      debugPrint(
+          '❌ EmailVerificationPage: Error sending verification email: $e');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -163,6 +166,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           icon: const Icon(Icons.arrow_back),
           tooltip: 'Back to Sign In',
           onPressed: () async {
+            final authService = context.read<AuthenticationService>();
             final confirmed = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
@@ -184,7 +188,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             );
 
             if (confirmed == true && mounted) {
-              await context.read<AuthenticationService>().signOut();
+              await authService.signOut();
             }
           },
         ),
@@ -214,7 +218,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 32),
-                
+
                 Card(
                   color: Theme.of(context).colorScheme.primaryContainer,
                   child: Padding(
@@ -223,7 +227,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       children: [
                         Icon(
                           Icons.check_circle_outline,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -244,7 +249,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Title
                 Text(
                   'Verify Your Email',
@@ -252,7 +257,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Instructions
                 Text(
                   'We\'ve sent a verification email to:',
@@ -260,18 +265,18 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Email address
                 Text(
                   email,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Steps card
                 Card(
                   child: Padding(
@@ -281,9 +286,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       children: [
                         Text(
                           'Next Steps:',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 16),
                         _buildStep('1', 'Check your email inbox'),
@@ -296,27 +302,32 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 FilledButton.icon(
-                  onPressed: _isChecking ? null : () => _checkEmailVerified(silent: false),
+                  onPressed: _isChecking
+                      ? null
+                      : () => _checkEmailVerified(silent: false),
                   icon: _isChecking
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : const Icon(Icons.check_circle),
-                  label: Text(_isChecking ? 'Checking...' : 'I\'ve Verified My Email'),
+                  label: Text(
+                      _isChecking ? 'Checking...' : 'I\'ve Verified My Email'),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Resend button
                 OutlinedButton.icon(
-                  onPressed: _isResending ? null : () => _sendVerificationEmail(),
+                  onPressed:
+                      _isResending ? null : () => _sendVerificationEmail(),
                   icon: _isResending
                       ? const SizedBox(
                           width: 16,
@@ -326,9 +337,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       : const Icon(Icons.refresh),
                   label: Text(_isResending ? 'Sending...' : 'Resend Email'),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Help text
                 Text(
                   'Didn\'t receive the email? Check your spam folder or try resending.',

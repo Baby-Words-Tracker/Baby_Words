@@ -229,7 +229,8 @@ class _SurveyPageState extends State<SurveyPage> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : const Icon(Icons.check_circle),
@@ -318,7 +319,7 @@ class _SurveyContainer extends StatelessWidget {
                   if (loadError != null)
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         alignment: Alignment.center,
                         padding: const EdgeInsets.all(24),
                         child: Text(

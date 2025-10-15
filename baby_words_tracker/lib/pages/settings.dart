@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/util/child_utils.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
@@ -32,7 +31,7 @@ class _AddSettingsPage extends State<SettingsPage> {
     return Consumer<LocalizationService>(
       builder: (context, localizationService, child) {
         final theme = Theme.of(context);
-        bool _isSpanish =
+        final isSpanish =
             localizationService.getLocaleCode() == LanguageCode.es;
         return Scaffold(
             backgroundColor: theme.colorScheme.surface,
@@ -94,63 +93,65 @@ class _AddSettingsPage extends State<SettingsPage> {
                         style: theme.textTheme.bodyMedium,
                       ),
                       Switch(
-                        value: _isSpanish,
+                        value: isSpanish,
                         onChanged: (value) async {
                           late LanguageCode newLanguage;
-                          if (_isSpanish) {
+                          if (isSpanish) {
                             newLanguage = LanguageCode.en;
                           } else {
                             newLanguage = LanguageCode.es;
                           }
-                          
-                          // Try new system first
-                          final userProfileModelService = Provider.of<UserProfileModelService>(
-                              context, listen: false);
-                          final userProfileService = Provider.of<UserProfileService>(
-                              context, listen: false);
-                          final userId = userProfileModelService.userProfile?.id;
-                          
+                          final userProfileModelService =
+                              context.read<UserProfileModelService>();
+                          final userProfileService =
+                              context.read<UserProfileService>();
+                          final userModelService =
+                              context.read<UserModelService>();
+                          final parentDataService =
+                              context.read<ParentDataService>();
+
+                          final userId =
+                              userProfileModelService.userProfile?.id;
+                          final parentModel = userModelService.parent;
+
                           if (userId != null) {
                             // Update language preference in UserProfile
                             try {
-                              await userProfileService.updateUserProfile(userId, {
+                              await userProfileService
+                                  .updateUserProfile(userId, {
                                 'preferredLanguage': newLanguage.name,
                               });
-                              debugPrint('Language changed to $newLanguage for user $userId');
+                              debugPrint(
+                                  'Language changed to $newLanguage for user $userId');
                             } catch (e) {
-                              debugPrint('Error updating language in UserProfile: $e');
-                              // Try fallback to old system
-                              try {
-                                Parent parent = Provider.of<UserModelService>(
-                                        context,
-                                        listen: false)
-                                    .parent!;
-                                Provider.of<ParentDataService>(context,
-                                        listen: false)
-                                    .updateParent(parent.id, language: newLanguage);
-                              } catch (e2) {
-                                debugPrint('Fallback also failed: $e2');
+                              debugPrint(
+                                  'Error updating language in UserProfile: $e');
+                              if (parentModel != null) {
+                                try {
+                                  await parentDataService.updateParent(
+                                    parentModel.id,
+                                    language: newLanguage,
+                                  );
+                                } catch (e2) {
+                                  debugPrint('Fallback also failed: $e2');
+                                }
                               }
                             }
                           } else {
-                            // Fallback to old system
-                            try {
-                              Parent parent = Provider.of<UserModelService>(
-                                      context,
-                                      listen: false)
-                                  .parent!;
-                              Provider.of<ParentDataService>(context,
-                                      listen: false)
-                                  .updateParent(parent.id, language: newLanguage);
-                            } catch (e) {
-                              debugPrint('Error updating language in old system: $e');
+                            if (parentModel != null) {
+                              try {
+                                await parentDataService.updateParent(
+                                  parentModel.id,
+                                  language: newLanguage,
+                                );
+                              } catch (e) {
+                                debugPrint(
+                                    'Error updating language in old system: $e');
+                              }
                             }
                           }
 
-                          localizationService.changeLocale(newLanguage);
-                          setState(() {
-                            _isSpanish = !_isSpanish;
-                          });
+                          await localizationService.changeLocale(newLanguage);
                         },
                       ),
                       Text(

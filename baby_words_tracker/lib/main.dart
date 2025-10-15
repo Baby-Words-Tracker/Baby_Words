@@ -31,7 +31,6 @@ import 'pages/display_video_page.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:baby_words_tracker/util/check_emulators.dart';
 import 'package:baby_words_tracker/video/video_storage_service.dart';
 
 // Firebase
@@ -68,10 +67,10 @@ void main() async {
         rethrow;
       }
     }
-    
+
     // Connect to Firebase Emulators in debug mode, but not for production. Uncomment for development.
     // await setupFirebaseEmulators();
-    
+
     //can probably remove this once adding the change notifyers
     runApp(
       // Provider used for dependency injection of database functions and configurations
@@ -220,8 +219,7 @@ class MyApp extends StatelessWidget {
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
               shape: const StadiumBorder(),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               textStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -292,8 +290,7 @@ class MyApp extends StatelessWidget {
               backgroundColor: darkColorScheme.primary,
               foregroundColor: darkColorScheme.onPrimary,
               shape: const StadiumBorder(),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               textStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -311,13 +308,13 @@ class MyApp extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
-              borderSide:
-                  BorderSide(color: darkColorScheme.primary, width: 1),
+              borderSide: BorderSide(color: darkColorScheme.primary, width: 1),
             ),
             hintStyle: TextStyle(color: darkColorScheme.onSurfaceVariant),
           ),
         ),
-        themeMode: ThemeMode.system, // Set light or dark mode based on system settings
+        themeMode:
+            ThemeMode.system, // Set light or dark mode based on system settings
         initialRoute:
             NewAuthGate.routeName, // NEW: Use new auth gate with UserProfile
         routes: {
@@ -325,7 +322,8 @@ class MyApp extends StatelessWidget {
           HomePage.routeName: (context) => const HomePage(),
           StatsPage.routeName: (context) => const StatsPage(),
           AddTextPage.routeName: (context) => const AddTextPage(),
-          AuthGate.routeName: (context) => const AuthGate(), // OLD: Keep for reference
+          AuthGate.routeName: (context) =>
+              const AuthGate(), // OLD: Keep for reference
           NewAuthGate.routeName: (context) => const NewAuthGate(), // NEW
           SurveyPage.routeName: (context) => const SurveyPage(),
           DisplayVideoPage.routeName: (context) => const DisplayVideoPage(),
@@ -349,43 +347,45 @@ class MyApp extends StatelessWidget {
 }
 
 TextTheme _buildTextTheme(TextTheme base, ColorScheme colorScheme) {
-  return base.copyWith(
-    displayLarge: base.displayLarge?.copyWith(
-      fontWeight: FontWeight.w700,
-      height: 1.1,
-    ),
-    headlineLarge: base.headlineLarge?.copyWith(
-      fontSize: 34,
-      fontWeight: FontWeight.w700,
-      height: 1.1,
-    ),
-    headlineMedium: base.headlineMedium?.copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w600,
-    ),
-    titleLarge: base.titleLarge?.copyWith(
-      fontSize: 22,
-      fontWeight: FontWeight.w600,
-    ),
-    titleMedium: base.titleMedium?.copyWith(
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-    ),
-    bodyLarge: base.bodyLarge?.copyWith(
-      fontSize: 17,
-      height: 1.4,
-    ),
-    bodyMedium: base.bodyMedium?.copyWith(
-      fontSize: 16,
-      height: 1.4,
-    ),
-    labelLarge: base.labelLarge?.copyWith(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.2,
-    ),
-  ).apply(
-    bodyColor: colorScheme.onSurface,
-    displayColor: colorScheme.onSurface,
-  );
+  return base
+      .copyWith(
+        displayLarge: base.displayLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          height: 1.1,
+        ),
+        headlineLarge: base.headlineLarge?.copyWith(
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+          height: 1.1,
+        ),
+        headlineMedium: base.headlineMedium?.copyWith(
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
+        ),
+        titleLarge: base.titleLarge?.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+        titleMedium: base.titleMedium?.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: base.bodyLarge?.copyWith(
+          fontSize: 17,
+          height: 1.4,
+        ),
+        bodyMedium: base.bodyMedium?.copyWith(
+          fontSize: 16,
+          height: 1.4,
+        ),
+        labelLarge: base.labelLarge?.copyWith(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
+      )
+      .apply(
+        bodyColor: colorScheme.onSurface,
+        displayColor: colorScheme.onSurface,
+      );
 }

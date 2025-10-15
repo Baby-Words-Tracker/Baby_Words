@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 /// Displays privacy policy and requires acceptance before continuing
 class PrivacyPolicyPage extends StatefulWidget {
   static const routeName = '/onboarding/privacy-policy';
-  
+
   const PrivacyPolicyPage({super.key});
 
   @override
@@ -37,13 +37,13 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
 
     try {
       final userModelService = context.read<UserProfileModelService>();
-      
+
       await userModelService.acceptPrivacyPolicy(
         policyVersion: PrivacyPolicyInformation.privacyPolicyVersion,
       );
-      
+
       debugPrint('PrivacyPolicyPage: Privacy policy accepted');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -52,11 +52,11 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
           ),
         );
       }
-      
+
       // AuthGate will automatically navigate to next step
     } catch (e) {
       debugPrint('PrivacyPolicyPage: Error accepting policy: $e');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -103,7 +103,7 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
 
   Future<void> _openPrivacyPolicy() async {
     final url = Uri.parse(PrivacyPolicyInformation.privacyPolicyUrl);
-    
+
     try {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -185,7 +185,7 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Title
                 Text(
                   'Privacy Policy',
@@ -193,7 +193,7 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Description
                 Text(
                   'Please review and accept our privacy policy to continue',
@@ -201,7 +201,7 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Privacy policy content card
                 Card(
                   elevation: 2,
@@ -212,19 +212,20 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                       children: [
                         Text(
                           'Privacy Policy Summary',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         const Text(
                           PrivacyPolicyInformation.privacyPolicyText,
                           style: TextStyle(height: 1.5),
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Link to full policy
                         InkWell(
                           onTap: _openPrivacyPolicy,
@@ -240,7 +241,8 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                                 child: Text(
                                   'Read Full Privacy Policy',
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                     decoration: TextDecoration.underline,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -253,12 +255,12 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Checkbox to confirm reading
                 Card(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   child: CheckboxListTile(
                     value: _hasReadPolicy,
                     onChanged: (value) {
@@ -273,27 +275,31 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                     controlAffinity: ListTileControlAffinity.leading,
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Accept button
                 FilledButton.icon(
-                  onPressed: (_isAccepting || !_hasReadPolicy) ? null : _acceptPrivacyPolicy,
+                  onPressed: (_isAccepting || !_hasReadPolicy)
+                      ? null
+                      : _acceptPrivacyPolicy,
                   icon: _isAccepting
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : const Icon(Icons.check_circle),
-                  label: Text(_isAccepting ? 'Accepting...' : 'Accept and Continue'),
+                  label: Text(
+                      _isAccepting ? 'Accepting...' : 'Accept and Continue'),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Decline button
                 OutlinedButton.icon(
                   onPressed: _isAccepting ? null : _declinePrivacyPolicy,
@@ -301,16 +307,17 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                   label: const Text('Decline'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
-                    side: BorderSide(color: Theme.of(context).colorScheme.error),
+                    side:
+                        BorderSide(color: Theme.of(context).colorScheme.error),
                     textStyle: Theme.of(context)
                         .textTheme
                         .labelLarge
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Info text
                 Text(
                   'Version: ${PrivacyPolicyInformation.privacyPolicyVersion}',

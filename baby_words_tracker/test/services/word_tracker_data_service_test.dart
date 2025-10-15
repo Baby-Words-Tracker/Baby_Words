@@ -1,12 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/foundation.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/models/child.dart';
 
 import '../test_helpers/firebase_test_helpers.dart';
-import '../test_helpers/mock_data.dart';
 import '../test_helpers/mock_firestore_repository.dart';
 
 void main() {
@@ -15,7 +12,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordTrackerDataService(repository: mockRepo);
-      
+
       expect(service, isNotNull);
     });
 
@@ -23,7 +20,7 @@ void main() {
       final fakeFirestore = FakeFirebaseFirestore();
       final mockRepo = MockFirestoreRepository(fakeFirestore);
       final service = WordTrackerDataService(repository: mockRepo);
-      
+
       expect(service.createWordTracker, isA<Function>());
       expect(service.updateWordTracker, isA<Function>());
       expect(service.addOrUpdateWordTracker, isA<Function>());
@@ -44,7 +41,7 @@ void main() {
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       // Create the service under test
       service = WordTrackerDataService(repository: mockRepo);
     });
@@ -117,7 +114,8 @@ void main() {
           firstUtterance: DateTime.now(),
         );
 
-        final result = await service.addOrUpdateWordTracker(childId, wordId, tracker);
+        final result =
+            await service.addOrUpdateWordTracker(childId, wordId, tracker);
 
         expect(result, isTrue);
       });
@@ -130,7 +128,8 @@ void main() {
           firstUtterance: DateTime.now(),
         );
 
-        final result = await service.addOrUpdateWordTracker(childId, wordId, tracker);
+        final result =
+            await service.addOrUpdateWordTracker(childId, wordId, tracker);
 
         expect(result, isTrue);
       });
@@ -149,11 +148,12 @@ void main() {
         // Store it using our mock (simplified - in real test this would be more complex)
         await service.addOrUpdateWordTracker(childId, wordId, tracker);
 
-        // Now try to retrieve it 
+        // Now try to retrieve it
         final result = await service.getWordTracker(childId, wordId);
 
         // With our improved mock, this should work
-        expect(result, isA<WordTracker?>()); // May be null or actual tracker depending on mock behavior
+        expect(result,
+            isA<WordTracker?>()); // May be null or actual tracker depending on mock behavior
       });
 
       test('should return null for non-existent word tracker', () async {
@@ -192,7 +192,8 @@ void main() {
         final startDate = DateTime.now().subtract(const Duration(days: 7));
         const range = 7; // 7 days
 
-        final result = await service.getWordsFromDateRange(childId, startDate, range);
+        final result =
+            await service.getWordsFromDateRange(childId, startDate, range);
 
         expect(result, isA<List<WordTracker>>());
         expect(result, isEmpty); // Expected with our mock implementation
@@ -200,7 +201,8 @@ void main() {
 
       test('should handle date calculations correctly', () async {
         const childId = 'test-child-date-calc-123';
-        final testDate = DateTime(2024, 1, 15, 14, 30, 0); // Specific date and time
+        final testDate =
+            DateTime(2024, 1, 15, 14, 30, 0); // Specific date and time
 
         // Test that the service handles date range calculations
         final result = await service.getWordsFromDate(childId, testDate);
@@ -214,7 +216,8 @@ void main() {
         final testDate = DateTime(2024, 1, 1);
         const range = 30; // 30 days
 
-        final result = await service.getWordsFromDateRange(childId, testDate, range);
+        final result =
+            await service.getWordsFromDateRange(childId, testDate, range);
 
         expect(result, isA<List<WordTracker>>());
         // The important thing is that the method completes without error
@@ -271,7 +274,8 @@ void main() {
         final startDate = DateTime(2020, 1, 1);
         const range = 1000; // 1000 days
 
-        final result = await service.getWordsFromDateRange(childId, startDate, range);
+        final result =
+            await service.getWordsFromDateRange(childId, startDate, range);
 
         expect(result, isA<List<WordTracker>>());
         expect(result, isEmpty);
@@ -288,7 +292,7 @@ void main() {
       FirebaseTestHelpers.setupFirebaseMocks();
       fakeFirestore = FirebaseTestHelpers.fakeFirestore;
       mockRepo = MockFirestoreRepository(fakeFirestore);
-      
+
       service = WordTrackerDataService(repository: mockRepo);
     });
 
@@ -299,17 +303,18 @@ void main() {
     test('should handle complete word tracker workflow', () async {
       const childId = 'test-workflow-child-123';
       const wordId = 'workflow-word-123';
-      
+
       // Step 1: Create word tracker
       final originalTracker = WordTracker(
         id: wordId,
         firstUtterance: DateTime.now(),
       );
-      
-      final createResult = await service.createWordTracker(childId, 'hello', originalTracker);
+
+      final createResult =
+          await service.createWordTracker(childId, 'hello', originalTracker);
       expect(createResult, isNotNull);
       expect(createResult!.id, equals(wordId));
-      
+
       // Step 2: Update the tracker with a new timestamp
       final updateResult = await service.updateWordTracker(
         childId,
@@ -317,24 +322,25 @@ void main() {
         firstUtterance: DateTime.now().add(const Duration(seconds: 30)),
       );
       expect(updateResult, isTrue);
-      
+
       // Step 3: Try to retrieve (will be null with our mock, but tests the flow)
-      final getResult = await service.getWordTracker(childId, wordId);
+      await service.getWordTracker(childId, wordId);
       // With our mock implementation, this will be null, but the workflow completes
-      
+
       // Step 4: Add or update again
       final updatedTracker = WordTracker(
         id: wordId,
         firstUtterance: DateTime.now(),
       );
-      
-      final addUpdateResult = await service.addOrUpdateWordTracker(childId, wordId, updatedTracker);
+
+      final addUpdateResult =
+          await service.addOrUpdateWordTracker(childId, wordId, updatedTracker);
       expect(addUpdateResult, isTrue);
     });
 
     test('should handle multiple word trackers for same child', () async {
       const childId = 'test-multi-child-123';
-      
+
       // Create multiple word trackers
       final trackers = [
         WordTracker(
@@ -342,7 +348,7 @@ void main() {
           firstUtterance: DateTime.now(),
         ),
         WordTracker(
-          id: 'word-2', 
+          id: 'word-2',
           firstUtterance: DateTime.now(),
         ),
         WordTracker(
@@ -350,38 +356,42 @@ void main() {
           firstUtterance: DateTime.now(),
         ),
       ];
-      
+
       // Create all trackers
       for (int i = 0; i < trackers.length; i++) {
-        final result = await service.createWordTracker(childId, 'word-${i+1}', trackers[i]);
+        final result = await service.createWordTracker(
+            childId, 'word-${i + 1}', trackers[i]);
         expect(result, isNotNull);
-        expect(result!.id, equals('word-${i+1}'));
+        expect(result!.id, equals('word-${i + 1}'));
       }
-      
+
       // Query for words (will be empty with our mock, but tests the methods)
-      final timeResult = await service.getWordsFromTime(childId, DateTime.now().subtract(const Duration(hours: 1)));
+      final timeResult = await service.getWordsFromTime(
+          childId, DateTime.now().subtract(const Duration(hours: 1)));
       expect(timeResult, isA<List<WordTracker>>());
-      
-      final dateResult = await service.getWordsFromDate(childId, DateTime.now());
+
+      final dateResult =
+          await service.getWordsFromDate(childId, DateTime.now());
       expect(dateResult, isA<List<WordTracker>>());
     });
 
     test('should handle time zone edge cases', () async {
       const childId = 'test-timezone-child-123';
-      
+
       // Test with different times of day
       final midnight = DateTime(2024, 1, 15, 0, 0, 0);
       final noon = DateTime(2024, 1, 15, 12, 0, 0);
       final almostMidnight = DateTime(2024, 1, 15, 23, 59, 59);
-      
+
       // Test that all times work without errors
       final midnightResult = await service.getWordsFromDate(childId, midnight);
       expect(midnightResult, isA<List<WordTracker>>());
-      
+
       final noonResult = await service.getWordsFromDate(childId, noon);
       expect(noonResult, isA<List<WordTracker>>());
-      
-      final lateResult = await service.getWordsFromDate(childId, almostMidnight);
+
+      final lateResult =
+          await service.getWordsFromDate(childId, almostMidnight);
       expect(lateResult, isA<List<WordTracker>>());
     });
   });

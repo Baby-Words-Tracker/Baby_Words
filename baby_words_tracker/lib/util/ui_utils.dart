@@ -40,6 +40,17 @@ Future<void> showAlertMessage(
   );
 }
 
+Future<void> showAlertIfMounted(
+  BuildContext context,
+  String title,
+  String message,
+) {
+  if (!context.mounted) {
+    return Future.value();
+  }
+  return showAlertMessage(context, title, message);
+}
+
 Future<bool> showConfirmationDialog(BuildContext context, String message,
     {String? title}) async {
   return await showDialog<bool>(

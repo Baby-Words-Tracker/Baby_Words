@@ -72,13 +72,15 @@ class _AddTextPageState extends State<AddTextPage> {
         fileTextController.text = result.displayName;
       });
     } on VideoSelectionException catch (error) {
-      await showAlertMessage(
+      if (!context.mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         error.message,
       );
     } catch (error) {
-      await showAlertMessage(
+      if (!context.mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Something went wrong while selecting the video. Please try again.",
@@ -159,8 +161,8 @@ class _AddTextPageState extends State<AddTextPage> {
                         fillColor: const Color(0xFF9E1B32),
                         suffixIcon: _selectedVideo != null
                             ? IconButton(
-                                icon:
-                                    const Icon(Icons.close, color: Colors.white),
+                                icon: const Icon(Icons.close,
+                                    color: Colors.white),
                                 onPressed: _clearVideoSelection,
                               )
                             : null,
@@ -171,8 +173,7 @@ class _AddTextPageState extends State<AddTextPage> {
                     onPressed: () async {
                       final currentChildrenService =
                           context.read<CurrentChildrenService>();
-                      final videoStorage =
-                          context.read<VideoStorageService>();
+                      final videoStorage = context.read<VideoStorageService>();
 
                       final currChild = currentChildrenService.getCurrChild();
                       final currChildID = currChild?.id;
@@ -185,7 +186,8 @@ class _AddTextPageState extends State<AddTextPage> {
                       final pendingVideo = _selectedVideo;
 
                       if (pendingVideo != null && !videoStorage.isReady) {
-                        await showAlertMessage(
+                        if (!context.mounted) return;
+                        await showAlertIfMounted(
                           context,
                           localizationService.translate("file_not_added"),
                           "We couldn't store the video yet. Please try again once your profile finishes loading.",
@@ -201,7 +203,7 @@ class _AddTextPageState extends State<AddTextPage> {
                               localizationService.localization.languageCode,
                         );
 
-                        if (result != null && result && currChildID != null) {
+                        if (result && currChildID != null) {
                           final added = await addWordToChild(
                             currChildID,
                             word,
@@ -221,9 +223,11 @@ class _AddTextPageState extends State<AddTextPage> {
                                 );
                                 videoAttached = true;
                               } catch (error) {
-                                await showAlertMessage(
+                                if (!context.mounted) return;
+                                await showAlertIfMounted(
                                   context,
-                                  localizationService.translate("file_not_added"),
+                                  localizationService
+                                      .translate("file_not_added"),
                                   "The word was saved, but we couldn't store the video locally. Please try again.",
                                 );
                               }
@@ -316,5 +320,4 @@ class _AddTextPageState extends State<AddTextPage> {
       ),
     );
   }
-
 }

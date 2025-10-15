@@ -269,8 +269,7 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
 
         return Consumer<LocalizationService>(
             builder: (context, localizationService, child) {
-          return Container(
-              child: SfCartesianChart(
+          return SfCartesianChart(
             backgroundColor: Colors.white,
             plotAreaBackgroundColor: Colors.white,
             palette: const [
@@ -289,7 +288,7 @@ FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
                 // borderWidth: 2, // Capstone Gray
               )
             ],
-          ));
+          );
         });
       });
 }
@@ -357,8 +356,7 @@ FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(
 
         final timeSeriesData = snapshot.data!;
 
-        return Container(
-            child: SfCartesianChart(
+        return SfCartesianChart(
           backgroundColor: Colors.white,
           plotAreaBackgroundColor: Colors.white,
           palette: const [
@@ -379,7 +377,7 @@ FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(
               // borderWidth: 2, // Capstone Gray
             )
           ],
-        ));
+        );
       });
 }
 
@@ -509,6 +507,4 @@ async {
   }
 }
 
-
 // below this is the testing word adding functionality
-

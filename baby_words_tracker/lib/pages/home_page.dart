@@ -68,7 +68,8 @@ class _HomePageState extends State<HomePage> {
     VideoStorageService videoStorage,
   ) async {
     if (!videoStorage.isFeatureEnabled) {
-      await showAlertMessage(
+      if (!context.mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Video attachments are not available right now.",
@@ -86,13 +87,15 @@ class _HomePageState extends State<HomePage> {
         fileTextController.text = result.displayName;
       });
     } on VideoSelectionException catch (error) {
-      await showAlertMessage(
+      if (!context.mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         error.message,
       );
     } catch (_) {
-      await showAlertMessage(
+      if (!context.mounted) return;
+      await showAlertIfMounted(
         context,
         localizationService.translate("file_not_added"),
         "Something went wrong while selecting the video. Please try again.",
@@ -111,13 +114,14 @@ class _HomePageState extends State<HomePage> {
     CurrentChildrenService currentChildrenService,
     LocalizationService localizationService,
   ) async {
+    final BuildContext pageContext = context;
     Child? currChild = currentChildrenService.getCurrChild();
     String? currChildID;
     if (currChild != null) {
       currChildID = currChild.id;
     }
 
-    final videoStorage = context.read<VideoStorageService>();
+    final videoStorage = pageContext.read<VideoStorageService>();
     final pendingVideo = _selectedVideo;
     var videoAttached = false;
 
@@ -136,8 +140,9 @@ class _HomePageState extends State<HomePage> {
     bool networkFailure = false;
 
     if (pendingVideo != null && !videoStorage.isReady) {
-      await showAlertMessage(
-        context,
+      if (!pageContext.mounted) return;
+      await showAlertIfMounted(
+        pageContext,
         localizationService.translate("file_not_added"),
         "We couldn't store the video yet. Please try again once your profile finishes loading.",
       );
@@ -161,10 +166,13 @@ class _HomePageState extends State<HomePage> {
       } on DocumentCreationFailedException {
         debugPrint(
             "HomePage: Document creation failed while checking and updating word: $word");
-        if (mounted) {
+        if (pageContext.mounted) {
           // TODO: translate this message
-          showAlertMessage(context, "Failed to Add Word",
-              "The word '$word' could not be added due to a database issue. Please try again later.");
+          await showAlertIfMounted(
+            pageContext,
+            "Failed to Add Word",
+            "The word '$word' could not be added due to a database issue. Please try again later.",
+          );
         }
         // TODO: add dialog to alert user + tell them
         // TODO: later, add the word in local storage and then try to add it again when the network is available
@@ -185,14 +193,15 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (!result) {
-        if (mounted) {
+        if (pageContext.mounted) {
           // TODO: handle network failure by asking if custom word should be added and updated later
 
           // TODO: translate this message and title
           String message = networkFailure
               ? "We couldn't find your word in the dictionary due to a network issue. Would you like to add the word '$word' as a custom word for now and try again later?"
               : "We couldn't find your word in the dictionary. Would you like to add the word '$word' as a custom word?";
-          final createCustom = await showConfirmationDialog(context, message,
+          final createCustom = await showConfirmationDialog(
+              pageContext, message,
               title: "Word Not Found");
 
           // TODO: need to allow language selection for custom words
@@ -224,10 +233,10 @@ class _HomePageState extends State<HomePage> {
 
             if (newWord == null) {
               debugPrint("HomePage: Failed to create custom word: $word");
-              if (mounted) {
+              if (pageContext.mounted) {
                 // TODO: translate this message
-                showAlertMessage(
-                  context,
+                await showAlertIfMounted(
+                  pageContext,
                   "Failed to Add Word",
                   "The word '$word' could not be added due to a database issue. Please try again later.",
                 );
@@ -245,9 +254,15 @@ class _HomePageState extends State<HomePage> {
           }
         } else {
           debugPrint(
-              "HomePage: Error: context is not mounted. Skipping word: $word");
+              "HomePage: Error: pageContext is not mounted. Skipping word: $word");
           continue;
         }
+      }
+
+      if (!pageContext.mounted) {
+        debugPrint(
+            "HomePage: pageContext unmounted after word processing; aborting.");
+        return;
       }
 
       if (result == true && currChildID != null) {
@@ -256,6 +271,11 @@ class _HomePageState extends State<HomePage> {
           word,
           _wordTrackerDataService,
         );
+        if (!pageContext.mounted) {
+          debugPrint(
+              "HomePage: pageContext unmounted after addWordToChild; aborting.");
+          return;
+        }
 
         if (!success) {
           debugPrint("HomePage: Failed to add word tracker for $word");
@@ -264,9 +284,7 @@ class _HomePageState extends State<HomePage> {
 
         correctWords++;
 
-        if (!videoAttached &&
-            pendingVideo != null &&
-            videoStorage.isReady) {
+        if (!videoAttached && pendingVideo != null && videoStorage.isReady) {
           try {
             await videoStorage.saveVideoForWord(
               childId: currChildID,
@@ -275,24 +293,29 @@ class _HomePageState extends State<HomePage> {
             );
             videoAttached = true;
           } catch (error) {
+            if (!pageContext.mounted) {
+              return;
+            }
+            // ignore: use_build_context_synchronously
             await showAlertMessage(
-              context,
+              pageContext,
               localizationService.translate("file_not_added"),
               "The word was saved, but we couldn't store the video locally. Please try again.",
             );
           }
         }
       } else {
-        if (!mounted) {
+        if (!pageContext.mounted) {
           debugPrint(
-              "HomePage: context is not mounted. Error: $word was not found in dictionary.");
+              "HomePage: pageContext is not mounted. Error: $word was not found in dictionary.");
           return;
         }
         //TODO: make this experience a lot better.
         // This is confusing/frustrating at the moment because there is nothing users can do to fix the problem.
+        // ignore: use_build_context_synchronously
         await showDialog(
-          context: context,
-          builder: (BuildContext context) {
+          context: pageContext,
+          builder: (BuildContext dialogContext) {
             return AlertDialog(
               title: Text(localizationService.translate("error")),
               content:
@@ -301,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                 TextButton(
                   child: const Text('OK'),
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
+                    Navigator.of(dialogContext).pop(); // Close the dialog
                     _controller.clear();
                     _clearVideoSelection();
                   },
@@ -314,13 +337,13 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    if (!mounted) {
+    if (!pageContext.mounted) {
       debugPrint(
-          "HomePage: context is not mounted. Successfully added $correctWords words.");
+          "HomePage: pageContext is not mounted. Successfully added $correctWords words.");
       return;
     } else if (totalWords == correctWords) {
       // await showDialog(
-      //   context: context,
+      //   pageContext: pageContext,
       //   builder: (BuildContext context) {
       //     return AlertDialog(
       //       title: Text(
@@ -331,7 +354,7 @@ class _HomePageState extends State<HomePage> {
       //         TextButton(
       //           child: const Text('OK'),
       //           onPressed: () {
-      //             Navigator.of(context)
+      //             Navigator.of(pageContext)
       //                 .pop(); // Close the dialog
       //           },
       //         ),
@@ -345,9 +368,9 @@ class _HomePageState extends State<HomePage> {
     } else {
       debugPrint(
           "HomePage: Successfully added $correctWords out of $totalWords words.");
-      if (mounted) {
+      if (pageContext.mounted) {
         await showDialog(
-          context: context,
+          context: pageContext,
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text("Partial Success"), // TODO: translate
@@ -357,7 +380,7 @@ class _HomePageState extends State<HomePage> {
                 TextButton(
                   child: const Text('OK'), // TODO: Translate
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
+                    Navigator.of(pageContext).pop(); // Close the dialog
                     _controller.clear();
                     _clearVideoSelection();
                   },
@@ -417,9 +440,13 @@ class _HomePageState extends State<HomePage> {
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 message,
-                                style: theme.textTheme.headlineMedium
-                                        ?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold) ??
-                                    TextStyle(color: theme.colorScheme.onSurface, fontSize: 32, fontWeight: FontWeight.bold),
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface,
+                                        fontWeight: FontWeight.bold) ??
+                                    TextStyle(
+                                        color: theme.colorScheme.onSurface,
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -462,8 +489,17 @@ class _HomePageState extends State<HomePage> {
                                             "Last learned word is:",
                                             textAlign: TextAlign.center,
                                             style: theme.textTheme.titleMedium
-                                                    ?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w600) ??
-                                                TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
+                                                    ?.copyWith(
+                                                        color: theme.colorScheme
+                                                            .onSurface,
+                                                        fontWeight:
+                                                            FontWeight.w600) ??
+                                                TextStyle(
+                                                    color: theme
+                                                        .colorScheme.onSurface,
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.w600),
                                           ),
                                           if (snapshot.connectionState ==
                                               ConnectionState.waiting)
@@ -475,9 +511,21 @@ class _HomePageState extends State<HomePage> {
                                               fit: BoxFit.contain,
                                               child: Text(
                                                 word.capitalizeOrNA(),
-                                                style: theme.textTheme.headlineMedium
-                                                        ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
-                                                    TextStyle(color: theme.colorScheme.primary, fontSize: 34, fontWeight: FontWeight.w700),
+                                                style: theme.textTheme
+                                                        .headlineMedium
+                                                        ?.copyWith(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .primary,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700) ??
+                                                    TextStyle(
+                                                        color: theme.colorScheme
+                                                            .primary,
+                                                        fontSize: 34,
+                                                        fontWeight:
+                                                            FontWeight.w700),
                                               ),
                                             ),
                                           if (snapshot.connectionState !=
@@ -486,8 +534,18 @@ class _HomePageState extends State<HomePage> {
                                             Text(
                                               "N/A",
                                               style: theme.textTheme.titleLarge
-                                                      ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
-                                                  TextStyle(color: theme.colorScheme.primary, fontSize: 20, fontWeight: FontWeight.w700),
+                                                      ?.copyWith(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .primary,
+                                                          fontWeight: FontWeight
+                                                              .w700) ??
+                                                  TextStyle(
+                                                      color: theme
+                                                          .colorScheme.primary,
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w700),
                                             ),
                                         ],
                                       ),
@@ -528,8 +586,17 @@ class _HomePageState extends State<HomePage> {
                                                 "words_in_past_week"),
                                             textAlign: TextAlign.center,
                                             style: theme.textTheme.titleMedium
-                                                    ?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w600) ??
-                                                TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
+                                                    ?.copyWith(
+                                                        color: theme.colorScheme
+                                                            .onSurface,
+                                                        fontWeight:
+                                                            FontWeight.w600) ??
+                                                TextStyle(
+                                                    color: theme
+                                                        .colorScheme.onSurface,
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.w600),
                                           ),
                                           if (snapshot.connectionState ==
                                               ConnectionState.waiting)
@@ -541,9 +608,21 @@ class _HomePageState extends State<HomePage> {
                                               fit: BoxFit.contain,
                                               child: Text(
                                                 "${snapshot.data ?? 0}",
-                                                style: theme.textTheme.headlineMedium
-                                                        ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
-                                                    TextStyle(color: theme.colorScheme.primary, fontSize: 34, fontWeight: FontWeight.w700),
+                                                style: theme.textTheme
+                                                        .headlineMedium
+                                                        ?.copyWith(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .primary,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700) ??
+                                                    TextStyle(
+                                                        color: theme.colorScheme
+                                                            .primary,
+                                                        fontSize: 34,
+                                                        fontWeight:
+                                                            FontWeight.w700),
                                               ),
                                             ),
                                           if (snapshot.connectionState !=
@@ -552,8 +631,18 @@ class _HomePageState extends State<HomePage> {
                                             Text(
                                               "N/A",
                                               style: theme.textTheme.titleLarge
-                                                      ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700) ??
-                                                  TextStyle(color: theme.colorScheme.primary, fontSize: 20, fontWeight: FontWeight.w700),
+                                                      ?.copyWith(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .primary,
+                                                          fontWeight: FontWeight
+                                                              .w700) ??
+                                                  TextStyle(
+                                                      color: theme
+                                                          .colorScheme.primary,
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w700),
                                             ),
                                         ],
                                       ),
@@ -569,9 +658,13 @@ class _HomePageState extends State<HomePage> {
                     Center(
                       child: Text(
                         localizationService.translate("child_said"),
-                        style: theme.textTheme.titleLarge
-                                ?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold) ??
-                            TextStyle(color: theme.colorScheme.primary, fontSize: 24, fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold) ??
+                            TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold),
                       ),
                     ),
                     TextField(
@@ -628,8 +721,7 @@ class _HomePageState extends State<HomePage> {
                           currentChildrenService,
                           localizationService,
                         ),
-                        child: Text(
-                            localizationService.translate("submit")),
+                        child: Text(localizationService.translate("submit")),
                       ),
                     ),
                   ],

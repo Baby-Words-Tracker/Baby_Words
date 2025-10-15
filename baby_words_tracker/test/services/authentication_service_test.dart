@@ -12,16 +12,13 @@ void main() {
   group('AuthenticationService Tests', () {
     late AuthenticationService authService;
     late MockFirebaseAuth mockAuth;
-    late MockUser mockUser;
 
     setUp(() {
       FirebaseTestHelpers.setupFirebaseMocks();
       mockAuth = FirebaseTestHelpers.mockAuth;
-      mockUser = FirebaseTestHelpers.mockUser;
-      
-      // Setup user changes stream 
+      // Setup user changes stream
       when(mockAuth.userChanges()).thenAnswer((_) => Stream.value(null));
-      
+
       authService = AuthenticationService(mockAuth);
     });
 
@@ -117,8 +114,8 @@ void main() {
         );
 
         // Setup a stream that simulates sign in
-        when(mockAuth.userChanges()).thenAnswer((_) => 
-          Stream.fromIterable([null, testUser]));
+        when(mockAuth.userChanges())
+            .thenAnswer((_) => Stream.fromIterable([null, testUser]));
 
         // Create new service to trigger the stream
         final newAuthService = AuthenticationService(mockAuth);
@@ -130,8 +127,8 @@ void main() {
       test('should handle user sign out flow simulation', () async {
         // Setup a stream that simulates sign out
         final testUser = FirebaseTestHelpers.createTestUser();
-        when(mockAuth.userChanges()).thenAnswer((_) => 
-          Stream.fromIterable([testUser, null]));
+        when(mockAuth.userChanges())
+            .thenAnswer((_) => Stream.fromIterable([testUser, null]));
 
         // Create new service to trigger the stream
         final newAuthService = AuthenticationService(mockAuth);

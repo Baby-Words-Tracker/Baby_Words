@@ -78,13 +78,15 @@ Future<void> getUserConsent(BuildContext context) async {
               "PrivacyPolicyUtils: Context is not mounted, cannot update user model");
           return;
         }
-        
+
+        final userProfileModelService = context.read<UserProfileModelService>();
+        final userProfileService = context.read<UserProfileService>();
+        final userModelService = context.read<UserModelService>();
+
         // Try new system first, fall back to old if needed
         try {
-          final userProfileModelService = context.read<UserProfileModelService>();
-          final userProfileService = context.read<UserProfileService>();
           final userId = userProfileModelService.userProfile?.id;
-          
+
           if (userId != null) {
             await userProfileService.updateUserProfile(
               userId,
@@ -94,15 +96,16 @@ Future<void> getUserConsent(BuildContext context) async {
                 'consentDate': DateTime.now().toIso8601String(),
               },
             );
-            debugPrint("PrivacyPolicyUtils: Privacy policy acceptance saved to UserProfile");
+            debugPrint(
+                "PrivacyPolicyUtils: Privacy policy acceptance saved to UserProfile");
           } else {
-            debugPrint("PrivacyPolicyUtils: No userId found, falling back to old system");
-            final userModelService = context.read<UserModelService>();
+            debugPrint(
+                "PrivacyPolicyUtils: No userId found, falling back to old system");
             await userModelService.acceptPrivacyPolicy();
           }
         } catch (e) {
-          debugPrint("PrivacyPolicyUtils: Error with new system, trying old: $e");
-          final userModelService = context.read<UserModelService>();
+          debugPrint(
+              "PrivacyPolicyUtils: Error with new system, trying old: $e");
           await userModelService.acceptPrivacyPolicy();
         }
       } else {
@@ -124,8 +127,7 @@ Future<void> getUserConsent(BuildContext context) async {
 bool checkPrivacyPolicy(BuildContext context) {
   debugPrint("PrivacyPolicyUtils: Checking privacy policy");
   try {
-    final userProfile =
-        context.read<UserProfileModelService>().userProfile;
+    final userProfile = context.read<UserProfileModelService>().userProfile;
     if (userProfile != null) {
       final hasAccepted = userProfile.acceptedPrivacyPolicy;
       debugPrint(

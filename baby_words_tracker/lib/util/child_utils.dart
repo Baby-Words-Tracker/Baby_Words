@@ -57,7 +57,7 @@ Future<void> addCurrentChildToOtherParent(
   // Use new user model service
   final userProfileModelService = context.read<UserProfileModelService>();
   final userId = userProfileModelService.userProfile?.id;
-  
+
   if (userId == null || !userProfileModelService.isParent) {
     showAlertMessage(
         context, "Child Add Failed", "You're somehow not a parent?????");
@@ -184,33 +184,59 @@ Future<void> addChildToCurrParent(BuildContext context, String name,
   // Use new user model service and user profile service
   final userProfileModelService = context.read<UserProfileModelService>();
   final userProfileService = context.read<UserProfileService>();
+  final localizationService = context.read<LocalizationService>();
+  final currentChildrenService = context.read<CurrentChildrenService>();
+  final parentDataService = context.read<ParentDataService>();
   final userId = userProfileModelService.userProfile?.id;
-  
+
   if (userId != null && userProfileModelService.isParent) {
     // Create child
-    Child? child = await context
-        .read<ChildDataService>()
-        .createChild(DateTime.now(), name, langauges, 0, [userId]);
-    
+    final childDataService = context.read<ChildDataService>();
+    Child? child;
+    try {
+      child = await childDataService.createChild(
+        bday,
+        name,
+        langauges,
+        0,
+        [userId],
+      );
+    } catch (e) {
+      debugPrint('Error creating child: $e');
+      child = null;
+    }
+
+    if (child == null) {
+      if (!context.mounted) {
+        return;
+      }
+      await showAlertIfMounted(
+        context,
+        localizationService.translate("child_not_added"),
+        localizationService.translate("add_child_failed"),
+      );
+      return;
+    }
+
     // Add child ID to UserProfile instead of old Parent collection
-    final childId = child?.id;
+    final String? childId = child.id;
     if (childId != null) {
+      final updatedIds = List<String>.from(
+        userProfileModelService.userProfile?.childIDs ?? const <String>[],
+      )..add(childId);
+
       try {
         await userProfileService.addChild(userId, childId);
         debugPrint('Child $childId added to UserProfile $userId');
 
         // Proactively refresh current children list for immediate UI update
-        final currentChildrenService = context.read<CurrentChildrenService>();
-        final updatedIds = List<String>.from(
-          userProfileModelService.userProfile?.childIDs ?? const <String>[],
-        )..add(childId);
         await currentChildrenService.updateChildrenFromIds(updatedIds);
       } catch (e) {
         debugPrint('Error adding child to UserProfile: $e');
         // Fallback to old system if new one fails
         try {
-          final parentDataService = context.read<ParentDataService>();
           await parentDataService.addChildToParent(userId, childId);
+          await currentChildrenService.updateChildrenFromIds(updatedIds);
         } catch (e2) {
           debugPrint('Fallback also failed: $e2');
         }
