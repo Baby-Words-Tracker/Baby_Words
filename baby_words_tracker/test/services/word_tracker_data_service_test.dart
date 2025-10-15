@@ -60,7 +60,6 @@ void main() {
         final tracker = WordTracker(
           id: 'tracker-hello-123',
           firstUtterance: DateTime.now(),
-          videoID: null,
         );
 
         final result = await service.createWordTracker(childId, word, tracker);
@@ -76,29 +75,11 @@ void main() {
         final tracker = WordTracker(
           id: null, // This should cause failure
           firstUtterance: DateTime.now(),
-          videoID: null,
         );
 
         final result = await service.createWordTracker(childId, word, tracker);
 
         expect(result, isNull);
-      });
-
-      test('should create word tracker with video ID', () async {
-        const childId = 'test-child-video-123';
-        const word = 'goodbye';
-        final tracker = WordTracker(
-          id: 'tracker-goodbye-123',
-          firstUtterance: DateTime.now(),
-          videoID: 'video-123',
-        );
-
-        final result = await service.createWordTracker(childId, word, tracker);
-
-        expect(result, isNotNull);
-        expect(result!.id, equals('tracker-goodbye-123'));
-        expect(result.videoID, equals('video-123'));
-        expect(result.videoID, equals('video-123'));
       });
     });
 
@@ -112,36 +93,6 @@ void main() {
           childId,
           wordId,
           firstUtterance: newUtterance,
-        );
-
-        expect(result, isTrue);
-      });
-
-      test('should update word tracker with video ID', () async {
-        const childId = 'test-child-update-video-123';
-        const wordId = 'word-update-video-123';
-        const videoId = 'new-video-456';
-
-        final result = await service.updateWordTracker(
-          childId,
-          wordId,
-          videoID: videoId,
-        );
-
-        expect(result, isTrue);
-      });
-
-      test('should update word tracker with both fields', () async {
-        const childId = 'test-child-update-both-123';
-        const wordId = 'word-update-both-123';
-        final newUtterance = DateTime.now();
-        const videoId = 'combined-video-789';
-
-        final result = await service.updateWordTracker(
-          childId,
-          wordId,
-          firstUtterance: newUtterance,
-          videoID: videoId,
         );
 
         expect(result, isTrue);
@@ -164,7 +115,6 @@ void main() {
         final tracker = WordTracker(
           id: wordId,
           firstUtterance: DateTime.now(),
-          videoID: 'addupdate-video-123',
         );
 
         final result = await service.addOrUpdateWordTracker(childId, wordId, tracker);
@@ -178,7 +128,6 @@ void main() {
         final tracker = WordTracker(
           id: wordId,
           firstUtterance: DateTime.now(),
-          videoID: null,
         );
 
         final result = await service.addOrUpdateWordTracker(childId, wordId, tracker);
@@ -195,7 +144,6 @@ void main() {
         final tracker = WordTracker(
           id: wordId,
           firstUtterance: DateTime.now(),
-          videoID: 'get-video-123',
         );
 
         // Store it using our mock (simplified - in real test this would be more complex)
@@ -279,7 +227,6 @@ void main() {
         final tracker = WordTracker(
           id: 'tracker-empty-child-123',
           firstUtterance: DateTime.now(),
-          videoID: null,
         );
 
         final result = await service.createWordTracker('', word, tracker);
@@ -357,18 +304,17 @@ void main() {
       final originalTracker = WordTracker(
         id: wordId,
         firstUtterance: DateTime.now(),
-        videoID: null,
       );
       
       final createResult = await service.createWordTracker(childId, 'hello', originalTracker);
       expect(createResult, isNotNull);
       expect(createResult!.id, equals(wordId));
       
-      // Step 2: Update the tracker with video
+      // Step 2: Update the tracker with a new timestamp
       final updateResult = await service.updateWordTracker(
         childId,
         wordId,
-        videoID: 'workflow-video-456',
+        firstUtterance: DateTime.now().add(const Duration(seconds: 30)),
       );
       expect(updateResult, isTrue);
       
@@ -380,7 +326,6 @@ void main() {
       final updatedTracker = WordTracker(
         id: wordId,
         firstUtterance: DateTime.now(),
-        videoID: 'workflow-video-789',
       );
       
       final addUpdateResult = await service.addOrUpdateWordTracker(childId, wordId, updatedTracker);
@@ -395,17 +340,14 @@ void main() {
         WordTracker(
           id: 'word-1',
           firstUtterance: DateTime.now(),
-          videoID: null,
         ),
         WordTracker(
           id: 'word-2', 
           firstUtterance: DateTime.now(),
-          videoID: 'video-2',
         ),
         WordTracker(
           id: 'word-3',
           firstUtterance: DateTime.now(),
-          videoID: 'video-3',
         ),
       ];
       

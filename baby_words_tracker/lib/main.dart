@@ -32,6 +32,7 @@ import 'pages/display_video_page.dart';
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/check_emulators.dart';
+import 'package:baby_words_tracker/video/video_storage_service.dart';
 
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
@@ -111,6 +112,13 @@ void main() async {
                   Provider.of<AuthenticationService>(context, listen: false),
               userProfileService:
                   Provider.of<UserProfileService>(context, listen: false),
+            ),
+            lazy: false,
+          ),
+          ChangeNotifierProvider<VideoStorageService>(
+            create: (context) => VideoStorageService(
+              userProfileModelService:
+                  Provider.of<UserProfileModelService>(context, listen: false),
             ),
             lazy: false,
           ),

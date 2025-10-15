@@ -613,22 +613,9 @@ class FirestoreRepository implements IFirestoreRepository {
 
         final subDocSnapshot = await transaction.get(subDocRef);
         if (subDocSnapshot.exists) {
-          if ((subDocSnapshot.data()?[WordTracker.videoIDFieldName] == null ||
-              subDocSnapshot.data()?[WordTracker.videoIDFieldName] == "")) {
-            // If the subdocument exists, update it
-            transaction.update(
-              subDocRef,
-              WordTracker.createUpdateMap(
-                videoID: wordTracker.videoID,
-              ),
-            );
-            debugPrint(
-                "addOrUpdateWordTracker(): Subdocument $wordID updated with video ID: ${wordTracker.videoID}");
-          } else {
-            // If the subdocument exists and has a video ID, do not update it
-            debugPrint(
-                "addOrUpdateWordTracker(): Subdocument $wordID already exists with video ID, not updating.");
-          }
+          transaction.update(subDocRef, wordTracker.toMap());
+          debugPrint(
+              "addOrUpdateWordTracker(): Subdocument $wordID updated with latest data.");
         } else {
           // If the subdocument does not exist, create it
           transaction.update(

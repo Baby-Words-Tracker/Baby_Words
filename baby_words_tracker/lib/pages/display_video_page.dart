@@ -1,18 +1,14 @@
 import 'dart:io';
 
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:baby_words_tracker/video/video_functions.dart';
-
+import 'package:baby_words_tracker/video/local_video_entry.dart';
+import 'package:baby_words_tracker/video/video_storage_service.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
@@ -22,261 +18,310 @@ class DisplayVideoPage extends StatefulWidget {
   const DisplayVideoPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _DisplayVideoPageState createState() => _DisplayVideoPageState();
+  State<DisplayVideoPage> createState() => _DisplayVideoPageState();
 }
 
 class _DisplayVideoPageState extends State<DisplayVideoPage> {
-  String? _selectedVideoId;
-  List<WordTracker> _wordList = [];
+  String? _selectedVideoKey;
+  String? _lastLoadedKey;
 
   VideoPlayerController? _controller;
   ChewieController? _chewieController;
   Chewie? _playerWidget;
 
-  String? _lastChildId;
-  bool _isLoading = true;
+  bool _isInitializing = false;
+  String? _initError;
 
-  /// Fetch video metadata from Firestore
-  Future<void> fetchVideos(
-    ChildDataService childService,
-    CurrentChildrenService currentChildrenService,
+  @override
+  void dispose() {
+    _disposeControllers();
+    super.dispose();
+  }
+
+  void _disposeControllers() {
+    _controller?.dispose();
+    _controller = null;
+    _chewieController?.dispose();
+    _chewieController = null;
+    _playerWidget = null;
+  }
+
+  Future<void> _playEntry(
+    LocalVideoEntry entry,
+    VideoStorageService videoStorage,
   ) async {
+    if (_lastLoadedKey == entry.key && _controller != null) {
+      return;
+    }
+
+    _disposeControllers();
+
     setState(() {
-      _isLoading = true;
+      _isInitializing = true;
+      _initError = null;
     });
-    debugPrint("Fetching videos for current child...");
-    // Get the current child ID
-    String? currentChildID = currentChildrenService.getCurrChild()?.id;
-    if (currentChildID == null) {
-      debugPrint("No current child ID found.");
+
+    try {
+      final file =
+          await videoStorage.getVideoFile(entry.childId, entry.wordId);
+      if (file == null) {
+        setState(() {
+          _initError =
+              "The video file for '${entry.wordId}' could not be found.";
+        });
+        return;
+      }
+
+      final controller = VideoPlayerController.file(file);
+      await controller.initialize();
+      controller.play();
+
+      final chewieController = ChewieController(
+        videoPlayerController: controller,
+        autoPlay: true,
+        looping: false,
+      );
+
       setState(() {
-        _wordList = [];
-        _isLoading = false;
+        _controller = controller;
+        _chewieController = chewieController;
+        _playerWidget = Chewie(controller: chewieController);
+        _lastLoadedKey = entry.key;
       });
-    } else {
-      try {
-        final wordList = await childService.getAllKnownWords(currentChildID);
+    } catch (error) {
+      debugPrint('DisplayVideoPage: Failed to initialise video - $error');
+      setState(() {
+        _initError =
+            "We couldn't open that video. It may have been deleted or moved.";
+      });
+    } finally {
+      if (mounted) {
         setState(() {
-          _wordList = wordList.where((video) => video.videoID != null).toList();
-          //debugPrint(_wordList.toString());
-        });
-      } catch (e) {
-        debugPrint("Error fetching videos: $e");
-        setState(() {
-          _wordList = [];
-        });
-      } finally {
-        debugPrint("Videos fetched: ${_wordList.length}");
-        setState(() {
-          _isLoading = false;
+          _isInitializing = false;
         });
       }
     }
   }
 
-  void _disposeControllers() {
-    _disposeVideoController();
-    _disposeChewieController();
-    _resetPlayerWidget();
+  void _onVideoSelected(
+    String key,
+    List<LocalVideoEntry> entries,
+    VideoStorageService videoStorage,
+  ) {
+    if (_selectedVideoKey == key) {
+      return;
+    }
+
+    final entry = entries.firstWhere(
+      (element) => element.key == key,
+      orElse: () => entries.first,
+    );
+
+    setState(() {
+      _selectedVideoKey = entry.key;
+    });
+
+    _playEntry(entry, videoStorage);
   }
 
-  void _disposeVideoController() {
-    if (_controller != null) {
-      _controller!.dispose();
-      _controller = null;
-      debugPrint("Disposed of previous video controller.");
-    }
-  }
-
-  void _disposeChewieController() {
-    if (_chewieController != null) {
-      _chewieController!.dispose();
-      _chewieController = null;
-      debugPrint("Disposed of Chewie controller.");
-    }
-  }
-
-  void _resetPlayerWidget() {
-    if (_playerWidget != null) {
-      _playerWidget = null;
-      debugPrint("Reset player widget.");
-    }
-  }
-
-  void _initializeWidget(VideoPlayerController controller) {
-    try {
-      _chewieController = ChewieController(
-        videoPlayerController: _controller!,
-        autoPlay: true,
-        looping: false,
-      );
-    } catch (e) {
-      debugPrint("Error initializing Chewie controller: $e");
-      _disposeControllers();
-    }
-
-    try {
-      _playerWidget = Chewie(
-        controller: _chewieController!,
-      );
-    } catch (e) {
-      debugPrint("Error creating Chewie widget: $e");
-      _disposeControllers();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final childService = context.read<ChildDataService>();
-    final currentChildService = context.read<CurrentChildrenService>();
-    final currentChild = context.watch<CurrentChildrenService>().getCurrChild();
-
-    if (currentChild != null && currentChild.id != _lastChildId) {
-      _lastChildId = currentChild.id;
-      Future.microtask(() => fetchVideos(childService, currentChildService));
-    }
-  }
-
-  Future<File?> initializeFileVideoPlayer(String fileName) async {
-    final signedUrl = await getSignedDownloadUrl(fileName);
-    final response = await http.get(Uri.parse(signedUrl!));
-    debugPrint("Response length: ${response.bodyBytes.length} bytes");
-
-    final tempDirectory = await path
-        .getTemporaryDirectory(); //this directory will be cleared by the device when needed and does not persist through bootups
-
-    final filePath = '${tempDirectory.path}/$fileName';
-
-    final file = File(filePath);
-    await file.writeAsBytes(response.bodyBytes);
-
-    debugPrint("File location: ${file.path}");
-    debugPrint("File size: ${await file.length()} bytes");
-
-    // Uncomment the next line to debug print the file contents only if you suspect they are a string
-    // debugPrint("File contents: ${await file.readAsString()}");
-
-    if (!(await file.exists())) {
-      debugPrint("Error: File was not saved correctly");
-      return null;
-    }
-    debugPrint("File saved successfully at: ${file.path}");
-
-    debugPrint("opening file: $filePath");
-    try {
-      await file.open(mode: FileMode.read);
-      debugPrint("File opened successfully.");
-    } catch (e) {
-      debugPrint("Error opening file: $e");
-      return null;
-    }
-
-    _disposeControllers();
-
-    try {
-      _controller = VideoPlayerController.file(
-        file,
-      )..initialize().then((_) {
-          setState(() {});
-          _controller!.play();
+  void _syncSelection(
+    List<LocalVideoEntry> entries,
+    VideoStorageService videoStorage,
+  ) {
+    if (entries.isEmpty) {
+      if (_selectedVideoKey != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _disposeControllers();
+          setState(() {
+            _selectedVideoKey = null;
+            _lastLoadedKey = null;
+          });
         });
-      debugPrint("Video Player Controller created with file: $filePath");
-    } catch (e) {
-      debugPrint("Error initializing video player: $e");
-      _disposeControllers();
-      return null;
+      }
+      return;
     }
 
-    _initializeWidget(_controller!);
+    final hasSelection =
+        entries.any((entry) => entry.key == _selectedVideoKey);
 
-    return file;
-  }
-
-  /// Initialize the Video Player
-  void initializeNetworkVideoPlayer(String filename) async {
-    _disposeControllers();
-
-    try {
-      final signedUrl = await getSignedDownloadUrl(filename);
-      _controller = VideoPlayerController.networkUrl(Uri.parse(signedUrl!))
-        ..initialize().then((_) {
-          setState(() {});
-          _controller!.play();
+    if (!hasSelection) {
+      final firstEntry = entries.first;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _selectedVideoKey = firstEntry.key;
         });
-      _initializeWidget(_controller!);
-    } catch (e) {
-      debugPrint("Error: could not get signed download url.");
+        _playEntry(firstEntry, videoStorage);
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, ChildDataService,
-        CurrentChildrenService>(
-      builder: (context, localizationService, childService,
-          currentChildrenService, child) {
-        // fetchVideos(context, childService, currentChildrenService);
+    return Consumer3<LocalizationService, CurrentChildrenService,
+        VideoStorageService>(
+      builder: (context, localizationService, currentChildrenService,
+          videoStorage, child) {
+        final theme = Theme.of(context);
+        final currentChild = currentChildrenService.getCurrChild();
+        final childId = currentChild?.id;
+
+        final entries = <LocalVideoEntry>[];
+        if (childId != null && videoStorage.isReady) {
+          entries.addAll(videoStorage.videosForChild(childId));
+        }
+
+        _syncSelection(entries, videoStorage);
+
+        final selectedEntry = entries
+            .where((entry) => entry.key == _selectedVideoKey)
+            .cast<LocalVideoEntry?>()
+            .firstWhere(
+              (entry) => entry != null,
+              orElse: () => null,
+            );
+
         return Scaffold(
-          backgroundColor: const Color(0xFF828A8F),
-          appBar: TopBar(pageName: localizationService.translate("add_words")),
-          bottomNavigationBar: const CustomBottomBar(DisplayVideoPage.routeName),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Center(
-                  child: Column(
-                    children: [
-                      DropdownButton<String>(
-                        value: _selectedVideoId,
-                        hint: const Text("Select a video"),
-                        items: _wordList.map(
-                          (video) {
-                            return DropdownMenuItem<String>(
-                              value: video.id,
-                              child: Text(video.id!),
-                            );
-                          },
-                        ).toList(),
-                        onChanged: (value) async {
-                          setState(
-                            () {
-                              _selectedVideoId = value;
-                            },
-                          );
-                          final selectedVideo = _wordList
-                              .firstWhere((video) => video.id == value);
-                          if (kIsWeb) {
-                            initializeNetworkVideoPlayer(
-                                selectedVideo.videoID!);
-                          } else {
-                            initializeFileVideoPlayer(selectedVideo.videoID!);
-                          }
-                        },
-                      ),
-                      Expanded(
-                        child: _playerWidget != null &&
-                                _controller != null &&
-                                _chewieController != null
-                            ? AspectRatio(
-                                aspectRatio: _controller!.value.aspectRatio,
-                                child: _playerWidget!,
-                              )
-                            : const Center(
-                                child: Text("Select a video to play")),
-                      ),
-                    ],
-                  ),
-                ),
+          backgroundColor: theme.colorScheme.surface,
+          appBar:
+              TopBar(pageName: localizationService.translate("upload_video")),
+          bottomNavigationBar:
+              const CustomBottomBar(DisplayVideoPage.routeName),
+          body: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: _buildContent(
+              theme: theme,
+              localizationService: localizationService,
+              videoStorage: videoStorage,
+              currentChildId: childId,
+              entries: entries,
+              selectedEntry: selectedEntry,
+            ),
+          ),
         );
       },
     );
   }
 
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
+  Widget _buildContent({
+    required ThemeData theme,
+    required LocalizationService localizationService,
+    required VideoStorageService videoStorage,
+    required String? currentChildId,
+    required List<LocalVideoEntry> entries,
+    required LocalVideoEntry? selectedEntry,
+  }) {
+    if (!videoStorage.isFeatureEnabled || kIsWeb) {
+      return _buildMessageCard(
+        theme,
+        title: "Video playback unavailable",
+        description:
+            "Local video playback is disabled by the feature flag or unsupported on this platform.",
+      );
+    }
+
+    if (!videoStorage.isReady) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (currentChildId == null) {
+      return _buildMessageCard(
+        theme,
+        title: localizationService.translate("file_not_added"),
+        description: "Add a child to view any saved videos.",
+      );
+    }
+
+    if (entries.isEmpty) {
+      return _buildMessageCard(
+        theme,
+        title: "No videos yet",
+        description:
+            "Add a word with a video attachment to see it appear here.",
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selectedVideoKey,
+          items: entries
+              .map(
+                (entry) => DropdownMenuItem<String>(
+                  value: entry.key,
+                  child: Text(entry.wordId),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) {
+              _onVideoSelected(value, entries, videoStorage);
+            }
+          },
+          decoration: const InputDecoration(
+            labelText: "Select a video",
+          ),
+        ),
+        const SizedBox(height: 24),
+        Expanded(
+          child: Center(
+            child: _buildPlayerArea(theme, selectedEntry),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlayerArea(ThemeData theme, LocalVideoEntry? selectedEntry) {
+    if (_isInitializing) {
+      return const CircularProgressIndicator();
+    }
+
+    if (_initError != null) {
+      return Text(
+        _initError!,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: theme.colorScheme.error,
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+
+    if (selectedEntry == null ||
+        _controller == null ||
+        _chewieController == null ||
+        _playerWidget == null) {
+      return const Text("Select a video to play.");
+    }
+
+    final aspectRatio = _controller!.value.aspectRatio;
+    return AspectRatio(
+      aspectRatio: aspectRatio == 0 ? 16 / 9 : aspectRatio,
+      child: _playerWidget!,
+    );
+  }
+
+  Widget _buildMessageCard(
+    ThemeData theme, {
+    required String title,
+    required String description,
+  }) {
+    return Card(
+      color: theme.colorScheme.surfaceContainerHigh,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(description),
+          ],
+        ),
+      ),
+    );
   }
 }

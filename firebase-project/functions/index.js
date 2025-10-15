@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 const {getAuth} = require("firebase-admin/auth");
 const {FieldValue} = require("firebase-admin/firestore");
 
-const {Storage} = require("@google-cloud/storage");
+require("@google-cloud/storage");
 
 // Import our auth module
 const {Role} = require("./auth/roles");
@@ -24,13 +24,10 @@ const auth = require("firebase-functions/v1/auth");
 // v2 functions
 const https = require("firebase-functions/v2/https");
 
-// path
-const path = require("path");
 
 admin.initializeApp();
 
 const db = admin.firestore();
-const storage = new Storage();
 
 // Export migration function
 exports.migrateToUserProfile = migrateToUserProfile;
@@ -403,150 +400,6 @@ exports.getUserCustomClaims = https.onCall(async (req, context) => {
   }
 });
 
-
-exports.generateSignedUploadUrl = https.onCall(async (req, context) => {
-  logger.log(`Current filename passed: ${req.data.fileName}`);
-
-  try {
-    checkIsAtLeast(req, Role.parent);
-  } catch (error) {
-    logger.error(`User does not have permission to upload: ${error}`);
-    throw new https.HttpsError(
-        "permission-denied",
-        `User does not have permission to upload: ${error}`,
-    );
-  }
-
-  // code to validate the file name
-  const rawFileName = req.data.fileName;
-
-  // Reject obviously bad characters
-  if (
-    typeof rawFileName !== "string" ||
-      rawFileName.includes("/") ||
-      rawFileName.includes("..")
-  ) {
-    throw new https.HttpsError(
-        "invalid-argument",
-        "Filename cannot be an address",
-    );
-  }
-
-  // Ensure the file name contains only valid characters
-  if (!/^[a-zA-Z0-9._-]+$/.test(rawFileName)) {
-    throw new https.HttpsError(
-        "invalid-argument",
-        "Invalid characters in file name",
-    );
-  }
-
-  // Ensure the file name ends with .mp4
-  if (!rawFileName.toLowerCase().endsWith(".mp4")) {
-    throw new https.HttpsError(
-        "invalid-argument",
-        "File extension must be .mp4",
-    );
-  }
-
-  // Ensure normalized path is within user directory
-  const userId = req.auth.uid;
-  const filePath = path.posix.normalize(`${userId}/${rawFileName}`);
-  if (!filePath.startsWith(`${userId}/`)) {
-    throw new https.HttpsError(
-        "permission-denied",
-        "Illegal file path traversal attempt",
-    );
-  }
-
-  try {
-    // Proceed with signed URL generation
-    const bucketName = "baby-words-tracker-media";
-
-    const options = {
-      version: "v4",
-      action: "write",
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
-      contentType: "video/mp4", // Ensures Cloud Storage knows the format
-    };
-
-    const fireFile = storage.bucket(bucketName).file(filePath);
-    await fireFile.save(Buffer.from(""), {
-      contentType: "video/mp4",
-    });
-
-    const [url] = await fireFile.getSignedUrl(options);
-
-    // res.status(200).send({url});
-    return {url};
-  } catch (error) {
-    throw new https.HttpsError(
-        "not-found",
-        // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
-    );
-  }
-});
-
-exports.generateSignedDownloadUrl = https.onCall(async (req, context) => {
-  logger.log(`Current filename passed: ${req.data.fileName}`);
-
-  try {
-    checkIsAtLeast(req, Role.parent);
-  } catch (error) {
-    logger.error(`User does not have permission to upload: ${error}`);
-    throw new https.HttpsError(
-        "permission-denied",
-        `User does not have permission to upload: ${error}`,
-    );
-  }
-
-  // Proceed with signed URL generation
-  const bucketName = "baby-words-tracker-media";
-
-  // code to validate the file name
-  const rawFileName = req.data.fileName;
-
-  // Reject obviously bad characters
-  if (
-    typeof rawFileName !== "string" ||
-      rawFileName.includes("/") ||
-      rawFileName.includes("..")
-  ) {
-    throw new https.HttpsError("invalid-argument", "Invalid file name");
-  }
-
-  // Ensure normalized path is within user directory
-  const userId = req.auth.uid;
-  const filePath = path.posix.normalize(`${userId}/${rawFileName}`);
-  if (!filePath.startsWith(`${userId}/`)) {
-    throw new https.HttpsError(
-        "permission-denied",
-        "Illegal file path traversal attempt",
-    );
-  }
-
-  try {
-    const options = {
-      version: "v4",
-      action: "read",
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
-      // contentType: "video/mp4", // Ensures Cloud Storage knows the format
-    };
-
-    const fireFile = storage.bucket(bucketName).file(filePath);
-
-    const [url] = await fireFile.getSignedUrl(options);
-
-    // res.status(200).send({url});
-    return {url};
-  } catch (error) {
-    throw new https.HttpsError(
-        "not-found",
-        // eslint-disable-next-line max-len
-        `Error generating signed url: ${error}, filename : ${req.data.fileName}`,
-    );
-  }
-});
 
 // !!! note: this function should only be called by admin users.
 // Make sure to call checkIsAtLeast(req, Role.admin); before using it
