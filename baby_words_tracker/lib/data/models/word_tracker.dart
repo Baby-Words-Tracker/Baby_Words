@@ -7,35 +7,29 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 
 class WordTracker {
   static String collectionName = 'WordTracker';
-  static String videoIDFieldName = 'videoID';
 
   final String? id; // The word being tracked, e.g., "mama", "dada"
   final DateTime firstUtterance;
-  final String? videoID;
 
   WordTracker({
     this.id,
     required this.firstUtterance,
-    this.videoID,
   });
 
   WordTracker copyWith({
     String? id,
     DateTime? firstUtterance,
     int? numUtterances,
-    String? videoID,
   }) {
     return WordTracker(
       id: id ?? this.id,
       firstUtterance: firstUtterance ?? this.firstUtterance,
-      videoID: videoID ?? this.videoID,
     );
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'firstUtterance': firstUtterance,
-      videoIDFieldName: videoID,
     };
   }
 
@@ -45,7 +39,6 @@ class WordTracker {
       firstUtterance: map['firstUtterance'] != null
           ? convertToDateTime(map['firstUtterance'])
           : DateTime.fromMillisecondsSinceEpoch(0),
-      videoID: map[videoIDFieldName] as String?,
     );
   }
 
@@ -62,15 +55,11 @@ class WordTracker {
 
   static Map<String, dynamic> createUpdateMap({
     DateTime? firstUtterance,
-    String? videoID,
   }) {
     Map<String, dynamic> map = {};
 
     if (firstUtterance != null) {
       map['firstUtterance'] = firstUtterance;
-    }
-    if (videoID != null) {
-      map[videoIDFieldName] = videoID;
     }
 
     return map;
@@ -78,7 +67,7 @@ class WordTracker {
 
   @override
   String toString() {
-    return 'Wordtracker(wordID: $id, firstUtterance: $firstUtterance, videoID: $videoID)';
+    return 'Wordtracker(wordID: $id, firstUtterance: $firstUtterance)';
   }
 
   @override
@@ -86,15 +75,12 @@ class WordTracker {
     if (identical(this, other)) return true;
     if (other is! WordTracker) return false;
 
-    return other.id == id &&
-        other.firstUtterance == firstUtterance &&
-        other.videoID == videoID;
+    return other.id == id && other.firstUtterance == firstUtterance;
   }
 
   @override
   int get hashCode => Object.hashAll([
         id,
         firstUtterance,
-        videoID,
       ]);
 }

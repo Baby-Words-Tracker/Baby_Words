@@ -16,8 +16,12 @@ Future<void> selectDate(
   }
 }
 
-void showAlertMessage(BuildContext context, String title, String message) {
-  showDialog(
+Future<void> showAlertMessage(
+  BuildContext context,
+  String title,
+  String message,
+) {
+  return showDialog<void>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(

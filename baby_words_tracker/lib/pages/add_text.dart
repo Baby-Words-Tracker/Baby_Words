@@ -1,22 +1,20 @@
-import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/check_and_update_word.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:baby_words_tracker/util/ui_utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // baby words packages
-import 'package:baby_words_tracker/video/video_functions.dart';
-
-import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/video/video_picker.dart';
+import 'package:baby_words_tracker/video/video_storage_service.dart';
 
 import 'package:baby_words_tracker/l10n/localization_service.dart';
-import 'package:path/path.dart' as path;
 
 class AddTextPage extends StatefulWidget {
   static const routeName = "/addtext";
@@ -31,8 +29,8 @@ class _AddTextPageState extends State<AddTextPage> {
   final TextEditingController _controller = TextEditingController();
   final TextEditingController fileTextController = TextEditingController();
   List<String> parsedWords = [];
+  VideoSelectionResult? _selectedVideo;
 
-  late final ChildDataService _childDataService;
   late final WordDataService _wordDataService;
   late final WordTrackerDataService _wordTrackerDataService;
 
@@ -44,7 +42,6 @@ class _AddTextPageState extends State<AddTextPage> {
     super.didChangeDependencies();
 
     if (!_initialized) {
-      _childDataService = Provider.of<ChildDataService>(context, listen: false);
       _wordDataService = Provider.of<WordDataService>(context, listen: false);
       _wordTrackerDataService =
           Provider.of<WordTrackerDataService>(context, listen: false);
@@ -60,6 +57,42 @@ class _AddTextPageState extends State<AddTextPage> {
     setState(() {});
   }
 
+  Future<void> _handleVideoSelection(
+    BuildContext context,
+    LocalizationService localizationService,
+    VideoStorageService videoStorage,
+  ) async {
+    try {
+      final result = await pickLocalVideo();
+      if (result == null) {
+        return;
+      }
+      setState(() {
+        _selectedVideo = result;
+        fileTextController.text = result.displayName;
+      });
+    } on VideoSelectionException catch (error) {
+      await showAlertMessage(
+        context,
+        localizationService.translate("file_not_added"),
+        error.message,
+      );
+    } catch (error) {
+      await showAlertMessage(
+        context,
+        localizationService.translate("file_not_added"),
+        "Something went wrong while selecting the video. Please try again.",
+      );
+    }
+  }
+
+  void _clearVideoSelection() {
+    setState(() {
+      _selectedVideo = null;
+      fileTextController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -69,10 +102,9 @@ class _AddTextPageState extends State<AddTextPage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    return Consumer3<LocalizationService, AuthenticationService,
-            ChildDataService>(
-        builder: (context, localizationService, authenticationService,
-            childService, child) {
+    return Consumer<LocalizationService>(
+        builder: (context, localizationService, child) {
+      final videoStorage = context.watch<VideoStorageService>();
       return Scaffold(
         backgroundColor: const Color(0xFF828A8F),
         appBar: TopBar(pageName: localizationService.translate("add_words")),
@@ -111,67 +143,92 @@ class _AddTextPageState extends State<AddTextPage> {
                       fillColor: const Color(0xFF9E1B32),
                     ),
                   ),
-                  TextField(
-                    controller: fileTextController,
-                    onTap: () => selectFile(fileTextController),
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      //border: OutlineInputBorder(),
-                      hintText: localizationService.translate(
-                          "choose_file"), //'Tap to Choose Birthday..',
-                      hintStyle: const TextStyle(color: Colors.white),
-                      filled: true,
-                      fillColor: const Color(0xFF9E1B32),
+                  if (!kIsWeb && videoStorage.isFeatureEnabled)
+                    TextField(
+                      controller: fileTextController,
+                      readOnly: true,
+                      onTap: () => _handleVideoSelection(
+                        context,
+                        localizationService,
+                        videoStorage,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: localizationService.translate("choose_file"),
+                        hintStyle: const TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: const Color(0xFF9E1B32),
+                        suffixIcon: _selectedVideo != null
+                            ? IconButton(
+                                icon:
+                                    const Icon(Icons.close, color: Colors.white),
+                                onPressed: _clearVideoSelection,
+                              )
+                            : null,
+                      ),
                     ),
-                  ),
                   Center(
                       child: OutlinedButton(
                     onPressed: () async {
-                      Child? currChild =
-                          context.read<CurrentChildrenService>().getCurrChild();
-                      String? currChildID;
-                      if (currChild != null) {
-                        currChildID = currChild.id;
-                      }
+                      final currentChildrenService =
+                          context.read<CurrentChildrenService>();
+                      final videoStorage =
+                          context.read<VideoStorageService>();
 
-                      /* List<LanguageCode>? maybeLanguages = currChildID != null
-                          ? await childDataService.getLanguages(currChildID)
-                          : [LanguageCode.en];
-
-                      List<LanguageCode> langauges =
-                          maybeLanguages ?? [LanguageCode.en]; */
+                      final currChild = currentChildrenService.getCurrChild();
+                      final currChildID = currChild?.id;
 
                       _parseWords();
 
                       var correctWords = 0;
                       var totalWords = 0;
+                      var videoAttached = false;
+                      final pendingVideo = _selectedVideo;
 
-                      for (var word in parsedWords) {
+                      if (pendingVideo != null && !videoStorage.isReady) {
+                        await showAlertMessage(
+                          context,
+                          localizationService.translate("file_not_added"),
+                          "We couldn't store the video yet. Please try again once your profile finishes loading.",
+                        );
+                      }
+
+                      for (final word in parsedWords) {
                         totalWords++;
-                        bool? result = await checkAndUpdateWord(
+                        final result = await checkAndUpdateWord(
                           word,
                           _wordDataService,
                           targetLanguage:
                               localizationService.localization.languageCode,
-                        ); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //languages != null ? await checkAndUpdateWord(word, languages: languages) : await checkAndUpdateWord(word); //only checks the childs selected languages
+                        );
+
                         if (result != null && result && currChildID != null) {
-                          late String? filePath;
-                          if (fileTextController.text != "") {
-                            filePath = path.basename(fileTextController.text);
-                            uploadVideo(fileTextController.text);
-                          } else {
-                            filePath = null;
-                          }
-                          addWordToChild(
+                          final added = await addWordToChild(
                             currChildID,
                             word,
                             _wordTrackerDataService,
-                            videoId: filePath,
                           );
-                          correctWords++;
-                          /* addVideoToWord(
-                              word, path.basename(filePath), childService,
-                              id: currChildID); */
+
+                          if (added) {
+                            correctWords++;
+                            if (!videoAttached &&
+                                pendingVideo != null &&
+                                videoStorage.isReady) {
+                              try {
+                                await videoStorage.saveVideoForWord(
+                                  childId: currChildID,
+                                  wordId: word,
+                                  sourceFile: pendingVideo.file,
+                                );
+                                videoAttached = true;
+                              } catch (error) {
+                                await showAlertMessage(
+                                  context,
+                                  localizationService.translate("file_not_added"),
+                                  "The word was saved, but we couldn't store the video locally. Please try again.",
+                                );
+                              }
+                            }
+                          }
                         } else {
                           if (!context.mounted) return;
                           await showDialog(
@@ -180,15 +237,14 @@ class _AddTextPageState extends State<AddTextPage> {
                               return AlertDialog(
                                 title: Text(
                                     localizationService.translate("error")),
-                                content: Text(word +
-                                    localizationService
-                                        .translate("words_error")),
+                                content: Text(
+                                  '$word${localizationService.translate("words_error")}',
+                                ),
                                 actions: <Widget>[
                                   TextButton(
                                     child: const Text('OK'),
                                     onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(); // Close the dialog
+                                      Navigator.of(context).pop();
                                       _controller.clear();
                                     },
                                   ),
@@ -213,8 +269,7 @@ class _AddTextPageState extends State<AddTextPage> {
                                 TextButton(
                                   child: const Text('OK'),
                                   onPressed: () {
-                                    Navigator.of(context)
-                                        .pop(); // Close the dialog
+                                    Navigator.of(context).pop();
                                   },
                                 ),
                               ],
@@ -222,7 +277,7 @@ class _AddTextPageState extends State<AddTextPage> {
                           },
                         );
                         _controller.clear();
-                        fileTextController.clear();
+                        _clearVideoSelection();
                       }
                     },
                     style: OutlinedButton.styleFrom(
@@ -250,31 +305,16 @@ class _AddTextPageState extends State<AddTextPage> {
   Future<bool> addWordToChild(
     String childId,
     String word,
-    WordTrackerDataService trackerService, {
-    String? videoId,
-  }) async {
-
-    return await trackerService.addOrUpdateWordTracker(
-        childId,
-        word,
-        WordTracker(
-          id: word,
-          firstUtterance: DateTime.now(),
-          videoID: videoId,
-        ));
-  }
-
-  Future<void> addVideoToWord(
-    String childId,
-    String word,
-    String filePath,
-    ChildDataService childService,
+    WordTrackerDataService trackerService,
   ) async {
-    if (await childService.addVideo(childId, word, path.basename(filePath)) ==
-        false) {
-      debugPrint("AddVideo: Error adding video to work tracker");
-    } else {
-      debugPrint("AddVideo: $filePath added to $word");
-    }
+    return trackerService.addOrUpdateWordTracker(
+      childId,
+      word,
+      WordTracker(
+        id: word,
+        firstUtterance: DateTime.now(),
+      ),
+    );
   }
+
 }

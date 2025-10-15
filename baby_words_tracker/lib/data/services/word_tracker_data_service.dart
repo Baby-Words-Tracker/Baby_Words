@@ -41,11 +41,9 @@ class WordTrackerDataService {
     String childId,
     String wordID, {
     DateTime? firstUtterance,
-    String? videoID,
   }) async {
     final updateMap = WordTracker.createUpdateMap(
       firstUtterance: firstUtterance,
-      videoID: videoID,
     );
 
     final bool result = await fireRepo.updateSubcollectionDocument(

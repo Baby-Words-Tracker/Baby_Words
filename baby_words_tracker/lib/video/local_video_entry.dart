@@ -1,0 +1,62 @@
+import 'dart:convert';
+
+/// Metadata about a locally stored video that is associated with a parent's child word.
+class LocalVideoEntry {
+  LocalVideoEntry({
+    required this.parentId,
+    required this.childId,
+    required this.wordId,
+    required this.filePath,
+    required this.savedAt,
+  });
+
+  final String parentId;
+  final String childId;
+  final String wordId;
+  final String filePath;
+  final DateTime savedAt;
+
+  String get key => composeKey(parentId, childId, wordId);
+
+  LocalVideoEntry copyWith({
+    String? parentId,
+    String? childId,
+    String? wordId,
+    String? filePath,
+    DateTime? savedAt,
+  }) {
+    return LocalVideoEntry(
+      parentId: parentId ?? this.parentId,
+      childId: childId ?? this.childId,
+      wordId: wordId ?? this.wordId,
+      filePath: filePath ?? this.filePath,
+      savedAt: savedAt ?? this.savedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'parentId': parentId,
+      'childId': childId,
+      'wordId': wordId,
+      'filePath': filePath,
+      'savedAt': savedAt.toIso8601String(),
+    };
+  }
+
+  static LocalVideoEntry fromJson(Map<String, dynamic> json) {
+    return LocalVideoEntry(
+      parentId: json['parentId'] as String,
+      childId: json['childId'] as String,
+      wordId: json['wordId'] as String,
+      filePath: json['filePath'] as String,
+      savedAt: DateTime.parse(json['savedAt'] as String),
+    );
+  }
+
+  static String composeKey(String parentId, String childId, String wordId) {
+    return base64Url.encode(
+      utf8.encode('$parentId::$childId::$wordId'),
+    );
+  }
+}

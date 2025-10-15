@@ -302,17 +302,16 @@ Consumer childAddingFeature(
 Future<bool> addWordToChild(
   String childId,
   String word,
-  WordTrackerDataService trackerService, {
-  String? videoId,
-}) async {
-  return await trackerService.addOrUpdateWordTracker(
-      childId,
-      word,
-      WordTracker(
-        id: word,
-        firstUtterance: DateTime.now(),
-        videoID: videoId,
-      ));
+  WordTrackerDataService trackerService,
+) async {
+  return trackerService.addOrUpdateWordTracker(
+    childId,
+    word,
+    WordTracker(
+      id: word,
+      firstUtterance: DateTime.now(),
+    ),
+  );
 }
 
 Column wordAddingFeature(
