@@ -243,7 +243,7 @@ class _DisplayVideoPageState extends State<DisplayVideoPage> {
       children: [
         DropdownButtonFormField<String>(
           key: ValueKey(_selectedVideoKey),
-          initialValue: _selectedVideoKey,
+          value: _selectedVideoKey,
           items: entries
               .map(
                 (entry) => DropdownMenuItem<String>(
