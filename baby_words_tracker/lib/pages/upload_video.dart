@@ -294,8 +294,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
       ),
       const SizedBox(height: 16),
       DropdownButtonFormField<String>(
-        key: ValueKey(_selectedWordId),
-        initialValue: _selectedWordId,
+        value: _selectedWordId,
         items: _words
             .where((word) => word.id != null)
             .map(
