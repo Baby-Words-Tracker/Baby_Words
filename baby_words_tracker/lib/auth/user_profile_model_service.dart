@@ -142,21 +142,6 @@ class UserProfileModelService extends ChangeNotifier {
 
       var currentProfile = profile!;
 
-      final firebaseEmailVerified =
-          _authenticationService.user?.emailVerified ?? false;
-      if (currentProfile.emailVerified != firebaseEmailVerified) {
-        try {
-          await _userProfileService.updateUserProfile(
-            currentProfile.id,
-            {'emailVerified': firebaseEmailVerified},
-            isDemo: isDemo,
-          );
-          currentProfile =
-              currentProfile.copyWith(emailVerified: firebaseEmailVerified);
-        } catch (_) {
-          // Ignore sync failures; listener will retry on next update
-        }
-      }
       _userProfile = currentProfile;
       
       final roleName = _userProfile?.role.name ?? 'unknown';
@@ -280,6 +265,32 @@ class UserProfileModelService extends ChangeNotifier {
       phoneNumber: phoneNumber,
       isDemo: isDemoUser,
     );
+  }
+
+  /// Record that the user has completed email verification
+  Future<void> markEmailVerified() async {
+    if (_userProfile == null) {
+      debugPrint("UserProfileModelService: Cannot mark email verified - no profile");
+      return;
+    }
+
+    if (_userProfile!.emailVerified) {
+      debugPrint("UserProfileModelService: Email already marked as verified");
+      return;
+    }
+
+    final success = await _userProfileService.updateUserProfile(
+      _userProfile!.id,
+      {'emailVerified': true},
+      isDemo: isDemoUser,
+    );
+
+    if (success) {
+      _userProfile = _userProfile!.copyWith(emailVerified: true);
+      notifyListeners();
+    } else {
+      debugPrint("UserProfileModelService: Failed to update email verified flag");
+    }
   }
 
   /// Check if user can access given platform

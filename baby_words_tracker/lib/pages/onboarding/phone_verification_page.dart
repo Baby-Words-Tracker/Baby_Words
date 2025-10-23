@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 /// Collects phone number, sends SMS code, verifies it
 class PhoneVerificationPage extends StatefulWidget {
   static const routeName = '/onboarding/phone-verification';
-  
+
   const PhoneVerificationPage({super.key});
 
   @override
@@ -20,43 +20,133 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   bool _isLoading = false;
   bool _codeSent = false;
   String? _verificationId;
   int? _resendToken;
   String? _errorMessage;
+  String _currentUsDigits = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController.addListener(_handlePhoneInputChanged);
+  }
 
   @override
   void dispose() {
+    _phoneController.removeListener(_handlePhoneInputChanged);
     _phoneController.dispose();
     _codeController.dispose();
     super.dispose();
   }
 
+  void _handlePhoneInputChanged() {
+    var digitsOnly = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (digitsOnly.length > 10 && digitsOnly.startsWith('1')) {
+      digitsOnly = digitsOnly.substring(1);
+    }
+
+    if (digitsOnly.length > 10) {
+      digitsOnly = digitsOnly.substring(0, 10);
+    }
+
+    final limited = digitsOnly;
+
+    if (limited == _currentUsDigits) {
+      return;
+    }
+
+    _currentUsDigits = limited;
+    final formatted = _formatUsPhoneNumber(limited);
+
+    _phoneController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  String _formatUsPhoneNumber(String digits) {
+    if (digits.isEmpty) {
+      return '';
+    }
+
+    if (digits.length < 3) {
+      return '($digits';
+    }
+
+    final buffer = StringBuffer()
+      ..write('(')
+      ..write(digits.substring(0, 3))
+      ..write(')');
+
+    if (digits.length == 3) {
+      return buffer.toString();
+    }
+
+    if (digits.length <= 6) {
+      buffer
+        ..write(' ')
+        ..write(digits.substring(3));
+      return buffer.toString();
+    }
+
+    buffer
+      ..write(' ')
+      ..write(digits.substring(3, 6))
+      ..write('-')
+      ..write(digits.substring(6));
+
+    return buffer.toString();
+  }
+
+  String? _getE164PhoneNumber() {
+    if (_currentUsDigits.length != 10) {
+      return null;
+    }
+    return '+1$_currentUsDigits';
+  }
+
+  String? _getDisplayPhoneNumber() {
+    if (_currentUsDigits.isEmpty) {
+      return null;
+    }
+    return '+1 ${_formatUsPhoneNumber(_currentUsDigits)}';
+  }
+
   Future<void> _sendVerificationCode() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final phoneNumber = _getE164PhoneNumber();
+    if (phoneNumber == null) {
+      setState(() {
+        _errorMessage = 'Enter a valid 10-digit US phone number';
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final phoneNumber = _phoneController.text.trim();
     debugPrint('PhoneVerificationPage: Sending code to $phoneNumber');
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         timeout: const Duration(seconds: 60),
-        
         verificationCompleted: (PhoneAuthCredential credential) async {
           debugPrint('PhoneVerificationPage: Auto-verification completed');
           await _linkPhoneCredential(credential);
         },
-        
         verificationFailed: (FirebaseAuthException e) {
-          debugPrint('PhoneVerificationPage: Verification failed: ${e.message}');
+          debugPrint(
+              'PhoneVerificationPage: Verification failed: ${e.message}');
           if (mounted) {
             setState(() {
               _errorMessage = e.message ?? 'Verification failed';
@@ -64,9 +154,9 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
             });
           }
         },
-        
         codeSent: (String verificationId, int? resendToken) {
-          debugPrint('PhoneVerificationPage: Code sent, verificationId: $verificationId');
+          debugPrint(
+              'PhoneVerificationPage: Code sent, verificationId: $verificationId');
           if (mounted) {
             setState(() {
               _codeSent = true;
@@ -76,12 +166,10 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
             });
           }
         },
-        
         codeAutoRetrievalTimeout: (String verificationId) {
           debugPrint('PhoneVerificationPage: Auto-retrieval timeout');
           _verificationId = verificationId;
         },
-        
         forceResendingToken: _resendToken,
       );
     } catch (e) {
@@ -130,24 +218,25 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
   Future<void> _linkPhoneCredential(PhoneAuthCredential credential) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      
+
       if (user == null) {
         throw Exception('No user logged in');
       }
 
       // Link phone credential to existing account
       await user.linkWithCredential(credential);
-      
+
       debugPrint('PhoneVerificationPage: Phone number linked successfully');
 
       // Update UserProfile to mark 2FA as enabled and save phone number
       if (mounted) {
         final userModelService = context.read<UserProfileModelService>();
-        final phoneNumber = _phoneController.text.trim();
-        await userModelService.enable2FA(phoneNumber: phoneNumber);
-        
-        debugPrint('PhoneVerificationPage: 2FA enabled in UserProfile with phone: $phoneNumber');
-        
+        final normalizedPhone = _getE164PhoneNumber();
+        await userModelService.enable2FA(phoneNumber: normalizedPhone);
+
+        debugPrint(
+            'PhoneVerificationPage: 2FA enabled in UserProfile with phone: ${normalizedPhone ?? 'unknown'}');
+
         // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -157,15 +246,16 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
             ),
           );
         }
-        
+
         // The AuthGate will automatically move to next step
       }
     } on FirebaseAuthException catch (e) {
-      debugPrint('PhoneVerificationPage: Firebase error linking credential: ${e.message}');
-      
+      debugPrint(
+          'PhoneVerificationPage: Firebase error linking credential: ${e.message}');
+
       if (mounted) {
         String message = 'Error verifying phone number';
-        
+
         if (e.code == 'provider-already-linked') {
           message = 'This phone number is already linked to your account';
           // Still mark 2FA as enabled
@@ -176,7 +266,7 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
         } else if (e.code == 'invalid-verification-code') {
           message = 'Invalid verification code';
         }
-        
+
         setState(() {
           _errorMessage = message;
           _isLoading = false;
@@ -258,49 +348,55 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Title
                   Text(
-                    _codeSent ? 'Enter Verification Code' : 'Verify Phone Number',
+                    _codeSent
+                        ? 'Enter Verification Code'
+                        : 'Verify Phone Number',
                     style: Theme.of(context).textTheme.headlineMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Description
                   Text(
                     _codeSent
-                        ? 'Enter the 6-digit code sent to ${_phoneController.text}'
-                        : 'We\'ll send you a verification code for two-factor authentication',
+                        ? 'Enter the 6-digit code sent to ${_getDisplayPhoneNumber() ?? 'your phone number'}'
+                        : 'We\u2019ll send a verification code to your US mobile number.',
                     style: Theme.of(context).textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Phone number input (only show if code not sent yet)
                   if (!_codeSent) ...[
                     TextFormField(
                       controller: _phoneController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Phone Number',
-                        hintText: '+1 234 567 8900',
-                        prefixIcon: Icon(Icons.phone),
-                        helperText: 'Include country code (e.g., +1 for US)',
+                        hintText: '(555) 123-4567',
+                        prefixIcon: const Icon(Icons.phone),
+                        prefixText: '+1 ',
+                        helperText: 'US numbers only. Just type the digits.',
                       ),
-                      keyboardType: TextInputType.phone,
+                      keyboardType: TextInputType.number,
                       enabled: !_isLoading,
+                      autofocus: true,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
+                        if (_currentUsDigits.isEmpty) {
                           return 'Please enter your phone number';
                         }
-                        if (!value.startsWith('+')) {
-                          return 'Phone number must include country code (e.g., +1)';
+                        if (_currentUsDigits.length != 10) {
+                          return 'Enter a 10-digit US phone number';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 24),
-                    
                     FilledButton.icon(
                       onPressed: _isLoading ? null : _sendVerificationCode,
                       icon: _isLoading
@@ -309,14 +405,15 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : const Icon(Icons.send),
                       label: Text(_isLoading ? 'Sending...' : 'Send Code'),
                     ),
                   ],
-                  
+
                   // Code input (only show after code is sent)
                   if (_codeSent) ...[
                     TextFormField(
@@ -335,7 +432,6 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
                       autofocus: true,
                     ),
                     const SizedBox(height: 24),
-                    
                     FilledButton.icon(
                       onPressed: _isLoading ? null : _verifyCode,
                       icon: _isLoading
@@ -344,21 +440,21 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : const Icon(Icons.check_circle),
                       label: Text(_isLoading ? 'Verifying...' : 'Verify Code'),
                     ),
                     const SizedBox(height: 16),
-                    
                     OutlinedButton.icon(
                       onPressed: _isLoading ? null : _sendVerificationCode,
                       icon: const Icon(Icons.refresh),
                       label: const Text('Resend Code'),
                     ),
                   ],
-                  
+
                   // Error message
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),
@@ -384,7 +480,7 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  
+
                   // Info card
                   Card(
                     color: Colors.blue.shade50,

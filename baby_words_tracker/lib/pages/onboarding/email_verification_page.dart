@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -65,7 +66,21 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           verified = true;
           debugPrint('✅ EmailVerificationPage: Email verified!');
 
+          if (mounted) {
+            final profileService = context.read<UserProfileModelService>();
+            await profileService.markEmailVerified();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Email verified!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          }
+
           await freshUser!.reload();
+          _autoCheckTimer?.cancel();
 
           debugPrint('✅ AuthGate will now detect verification and advance');
         } else {
