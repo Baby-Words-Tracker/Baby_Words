@@ -5,6 +5,7 @@ import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/researcher_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
+import 'package:baby_words_tracker/data/services/phrase_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 
 // Auth
@@ -81,6 +82,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ResearcherDataService()),
           ChangeNotifierProvider(create: (_) => WordDataService()),
           Provider(create: (_) => WordTrackerDataService()),
+          Provider(create: (_) => PhraseTrackerDataService()),
           ChangeNotifierProvider(
             create: (_) => LocalizationService(),
             lazy: false,

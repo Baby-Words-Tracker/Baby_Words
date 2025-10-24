@@ -1,20 +1,16 @@
 import 'dart:async';
 
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
-import 'package:baby_words_tracker/exceptions/document_creation_failed_exception.dart';
-import 'package:baby_words_tracker/exceptions/document_update_failed_exception.dart';
-import 'package:baby_words_tracker/exceptions/network_failure_exception.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/util/check_and_update_word.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
+import 'package:baby_words_tracker/util/text_entry_utils.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/video/video_picker.dart';
 import 'package:baby_words_tracker/video/video_storage_service.dart';
@@ -53,14 +49,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  List<String> _parseCurrentWords() {
-    String text = _controller.text;
-    String cleanedText = text
-        .trim() // Remove leading and trailing whitespace
-        .replaceAll(RegExp(r'[^\w\s]'), '') // Remove punctuation
-        .toLowerCase();
-    return cleanedText.split(' ').where((word) => word.isNotEmpty).toList();
-  }
+  List<String> _parseCurrentWords() => extractWords(_controller.text);
 
   Future<void> _handleVideoSelection(
     BuildContext context,
@@ -110,288 +99,108 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _addCurrentWords(
-    CurrentChildrenService currentChildrenService,
-    LocalizationService localizationService,
-  ) async {
-    final BuildContext pageContext = context;
-    Child? currChild = currentChildrenService.getCurrChild();
-    String? currChildID;
-    if (currChild != null) {
-      currChildID = currChild.id;
-    }
+  
+Future<void> _addCurrentWords(
+  CurrentChildrenService currentChildrenService,
+  LocalizationService localizationService,
+) async {
+  final child = currentChildrenService.getCurrChild();
+  final childId = child?.id;
 
-    final videoStorage = pageContext.read<VideoStorageService>();
-    final pendingVideo = _selectedVideo;
-    var videoAttached = false;
-
-    List<String> parsedWords = _parseCurrentWords();
-
-    if (parsedWords.isEmpty ||
-        (parsedWords.length == 1 && parsedWords.first == '')) {
-      debugPrint("No input in parsed words. Skipping _addCurrentWords.");
-      return;
-    } else {
-      debugPrint("List has contnet. Proceeding in _addCurrentWords.");
-    }
-
-    var correctWords = 0;
-    var totalWords = 0;
-    bool networkFailure = false;
-
-    if (pendingVideo != null && !videoStorage.isReady) {
-      if (!pageContext.mounted) return;
-      await showAlertIfMounted(
-        pageContext,
-        localizationService.translate("file_not_added"),
-        "We couldn't store the video yet. Please try again once your profile finishes loading.",
-      );
-    }
-
-    for (var word in parsedWords) {
-      totalWords++;
-      bool result = false;
-
-      try {
-        result = await checkAndUpdateWord(
-          word,
-          _wordDataService,
-          targetLanguage: localizationService.localization
-              .languageCode, // TODO: need to give users the ability to select the target language if they are multilingual
-        );
-      } on NetworkFailureException catch (e) {
-        debugPrint(
-            "HomePage: Network failure while checking and updating word: $word with error message $e");
-        networkFailure = true;
-      } on DocumentCreationFailedException {
-        debugPrint(
-            "HomePage: Document creation failed while checking and updating word: $word");
-        if (pageContext.mounted) {
-          // TODO: translate this message
-          await showAlertIfMounted(
-            pageContext,
-            "Failed to Add Word",
-            "The word '$word' could not be added due to a database issue. Please try again later.",
-          );
-        }
-        // TODO: add dialog to alert user + tell them
-        // TODO: later, add the word in local storage and then try to add it again when the network is available
-        continue; // Skip to the next word if creation failed
-      } on DocumentUpdateFailedException catch (e) {
-        debugPrint(
-            "HomePage: Document update failed while checking and updating word: $word with error message $e");
-        await _wordDataService.updateWord(
-          word,
-          Word.createUpdateMap(needsProcessing: true),
-        );
-        result =
-            true; // The word exists, but it's data needs to be updated. It is marked for update but the next steps can proceed.
-      } catch (e) {
-        debugPrint(
-            "HomePage: Error checking and updating word: $word. Error: $e");
-        continue; // Skip to the next word if there's an error
-      }
-
-      if (!result) {
-        if (pageContext.mounted) {
-          // TODO: handle network failure by asking if custom word should be added and updated later
-
-          // TODO: translate this message and title
-          String message = networkFailure
-              ? "We couldn't find your word in the dictionary due to a network issue. Would you like to add the word '$word' as a custom word for now and try again later?"
-              : "We couldn't find your word in the dictionary. Would you like to add the word '$word' as a custom word?";
-          final createCustom = await showConfirmationDialog(
-              pageContext, message,
-              title: "Word Not Found");
-
-          // TODO: need to allow language selection for custom words
-          if (createCustom) {
-            debugPrint("HomePage: User chose to create custom word for: $word");
-            final newWord = await _wordDataService
-                .createWord(
-                  Word(
-                    word: word,
-                    languageCodes: {
-                      localizationService.localization.languageCode
-                    },
-                    partOfSpeech: {
-                      localizationService.localization.languageCode:
-                          PartOfSpeech.unknown
-                    },
-                    needsProcessing:
-                        networkFailure, // mark as custom or mark for updates later
-                  ),
-                )
-                .timeout(Duration(seconds: 3))
-                .catchError((e) {
-              debugPrint(
-                  "HomePage: Timeout while creating custom word: $word. Error: $e");
-              return null; // Return null if the creation fails
-            });
-
-            debugPrint("HomePage: Attempting to create custom word: $word");
-
-            if (newWord == null) {
-              debugPrint("HomePage: Failed to create custom word: $word");
-              if (pageContext.mounted) {
-                // TODO: translate this message
-                await showAlertIfMounted(
-                  pageContext,
-                  "Failed to Add Word",
-                  "The word '$word' could not be added due to a database issue. Please try again later.",
-                );
-              }
-              continue; // Skip to the next word if creation failed
-            } else {
-              debugPrint("HomePage: Custom word created successfully: $word");
-              result = true; // Custom word created successfully
-            }
-          } else {
-            debugPrint(
-                "HomePage: User chose not to create custom word for: $word");
-            // If the user doesn't want to create a custom word, skip to the next word
-            continue;
-          }
-        } else {
-          debugPrint(
-              "HomePage: Error: pageContext is not mounted. Skipping word: $word");
-          continue;
-        }
-      }
-
-      if (!pageContext.mounted) {
-        debugPrint(
-            "HomePage: pageContext unmounted after word processing; aborting.");
-        return;
-      }
-
-      if (result == true && currChildID != null) {
-        final success = await addWordToChild(
-          currChildID,
-          word,
-          _wordTrackerDataService,
-        );
-        if (!pageContext.mounted) {
-          debugPrint(
-              "HomePage: pageContext unmounted after addWordToChild; aborting.");
-          return;
-        }
-
-        if (!success) {
-          debugPrint("HomePage: Failed to add word tracker for $word");
-          continue; // Skip to the next word if adding failed
-        }
-
-        correctWords++;
-
-        if (!videoAttached && pendingVideo != null && videoStorage.isReady) {
-          try {
-            await videoStorage.saveVideoForWord(
-              childId: currChildID,
-              wordId: word,
-              sourceFile: pendingVideo.file,
-            );
-            videoAttached = true;
-          } catch (error) {
-            if (!pageContext.mounted) {
-              return;
-            }
-            // ignore: use_build_context_synchronously
-            await showAlertMessage(
-              pageContext,
-              localizationService.translate("file_not_added"),
-              "The word was saved, but we couldn't store the video locally. Please try again.",
-            );
-          }
-        }
-      } else {
-        if (!pageContext.mounted) {
-          debugPrint(
-              "HomePage: pageContext is not mounted. Error: $word was not found in dictionary.");
-          return;
-        }
-        //TODO: make this experience a lot better.
-        // This is confusing/frustrating at the moment because there is nothing users can do to fix the problem.
-        // ignore: use_build_context_synchronously
-        await showDialog(
-          context: pageContext,
-          builder: (BuildContext dialogContext) {
-            return AlertDialog(
-              title: Text(localizationService.translate("error")),
-              content:
-                  Text(word + localizationService.translate("words_error")),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('OK'),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop(); // Close the dialog
-                    _controller.clear();
-                    _clearVideoSelection();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-        break;
-      }
-    }
-
-    if (!pageContext.mounted) {
-      debugPrint(
-          "HomePage: pageContext is not mounted. Successfully added $correctWords words.");
-      return;
-    } else if (totalWords == correctWords) {
-      // await showDialog(
-      //   pageContext: pageContext,
-      //   builder: (BuildContext context) {
-      //     return AlertDialog(
-      //       title: Text(
-      //           localizationService.translate("success")),
-      //       content: Text(
-      //           '$correctWords ${localizationService.translate("word_success").toLowerCase()}'),
-      //       actions: <Widget>[
-      //         TextButton(
-      //           child: const Text('OK'),
-      //           onPressed: () {
-      //             Navigator.of(pageContext)
-      //                 .pop(); // Close the dialog
-      //           },
-      //         ),
-      //       ],
-      //     );
-      //   },
-      // );
-      debugPrint("HomePage: Successfully added all $correctWords words.");
-      _controller.clear();
-      _clearVideoSelection();
-    } else {
-      debugPrint(
-          "HomePage: Successfully added $correctWords out of $totalWords words.");
-      if (pageContext.mounted) {
-        await showDialog(
-          context: pageContext,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Partial Success"), // TODO: translate
-              content: Text(
-                  '$correctWords/$totalWords ${localizationService.translate("word_success").toLowerCase()}'),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('OK'), // TODO: Translate
-                  onPressed: () {
-                    Navigator.of(pageContext).pop(); // Close the dialog
-                    _controller.clear();
-                    _clearVideoSelection();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      }
-    }
+  if (childId == null) {
+    if (!mounted) return;
+    await showAlertIfMounted(
+      context,
+      localizationService.translate('error'),
+      localizationService.translate('go_to_settings'),
+    );
+    return;
   }
+
+  final words = _parseCurrentWords();
+  if (words.isEmpty) {
+    return;
+  }
+
+  final language = (child?.language.isNotEmpty == true)
+      ? child!.language.first
+      : localizationService.localization.languageCode;
+
+  final videoStorage = context.read<VideoStorageService>();
+  final pendingVideo = _selectedVideo;
+  bool videoAttached = false;
+  String? videoKey;
+
+  if (pendingVideo != null && !videoStorage.isReady) {
+    if (!mounted) return;
+    await showAlertIfMounted(
+      context,
+      localizationService.translate('file_not_added'),
+      localizationService.translate('video_not_ready_message'),
+    );
+  }
+
+  final now = DateTime.now();
+  int queuedCount = 0;
+
+  for (final word in words) {
+    final queued = await _wordDataService.queueWordForProcessing(
+      wordId: word,
+      language: language,
+    );
+    if (queued) {
+      queuedCount++;
+    }
+
+    if (!videoAttached &&
+        pendingVideo != null &&
+        videoStorage.isReady) {
+      try {
+        final savedVideo = await videoStorage.saveVideoForWord(
+          childId: childId,
+          wordId: word,
+          sourceFile: pendingVideo.file,
+        );
+        videoKey = savedVideo?.key;
+        videoAttached = true;
+      } catch (_) {
+        if (!mounted) return;
+        await showAlertIfMounted(
+          context,
+          localizationService.translate('file_not_added'),
+          localizationService.translate('video_not_ready_message'),
+        );
+      }
+    }
+
+    await _wordTrackerDataService.addOrUpdateWordTracker(
+      childId,
+      word,
+      WordTracker(
+        id: word,
+        firstUtterance: now,
+        language: language,
+        videoId: videoKey,
+      ),
+    );
+  }
+
+  if (!mounted) return;
+  setState(() {
+    _controller.clear();
+  });
+  _clearVideoSelection();
+
+  final message = queuedCount > 0
+      ? localizationService
+          .translate('words_processing_summary')
+          .replaceFirst('{count}', queuedCount.toString())
+      : localizationService.translate('words_already_processed');
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -733,23 +542,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-}
-
-Future<bool> addWordToChild(
-  String childId,
-  String word,
-  WordTrackerDataService trackerService,
-) async {
-  return trackerService.addOrUpdateWordTracker(
-    childId,
-    word,
-    WordTracker(
-      id: word,
-      firstUtterance: DateTime.now(),
-    ),
-  );
-}
-
 Stream<String?> getRecentWordTracker(String childId) {
   return FirebaseFirestore.instance
       .collection('Child')
@@ -781,4 +573,5 @@ Stream<int?> getNumWords(String childId) {
       .doc(childId)
       .snapshots()
       .map((snapshot) => snapshot.data()?['wordCount'] as int);
+}
 }

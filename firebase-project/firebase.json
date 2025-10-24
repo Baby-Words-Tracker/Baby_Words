@@ -13,6 +13,15 @@
         "firebase-debug.*.log",
         "*.local"
       ]
+    },
+    {
+      "source": "functions_python",
+      "codebase": "processing",
+      "runtime": "python310",
+      "ignore": ["__pycache__", "*.pyc", ".pytest_cache", "venv", "build"],
+      "include": ["nltk_data/**"],
+      "timeoutSeconds": 540,
+      "memory": "1GB"
     }
   ],
   "emulators": {

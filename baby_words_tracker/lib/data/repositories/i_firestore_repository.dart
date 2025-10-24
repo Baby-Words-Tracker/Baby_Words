@@ -44,6 +44,14 @@ abstract class IFirestoreRepository {
   Future<bool> updateSubcollectionDocument(
       String collectionName, String docId, String subcollectionName,
       String subDocId, Map<String, dynamic> data);
+  Future<bool> setSubcollectionDocument(
+      String collectionName,
+      String docId,
+      String subcollectionName,
+      String subDocId,
+      Map<String, dynamic> data, {
+        bool merge = false,
+      });
   Future<DataWithId?> readSubcollection(String collectionName, String docId,
       String subcollectionName, String subDocId);
   Future<List<DataWithId>> subFieldGreaterThan(String collectionName,

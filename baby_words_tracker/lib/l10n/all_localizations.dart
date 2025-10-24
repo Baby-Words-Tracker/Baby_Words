@@ -45,6 +45,28 @@ class AllLocalizations {
       "error": "Error!",
       "words_error": " not found in dictionary, please try again!",
       "go_to_settings": "Navigate to settings to add a child",
+      "entry_mode_label": "Entry mode",
+      "word_mode": "Word",
+      "phrase_mode": "Phrase",
+      "word_input_label": "Add a word",
+      "word_input_hint": "Type the word your child said",
+      "phrase_input_label": "Add a phrase",
+      "phrase_input_hint": "Type the phrase your child said",
+      "note_optional": "Note (optional)",
+      "note_hint": "Add context about the moment",
+      "video_optional": "Attach video (optional)",
+      "processing_state": "Processing…",
+      "video_not_ready_message":
+          "We couldn't store the video yet. Please try again once your profile finishes loading.",
+      "word_processing_queued": 'Queued "{word}" for enrichment.',
+      "word_already_processed": '"{word}" is already enriched.',
+      "phrase_processing_queued":
+          "Queued {count} new words from this phrase.",
+      "phrase_already_processed": "Phrase words already enriched.",
+      "words_processing_summary":
+          "Queued {count} word(s) for enrichment.",
+      "words_already_processed":
+          "All selected words are already enriched.",
 
       //stats page
       "learning_summary": "Learning Summary",
@@ -135,6 +157,29 @@ class AllLocalizations {
           "¿Estás seguro de que deseas dar acceso al padre con el correo electrónico",
       "No": "No",
       "Yes": "Si",
+      "entry_mode_label": "Modo de entrada",
+      "word_mode": "Palabra",
+      "phrase_mode": "Frase",
+      "word_input_label": "Agregar una palabra",
+      "word_input_hint": "Escriba la palabra que dijo su hijo",
+      "phrase_input_label": "Agregar una frase",
+      "phrase_input_hint": "Escriba la frase que dijo su hijo",
+      "note_optional": "Nota (opcional)",
+      "note_hint": "Agregue contexto sobre el momento",
+      "video_optional": "Adjuntar video (opcional)",
+      "processing_state": "Procesando...",
+      "video_not_ready_message":
+          "Aún no pudimos guardar el video. Vuelve a intentarlo cuando se complete la carga de tu perfil.",
+      "word_processing_queued":
+          'Se agregó "{word}" para enriquecimiento.',
+      "word_already_processed": '"{word}" ya está enriquecida.',
+      "phrase_processing_queued":
+          "Se agregaron {count} palabras nuevas de esta frase.",
+      "phrase_already_processed": "Las palabras de la frase ya están enriquecidas.",
+      "words_processing_summary":
+          "Se agregaron {count} palabra(s) para enriquecimiento.",
+      "words_already_processed":
+          "Las palabras seleccionadas ya están enriquecidas.",
       "welcome_sign_in":
           "¡Bienvenido a BabyWordsTracker, por favor inicia sesión!",
       "welcome_sign_up":
