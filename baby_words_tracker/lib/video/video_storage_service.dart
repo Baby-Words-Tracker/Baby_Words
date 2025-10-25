@@ -48,6 +48,8 @@ class VideoStorageService extends ChangeNotifier {
     return _videos[LocalVideoEntry.composeKey(_parentId!, childId, wordId)];
   }
 
+  LocalVideoEntry? entryForKey(String key) => _videos[key];
+
   Future<LocalVideoEntry?> saveVideoForWord({
     required String childId,
     required String wordId,

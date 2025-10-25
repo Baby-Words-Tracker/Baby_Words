@@ -1,14 +1,18 @@
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 class TopBar extends StatefulWidget implements PreferredSizeWidget {
-  final String pageName;
+  final String? pageName;
+  final bool showPageTitle;
 
-  const TopBar({super.key, required this.pageName});
+  const TopBar({
+    super.key,
+    this.pageName,
+    this.showPageTitle = true,
+  });
 
   @override
   // ignore: library_private_types_in_public_api
@@ -47,125 +51,155 @@ class _TopBarState extends State<TopBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizationService = context.watch<LocalizationService>();
+    final showPageTitle =
+        widget.showPageTitle && (widget.pageName?.trim().isNotEmpty ?? false);
+    final Color barColor = theme.colorScheme.secondaryContainer;
+    final Color onBarColor = theme.colorScheme.onSecondaryContainer;
+    final brandTranslation = localizationService.translate('word_buds').trim();
+    final String brandLabel =
+        brandTranslation.isEmpty ? 'WordBuds' : brandTranslation;
 
     return AppBar(
+      backgroundColor: barColor,
+      surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
-      centerTitle: false,
       toolbarHeight: widget.preferredSize.height,
-      titleSpacing: 20,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Image.asset(
-                    'assets/lecs_mascot_64x64.png',
-                    fit: BoxFit.contain,
+      titleSpacing: 0,
+      title: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    brandLabel,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: onBarColor.withOpacity(0.85),
+                        ) ??
+                        TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: onBarColor.withOpacity(0.85),
+                        ),
                   ),
+                  if (showPageTitle) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.pageName!,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: onBarColor,
+                          ) ??
+                          TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: onBarColor,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: Image.asset(
+                  'assets/lecs_mascot_64x64.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  widget.pageName,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ) ??
-                      TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Consumer2<LocalizationService, CurrentChildrenService>(
-            builder:
-                (context, localizationService, currentChildrenService, child) {
-              final Color outlineColor =
-                  theme.colorScheme.outlineVariant.withValues(alpha: 0.6);
-              final childMenuItems =
-                  _loadParentAndChildren(currentChildrenService);
-              final bool isLoading = !currentChildrenService.dataRetrieved;
-              final Child? currentChild = currentChildrenService.getCurrChild();
-              final String currentChildLabel = isLoading
-                  ? localizationService.translate('loading')
-                  : currentChild?.name ??
-                      localizationService.translate('select_child');
+            ),
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Consumer2<LocalizationService, CurrentChildrenService>(
+                  builder: (context, localizationService,
+                      currentChildrenService, child) {
+                    final Color outlineColor = onBarColor.withOpacity(0.32);
+                    final childMenuItems =
+                        _loadParentAndChildren(currentChildrenService);
+                    final bool isLoading =
+                        !currentChildrenService.dataRetrieved;
+                    final Child? currentChild =
+                        currentChildrenService.getCurrChild();
+                    final String currentChildLabel = isLoading
+                        ? localizationService.translate('loading')
+                        : currentChild?.name ??
+                            localizationService.translate('select_child');
 
-              return PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value.isNotEmpty) {
-                    currentChildrenService.switchChild(value);
-                  }
-                },
-                offset: const Offset(0, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                itemBuilder: (BuildContext context) {
-                  if (childMenuItems.isEmpty) {
-                    return [
-                      PopupMenuItem(
-                        value: '',
-                        child: Text(
-                          localizationService.translate('No children yet'),
+                    return PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value.isNotEmpty) {
+                          currentChildrenService.switchChild(value);
+                        }
+                      },
+                      offset: const Offset(0, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      itemBuilder: (BuildContext context) {
+                        if (childMenuItems.isEmpty) {
+                          return [
+                            PopupMenuItem(
+                              value: '',
+                              child: Text(
+                                localizationService
+                                    .translate('No children yet'),
+                              ),
+                            ),
+                          ];
+                        }
+                        return childMenuItems;
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: outlineColor, width: 0.8),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                currentChildLabel,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: onBarColor,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.expand_more,
+                              color: onBarColor,
+                              size: 18,
+                            ),
+                          ],
                         ),
                       ),
-                    ];
-                  }
-                  return childMenuItems;
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: outlineColor, width: 0.8),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  constraints: const BoxConstraints(maxWidth: 220),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          currentChildLabel,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(
-                        Icons.expand_more,
-                        color: theme.colorScheme.onSurfaceVariant,
-                        size: 18,
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.person_rounded),
-          onPressed: () {
-            Navigator.pushNamed(context, ProfilePage.routeName);
-          },
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-      ],
+      ),
     );
   }
 }

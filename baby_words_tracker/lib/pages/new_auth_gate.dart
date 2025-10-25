@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'researcher_home_page.dart';
 import 'home_page.dart';
+import 'parent_dashboard.dart';
 
 /// New AuthGate with UserProfile-based authentication
 /// Includes platform enforcement and survey requirements
@@ -178,7 +179,7 @@ class _NewAuthGateState extends State<NewAuthGate> {
             if (user == null) {
               throw Exception('User is null in NewAuthGate');
             } else if (userModelService.isParent) {
-              return const HomePage();
+              return const ParentDashboard();
             } else if (userModelService.isResearcher || userModelService.isAdmin) {
               return const ResearcherHomePage();
             } else {

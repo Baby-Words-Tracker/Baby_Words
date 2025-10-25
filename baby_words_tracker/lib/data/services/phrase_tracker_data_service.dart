@@ -30,4 +30,24 @@ class PhraseTrackerDataService {
 
     return phrase;
   }
+
+  Future<bool> deletePhraseTracker({
+    required String childId,
+    required String phraseId,
+  }) async {
+    final success = await _fireRepo.deleteSubcollectionDocument(
+      Child.collectionName,
+      childId,
+      PhraseTracker.collectionName,
+      phraseId,
+    );
+
+    if (!success) {
+      debugPrint(
+        'PhraseTrackerDataService: Failed to delete phrase tracker $phraseId',
+      );
+    }
+
+    return success;
+  }
 }

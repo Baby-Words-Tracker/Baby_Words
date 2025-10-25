@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 class WordTrackerDataService {
   final IFirestoreRepository fireRepo;
 
-  WordTrackerDataService({IFirestoreRepository? repository}) 
+  WordTrackerDataService({IFirestoreRepository? repository})
       : fireRepo = repository ?? FirestoreRepository();
 
   Future<WordTracker?> createWordTracker(
@@ -142,5 +142,18 @@ class WordTrackerDataService {
         data.map((word) => WordTracker.fromDataWithId(word)).toList();
 
     return words;
+  }
+
+  Future<bool> deleteWordTracker(String childId, String wordId) async {
+    final success = await fireRepo.deleteWordTrackerDocument(
+      Child.collectionName,
+      childId,
+      WordTracker.collectionName,
+      wordId,
+    );
+    if (!success) {
+      debugPrint("Error: failed to delete word tracker for $wordId");
+    }
+    return success;
   }
 }

@@ -24,15 +24,18 @@ import 'package:baby_words_tracker/pages/new_auth_gate.dart';
 import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
-import 'pages/add_text.dart';
+import 'pages/add_entry_page.dart';
 import 'pages/home_page.dart';
+import 'pages/log_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
 import 'pages/display_video_page.dart';
+import 'pages/parent_dashboard.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
@@ -86,6 +89,9 @@ void main() async {
           ChangeNotifierProvider(
             create: (_) => LocalizationService(),
             lazy: false,
+          ),
+          ChangeNotifierProvider(
+            create: (_) => MainNavigationController(),
           ),
           Provider<GeneralUserService>(
             create: (context) => GeneralUserService(
@@ -170,6 +176,16 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
     );
 
+    const pageTransitions = PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+      },
+    );
+
     return MaterialApp(
         title: 'WordBuds Root',
         debugShowCheckedModeBanner: false,
@@ -178,6 +194,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           //platform: TargetPlatform.iOS,
           visualDensity: VisualDensity.adaptivePlatformDensity,
+          pageTransitionsTheme: pageTransitions,
           textTheme: _buildTextTheme(ThemeData.light().textTheme, colorScheme),
           scaffoldBackgroundColor: colorScheme.surface,
           appBarTheme: AppBarTheme(
@@ -249,6 +266,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           platform: TargetPlatform.iOS,
           visualDensity: VisualDensity.adaptivePlatformDensity,
+          pageTransitionsTheme: pageTransitions,
           textTheme:
               _buildTextTheme(ThemeData.dark().textTheme, darkColorScheme),
           scaffoldBackgroundColor: darkColorScheme.surface,
@@ -321,9 +339,10 @@ class MyApp extends StatelessWidget {
             NewAuthGate.routeName, // NEW: Use new auth gate with UserProfile
         routes: {
           //Navigate app using named routes
-          HomePage.routeName: (context) => const HomePage(),
+          HomePage.routeName: (context) => const ParentDashboard(),
           StatsPage.routeName: (context) => const StatsPage(),
-          AddTextPage.routeName: (context) => const AddTextPage(),
+          AddEntryPage.routeName: (context) => const AddEntryPage(),
+          WordLogPage.routeName: (context) => const WordLogPage(),
           AuthGate.routeName: (context) =>
               const AuthGate(), // OLD: Keep for reference
           NewAuthGate.routeName: (context) => const NewAuthGate(), // NEW
