@@ -337,6 +337,25 @@ class _AddEntryPageState extends State<AddEntryPage> {
     required String note,
   }) async {
     final normalisedWord = normaliseForDocumentId(rawInput);
+    
+    // Check if word already exists
+    final existingWord = await _wordTrackerDataService.getWordTracker(
+      childId,
+      normalisedWord,
+    );
+    
+    if (existingWord != null) {
+      // Word already logged, show toast and return
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localization.translate('word_already_logged')),
+          ),
+        );
+      }
+      return;
+    }
+    
     await _wordDataService.queueWordForProcessing(
       wordId: normalisedWord,
       language: language,
@@ -382,6 +401,17 @@ class _AddEntryPageState extends State<AddEntryPage> {
     );
 
     for (final word in words) {
+      // Check if word already exists
+      final existingWord = await _wordTrackerDataService.getWordTracker(
+        childId,
+        word,
+      );
+      
+      // Skip if word already logged (silently for phrases)
+      if (existingWord != null) {
+        continue;
+      }
+      
       await _wordDataService.queueWordForProcessing(
         wordId: word,
         language: language,
@@ -483,7 +513,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                             label: Text(
                               localization.translate('word_mode'),
                             ),
-                            icon: const Icon(Icons.text_fields_rounded),
+                            icon: const Icon(Icons.menu_book_outlined),
                           ),
                           ButtonSegment(
                             value: EntryMode.phrase,
@@ -491,7 +521,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                               localization.translate('phrase_mode'),
                             ),
                             icon: const Icon(
-                              Icons.chat_bubble_outline_rounded,
+                              Icons.comment_outlined,
                             ),
                           ),
                         ],

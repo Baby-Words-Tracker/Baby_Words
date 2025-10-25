@@ -231,12 +231,16 @@ Future<void> addChildToCurrParent(BuildContext context, String name,
 
         // Proactively refresh current children list for immediate UI update
         await currentChildrenService.updateChildrenFromIds(updatedIds);
+        
+        // Also refresh the user profile to ensure it's up to date
+        await userProfileModelService.refreshUserProfile();
       } catch (e) {
         debugPrint('Error adding child to UserProfile: $e');
         // Fallback to old system if new one fails
         try {
           await parentDataService.addChildToParent(userId, childId);
           await currentChildrenService.updateChildrenFromIds(updatedIds);
+          await userProfileModelService.refreshUserProfile();
         } catch (e2) {
           debugPrint('Fallback also failed: $e2');
         }

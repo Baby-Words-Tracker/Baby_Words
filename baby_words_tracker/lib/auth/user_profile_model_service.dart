@@ -314,6 +314,12 @@ class UserProfileModelService extends ChangeNotifier {
     return {'firstName': first, 'lastName': last};
   }
 
+  /// Force refresh the user profile from the database
+  Future<void> refreshUserProfile() async {
+    debugPrint("UserProfileModelService: Force refreshing user profile");
+    await _synchronizer.safeSynchronize();
+  }
+
   @override
   void dispose() {
     _listener?.dispose();
