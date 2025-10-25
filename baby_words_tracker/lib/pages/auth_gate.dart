@@ -5,14 +5,11 @@ import 'package:baby_words_tracker/util/safe_synchronizer.dart';
 import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' as io; // For checking platform
 
 import 'researcher_home_page.dart';
 import 'home_page.dart';
@@ -82,15 +79,6 @@ class _AuthGateState extends State<AuthGate> {
     });
   }
 
-  String _getPlatformKey() {
-    if (kIsWeb) {
-      return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com'; // Use this key for web
-    } else if (io.Platform.isIOS) {
-      return '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com'; // Use this key for iOS
-    }
-    return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com'; // Use this key for all other platforms
-  }
-
   @override
   Widget build(BuildContext context) {
     var localizationService =
@@ -125,7 +113,6 @@ class _AuthGateState extends State<AuthGate> {
           return buildSignInScreen(
             context,
             localizationService,
-            _getPlatformKey(),
           );
         }
 
@@ -169,12 +156,11 @@ class _AuthGateState extends State<AuthGate> {
   }
 }
 
-Widget buildSignInScreen(BuildContext context,
-    LocalizationService localizationService, String platformKey) {
+Widget buildSignInScreen(
+    BuildContext context, LocalizationService localizationService) {
   return SignInScreen(
     providers: [
       EmailAuthProvider(),
-      GoogleProvider(clientId: platformKey),
     ],
     headerBuilder: (context, constraints, shrinkOffset) {
       return Padding(
