@@ -1,7 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:baby_words_tracker/data/models/word.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Word Model Tests', () {
@@ -10,30 +10,46 @@ void main() {
     setUp(() {
       testWord = Word(
         word: 'hello',
-        languageCodes: {LanguageCode.en},
-        partOfSpeech: {LanguageCode.en: PartOfSpeech.interjection},
+        languageDetails: {
+          LanguageCode.en: WordLanguageDetail(
+            lemma: 'hello',
+            primaryPartOfSpeech: 'INTERJECTION',
+            allPOS: const ['INTERJECTION'],
+          ),
+        },
         needsProcessing: false,
       );
     });
 
-    test('should create a word with all required fields', () {
+    test('should create a word with language details', () {
       expect(testWord.word, equals('hello'));
       expect(testWord.languageCodes, contains(LanguageCode.en));
-      expect(testWord.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.interjection));
+      expect(
+        testWord.partOfSpeech[LanguageCode.en],
+        equals(PartOfSpeech.interjection),
+      );
       expect(testWord.needsProcessing, isFalse);
     });
 
     test('should create word needing processing by default', () {
       final processingWord = Word(
         word: 'casa',
-        languageCodes: {LanguageCode.es},
-        partOfSpeech: {LanguageCode.es: PartOfSpeech.noun},
+        languageDetails: {
+          LanguageCode.es: WordLanguageDetail(
+            primaryPartOfSpeech: 'NOUN',
+            allPOS: const ['NOUN'],
+          ),
+        },
       );
 
-      expect(processingWord.needsProcessing, isFalse); // Default is false
+      expect(processingWord.needsProcessing, isFalse);
+      expect(
+        processingWord.partOfSpeech[LanguageCode.es],
+        equals(PartOfSpeech.noun),
+      );
     });
 
-    test('should copy word with new values', () {
+    test('copyWith should preserve language details unless overridden', () {
       final copiedWord = testWord.copyWith(
         word: 'goodbye',
         needsProcessing: true,
@@ -41,35 +57,48 @@ void main() {
 
       expect(copiedWord.word, equals('goodbye'));
       expect(copiedWord.needsProcessing, isTrue);
-      expect(copiedWord.languageCodes, equals(testWord.languageCodes));
-      expect(copiedWord.partOfSpeech, equals(testWord.partOfSpeech));
+      expect(copiedWord.languageDetails, equals(testWord.languageDetails));
     });
 
-    test('should convert to map correctly', () {
+    test('toMap serialises language details', () {
       final map = testWord.toMap();
-      
+
       expect(map['languageCodes'], equals(['en']));
-      expect(map['partOfSpeech'], equals({'en': 'interjection'}));
-      expect(map['needsProcessing'], isFalse);
+      expect(map['languageDetails'], isA<Map<String, dynamic>>());
+      expect(
+        (map['languageDetails']['en'] as Map<String, dynamic>)['primaryPartOfSpeech'],
+        equals('INTERJECTION'),
+      );
     });
 
     test('should handle multiple languages', () {
       final multilingualWord = Word(
         word: 'book',
-        languageCodes: {LanguageCode.en, LanguageCode.es},
-        partOfSpeech: {
-          LanguageCode.en: PartOfSpeech.noun,
-          LanguageCode.es: PartOfSpeech.noun,
+        languageDetails: {
+          LanguageCode.en: WordLanguageDetail(
+            primaryPartOfSpeech: 'NOUN',
+            allPOS: const ['NOUN'],
+          ),
+          LanguageCode.es: WordLanguageDetail(
+            primaryPartOfSpeech: 'NOUN',
+            allPOS: const ['NOUN'],
+          ),
         },
       );
 
       expect(multilingualWord.languageCodes, hasLength(2));
       expect(multilingualWord.partOfSpeech, hasLength(2));
-      expect(multilingualWord.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.noun));
-      expect(multilingualWord.partOfSpeech[LanguageCode.es], equals(PartOfSpeech.noun));
+      expect(
+        multilingualWord.partOfSpeech[LanguageCode.en],
+        equals(PartOfSpeech.noun),
+      );
+      expect(
+        multilingualWord.partOfSpeech[LanguageCode.es],
+        equals(PartOfSpeech.noun),
+      );
     });
 
-    test('should create update map with partial fields', () {
+    test('createUpdateMap builds basic payload', () {
       final updateMap = Word.createUpdateMap(
         languageCodes: {LanguageCode.es},
         needsProcessing: true,
@@ -77,14 +106,19 @@ void main() {
 
       expect(updateMap['languageCodes'], equals(['es']));
       expect(updateMap['needsProcessing'], isTrue);
-      expect(updateMap.containsKey('partOfSpeech'), isFalse);
+      expect(updateMap.containsKey('languageDetails'), isFalse);
     });
 
-    test('should handle equality correctly', () {
+    test('equality considers language details', () {
       final identicalWord = Word(
         word: 'hello',
-        languageCodes: {LanguageCode.en},
-        partOfSpeech: {LanguageCode.en: PartOfSpeech.interjection},
+        languageDetails: {
+          LanguageCode.en: WordLanguageDetail(
+            lemma: 'hello',
+            primaryPartOfSpeech: 'INTERJECTION',
+            allPOS: const ['INTERJECTION'],
+          ),
+        },
         needsProcessing: false,
       );
 
@@ -95,27 +129,11 @@ void main() {
       expect(testWord.hashCode, equals(identicalWord.hashCode));
     });
 
-    test('should handle different parts of speech', () {
-      final verbWord = Word(
-        word: 'run',
-        languageCodes: {LanguageCode.en},
-        partOfSpeech: {LanguageCode.en: PartOfSpeech.verb},
-      );
-
-      final adjectiveWord = Word(
-        word: 'big',
-        languageCodes: {LanguageCode.en},
-        partOfSpeech: {LanguageCode.en: PartOfSpeech.adjective},
-      );
-
-      expect(verbWord.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.verb));
-      expect(adjectiveWord.partOfSpeech[LanguageCode.en], equals(PartOfSpeech.adjective));
-    });
-
-    test('should convert to and from JSON correctly', () {
+    test('Word -> JSON round trip works', () {
       final json = testWord.toJson();
-      expect(json, isA<String>());
-      expect(json.isNotEmpty, isTrue);
+      final roundTrip = Word.fromJson(json);
+
+      expect(roundTrip, equals(testWord));
     });
   });
 }

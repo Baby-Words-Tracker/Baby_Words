@@ -304,6 +304,30 @@ class FirestoreRepository implements IFirestoreRepository {
   }
 
   @override
+  Future<bool> setSubcollectionDocument(
+    String collectionName,
+    String docId,
+    String subcollectionName,
+    String subDocId,
+    Map<String, dynamic> data, {
+    bool merge = false,
+  }) async {
+    try {
+      final docRef = database
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollectionName)
+          .doc(subDocId);
+      await docRef.set(data, SetOptions(merge: merge));
+      return true;
+    } catch (e) {
+      debugPrint(
+          "Error setting document in subcollection $collectionName/$docId/$subcollectionName/$subDocId: $e");
+      return false;
+    }
+  }
+
+  @override
   Future<bool> updateFieldForSubcollection(
       String collectionName,
       String subcollectionName,

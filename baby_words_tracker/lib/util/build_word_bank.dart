@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/data/services/word_data_service.dart';
-import 'package:baby_words_tracker/util/check_and_update_word.dart';
+import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/text_entry_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 
@@ -16,6 +17,9 @@ void buildWordBank(WordDataService wordDataService) async {
   }
 
   for (String word in words) {
-    await checkAndUpdateWord(word, wordDataService);
+    await wordDataService.queueWordForProcessing(
+      wordId: normaliseForDocumentId(word),
+      language: LanguageCode.en,
+    );
   }
 }

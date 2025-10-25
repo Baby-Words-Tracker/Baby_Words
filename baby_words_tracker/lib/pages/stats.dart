@@ -216,24 +216,28 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
   Map<String, Word> wordMap = {for (var word in words) word.word: word};
 
   for (var tracker in allWordsFromChild) {
-    Word currWord = wordMap[tracker.id ?? "invalid id"] ??
-        Word(
-            word: "Invalid Word",
-            languageCodes: <LanguageCode>{},
-            partOfSpeech: {LanguageCode.en: PartOfSpeech.noun});
+    final defaultWord = Word(
+      word: "invalid word",
+      languageCodes: {LanguageCode.en},
+      languageDetails: {
+        LanguageCode.en: WordLanguageDetail(
+          primaryPartOfSpeech: PartOfSpeech.noun.name.toUpperCase(),
+          allPOS: [PartOfSpeech.noun.name.toUpperCase()],
+        ),
+      },
+    );
 
-    List<LanguageCode> languages = [
-      LanguageCode.en,
-      LanguageCode.es
-    ]; //possible language for a word to be
+    final currWord = wordMap[tracker.id ?? "invalid id"] ?? defaultWord;
 
-    for (LanguageCode language in languages) {
-      if (currWord.partOfSpeech[language] != null) {
-        data[currWord.partOfSpeech[language]!] =
-            (data[currWord.partOfSpeech[language]] ?? 0) + 1;
-      } //increment or set to 1 depending on if it already existed
+    final language = tracker.language ?? LanguageCode.en;
+    final detail = currWord.detailForLanguage(language) ??
+        currWord.languageDetails.values.firstOrNull;
+
+    if (detail?.primaryPartOfSpeech != null) {
+      final primaryPos =
+          PartofspeechExtension.fromString(detail!.primaryPartOfSpeech!);
+      data[primaryPos] = (data[primaryPos] ?? 0) + 1;
     }
-    //data[currWord.partOfSpeech[LanguageCode.en]!] = (data[currWord.partOfSpeech[LanguageCode.en]] ?? 0) + 1; //increment or set to 1 depending on if it already existed
   }
   List<MapEntry<PartOfSpeech, int>> entries = data.entries.toList();
   List<(int, PartOfSpeech)> listData = List.empty(growable: true);
