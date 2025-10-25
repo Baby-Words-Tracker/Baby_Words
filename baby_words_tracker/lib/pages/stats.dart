@@ -26,7 +26,9 @@ class StatsPage extends StatefulWidget {
   // Using a stateful widget to allow for changing the graph length and type
   static const routeName = '/stats'; // Route name for navigation
 
-  const StatsPage({super.key});
+  final bool showChrome;
+
+  const StatsPage({super.key, this.showChrome = true});
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -76,73 +78,118 @@ class _StatsPageState extends State<StatsPage> {
           .id; //ChildId is used for database queries for graphs and stats
     }
 
+    final localizationService = context.read<LocalizationService>();
+
     if (currChildId == null) {
+      final placeholder = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.auto_graph_outlined,
+                size: 64,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.6),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                localizationService.translate('log_no_child_selected'),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                localizationService.translate('log_add_child_hint'),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant
+                          .withOpacity(0.8),
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (!widget.showChrome) {
+        return placeholder;
+      }
+
       return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        // Small error handling page, could be beautified
         appBar: TopBar(
-            pageName: context
-                .read<LocalizationService>()
-                .translate("learning_summary")),
-        body: const Text("Please create a child before viewing stats"),
-        bottomNavigationBar: CustomBottomBar(StatsPage.routeName),
+          pageName: localizationService.translate("learning_summary"),
+        ),
+        body: placeholder,
+        bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
       );
     }
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: TopBar(
-          pageName: context
-              .read<LocalizationService>()
-              .translate("learning_summary")),
-      bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Consumer2<LocalizationService, WordTrackerDataService>(
-                // Using a consumer allows the graphs to update if values are changed, this may be removed at some point, as nothing on this screen currently changes the database, therefore this is not necessary rn
-                builder: (context, localizationService, trackerService, child) {
+
+    final content = SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Consumer2<LocalizationService, WordTrackerDataService>(
+            builder: (context, localizationService, trackerService, child) {
               return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 25.0),
-
-                  //wordsKnownFeature(context, currChildId!), //Displays text to show how many words the child knows, FIXME: ugly
-
-                  Text(localizationService.translate(graphType.displayName),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          // Displays the name of the current graph type as text above the graph
-                          fontSize: 30.0,
-                          color: Color(0xFF9E1B32),
-                          fontWeight: FontWeight.bold)),
-
-                  // Displays the correct graph depending on the current graphType and graphLength, all the other parameters are for the graph constructors within.
-                  graphSwitcher(
-                      graphType,
-                      context.read<ChildDataService>(),
-                      context.read<WordDataService>(),
-                      context.read<WordTrackerDataService>(),
-                      graphLength,
-                      graphCache,
-                      id: currChildId!),
-
-                  //Allows the user to change the length of those graphs with a time horizon. If graphType is one that does not need length adjustment, does not display.
-                  lengthChangeFeature(
-                      context, graphType, textcontroller1, updateLength),
-
-                  const SizedBox(
-                    height: 5.0,
+                  Text(
+                    localizationService.translate(graphType.displayName),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 30.0,
+                      color: Color(0xFF9E1B32),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-
-                  //Text(localizationService.translate("learning_summary")),
-
+                  const SizedBox(height: 16),
+                  graphSwitcher(
+                    graphType,
+                    context.read<ChildDataService>(),
+                    context.read<WordDataService>(),
+                    context.read<WordTrackerDataService>(),
+                    graphLength,
+                    graphCache,
+                    id: currChildId!,
+                  ),
+                  const SizedBox(height: 16),
+                  lengthChangeFeature(
+                    context,
+                    graphType,
+                    textcontroller1,
+                    updateLength,
+                  ),
+                  const SizedBox(height: 5),
                   graphTypeSelectDropdown(graphType, updateType),
                 ],
               );
-            }),
+            },
           ),
         ),
       ),
+    );
+
+    if (!widget.showChrome) {
+      return content;
+    }
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: TopBar(
+        pageName: localizationService.translate("learning_summary"),
+      ),
+      bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
+      body: content,
     );
   }
 }

@@ -326,4 +326,30 @@ class MockFirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
+  Future<bool> deleteSubcollectionDocument(String collectionName, String docId,
+      String subcollectionName, String subDocId) async {
+    try {
+      final path = '$collectionName/$docId/$subcollectionName';
+      await fakeFirestore.collection(path).doc(subDocId).delete();
+      return true;
+    } catch (e) {
+      debugPrint('MockFirestoreRepository.deleteSubcollectionDocument error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteWordTrackerDocument(String collectionName, String docId,
+      String subcollectionName, String subDocId) async {
+    try {
+      final path = '$collectionName/$docId/$subcollectionName';
+      await fakeFirestore.collection(path).doc(subDocId).delete();
+      return true;
+    } catch (e) {
+      debugPrint('MockFirestoreRepository.deleteWordTrackerDocument error: $e');
+      return false;
+    }
+  }
+
 }
