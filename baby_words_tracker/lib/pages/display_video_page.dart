@@ -200,7 +200,7 @@ class _DisplayMediaPageState extends State<DisplayMediaPage> {
 
   bool _isImageFile(String path) {
     final extension = p.extension(path).toLowerCase();
-    return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].contains(extension);
+    return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.heic', '.heif'].contains(extension);
   }
 
   void _onMediaSelected(
