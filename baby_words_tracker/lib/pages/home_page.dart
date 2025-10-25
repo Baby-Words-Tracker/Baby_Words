@@ -7,8 +7,8 @@ import 'package:baby_words_tracker/pages/shared/word_entry_sheets.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
-import 'package:baby_words_tracker/video/local_video_entry.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/local_media_entry.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:baby_words_tracker/pages/add_entry_page.dart';
 import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showWordDetails({
     required WordTracker tracker,
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
   }) async {
     final displayWord = tracker.id?.capitalizeOrNA() ?? '—';
     final languageLabel = tracker.language?.displayName ??
@@ -124,24 +124,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openAttachment(LocalVideoEntry entry) {
+  void _openAttachment(LocalMediaEntry entry) {
     Navigator.of(context).pop();
     Future.microtask(() => _showMediaPreview(entry));
   }
 
-  Future<void> _showMediaPreview(LocalVideoEntry entry) {
+  Future<void> _showMediaPreview(LocalMediaEntry entry) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => WordMediaPreviewSheet(entry: entry),
+      builder: (context) => WordMediaPreviewSheet(
+        entry: entry,
+        displayText: entry.wordId.capitalizeOrNA(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer3<LocalizationService, CurrentChildrenService,
-        VideoStorageService>(
+        MediaStorageService>(
       builder: (
         context,
         localization,

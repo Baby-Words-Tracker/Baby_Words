@@ -13,8 +13,8 @@ import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
 import 'package:baby_words_tracker/util/text_entry_utils.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/video/local_video_entry.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/local_media_entry.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
@@ -142,7 +142,7 @@ class _WordLogPageState extends State<WordLogPage> {
     required String childId,
     required WordTracker tracker,
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
   }) async {
     final displayWord = tracker.id?.capitalizeOrNA() ?? '—';
     final languageLabel = tracker.language?.displayName ??
@@ -257,7 +257,7 @@ class _WordLogPageState extends State<WordLogPage> {
     required String childId,
     required PhraseTracker tracker,
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
   }) async {
     final attachment = tracker.videoId != null && tracker.videoId!.isNotEmpty
         ? videoStorage.entryForKey(tracker.videoId!)
@@ -283,24 +283,27 @@ class _WordLogPageState extends State<WordLogPage> {
     );
   }
 
-  void _openAttachment(LocalVideoEntry entry) {
+  void _openAttachment(LocalMediaEntry entry) {
     Navigator.of(context).pop();
     Future.microtask(() => _showMediaPreview(entry));
   }
 
-  Future<void> _showMediaPreview(LocalVideoEntry entry) {
+  Future<void> _showMediaPreview(LocalMediaEntry entry) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => WordMediaPreviewSheet(entry: entry),
+      builder: (context) => WordMediaPreviewSheet(
+        entry: entry,
+        displayText: entry.wordId.capitalizeOrNA(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer3<LocalizationService, CurrentChildrenService,
-        VideoStorageService>(
+        MediaStorageService>(
       builder: (
         context,
         localization,
@@ -744,7 +747,7 @@ class _PhraseDetailSheet extends StatelessWidget {
   final String languageLabel;
   final String dateLabel;
   final LocalizationService localization;
-  final LocalVideoEntry? attachment;
+  final LocalMediaEntry? attachment;
   final VoidCallback? onOpenAttachment;
 
   @override

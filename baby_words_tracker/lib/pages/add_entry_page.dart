@@ -11,7 +11,7 @@ import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/text_entry_utils.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -201,7 +201,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<String?> _storeAttachment({
-    required VideoStorageService storage,
+    required MediaStorageService storage,
     required LocalizationService localization,
     required String childId,
     required String entryId,
@@ -230,7 +230,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
 
     try {
-      final saved = await storage.saveVideoForWord(
+      final saved = await storage.saveMediaForWord(
         childId: childId,
         wordId: entryId,
         sourceFile: attachment.file,
@@ -248,7 +248,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   Future<void> _submitEntry(
     LocalizationService localization,
-    VideoStorageService videoStorage,
+    MediaStorageService videoStorage,
   ) async {
     if (_isSubmitting) {
       return;
@@ -330,7 +330,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   Future<void> _submitWordEntry({
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
     required String childId,
     required LanguageCode language,
     required String rawInput,
@@ -383,7 +383,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   Future<void> _submitPhraseEntry({
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
     required String childId,
     required LanguageCode language,
     required String rawInput,
@@ -449,7 +449,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<LocalizationService, VideoStorageService>(
+    return Consumer2<LocalizationService, MediaStorageService>(
       builder: (context, localization, videoStorage, _) {
         final theme = Theme.of(context);
         final entryLabel = localization.translate(
