@@ -2,11 +2,15 @@ import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
-import 'package:baby_words_tracker/pages/add_entry_page.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/pages/shared/word_entry_sheets.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
+import 'package:baby_words_tracker/video/local_video_entry.dart';
+import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/pages/add_entry_page.dart';
+import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -37,12 +41,17 @@ class _HomePageState extends State<HomePage> {
         .map((snapshot) => snapshot.docs.length);
   }
 
-  Stream<List<WordTracker>> _watchRecentWords(String childId, {int limit = 5}) {
+  Stream<List<WordTracker>> _watchRecentWords(String childId,
+      {int limit = 10}) {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+
     return FirebaseFirestore.instance
         .collection(Child.collectionName)
         .doc(childId)
         .collection(WordTracker.collectionName)
         .orderBy('firstUtterance', descending: true)
+        .where('firstUtterance', isGreaterThanOrEqualTo: startOfDay)
         .limit(limit)
         .snapshots()
         .map(
@@ -72,42 +81,105 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _showWordDetails({
+    required WordTracker tracker,
+    required LocalizationService localization,
+    required VideoStorageService videoStorage,
+  }) async {
+    final displayWord = tracker.id?.capitalizeOrNA() ?? '—';
+    final languageLabel = tracker.language?.displayName ??
+        localization.translate('language_unknown');
+    final attachment = tracker.videoId != null && tracker.videoId!.isNotEmpty
+        ? videoStorage.entryForKey(tracker.videoId!)
+        : null;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => WordDetailSheet(
+        displayWord: displayWord,
+        tracker: tracker,
+        languageLabel: languageLabel,
+        dateLabel: _dateFormat.format(tracker.firstUtterance),
+        localization: localization,
+        attachment: attachment,
+        onOpenAttachment:
+            attachment == null ? null : () => _openAttachment(attachment),
+      ),
+    );
+  }
+
+  void _openAttachment(LocalVideoEntry entry) {
+    Navigator.of(context).pop();
+    Future.microtask(() => _showMediaPreview(entry));
+  }
+
+  Future<void> _showMediaPreview(LocalVideoEntry entry) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => WordMediaPreviewSheet(entry: entry),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer2<LocalizationService, CurrentChildrenService>(
-      builder: (context, localization, currentChildrenService, _) {
+    return Consumer3<LocalizationService, CurrentChildrenService,
+        VideoStorageService>(
+      builder: (
+        context,
+        localization,
+        currentChildrenService,
+        videoStorage,
+        _,
+      ) {
         final theme = Theme.of(context);
         final child = currentChildrenService.getCurrChild();
 
         final body = SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: child == null
-                ? _HomeEmptyState(localization: localization)
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _OverviewCard(
-                        child: child,
+          child: child == null
+              ? Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: _HomeEmptyState(localization: localization),
+                )
+              : ListView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  children: [
+                    _OverviewCard(
+                      child: child,
+                      localization: localization,
+                      wordCountStream: _watchWordCount(child.id!),
+                      onAddEntry: () {
+                        if (widget.showChrome) {
+                          Navigator.of(context)
+                              .pushNamed(AddEntryPage.routeName);
+                        } else {
+                          context.read<MainNavigationController>().setIndex(2);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    _WeeklySummaryCard(
+                      stream: _watchPastWeekCount(child.id!),
+                      localization: localization,
+                    ),
+                    const SizedBox(height: 24),
+                    _RecentWordsSection(
+                      stream: _watchRecentWords(child.id!),
+                      localization: localization,
+                      dateFormat: _dateFormat,
+                      onTap: (tracker) => _showWordDetails(
+                        tracker: tracker,
                         localization: localization,
-                        wordCountStream: _watchWordCount(child.id!),
+                        videoStorage: videoStorage,
                       ),
-                      const SizedBox(height: 24),
-                      _WeeklySummaryCard(
-                        stream: _watchPastWeekCount(child.id!),
-                        localization: localization,
-                      ),
-                      const SizedBox(height: 24),
-                      Expanded(
-                        child: _RecentWordsSection(
-                          stream: _watchRecentWords(child.id!),
-                          localization: localization,
-                          dateFormat: _dateFormat,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
+                    ),
+                  ],
+                ),
         );
 
         if (!widget.showChrome) {
@@ -116,8 +188,8 @@ class _HomePageState extends State<HomePage> {
 
         return Scaffold(
           appBar: TopBar(
-            pageName: localization.translate('word_buds'),
-            showPageTitle: false,
+            pageName: localization.translate('home_title'),
+            showPageTitle: true,
           ),
           body: body,
         );
@@ -131,11 +203,13 @@ class _OverviewCard extends StatelessWidget {
     required this.child,
     required this.localization,
     required this.wordCountStream,
+    required this.onAddEntry,
   });
 
   final Child child;
   final LocalizationService localization;
   final Stream<int> wordCountStream;
+  final VoidCallback onAddEntry;
 
   @override
   Widget build(BuildContext context) {
@@ -193,9 +267,7 @@ class _OverviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: () {
-              Navigator.of(context).pushNamed(AddEntryPage.routeName);
-            },
+            onPressed: onAddEntry,
             style: FilledButton.styleFrom(
               backgroundColor: theme.colorScheme.onPrimary,
               foregroundColor: theme.colorScheme.primary,
@@ -282,11 +354,13 @@ class _RecentWordsSection extends StatelessWidget {
     required this.stream,
     required this.localization,
     required this.dateFormat,
+    required this.onTap,
   });
 
   final Stream<List<WordTracker>> stream;
   final LocalizationService localization;
   final DateFormat dateFormat;
+  final ValueChanged<WordTracker> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -301,84 +375,130 @@ class _RecentWordsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Expanded(
-          child: StreamBuilder<List<WordTracker>>(
-            stream: stream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+        StreamBuilder<List<WordTracker>>(
+          stream: stream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-              final words = snapshot.data ?? const <WordTracker>[];
-              if (words.isEmpty) {
-                return Center(
+            final words = snapshot.data ?? const <WordTracker>[];
+            if (words.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
                   child: Text(
                     localization.translate('home_no_recent_words'),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                );
-              }
-
-              return ListView.separated(
-                itemCount: words.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final tracker = words[index];
-                  final displayWord = tracker.id?.capitalizeOrNA() ?? '—';
-                  final dateLabel = dateFormat.format(tracker.firstUtterance);
-                  final languageLabel = tracker.language?.displayName ??
-                      localization.translate('language_unknown');
-
-                  final subtitle = [
-                    dateLabel,
-                    languageLabel,
-                    if (tracker.phraseText != null &&
-                        tracker.phraseText!.isNotEmpty)
-                      localization
-                          .translate('home_recent_from_phrase')
-                          .replaceFirst('{phrase}', tracker.phraseText!),
-                  ].join(' • ');
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ListTile(
-                      title: Text(
-                        displayWord,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      subtitle: Text(
-                        subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      trailing: tracker.note != null && tracker.note!.isNotEmpty
-                          ? Chip(
-                              label: Text(
-                                localization.translate('home_recent_has_note'),
-                              ),
-                              backgroundColor:
-                                  theme.colorScheme.secondaryContainer,
-                              labelStyle: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.onSecondaryContainer,
-                              ),
-                            )
-                          : null,
-                    ),
-                  );
-                },
+                ),
               );
-            },
-          ),
+            }
+
+            return Column(
+              children: [
+                for (int index = 0; index < words.length; index++) ...[
+                  if (index > 0) const SizedBox(height: 12),
+                  _RecentWordTile(
+                    tracker: words[index],
+                    localization: localization,
+                    dateFormat: dateFormat,
+                    onTap: onTap,
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ],
+    );
+  }
+}
+
+class _RecentWordTile extends StatelessWidget {
+  const _RecentWordTile({
+    required this.tracker,
+    required this.localization,
+    required this.dateFormat,
+    required this.onTap,
+  });
+
+  final WordTracker tracker;
+  final LocalizationService localization;
+  final DateFormat dateFormat;
+  final ValueChanged<WordTracker> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final displayWord = tracker.id?.capitalizeOrNA() ?? '—';
+    final dateLabel = dateFormat.format(tracker.firstUtterance);
+    final languageLabel = tracker.language?.displayName ??
+        localization.translate('language_unknown');
+
+    final subtitle = [
+      dateLabel,
+      languageLabel,
+      if (tracker.phraseText != null && tracker.phraseText!.isNotEmpty)
+        localization
+            .translate('home_recent_from_phrase')
+            .replaceFirst('{phrase}', tracker.phraseText!),
+    ].join(' • ');
+
+    final List<Widget> trailingIcons = [];
+    if (tracker.note != null && tracker.note!.isNotEmpty) {
+      trailingIcons.add(
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Icon(
+            Icons.sticky_note_2_outlined,
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+        ),
+      );
+    }
+    if (tracker.videoId != null && tracker.videoId!.isNotEmpty) {
+      trailingIcons.add(
+        Icon(
+          Icons.attachment_rounded,
+          color: theme.colorScheme.primary,
+          size: 20,
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ListTile(
+        title: Text(
+          displayWord,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: trailingIcons.isEmpty
+            ? null
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: trailingIcons,
+              ),
+        onTap: () => onTap(tracker),
+      ),
     );
   }
 }

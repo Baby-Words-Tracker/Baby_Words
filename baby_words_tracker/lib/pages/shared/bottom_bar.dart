@@ -19,7 +19,7 @@ class CustomBottomBar extends StatelessWidget {
         iconBuilder: (context, selected) => Icon(
           selected ? Icons.home_rounded : Icons.home_outlined,
         ),
-        labelKey: 'home_page',
+        labelKey: 'home_title',
       ),
       _NavigationItem(
         routeName: WordLogPage.routeName,
@@ -30,7 +30,7 @@ class CustomBottomBar extends StatelessWidget {
       ),
       _NavigationItem(
         routeName: AddEntryPage.routeName,
-        iconBuilder: (context, selected) => _AddEntryIcon(selected: selected),
+        iconBuilder: (context, selected) => const Icon(Icons.add_rounded),
         labelKey: 'add_entry',
       ),
     ];
@@ -38,9 +38,8 @@ class CustomBottomBar extends StatelessWidget {
     items.addAll([
       _NavigationItem(
         routeName: StatsPage.routeName,
-        iconBuilder: (context, selected) => Icon(
-          selected ? Icons.auto_graph : Icons.bar_chart_outlined,
-        ),
+        iconBuilder: (context, selected) =>
+            const Icon(Icons.bar_chart_outlined),
         labelKey: 'view_stats',
       ),
       _NavigationItem(
@@ -122,54 +121,4 @@ class _NavigationItem {
     required this.iconBuilder,
     required this.labelKey,
   });
-}
-
-class _AddEntryIcon extends StatelessWidget {
-  final bool selected;
-
-  const _AddEntryIcon({required this.selected});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final gradient = selected
-        ? LinearGradient(
-            colors: [
-              colorScheme.primary,
-              colorScheme.primaryContainer,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-        : LinearGradient(
-            colors: [
-              colorScheme.primaryContainer.withOpacity(0.4),
-              colorScheme.primaryContainer.withOpacity(0.2),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          );
-
-    return Container(
-      width: 54,
-      height: 54,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: gradient,
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(selected ? 0.35 : 0.15),
-            blurRadius: selected ? 18 : 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.add_rounded,
-        size: selected ? 30 : 28,
-        color: selected ? colorScheme.onPrimary : colorScheme.primary,
-      ),
-    );
-  }
 }

@@ -2,6 +2,7 @@ import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/user_profile.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -11,6 +12,7 @@ import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -235,6 +237,592 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Map<String, String?> _splitFullName(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((element) => element.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) {
+      return {'firstName': null, 'lastName': null};
+    }
+    if (parts.length == 1) {
+      return {'firstName': parts.first, 'lastName': null};
+    }
+    final firstName = parts.first;
+    final lastName = parts.sublist(1).join(' ');
+    return {'firstName': firstName, 'lastName': lastName};
+  }
+
+  List<String> _getKnownChildIds() {
+    final profile = context.read<UserProfileModelService>().userProfile;
+    if (profile != null && profile.childIDs.isNotEmpty) {
+      return List<String>.from(profile.childIDs);
+    }
+    final parentModel = context.read<UserModelService>().parent;
+    if (parentModel != null && parentModel.childIDs.isNotEmpty) {
+      return List<String>.from(parentModel.childIDs);
+    }
+    final children = context.read<CurrentChildrenService>().getCurrChildren() ??
+        const <Child>[];
+    return children
+        .where((child) => child.id != null)
+        .map((child) => child.id!)
+        .toList(growable: false);
+  }
+
+  Future<void> _showEditProfileSheet(UserProfile? profile) async {
+    if (profile == null) {
+      return;
+    }
+
+    final localization = context.read<LocalizationService>();
+    final theme = Theme.of(context);
+    final rootContext = context;
+    final displayName = profile.fullName.isNotEmpty
+        ? profile.fullName
+        : (profile.name?.trim() ?? '');
+    final nameController = TextEditingController(text: displayName);
+    final emailController =
+        TextEditingController(text: profile.email?.trim() ?? '');
+    bool isSaving = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              Future<void> handleSave() async {
+                final trimmedName = nameController.text.trim();
+                final trimmedEmail = emailController.text.trim();
+
+                if (trimmedName.isEmpty) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(
+                      content: Text(localization
+                          .translate('settings_profile_name_required')),
+                    ),
+                  );
+                  return;
+                }
+
+                if (trimmedEmail.isEmpty) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(
+                      content: Text(localization
+                          .translate('settings_profile_email_required')),
+                    ),
+                  );
+                  return;
+                }
+
+                final currentName = displayName;
+                final bool nameChanged = trimmedName != currentName;
+                final bool emailChanged = trimmedEmail.toLowerCase() !=
+                    (profile.email ?? '').toLowerCase();
+
+                if (!nameChanged && !emailChanged) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        localization.translate('settings_profile_no_changes'),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                setModalState(() => isSaving = true);
+
+                try {
+                  if (nameChanged) {
+                    final parts = _splitFullName(trimmedName);
+                    final updates = <String, dynamic>{
+                      'name': trimmedName,
+                      'firstName': parts['firstName'],
+                      'lastName': parts['lastName'],
+                    }..removeWhere((key, value) => value == null);
+
+                    final success = await context
+                        .read<UserProfileService>()
+                        .updateUserProfile(profile.id, updates);
+                    if (!success) {
+                      throw Exception('profile-update-failed');
+                    }
+
+                    final firebaseAuth = context.read<FirebaseAuth>();
+                    final user = firebaseAuth.currentUser;
+                    if (user != null) {
+                      await user.updateDisplayName(trimmedName);
+                    }
+                  }
+
+                  if (emailChanged) {
+                    final firebaseAuth = context.read<FirebaseAuth>();
+                    final user = firebaseAuth.currentUser;
+                    if (user == null) {
+                      throw FirebaseAuthException(
+                        code: 'user-not-found',
+                        message: 'User not authenticated',
+                      );
+                    }
+                    await user.verifyBeforeUpdateEmail(trimmedEmail);
+                    if (mounted) {
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            localization
+                                .translate(
+                                    'settings_profile_email_verification_sent')
+                                .replaceFirst('{email}', trimmedEmail),
+                          ),
+                        ),
+                      );
+                    }
+                  }
+
+                  if (mounted) {
+                    if (nameChanged) {
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            localization
+                                .translate('settings_profile_update_success'),
+                          ),
+                        ),
+                      );
+                    }
+                    Navigator.of(sheetContext).pop();
+                  }
+                } on FirebaseAuthException catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.message ??
+                              localization
+                                  .translate('settings_profile_update_failed'),
+                        ),
+                      ),
+                    );
+                  }
+                } catch (_) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          localization
+                              .translate('settings_profile_update_failed'),
+                        ),
+                      ),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setModalState(() => isSaving = false);
+                  }
+                }
+              }
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localization.translate('settings_profile_edit_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText:
+                          localization.translate('settings_profile_name_label'),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: localization
+                          .translate('settings_primary_email_label'),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: isSaving
+                            ? null
+                            : () => Navigator.of(sheetContext).maybePop(),
+                        child: Text(localization.translate('cancel')),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton(
+                        onPressed: isSaving ? null : handleSave,
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(localization.translate('save')),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditChildSheet(Child child) async {
+    final localization = context.read<LocalizationService>();
+    final theme = Theme.of(context);
+    final rootContext = context;
+    final nameController = TextEditingController(text: child.name);
+    DateTime selectedBirthday = child.birthday;
+    final Set<LanguageCode> selectedLanguages =
+        child.language.isNotEmpty ? child.language.toSet() : {LanguageCode.en};
+    bool isSaving = false;
+
+    bool isSameDate(DateTime a, DateTime b) {
+      return a.year == b.year && a.month == b.month && a.day == b.day;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              Future<void> pickBirthday() async {
+                final now = DateTime.now();
+                final picked = await showDatePicker(
+                  context: sheetContext,
+                  initialDate: selectedBirthday,
+                  firstDate: DateTime(now.year - 10),
+                  lastDate: now,
+                );
+                if (picked != null) {
+                  setModalState(() {
+                    selectedBirthday = picked;
+                  });
+                }
+              }
+
+              void toggleLanguage(LanguageCode code) {
+                setModalState(() {
+                  if (selectedLanguages.contains(code)) {
+                    if (selectedLanguages.length > 1) {
+                      selectedLanguages.remove(code);
+                    }
+                  } else {
+                    selectedLanguages.add(code);
+                  }
+                });
+              }
+
+              Future<void> handleSave() async {
+                final trimmedName = nameController.text.trim();
+                if (trimmedName.isEmpty) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        localization.translate('settings_child_name_required'),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                final bool nameChanged = trimmedName != child.name;
+                final bool birthdayChanged =
+                    !isSameDate(selectedBirthday, child.birthday);
+                final Set<LanguageCode> existingLanguages =
+                    child.language.toSet();
+                final bool languagesChanged =
+                    !selectedLanguages.containsAll(existingLanguages) ||
+                        !existingLanguages.containsAll(selectedLanguages);
+
+                if (!nameChanged && !birthdayChanged && !languagesChanged) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        localization.translate('settings_child_no_changes'),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                if (child.id == null) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        localization.translate('settings_child_update_failed'),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                setModalState(() => isSaving = true);
+
+                try {
+                  final success =
+                      await context.read<ChildDataService>().updateChild(
+                            child.id!,
+                            name: nameChanged ? trimmedName : null,
+                            birthday: birthdayChanged ? selectedBirthday : null,
+                            language: languagesChanged
+                                ? selectedLanguages.toList()
+                                : null,
+                          );
+                  if (!success) {
+                    throw Exception('child-update-failed');
+                  }
+
+                  await context
+                      .read<CurrentChildrenService>()
+                      .updateChildrenFromIds(_getKnownChildIds());
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          localization
+                              .translate('settings_child_update_success'),
+                        ),
+                      ),
+                    );
+                    Navigator.of(sheetContext).pop();
+                  }
+                } catch (_) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          localization
+                              .translate('settings_child_update_failed'),
+                        ),
+                      ),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setModalState(() => isSaving = false);
+                  }
+                }
+              }
+
+              final birthdayLabel = DateFormat.yMMMMd(
+                localization.localization.locale.toString(),
+              ).format(selectedBirthday);
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localization.translate('settings_edit_child_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: localization.translate('choose_name'),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    readOnly: true,
+                    onTap: pickBirthday,
+                    decoration: InputDecoration(
+                      labelText: localization.translate('choose_birthday'),
+                      hintText: localization.translate('choose_birthday'),
+                      suffixIcon: const Icon(Icons.cake_outlined),
+                    ),
+                    controller: TextEditingController(text: birthdayLabel),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    localization.translate('select_language'),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('English'),
+                        selected: selectedLanguages.contains(LanguageCode.en),
+                        onSelected: (_) => toggleLanguage(LanguageCode.en),
+                      ),
+                      ChoiceChip(
+                        label: const Text('Español'),
+                        selected: selectedLanguages.contains(LanguageCode.es),
+                        onSelected: (_) => toggleLanguage(LanguageCode.es),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: isSaving
+                            ? null
+                            : () => Navigator.of(sheetContext).maybePop(),
+                        child: Text(localization.translate('cancel')),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton(
+                        onPressed: isSaving ? null : handleSave,
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(localization.translate('save')),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeleteChild(Child child) async {
+    final localization = context.read<LocalizationService>();
+    if (child.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            localization.translate('settings_child_delete_failed'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showConfirmationDialog(
+      context,
+      localization
+          .translate('settings_child_delete_confirm')
+          .replaceFirst('{name}', child.name),
+      title: localization.translate('confirm_action'),
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    final userProfileModelService = context.read<UserProfileModelService>();
+    final userProfileService = context.read<UserProfileService>();
+    final parentDataService = context.read<ParentDataService>();
+    final childDataService = context.read<ChildDataService>();
+    final userModelService = context.read<UserModelService>();
+
+    final parentIds = <String>{};
+    final profileId = userProfileModelService.userProfile?.id;
+    if (profileId != null) {
+      parentIds.add(profileId);
+    }
+    final legacyParentId = userModelService.parent?.id;
+    if (legacyParentId != null) {
+      parentIds.add(legacyParentId);
+    }
+
+    bool success = parentIds.isNotEmpty;
+
+    if (profileId != null) {
+      success = await userProfileService.removeChild(profileId, child.id!);
+    }
+
+    if (success && legacyParentId != null) {
+      success = await parentDataService.removeChildFromParent(
+        legacyParentId,
+        child.id!,
+      );
+    }
+
+    if (success) {
+      for (final id in parentIds) {
+        await childDataService.removeParentFromChild(child.id!, id);
+      }
+    }
+
+    if (success) {
+      final updatedIds = _getKnownChildIds()..remove(child.id!);
+      await context
+          .read<CurrentChildrenService>()
+          .updateChildrenFromIds(updatedIds);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              localization.translate('settings_child_delete_success'),
+            ),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              localization.translate('settings_child_delete_failed'),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _showShareChildSheet() async {
     final localization = context.read<LocalizationService>();
     final currentChild = context.read<CurrentChildrenService>().getCurrChild();
@@ -331,6 +919,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _ProfileCard(
                 profile: profile,
                 localization: localization,
+                onEdit: () => _showEditProfileSheet(profile),
               ),
               const SizedBox(height: 20),
               _LanguageCard(
@@ -345,6 +934,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 localization: localization,
                 onAddChild: _showAddChildSheet,
                 onShareChild: _showShareChildSheet,
+                onEditChild: _showEditChildSheet,
+                onDeleteChild: _confirmDeleteChild,
+                onSelectChild: (child) {
+                  final id = child.id;
+                  if (id != null) {
+                    context.read<CurrentChildrenService>().switchChild(id);
+                  }
+                },
               ),
             ],
           ),
@@ -370,10 +967,12 @@ class _ProfileCard extends StatelessWidget {
   const _ProfileCard({
     required this.profile,
     required this.localization,
+    required this.onEdit,
   });
 
   final UserProfile? profile;
   final LocalizationService localization;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -393,13 +992,25 @@ class _ProfileCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              localization.translate('settings_profile_title'),
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    localization.translate('settings_profile_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: profile == null ? null : onEdit,
+                  tooltip: localization.translate('edit'),
+                  icon: const Icon(Icons.edit_outlined),
+                  color: theme.colorScheme.primary,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(
@@ -504,6 +1115,9 @@ class _ChildrenCard extends StatelessWidget {
     required this.localization,
     required this.onAddChild,
     required this.onShareChild,
+    required this.onEditChild,
+    required this.onDeleteChild,
+    required this.onSelectChild,
   });
 
   final List<Child> children;
@@ -511,6 +1125,9 @@ class _ChildrenCard extends StatelessWidget {
   final LocalizationService localization;
   final VoidCallback onAddChild;
   final VoidCallback onShareChild;
+  final ValueChanged<Child> onEditChild;
+  final ValueChanged<Child> onDeleteChild;
+  final ValueChanged<Child> onSelectChild;
 
   @override
   Widget build(BuildContext context) {
@@ -551,6 +1168,7 @@ class _ChildrenCard extends StatelessWidget {
                   final isCurrent = child.id == currentChildId;
                   final languages =
                       child.language.map((code) => code.displayName).join(', ');
+                  final bool hasId = child.id != null;
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
@@ -579,18 +1197,38 @@ class _ChildrenCard extends StatelessWidget {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      trailing: isCurrent
-                          ? Chip(
-                              label: Text(
-                                localization.translate('select_child'),
+                      onTap: hasId ? () => onSelectChild(child) : null,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isCurrent)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Tooltip(
+                                message: localization
+                                    .translate('settings_current_child_label'),
+                                child: Icon(
+                                  Icons.check_circle_rounded,
+                                  color: theme.colorScheme.primary,
+                                  size: 20,
+                                ),
                               ),
-                              backgroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              labelStyle: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            )
-                          : null,
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined),
+                            color: theme.colorScheme.primary,
+                            tooltip: localization.translate('edit'),
+                            onPressed: hasId ? () => onEditChild(child) : null,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            color: theme.colorScheme.error,
+                            tooltip: localization.translate('delete'),
+                            onPressed:
+                                hasId ? () => onDeleteChild(child) : null,
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

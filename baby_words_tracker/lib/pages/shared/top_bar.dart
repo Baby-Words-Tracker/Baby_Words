@@ -54,11 +54,15 @@ class _TopBarState extends State<TopBar> {
     final localizationService = context.watch<LocalizationService>();
     final showPageTitle =
         widget.showPageTitle && (widget.pageName?.trim().isNotEmpty ?? false);
+    final Color barColor = theme.colorScheme.secondaryContainer;
+    final Color onBarColor = theme.colorScheme.onSecondaryContainer;
     final brandTranslation = localizationService.translate('word_buds').trim();
     final String brandLabel =
         brandTranslation.isEmpty ? 'WordBuds' : brandTranslation;
 
     return AppBar(
+      backgroundColor: barColor,
+      surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
       toolbarHeight: widget.preferredSize.height,
       titleSpacing: 0,
@@ -77,12 +81,12 @@ class _TopBarState extends State<TopBar> {
                     brandLabel,
                     style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: onBarColor.withOpacity(0.85),
                         ) ??
                         TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: onBarColor.withOpacity(0.85),
                         ),
                   ),
                   if (showPageTitle) ...[
@@ -91,12 +95,12 @@ class _TopBarState extends State<TopBar> {
                       widget.pageName!,
                       style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
+                            color: onBarColor,
                           ) ??
                           TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
+                            color: onBarColor,
                           ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -106,25 +110,11 @@ class _TopBarState extends State<TopBar> {
             ),
             Expanded(
               child: Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.shadow.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(10),
-                  child: Image.asset(
-                    'assets/lecs_mascot_64x64.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
+                child: Image.asset(
+                  'assets/lecs_mascot_64x64.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
@@ -135,8 +125,7 @@ class _TopBarState extends State<TopBar> {
                 child: Consumer2<LocalizationService, CurrentChildrenService>(
                   builder: (context, localizationService,
                       currentChildrenService, child) {
-                    final Color outlineColor =
-                        theme.colorScheme.outlineVariant.withOpacity(0.6);
+                    final Color outlineColor = onBarColor.withOpacity(0.32);
                     final childMenuItems =
                         _loadParentAndChildren(currentChildrenService);
                     final bool isLoading =
@@ -189,13 +178,15 @@ class _TopBarState extends State<TopBar> {
                               child: Text(
                                 currentChildLabel,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: onBarColor,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 6),
                             Icon(
                               Icons.expand_more,
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color: onBarColor,
                               size: 18,
                             ),
                           ],

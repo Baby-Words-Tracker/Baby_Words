@@ -10,7 +10,7 @@ import 'package:baby_words_tracker/util/language_code.dart';
 class ParentDataService extends ChangeNotifier {
   final IFirestoreRepository _firestoreRepository;
 
-  ParentDataService({IFirestoreRepository? repository}) 
+  ParentDataService({IFirestoreRepository? repository})
       : _firestoreRepository = repository ?? FirestoreRepository();
 
   //Parent services
@@ -106,6 +106,43 @@ class ParentDataService extends ChangeNotifier {
     await _firestoreRepository.appendToArrayField(
         Child.collectionName, childId, "parentIDs", parentId);
     notifyListeners();
+  }
+
+  Future<bool> removeChildFromParent(String parentId, String childId) async {
+    final parent = await getParent(parentId);
+    if (parent == null) {
+      debugPrint(
+          "ParentDataService: removeChildFromParent failed - parent null");
+      return false;
+    }
+
+    final updatedChildIds =
+        parent.childIDs.where((id) => id != childId).toList();
+    final success = await _firestoreRepository.update(
+      Parent.collectionName,
+      parentId,
+      {'childIDs': updatedChildIds},
+    );
+
+    if (!success) {
+      return false;
+    }
+
+    final childData =
+        await _firestoreRepository.read(Child.collectionName, childId);
+    if (childData != null) {
+      final child = Child.fromDataWithId(childData);
+      final updatedParentIds =
+          child.parentIDs.where((id) => id != parentId).toList();
+      await _firestoreRepository.update(
+        Child.collectionName,
+        childId,
+        {'parentIDs': updatedParentIds},
+      );
+    }
+
+    notifyListeners();
+    return true;
   }
 
   Future<List<Child>> getChildList(String id) async {
