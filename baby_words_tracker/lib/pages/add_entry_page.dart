@@ -11,7 +11,7 @@ import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/text_entry_utils.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -201,7 +201,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<String?> _storeAttachment({
-    required VideoStorageService storage,
+    required MediaStorageService storage,
     required LocalizationService localization,
     required String childId,
     required String entryId,
@@ -230,7 +230,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
 
     try {
-      final saved = await storage.saveVideoForWord(
+      final saved = await storage.saveMediaForWord(
         childId: childId,
         wordId: entryId,
         sourceFile: attachment.file,
@@ -248,7 +248,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   Future<void> _submitEntry(
     LocalizationService localization,
-    VideoStorageService videoStorage,
+    MediaStorageService videoStorage,
   ) async {
     if (_isSubmitting) {
       return;
@@ -330,13 +330,32 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   Future<void> _submitWordEntry({
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
     required String childId,
     required LanguageCode language,
     required String rawInput,
     required String note,
   }) async {
     final normalisedWord = normaliseForDocumentId(rawInput);
+    
+    // Check if word already exists
+    final existingWord = await _wordTrackerDataService.getWordTracker(
+      childId,
+      normalisedWord,
+    );
+    
+    if (existingWord != null) {
+      // Word already logged, show toast and return
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localization.translate('word_already_logged')),
+          ),
+        );
+      }
+      return;
+    }
+    
     await _wordDataService.queueWordForProcessing(
       wordId: normalisedWord,
       language: language,
@@ -364,7 +383,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   Future<void> _submitPhraseEntry({
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
     required String childId,
     required LanguageCode language,
     required String rawInput,
@@ -382,6 +401,17 @@ class _AddEntryPageState extends State<AddEntryPage> {
     );
 
     for (final word in words) {
+      // Check if word already exists
+      final existingWord = await _wordTrackerDataService.getWordTracker(
+        childId,
+        word,
+      );
+      
+      // Skip if word already logged (silently for phrases)
+      if (existingWord != null) {
+        continue;
+      }
+      
       await _wordDataService.queueWordForProcessing(
         wordId: word,
         language: language,
@@ -419,7 +449,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<LocalizationService, VideoStorageService>(
+    return Consumer2<LocalizationService, MediaStorageService>(
       builder: (context, localization, videoStorage, _) {
         final theme = Theme.of(context);
         final entryLabel = localization.translate(
@@ -483,7 +513,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                             label: Text(
                               localization.translate('word_mode'),
                             ),
-                            icon: const Icon(Icons.text_fields_rounded),
+                            icon: const Icon(Icons.menu_book_outlined),
                           ),
                           ButtonSegment(
                             value: EntryMode.phrase,
@@ -491,7 +521,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                               localization.translate('phrase_mode'),
                             ),
                             icon: const Icon(
-                              Icons.chat_bubble_outline_rounded,
+                              Icons.comment_outlined,
                             ),
                           ),
                         ],

@@ -29,12 +29,12 @@ import 'pages/home_page.dart';
 import 'pages/log_page.dart';
 import 'pages/stats.dart';
 import 'pages/upload_video.dart';
-import 'pages/display_video_page.dart';
+import 'pages/display_media_page.dart';
 import 'pages/parent_dashboard.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 
 // Firebase
@@ -122,8 +122,8 @@ void main() async {
             ),
             lazy: false,
           ),
-          ChangeNotifierProvider<VideoStorageService>(
-            create: (context) => VideoStorageService(
+          ChangeNotifierProvider<MediaStorageService>(
+            create: (context) => MediaStorageService(
               userProfileModelService:
                   Provider.of<UserProfileModelService>(context, listen: false),
             ),
@@ -347,7 +347,7 @@ class MyApp extends StatelessWidget {
               const AuthGate(), // OLD: Keep for reference
           NewAuthGate.routeName: (context) => const NewAuthGate(), // NEW
           SurveyPage.routeName: (context) => const SurveyPage(),
-          DisplayVideoPage.routeName: (context) => const DisplayVideoPage(),
+          DisplayMediaPage.routeName: (context) => const DisplayMediaPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
           SettingsPage.routeName: (context) => const SettingsPage(),
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),

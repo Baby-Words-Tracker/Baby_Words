@@ -4,8 +4,8 @@ import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
-import 'package:baby_words_tracker/video/local_video_entry.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/local_media_entry.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class WordDetailSheet extends StatelessWidget {
   final String languageLabel;
   final String dateLabel;
   final LocalizationService localization;
-  final LocalVideoEntry? attachment;
+  final LocalMediaEntry? attachment;
   final VoidCallback? onOpenAttachment;
 
   @override
@@ -307,7 +307,7 @@ class WordAttachmentSection extends StatelessWidget {
     required this.onOpenAttachment,
   });
 
-  final LocalVideoEntry? attachment;
+  final LocalMediaEntry? attachment;
   final LocalizationService localization;
   final VoidCallback? onOpenAttachment;
 
@@ -405,9 +405,13 @@ class WordMediaPreviewSheet extends StatefulWidget {
   const WordMediaPreviewSheet({
     super.key,
     required this.entry,
+    this.displayText,
+    this.phraseText,
   });
 
-  final LocalVideoEntry entry;
+  final LocalMediaEntry entry;
+  final String? displayText;
+  final String? phraseText;
 
   @override
   State<WordMediaPreviewSheet> createState() => _WordMediaPreviewSheetState();
@@ -493,6 +497,7 @@ class _WordMediaPreviewSheetState extends State<WordMediaPreviewSheet> {
     final theme = Theme.of(context);
     final localization = context.read<LocalizationService>();
     final fileName = p.basename(widget.entry.filePath);
+    final displayTitle = widget.displayText ?? fileName;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -505,12 +510,23 @@ class _WordMediaPreviewSheetState extends State<WordMediaPreviewSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            fileName,
+            displayTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
           ),
+          if (widget.phraseText != null && widget.phraseText!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '"${widget.phraseText!}"',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
           const SizedBox(height: 16),
           if (_isLoading)
             const Padding(
@@ -556,7 +572,7 @@ class _WordMediaPreviewSheetState extends State<WordMediaPreviewSheet> {
 
 bool _isImageFile(String path) {
   final extension = p.extension(path).toLowerCase();
-  return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].contains(extension);
+  return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.heic', '.heif'].contains(extension);
 }
 
 bool _isVideoFile(String path) {

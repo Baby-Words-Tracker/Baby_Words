@@ -7,9 +7,10 @@ import 'package:baby_words_tracker/pages/shared/word_entry_sheets.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/string_utils.dart';
-import 'package:baby_words_tracker/video/local_video_entry.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/local_media_entry.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:baby_words_tracker/pages/add_entry_page.dart';
+import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,19 @@ class _HomePageState extends State<HomePage> {
         );
   }
 
+  Stream<int> _watchTodayWordCount(String childId) {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+
+    return FirebaseFirestore.instance
+        .collection(Child.collectionName)
+        .doc(childId)
+        .collection(WordTracker.collectionName)
+        .where('firstUtterance', isGreaterThanOrEqualTo: startOfDay)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
   Stream<int> _watchWordCount(String childId) {
     return FirebaseFirestore.instance
         .collection(Child.collectionName)
@@ -84,7 +98,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showWordDetails({
     required WordTracker tracker,
     required LocalizationService localization,
-    required VideoStorageService videoStorage,
+    required MediaStorageService videoStorage,
   }) async {
     final displayWord = tracker.id?.capitalizeOrNA() ?? '—';
     final languageLabel = tracker.language?.displayName ??
@@ -110,24 +124,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openAttachment(LocalVideoEntry entry) {
+  void _openAttachment(LocalMediaEntry entry) {
     Navigator.of(context).pop();
     Future.microtask(() => _showMediaPreview(entry));
   }
 
-  Future<void> _showMediaPreview(LocalVideoEntry entry) {
+  Future<void> _showMediaPreview(LocalMediaEntry entry) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => WordMediaPreviewSheet(entry: entry),
+      builder: (context) => WordMediaPreviewSheet(
+        entry: entry,
+        displayText: entry.wordId.capitalizeOrNA(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer3<LocalizationService, CurrentChildrenService,
-        VideoStorageService>(
+        MediaStorageService>(
       builder: (
         context,
         localization,
@@ -135,7 +152,6 @@ class _HomePageState extends State<HomePage> {
         videoStorage,
         _,
       ) {
-        final theme = Theme.of(context);
         final child = currentChildrenService.getCurrChild();
 
         final body = SafeArea(
@@ -170,6 +186,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 24),
                     _RecentWordsSection(
                       stream: _watchRecentWords(child.id!),
+                      totalCountStream: _watchTodayWordCount(child.id!),
                       localization: localization,
                       dateFormat: _dateFormat,
                       onTap: (tracker) => _showWordDetails(
@@ -352,12 +369,14 @@ class _WeeklySummaryCard extends StatelessWidget {
 class _RecentWordsSection extends StatelessWidget {
   const _RecentWordsSection({
     required this.stream,
+    required this.totalCountStream,
     required this.localization,
     required this.dateFormat,
     required this.onTap,
   });
 
   final Stream<List<WordTracker>> stream;
+  final Stream<int> totalCountStream;
   final LocalizationService localization;
   final DateFormat dateFormat;
   final ValueChanged<WordTracker> onTap;
@@ -400,22 +419,79 @@ class _RecentWordsSection extends StatelessWidget {
               );
             }
 
-            return Column(
-              children: [
-                for (int index = 0; index < words.length; index++) ...[
-                  if (index > 0) const SizedBox(height: 12),
-                  _RecentWordTile(
-                    tracker: words[index],
-                    localization: localization,
-                    dateFormat: dateFormat,
-                    onTap: onTap,
-                  ),
-                ],
-              ],
+            return StreamBuilder<int>(
+              stream: totalCountStream,
+              builder: (context, countSnapshot) {
+                final totalCount = countSnapshot.data ?? 0;
+                final showSeeAllCard = totalCount >= 10;
+
+                return Column(
+                  children: [
+                    for (int index = 0; index < words.length; index++) ...[
+                      if (index > 0) const SizedBox(height: 12),
+                      _RecentWordTile(
+                        tracker: words[index],
+                        localization: localization,
+                        dateFormat: dateFormat,
+                        onTap: onTap,
+                      ),
+                    ],
+                    if (showSeeAllCard) ...[
+                      const SizedBox(height: 12),
+                      _SeeAllCard(
+                        localization: localization,
+                        onTap: () {
+                          Navigator.of(context).pushNamed(WordLogPage.routeName);
+                        },
+                      ),
+                    ],
+                  ],
+                );
+              },
             );
           },
         ),
       ],
+    );
+  }
+}
+
+class _SeeAllCard extends StatelessWidget {
+  const _SeeAllCard({
+    required this.localization,
+    required this.onTap,
+  });
+
+  final LocalizationService localization;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        title: Text(
+          localization.translate('home_see_all_in_logbook'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          color: theme.colorScheme.primary,
+          size: 16,
+        ),
+        onTap: onTap,
+      ),
     );
   }
 }
