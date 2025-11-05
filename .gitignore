@@ -13,3 +13,56 @@
 # ignore log files
 *.log
 .vs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+flutter_*.png
+linked_*.ds
+unlinked.ds
+unlinked_spec.ds
+*.dart.js
+*.info.json
+*.js
+*.js_
+*.js.deps
+*.js.map
+*.mjs
+*.dart.js_*
+*.js_
+*.js.deps
+*.js.map
+*.mjs
+*.dart.js_*
+
+# NLTK Data (pre-downloaded for Firebase Functions)
+firebase-project/functions_python/nltk_data/
+firebase-project/functions_python/__pycache__/
+baby_words_tracker/.dart-tool/dart-flutter-telemetry-session.json
+.gitignore
+baby_words_tracker/.dart-tool/CLIENT_ID
+baby_words_tracker/.dart-tool/dart-flutter-telemetry.config
+baby_words_tracker/.dart-tool/dart-flutter-telemetry-dismissed-surveys.json

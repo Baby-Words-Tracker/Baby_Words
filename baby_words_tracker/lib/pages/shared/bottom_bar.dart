@@ -1,9 +1,9 @@
-import 'package:baby_words_tracker/l10n/localization_service.dart'; //important for translation
-import 'package:baby_words_tracker/pages/display_video_page.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/add_entry_page.dart';
 import 'package:baby_words_tracker/pages/home_page.dart';
+import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/stats.dart';
-import 'package:baby_words_tracker/util/feature_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,40 +14,48 @@ class CustomBottomBar extends StatelessWidget {
 
   List<_NavigationItem> _buildNavItems() {
     final items = <_NavigationItem>[
-      const _NavigationItem(
+      _NavigationItem(
         routeName: HomePage.routeName,
-        icon: Icons.home,
-        labelKey: 'home_page',
+        iconBuilder: (context, selected) => Icon(
+          selected ? Icons.home_rounded : Icons.home_outlined,
+        ),
+        labelKey: 'home_title',
       ),
-      const _NavigationItem(
-        routeName: StatsPage.routeName,
-        icon: Icons.bar_chart_outlined,
-        labelKey: 'view_stats',
+      _NavigationItem(
+        routeName: WordLogPage.routeName,
+        iconBuilder: (context, selected) => Icon(
+          selected ? Icons.menu_book : Icons.menu_book_outlined,
+        ),
+        labelKey: 'word_log',
       ),
-      const _NavigationItem(
-        routeName: SettingsPage.routeName,
-        icon: Icons.settings_rounded,
-        labelKey: 'settings',
+      _NavigationItem(
+        routeName: AddEntryPage.routeName,
+        iconBuilder: (context, selected) => const Icon(Icons.add_rounded),
+        labelKey: 'add_entry',
       ),
     ];
 
-    if (FeatureFlags.parentLocalVideos) {
-      items.insert(
-        1,
-        const _NavigationItem(
-          routeName: DisplayVideoPage.routeName,
-          icon: Icons.video_camera_front,
-          labelKey: 'upload_video',
+    items.addAll([
+      _NavigationItem(
+        routeName: StatsPage.routeName,
+        iconBuilder: (context, selected) =>
+            const Icon(Icons.bar_chart_outlined),
+        labelKey: 'view_stats',
+      ),
+      _NavigationItem(
+        routeName: SettingsPage.routeName,
+        iconBuilder: (context, selected) => Icon(
+          selected ? Icons.settings_rounded : Icons.settings_outlined,
         ),
-      );
-    }
+        labelKey: 'settings',
+      ),
+    ]);
 
     return items;
   }
 
   int _resolveSelectedIndex(List<_NavigationItem> navItems) {
-    final idx =
-        navItems.indexWhere((item) => item.routeName == currentRoute);
+    final idx = navItems.indexWhere((item) => item.routeName == currentRoute);
     return idx >= 0 ? idx : 0;
   }
 
@@ -67,6 +75,8 @@ class CustomBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Consumer<LocalizationService>(
       builder: (context, localizationService, _) {
         final navItems = _buildNavItems();
@@ -79,7 +89,18 @@ class CustomBottomBar extends StatelessWidget {
           destinations: navItems
               .map(
                 (item) => NavigationDestination(
-                  icon: Icon(item.icon),
+                  icon: IconTheme(
+                    data: IconThemeData(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    child: item.iconBuilder(context, false),
+                  ),
+                  selectedIcon: IconTheme(
+                    data: IconThemeData(
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                    child: item.iconBuilder(context, true),
+                  ),
                   label: localizationService.translate(item.labelKey),
                 ),
               )
@@ -92,12 +113,12 @@ class CustomBottomBar extends StatelessWidget {
 
 class _NavigationItem {
   final String routeName;
-  final IconData icon;
+  final Widget Function(BuildContext context, bool selected) iconBuilder;
   final String labelKey;
 
   const _NavigationItem({
     required this.routeName,
-    required this.icon,
+    required this.iconBuilder,
     required this.labelKey,
   });
 }

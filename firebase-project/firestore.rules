@@ -133,16 +133,32 @@ service cloud.firestore {
           let childDoc = get(/databases/$(database)/documents/Child/$(childId));
           return request.auth.uid in childDoc.data.parentIDs;
         }
-        
+
         // Parents can manage their children's word trackers
         allow read, write, create, update: if isSignedIn() && 
                                               isActive() && 
                                               parentOwnsChild();
-        
+
         // Researchers can read
         allow read: if isSignedIn() && isActive() && isResearcher();
-        
+
         // No deletes allowed
+        allow delete: if false;
+      }
+
+      // PhraseTracker subcollection
+      match /PhraseTracker/{phraseId} {
+        function parentOwnsChild() {
+          let childDoc = get(/databases/$(database)/documents/Child/$(childId));
+          return request.auth.uid in childDoc.data.parentIDs;
+        }
+
+        allow read, write, create, update: if isSignedIn() &&
+                                              isActive() &&
+                                              parentOwnsChild();
+
+        allow read: if isSignedIn() && isActive() && isResearcher();
+
         allow delete: if false;
       }
     }

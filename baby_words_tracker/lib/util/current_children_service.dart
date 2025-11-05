@@ -88,6 +88,12 @@ class CurrentChildrenService extends ChangeNotifier {
     List<Child> children = await _childService.getMultipleChildren(childIDs);
     children.sortBy((child) => child.name);
     _children = children;
+    
+    // Ensure child index is within bounds after children list changes
+    if (_childIndex >= _children.length) {
+      _childIndex = _children.isNotEmpty ? 0 : 0;
+    }
+    
     _dataRetrieved = true;
     notifyListeners();
   }

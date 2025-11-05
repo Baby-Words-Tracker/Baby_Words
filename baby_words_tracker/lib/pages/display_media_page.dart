@@ -1,6 +1,5 @@
-import 'dart:io';
-import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
+import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/phrase_tracker.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
@@ -12,6 +11,7 @@ import 'package:baby_words_tracker/video/local_media_entry.dart';
 import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:chewie/chewie.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -200,7 +200,7 @@ class _DisplayMediaPageState extends State<DisplayMediaPage> {
 
   bool _isImageFile(String path) {
     final extension = p.extension(path).toLowerCase();
-    return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.heic', '.heif'].contains(extension);
+    return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].contains(extension);
   }
 
   void _onMediaSelected(

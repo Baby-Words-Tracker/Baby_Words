@@ -1,4 +1,3 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:baby_words_tracker/data/repositories/i_firestore_repository.dart';
 import 'package:baby_words_tracker/data/repositories/firestore_repository.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
@@ -6,6 +5,8 @@ import 'package:baby_words_tracker/data/listeners/firestore_document_listener.da
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/util/pair.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 
 /// Mock implementation of IFirestoreRepository using FakeFirebaseFirestore
 /// This allows us to test services with realistic Firestore operations without hitting real Firebase
@@ -112,6 +113,31 @@ class MockFirestoreRepository implements IFirestoreRepository {
           .update({field: value});
       return true;
     } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> setSubcollectionDocument(
+      String collectionName,
+      String docId,
+      String subcollectionName,
+      String subDocId,
+      Map<String, dynamic> data,
+      {bool merge = false}) async {
+    try {
+      final ref = fakeFirestore
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollectionName)
+          .doc(subDocId);
+      if (merge) {
+        await ref.set(data, SetOptions(merge: true));
+      } else {
+        await ref.set(data);
+      }
+      return true;
+    } catch (_) {
       return false;
     }
   }
@@ -297,6 +323,32 @@ class MockFirestoreRepository implements IFirestoreRepository {
     } catch (e) {
       debugPrint('MockFirestoreRepository.subQueryByDateRange error: $e');
       return [];
+    }
+  }
+
+  @override
+  Future<bool> deleteSubcollectionDocument(String collectionName, String docId,
+      String subcollectionName, String subDocId) async {
+    try {
+      final path = '$collectionName/$docId/$subcollectionName';
+      await fakeFirestore.collection(path).doc(subDocId).delete();
+      return true;
+    } catch (e) {
+      debugPrint('MockFirestoreRepository.deleteSubcollectionDocument error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteWordTrackerDocument(String collectionName, String docId,
+      String subcollectionName, String subDocId) async {
+    try {
+      final path = '$collectionName/$docId/$subcollectionName';
+      await fakeFirestore.collection(path).doc(subDocId).delete();
+      return true;
+    } catch (e) {
+      debugPrint('MockFirestoreRepository.deleteWordTrackerDocument error: $e');
+      return false;
     }
   }
 

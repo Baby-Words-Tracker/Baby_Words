@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 class FirestoreRepository implements IFirestoreRepository {
   final FirebaseFirestore database;
 
-  FirestoreRepository({FirebaseFirestore? firestore}) 
+  FirestoreRepository({FirebaseFirestore? firestore})
       : database = firestore ?? FirebaseFirestore.instance {
     database.settings = const Settings(
       persistenceEnabled: true,
@@ -299,6 +299,91 @@ class FirestoreRepository implements IFirestoreRepository {
     } catch (e) {
       debugPrint(
           "Error updating document in subcollection $collectionName/$docId/$subcollectionName/$subId: $e");
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> setSubcollectionDocument(
+    String collectionName,
+    String docId,
+    String subcollectionName,
+    String subDocId,
+    Map<String, dynamic> data, {
+    bool merge = false,
+  }) async {
+    try {
+      final docRef = database
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollectionName)
+          .doc(subDocId);
+      await docRef.set(data, SetOptions(merge: merge));
+      return true;
+    } catch (e) {
+      debugPrint(
+          "Error setting document in subcollection $collectionName/$docId/$subcollectionName/$subDocId: $e");
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteSubcollectionDocument(String collectionName, String docId,
+      String subcollectionName, String subDocId) async {
+    try {
+      final docRef = database
+          .collection(collectionName)
+          .doc(docId)
+          .collection(subcollectionName)
+          .doc(subDocId);
+      await docRef.delete();
+      return true;
+    } catch (e) {
+      debugPrint(
+          "Error deleting document in subcollection $collectionName/$docId/$subcollectionName/$subDocId: $e");
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteWordTrackerDocument(String collectionName, String docId,
+      String subcollectionName, String subDocId) async {
+    try {
+      final docRef = database.collection(collectionName).doc(docId);
+      final subDocRef = docRef.collection(subcollectionName).doc(subDocId);
+
+      return await database.runTransaction((transaction) async {
+        final parentSnapshot = await transaction.get(docRef);
+        if (!parentSnapshot.exists) {
+          throw Exception(
+            "deleteWordTrackerDocument(): parent document $collectionName/$docId does not exist",
+          );
+        }
+
+        final subDocSnapshot = await transaction.get(subDocRef);
+        if (!subDocSnapshot.exists) {
+          return true;
+        }
+
+        transaction.delete(subDocRef);
+
+        final currentCount =
+            (parentSnapshot.data()?[Child.wordCountFieldName] ?? 0) as int;
+
+        if (currentCount <= 0) {
+          transaction.update(docRef, {Child.wordCountFieldName: 0});
+        } else {
+          transaction.update(
+            docRef,
+            {Child.wordCountFieldName: FieldValue.increment(-1)},
+          );
+        }
+
+        return true;
+      });
+    } catch (e) {
+      debugPrint(
+          "Error deleting word tracker in $collectionName/$docId/$subcollectionName/$subDocId: $e");
       return false;
     }
   }
@@ -714,7 +799,7 @@ class FirestoreRepository implements IFirestoreRepository {
   Future<bool> batchUpdate(Map<String, Map<String, dynamic>> updates) async {
     try {
       final batch = database.batch();
-      
+
       for (final entry in updates.entries) {
         final parts = entry.key.split('/');
         if (parts.length >= 2) {
@@ -724,7 +809,7 @@ class FirestoreRepository implements IFirestoreRepository {
           batch.update(docRef, entry.value);
         }
       }
-      
+
       await batch.commit();
       return true;
     } catch (e) {

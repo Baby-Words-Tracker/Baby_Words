@@ -12,16 +12,15 @@ import 'package:baby_words_tracker/pages/tutorial/welcome_page.dart';
 import 'package:baby_words_tracker/pages/tutorial/add_first_child_page.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' as io;
 
 import 'researcher_home_page.dart';
 import 'home_page.dart';
+import 'parent_dashboard.dart';
 
 /// New AuthGate with UserProfile-based authentication
 /// Includes platform enforcement and survey requirements
@@ -41,15 +40,6 @@ class _NewAuthGateState extends State<NewAuthGate> {
   void initState() {
     super.initState();
     debugPrint("NewAuthGate: Initialized with OnboardingFlowManager");
-  }
-
-  String _getPlatformKey() {
-    if (kIsWeb) {
-      return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com';
-    } else if (io.Platform.isIOS) {
-      return '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com';
-    }
-    return '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com';
   }
 
   String _getCurrentPlatform() {
@@ -82,7 +72,7 @@ class _NewAuthGateState extends State<NewAuthGate> {
 
         // Not authenticated - show sign in
         if (!snapshot.hasData) {
-          return _buildSignInScreen(context, localizationService, _getPlatformKey());
+          return _buildSignInScreen(context, localizationService);
         }
 
         // User is authenticated in Firebase Auth
@@ -189,7 +179,7 @@ class _NewAuthGateState extends State<NewAuthGate> {
             if (user == null) {
               throw Exception('User is null in NewAuthGate');
             } else if (userModelService.isParent) {
-              return const HomePage();
+              return const ParentDashboard();
             } else if (userModelService.isResearcher || userModelService.isAdmin) {
               return const ResearcherHomePage();
             } else {
@@ -204,12 +194,10 @@ class _NewAuthGateState extends State<NewAuthGate> {
   Widget _buildSignInScreen(
     BuildContext context,
     LocalizationService localizationService,
-    String platformKey,
   ) {
     return SignInScreen(
       providers: [
         EmailAuthProvider(),
-        GoogleProvider(clientId: platformKey),
       ],
       headerBuilder: (context, constraints, shrinkOffset) {
         return Padding(

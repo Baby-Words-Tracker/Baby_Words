@@ -6,7 +6,7 @@ import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
 import 'package:baby_words_tracker/video/video_picker.dart';
-import 'package:baby_words_tracker/video/video_storage_service.dart';
+import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -85,7 +85,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
 
   Future<void> _handleVideoSelection(
     LocalizationService localizationService,
-    VideoStorageService videoStorage,
+    MediaStorageService videoStorage,
   ) async {
     if (!videoStorage.isFeatureEnabled) {
       if (!mounted) return;
@@ -132,7 +132,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
 
   Future<void> _saveVideo(
     LocalizationService localizationService,
-    VideoStorageService videoStorage,
+    MediaStorageService videoStorage,
     CurrentChildrenService currentChildrenService,
   ) async {
     final childId = currentChildrenService.getCurrChild()?.id;
@@ -181,7 +181,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     });
 
     try {
-      await videoStorage.saveVideoForWord(
+      await videoStorage.saveMediaForWord(
         childId: childId,
         wordId: _selectedWordId!,
         sourceFile: _selectedVideo!.file,
@@ -212,7 +212,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
   @override
   Widget build(BuildContext context) {
     return Consumer3<LocalizationService, CurrentChildrenService,
-        VideoStorageService>(
+        MediaStorageService>(
       builder: (context, localizationService, currentChildrenService,
           videoStorage, child) {
         final theme = Theme.of(context);
@@ -285,7 +285,7 @@ class _UploadVideoPageState extends State<UploadVideoPage> {
     ThemeData theme,
     LocalizationService localizationService,
     CurrentChildrenService currentChildrenService,
-    VideoStorageService videoStorage,
+    MediaStorageService videoStorage,
   ) {
     return [
       Text(

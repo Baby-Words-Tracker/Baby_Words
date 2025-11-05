@@ -9,7 +9,7 @@ import 'package:baby_words_tracker/util/language_code.dart';
 class ChildDataService extends ChangeNotifier {
   final IFirestoreRepository firebaseRepo;
 
-  ChildDataService({IFirestoreRepository? repository}) 
+  ChildDataService({IFirestoreRepository? repository})
       : firebaseRepo = repository ?? FirestoreRepository();
 
   //child services
@@ -36,6 +36,34 @@ class ChildDataService extends ChangeNotifier {
     return object.copyWith(id: returnId);
   }
 
+  Future<bool> updateChild(
+    String childId, {
+    String? name,
+    DateTime? birthday,
+    List<LanguageCode>? language,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (name != null) {
+      updates['name'] = name;
+    }
+    if (birthday != null) {
+      updates['birthday'] = birthday;
+    }
+    if (language != null) {
+      updates['languageCodes'] = language.map((code) => code.name).toList();
+    }
+    if (updates.isEmpty) {
+      return true;
+    }
+
+    final success =
+        await firebaseRepo.update(Child.collectionName, childId, updates);
+    if (success) {
+      notifyListeners();
+    }
+    return success;
+  }
+
   Future<Child?> getChild(String id) async {
     final child = await firebaseRepo.read(Child.collectionName, id);
     if (child == null) return null;
@@ -54,6 +82,28 @@ class ChildDataService extends ChangeNotifier {
 
     final child = Child.fromDataWithId(object);
     return child.wordCount;
+  }
+
+  Future<bool> removeParentFromChild(String childId, String parentId) async {
+    final data = await firebaseRepo.read(Child.collectionName, childId);
+    if (data == null) {
+      return false;
+    }
+
+    final child = Child.fromDataWithId(data);
+    final updatedParentIds =
+        child.parentIDs.where((id) => id != parentId).toList();
+
+    final success = await firebaseRepo.update(
+      Child.collectionName,
+      childId,
+      {'parentIDs': updatedParentIds},
+    );
+
+    if (success) {
+      notifyListeners();
+    }
+    return success;
   }
 
   Future<List<LanguageCode>?> getLanguages(String id) async {
