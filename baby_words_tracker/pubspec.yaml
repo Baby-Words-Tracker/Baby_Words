@@ -69,6 +69,7 @@ dependencies:
   path: ^1.9.1
   url_launcher: ^6.3.1
   webview_flutter: ^4.0.0 # For embedding the Qualtrics survey
+  flutter_launcher_icons: ^0.14.4
 
   # Options for video compression later
   # video_compress: ^3.1.4
@@ -112,6 +113,13 @@ flutter:
     - assets/lecs_mascot_256x256.png
     - assets/lecs_mascot.svg
     - assets/lecs_mascot_overlap.svg
+  
+flutter_launcher_icons:
+  ios: true
+  android: true
+  image_path: "assets/lecs_mascot_app_icon.png"
+  remove_alpha_ios: true
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
