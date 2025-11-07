@@ -17,6 +17,7 @@ class UserProfileModelService extends ChangeNotifier {
   IDocumentListener? _listener;
 
   int _syncCounter = 0;
+  int _notifyCount = 0;
 
   UserProfileModelService({
     required AuthenticationService authenticationService,
@@ -149,8 +150,8 @@ class UserProfileModelService extends ChangeNotifier {
       debugPrint("UserProfileModelService [$syncId]: Sync complete - $roleName ($statusName)");
       
       // ALWAYS notify at the end to ensure UI updates
+      debugPrint("UserProfileModelService [$syncId]: notifyListeners() #${++_notifyCount} - sync complete");
       notifyListeners();
-      debugPrint("UserProfileModelService [$syncId]: notifyListeners() called");
     } catch (e, stack) {
       debugPrint("UserProfileModelService [$syncId]: Sync failed: $e\n$stack");
       rethrow; // Let error bubble up for UI to handle
@@ -181,6 +182,7 @@ class UserProfileModelService extends ChangeNotifier {
         // Update profile from listener
         _userProfile = data;
         debugPrint("UserProfileModelService: Profile updated from listener");
+        debugPrint("UserProfileModelService: notifyListeners() #${++_notifyCount} - listener update");
         notifyListeners();
       }
     });
@@ -197,6 +199,7 @@ class UserProfileModelService extends ChangeNotifier {
     _listener = null;
     _userProfile = null;
     debugPrint("UserProfileModelService: User unauthenticated");
+    debugPrint("UserProfileModelService: notifyListeners() #${++_notifyCount} - unauthenticated");
     notifyListeners();
   }
 
@@ -287,6 +290,7 @@ class UserProfileModelService extends ChangeNotifier {
 
     if (success) {
       _userProfile = _userProfile!.copyWith(emailVerified: true);
+      debugPrint("UserProfileModelService: notifyListeners() #${++_notifyCount} - email verified");
       notifyListeners();
     } else {
       debugPrint("UserProfileModelService: Failed to update email verified flag");

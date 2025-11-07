@@ -71,9 +71,12 @@ class ChildDataService extends ChangeNotifier {
   }
 
   Future<List<Child>> getMultipleChildren(List<String> ids) async {
-    return (await firebaseRepo.readMultiple(Child.collectionName, ids))
-        .map((doc) => Child.fromDataWithId(doc))
-        .toList();
+    debugPrint("ChildDataService: getMultipleChildren called with ${ids.length} IDs: $ids");
+    final docs = await firebaseRepo.readMultiple(Child.collectionName, ids);
+    debugPrint("ChildDataService: Retrieved ${docs.length} documents from Firestore");
+    final children = docs.map((doc) => Child.fromDataWithId(doc)).toList();
+    debugPrint("ChildDataService: Converted to ${children.length} Child objects");
+    return children;
   }
 
   Future<int> getNumWords(String id) async {

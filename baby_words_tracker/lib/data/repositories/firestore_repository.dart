@@ -18,10 +18,13 @@ class FirestoreRepository implements IFirestoreRepository {
 
   FirestoreRepository({FirebaseFirestore? firestore})
       : database = firestore ?? FirebaseFirestore.instance {
+    // CRITICAL: Limit cache size to prevent memory issues
+    // 100MB is reasonable for most apps. Adjust if needed.
     database.settings = const Settings(
       persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      cacheSizeBytes: 100 * 1024 * 1024, // 100MB cache limit
     );
+    debugPrint("FirestoreRepository: Initialized with 100MB cache limit");
   }
 
   @override

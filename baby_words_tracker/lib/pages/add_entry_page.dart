@@ -8,6 +8,7 @@ import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart'
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:baby_words_tracker/util/feature_flags.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/text_entry_utils.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
@@ -464,7 +465,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
         );
         final notesLabel = localization.translate('note_optional');
         final notesHint = localization.translate('note_hint');
-        final attachmentsEnabled = !kIsWeb && videoStorage.isFeatureEnabled;
+        
+        final attachmentsEnabled = !kIsWeb && FeatureFlags.parentLocalVideos;
         final attachmentsReady = attachmentsEnabled && videoStorage.isReady;
         final outlineColor = theme.colorScheme.outlineVariant.withOpacity(0.6);
         final baseBorder = OutlineInputBorder(
@@ -669,7 +671,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withOpacity(0.4),
+                            color: theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(18),
                           ),
                           padding: const EdgeInsets.all(16),
@@ -678,9 +680,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                               const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                                child: CircularProgressIndicator(strokeWidth: 2),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -704,8 +704,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                                     _handleAttachmentSelection(localization),
                                 icon: const Icon(Icons.upload_rounded),
                                 label: Text(
-                                  localization
-                                      .translate('attachment_pick_button'),
+                                  localization.translate('attachment_pick_button'),
                                 ),
                               )
                             else

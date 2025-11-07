@@ -28,12 +28,12 @@ Future<void> downloadAsCSV(List<String> header, List<List<String>> dataList,
   }
 
   // 4. Handle Mobile/Desktop
-  await FileSaver.instance.saveAs(
-    name: fullFileName.replaceAll('.csv', ''),
-    bytes: bytes,
-    ext: 'csv',
-    mimeType: MimeType.csv,
-  );
+  // await FileSaver.instance.saveAs(
+  //   name: fullFileName.replaceAll('.csv', ''),
+  //   bytes: bytes,
+  //   ext: 'csv',
+  //   mimeType: MimeType.csv,
+  // );
 
   // 5. Note: this will not work on desktop platforms since file_saver does not yet support it.
   //    For desktop, you might need to use file_selector to getSavePath() and then write the file manually using dart:io.

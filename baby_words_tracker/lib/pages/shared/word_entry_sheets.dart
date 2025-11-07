@@ -3,9 +3,7 @@ import 'dart:io';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/string_utils.dart';
 import 'package:baby_words_tracker/video/local_media_entry.dart';
-import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -552,11 +550,13 @@ class _WordMediaPreviewSheetState extends State<WordMediaPreviewSheet> {
                         .translate('log_details_attachment_unsupported'),
                     style: theme.textTheme.bodyMedium,
                   )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.file(
-                      File(widget.entry.filePath),
-                      fit: BoxFit.cover,
+                : Flexible(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.file(
+                        File(widget.entry.filePath),
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   )
           else

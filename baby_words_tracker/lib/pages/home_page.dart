@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
@@ -10,7 +12,6 @@ import 'package:baby_words_tracker/util/string_utils.dart';
 import 'package:baby_words_tracker/video/local_media_entry.dart';
 import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:baby_words_tracker/pages/add_entry_page.dart';
-import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final DateFormat _dateFormat = DateFormat.MMMd();
-
+  
+  // Cache the current child ID to detect when we need to recreate streams
+  String? _currentChildId;
+  Stream<int>? _wordCountStream;
+  Stream<List<WordTracker>>? _recentWordsStream;
+  Stream<int>? _pastWeekCountStream;
+  
+  @override
+  void dispose() {
+    _wordCountStream = null;
+    _recentWordsStream = null;
+    _pastWeekCountStream = null;
+    super.dispose();
+  }
+  
   Stream<int> _watchPastWeekCount(String childId) {
     final lastWeek = DateTime.now().subtract(const Duration(days: 7));
 
@@ -39,60 +54,53 @@ class _HomePageState extends State<HomePage> {
         .collection(WordTracker.collectionName)
         .where('firstUtterance', isGreaterThanOrEqualTo: lastWeek)
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) => snapshot.docs.length)
+        .distinct();
   }
-
-  Stream<List<WordTracker>> _watchRecentWords(String childId,
-      {int limit = 10}) {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-
+  
+  Stream<List<WordTracker>> _watchRecentWords(String childId, {int limit = 10}) {
     return FirebaseFirestore.instance
         .collection(Child.collectionName)
         .doc(childId)
         .collection(WordTracker.collectionName)
         .orderBy('firstUtterance', descending: true)
-        .where('firstUtterance', isGreaterThanOrEqualTo: startOfDay)
         .limit(limit)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) =>
-                  WordTracker.fromDataWithId(DataWithId.fromFirestore(doc)))
-              .toList(),
-        );
+        .map((snapshot) {
+          final words = snapshot.docs
+              .map((doc) {
+                try {
+                  return WordTracker.fromDataWithId(DataWithId.fromFirestore(doc));
+                } catch (e) {
+                  debugPrint("Error parsing word doc ${doc.id}: $e");
+                  return null;
+                }
+              })
+              .whereType<WordTracker>()
+              .toList();
+          return words;
+        })
+        .distinct((prev, next) {
+          if (prev.length != next.length) return false;
+          for (int i = 0; i < prev.length; i++) {
+            if (prev[i].id != next[i].id) return false;
+          }
+          return true;
+        });
   }
-
-  Stream<int> _watchTodayWordCount(String childId) {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-
-    return FirebaseFirestore.instance
-        .collection(Child.collectionName)
-        .doc(childId)
-        .collection(WordTracker.collectionName)
-        .where('firstUtterance', isGreaterThanOrEqualTo: startOfDay)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
-  }
-
+  
   Stream<int> _watchWordCount(String childId) {
     return FirebaseFirestore.instance
         .collection(Child.collectionName)
         .doc(childId)
         .snapshots()
         .map((snapshot) {
-      final data = snapshot.data();
-      if (data == null) return 0;
-      final value = data[Child.wordCountFieldName];
-      if (value is int) {
-        return value;
-      }
-      if (value is num) {
-        return value.toInt();
-      }
-      return 0;
-    });
+          final data = snapshot.data();
+          if (data == null) return 0;
+          final value = data[Child.wordCountFieldName];
+          return value is int ? value : (value is num ? value.toInt() : 0);
+        })
+        .distinct();
   }
 
   Future<void> _showWordDetails({
@@ -143,19 +151,32 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, CurrentChildrenService,
-        MediaStorageService>(
+    
+    return Consumer2<LocalizationService, CurrentChildrenService>(
       builder: (
         context,
         localization,
         currentChildrenService,
-        videoStorage,
         _,
       ) {
         final child = currentChildrenService.getCurrChild();
+        
+        // Only recreate streams if child has changed
+        if (child?.id != _currentChildId) {
+          _currentChildId = child?.id;
+          if (child?.id != null) {
+            _wordCountStream = _watchWordCount(child!.id!);
+            _recentWordsStream = _watchRecentWords(child.id!);
+            _pastWeekCountStream = _watchPastWeekCount(child.id!);
+          } else {
+            _wordCountStream = null;
+            _recentWordsStream = null;
+            _pastWeekCountStream = null;
+          }
+        }
 
         final body = SafeArea(
-          child: child == null
+          child: child == null || _wordCountStream == null
               ? Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -168,7 +189,7 @@ class _HomePageState extends State<HomePage> {
                     _OverviewCard(
                       child: child,
                       localization: localization,
-                      wordCountStream: _watchWordCount(child.id!),
+                      wordCountStream: _wordCountStream!,
                       onAddEntry: () {
                         if (widget.showChrome) {
                           Navigator.of(context)
@@ -180,20 +201,23 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 24),
                     _WeeklySummaryCard(
-                      stream: _watchPastWeekCount(child.id!),
+                      stream: _pastWeekCountStream!,
                       localization: localization,
                     ),
                     const SizedBox(height: 24),
                     _RecentWordsSection(
-                      stream: _watchRecentWords(child.id!),
-                      totalCountStream: _watchTodayWordCount(child.id!),
+                      stream: _recentWordsStream!,
                       localization: localization,
                       dateFormat: _dateFormat,
-                      onTap: (tracker) => _showWordDetails(
-                        tracker: tracker,
-                        localization: localization,
-                        videoStorage: videoStorage,
-                      ),
+                      onTap: (tracker) {
+                        // Get MediaStorageService only when tapped (lazy loading)
+                        final videoStorage = Provider.of<MediaStorageService>(context, listen: false);
+                        _showWordDetails(
+                          tracker: tracker,
+                          localization: localization,
+                          videoStorage: videoStorage,
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -369,14 +393,12 @@ class _WeeklySummaryCard extends StatelessWidget {
 class _RecentWordsSection extends StatelessWidget {
   const _RecentWordsSection({
     required this.stream,
-    required this.totalCountStream,
     required this.localization,
     required this.dateFormat,
     required this.onTap,
   });
 
   final Stream<List<WordTracker>> stream;
-  final Stream<int> totalCountStream;
   final LocalizationService localization;
   final DateFormat dateFormat;
   final ValueChanged<WordTracker> onTap;
@@ -419,35 +441,27 @@ class _RecentWordsSection extends StatelessWidget {
               );
             }
 
-            return StreamBuilder<int>(
-              stream: totalCountStream,
-              builder: (context, countSnapshot) {
-                final totalCount = countSnapshot.data ?? 0;
-                final showSeeAllCard = totalCount >= 10;
-
-                return Column(
-                  children: [
-                    for (int index = 0; index < words.length; index++) ...[
-                      if (index > 0) const SizedBox(height: 12),
-                      _RecentWordTile(
-                        tracker: words[index],
-                        localization: localization,
-                        dateFormat: dateFormat,
-                        onTap: onTap,
-                      ),
-                    ],
-                    if (showSeeAllCard) ...[
-                      const SizedBox(height: 12),
-                      _SeeAllCard(
-                        localization: localization,
-                        onTap: () {
-                          Navigator.of(context).pushNamed(WordLogPage.routeName);
-                        },
-                      ),
-                    ],
-                  ],
-                );
-              },
+            return Column(
+              children: [
+                for (int index = 0; index < words.length; index++) ...[
+                  if (index > 0) const SizedBox(height: 12),
+                  _RecentWordTile(
+                    tracker: words[index],
+                    localization: localization,
+                    dateFormat: dateFormat,
+                    onTap: onTap,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                _SeeAllCard(
+                  localization: localization,
+                  onTap: () {
+                    // Use MainNavigationController to switch tabs (same as bottom bar)
+                    // Tab index 1 is the Word Log page
+                    context.read<MainNavigationController>().setIndex(1);
+                  },
+                ),
+              ],
             );
           },
         ),

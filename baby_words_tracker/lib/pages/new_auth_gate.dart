@@ -174,19 +174,15 @@ class _NewAuthGateState extends State<NewAuthGate> {
 
         // ==================== ALL CHECKS PASSED ====================
         // Navigate to appropriate home screen based on role
-        return Consumer<UserProfileModelService>(
-          builder: (context, userModelService, child) {
-            if (user == null) {
-              throw Exception('User is null in NewAuthGate');
-            } else if (userModelService.isParent) {
-              return const ParentDashboard();
-            } else if (userModelService.isResearcher || userModelService.isAdmin) {
-              return const ResearcherHomePage();
-            } else {
-              throw Exception('Unexpected user role: ${profile.role.name}');
-            }
-          },
-        );
+        if (user == null) {
+          throw Exception('User is null in NewAuthGate');
+        } else if (userModelService.isParent) {
+          return const ParentDashboard();
+        } else if (userModelService.isResearcher || userModelService.isAdmin) {
+          return const ResearcherHomePage();
+        } else {
+          throw Exception('Unexpected user role: ${profile.role.name}');
+        }
       },
     );
   }

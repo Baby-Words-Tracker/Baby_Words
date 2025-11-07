@@ -1,10 +1,8 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/user_profile.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/parent_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
@@ -14,7 +12,6 @@ import 'package:baby_words_tracker/util/child_utils.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/ui_utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -53,11 +50,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final localizationService = context.read<LocalizationService>();
     final userProfileModelService = context.read<UserProfileModelService>();
     final userProfileService = context.read<UserProfileService>();
-    final userModelService = context.read<UserModelService>();
-    final parentDataService = context.read<ParentDataService>();
 
     final userId = userProfileModelService.userProfile?.id;
-    final parentModel = userModelService.parent;
 
     if (userId != null) {
       try {
@@ -66,25 +60,6 @@ class _SettingsPageState extends State<SettingsPage> {
         });
       } catch (e) {
         debugPrint('Error updating language in UserProfile: $e');
-        if (parentModel != null) {
-          try {
-            await parentDataService.updateParent(
-              parentModel.id,
-              language: newLanguage,
-            );
-          } catch (e2) {
-            debugPrint('Fallback language update failed: $e2');
-          }
-        }
-      }
-    } else if (parentModel != null) {
-      try {
-        await parentDataService.updateParent(
-          parentModel.id,
-          language: newLanguage,
-        );
-      } catch (e) {
-        debugPrint('Error updating language in legacy parent model: $e');
       }
     }
 
@@ -239,31 +214,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Map<String, String?> _splitFullName(String name) {
-    final parts = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((element) => element.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) {
-      return {'firstName': null, 'lastName': null};
-    }
-    if (parts.length == 1) {
-      return {'firstName': parts.first, 'lastName': null};
-    }
-    final firstName = parts.first;
-    final lastName = parts.sublist(1).join(' ');
-    return {'firstName': firstName, 'lastName': lastName};
-  }
-
   List<String> _getKnownChildIds() {
     final profile = context.read<UserProfileModelService>().userProfile;
     if (profile != null && profile.childIDs.isNotEmpty) {
       return List<String>.from(profile.childIDs);
-    }
-    final parentModel = context.read<UserModelService>().parent;
-    if (parentModel != null && parentModel.childIDs.isNotEmpty) {
-      return List<String>.from(parentModel.childIDs);
     }
     final children = context.read<CurrentChildrenService>().getCurrChildren() ??
         const <Child>[];
@@ -271,571 +225,6 @@ class _SettingsPageState extends State<SettingsPage> {
         .where((child) => child.id != null)
         .map((child) => child.id!)
         .toList(growable: false);
-  }
-
-  /// Formats phone number for display in text field (removes +1 prefix)
-  String _formatPhoneForDisplay(String? phoneNumber) {
-    if (phoneNumber == null || phoneNumber.isEmpty) {
-      return '';
-    }
-    
-    // Remove +1 prefix if present
-    if (phoneNumber.startsWith('+1')) {
-      return phoneNumber.substring(2);
-    }
-    
-    return phoneNumber;
-  }
-
-
-  Future<void> _showEditProfileSheet(UserProfile? profile) async {
-    if (profile == null) {
-      return;
-    }
-
-    final localization = context.read<LocalizationService>();
-    final theme = Theme.of(context);
-    final rootContext = context;
-    final displayName = profile.fullName.isNotEmpty
-        ? profile.fullName
-        : (profile.name?.trim() ?? '');
-    final nameController = TextEditingController(text: displayName);
-    final emailController =
-        TextEditingController(text: profile.email?.trim() ?? '');
-    final phoneController = TextEditingController(text: _formatPhoneForDisplay(profile.phoneNumber));
-    bool isSaving = false;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
-          ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              Future<void> handleSave() async {
-                final trimmedName = nameController.text.trim();
-                final trimmedEmail = emailController.text.trim();
-                final trimmedPhone = phoneController.text.trim();
-
-                if (trimmedName.isEmpty) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(rootContext).showSnackBar(
-                    SnackBar(
-                      content: Text(localization
-                          .translate('settings_profile_name_required')),
-                    ),
-                  );
-                  return;
-                }
-
-                if (trimmedEmail.isEmpty) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(rootContext).showSnackBar(
-                    SnackBar(
-                      content: Text(localization
-                          .translate('settings_profile_email_required')),
-                    ),
-                  );
-                  return;
-                }
-
-                final currentName = displayName;
-                final bool nameChanged = trimmedName != currentName;
-                final bool emailChanged = trimmedEmail.toLowerCase() !=
-                    (profile.email ?? '').toLowerCase();
-                final bool phoneChanged = _formatPhoneForDisplay(trimmedPhone) != _formatPhoneForDisplay(profile.phoneNumber);
-
-                if (!nameChanged && !emailChanged && !phoneChanged) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(rootContext).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        localization.translate('settings_profile_no_changes'),
-                      ),
-                    ),
-                  );
-                  return;
-                }
-
-                setModalState(() => isSaving = true);
-
-                try {
-                  if (nameChanged) {
-                    final parts = _splitFullName(trimmedName);
-                    final updates = <String, dynamic>{
-                      'name': trimmedName,
-                      'firstName': parts['firstName'],
-                      'lastName': parts['lastName'],
-                    }..removeWhere((key, value) => value == null);
-
-                    final success = await context
-                        .read<UserProfileService>()
-                        .updateUserProfile(profile.id, updates);
-                    if (!success) {
-                      throw Exception('profile-update-failed');
-                    }
-
-                    final firebaseAuth = context.read<FirebaseAuth>();
-                    final user = firebaseAuth.currentUser;
-                    if (user != null) {
-                      await user.updateDisplayName(trimmedName);
-                    }
-                  }
-
-                  if (emailChanged) {
-                    final firebaseAuth = context.read<FirebaseAuth>();
-                    final user = firebaseAuth.currentUser;
-                    if (user == null) {
-                      throw FirebaseAuthException(
-                        code: 'user-not-found',
-                        message: 'User not authenticated',
-                      );
-                    }
-                    
-                    // Re-authenticate before email change
-                    final currentEmail = user.email;
-                    if (currentEmail == null) {
-                      throw FirebaseAuthException(
-                        code: 'no-email',
-                        message: 'No email associated with account',
-                      );
-                    }
-                    
-                    final password = await _showPasswordConfirmDialog(
-                      sheetContext,
-                      localization,
-                    );
-                    
-                    if (password == null || password.isEmpty) {
-                      throw Exception('Password required for email change');
-                    }
-                    
-                    // Reauthenticate with current email and password
-                    final credential = EmailAuthProvider.credential(
-                      email: currentEmail,
-                      password: password,
-                    );
-                    await user.reauthenticateWithCredential(credential);
-                    
-                    // Now send verification email for new email
-                    await user.verifyBeforeUpdateEmail(trimmedEmail);
-                    if (mounted) {
-                      ScaffoldMessenger.of(rootContext).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            localization
-                                .translate(
-                                    'settings_profile_email_verification_sent')
-                                .replaceFirst('{email}', trimmedEmail),
-                          ),
-                        ),
-                      );
-                    }
-                  }
-
-                  if (phoneChanged) {
-                    // Handle phone number change with verification
-                    await _handlePhoneChange(
-                      sheetContext,
-                      rootContext,
-                      localization,
-                      trimmedPhone,
-                    );
-                  }
-
-                  if (mounted) {
-                    if (nameChanged || emailChanged || phoneChanged) {
-                      ScaffoldMessenger.of(rootContext).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            localization
-                                .translate('settings_profile_update_success'),
-                          ),
-                        ),
-                      );
-                    }
-                    Navigator.of(sheetContext).pop();
-                  }
-                } on FirebaseAuthException catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(rootContext).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          e.message ??
-                              localization
-                                  .translate('settings_profile_update_failed'),
-                        ),
-                      ),
-                    );
-                  }
-                } catch (_) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(rootContext).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          localization
-                              .translate('settings_profile_update_failed'),
-                        ),
-                      ),
-                    );
-                  }
-                } finally {
-                  if (mounted) {
-                    setModalState(() => isSaving = false);
-                  }
-                }
-              }
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    localization.translate('settings_profile_edit_title'),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText:
-                          localization.translate('settings_profile_name_label'),
-                    ),
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: localization
-                          .translate('settings_primary_email_label'),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: phoneController,
-                    decoration: InputDecoration(
-                      labelText: localization.translate('settings_phone_label'),
-                      hintText: '(555) 123-4567',
-                      prefixText: '+1 ',
-                    ),
-                    keyboardType: TextInputType.phone,
-                    autofillHints: const [AutofillHints.telephoneNumber],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: isSaving
-                            ? null
-                            : () => Navigator.of(sheetContext).maybePop(),
-                        child: Text(localization.translate('cancel')),
-                      ),
-                      const SizedBox(width: 12),
-                      FilledButton(
-                        onPressed: isSaving ? null : handleSave,
-                        child: isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Text(localization.translate('save')),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Future<String?> _showPasswordConfirmDialog(
-    BuildContext context,
-    LocalizationService localization,
-  ) async {
-    final passwordController = TextEditingController();
-    bool obscurePassword = true;
-    
-    return await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(
-            localization.translate('settings_confirm_password_title'),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                localization.translate('settings_confirm_password_message'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                obscureText: obscurePassword,
-                decoration: InputDecoration(
-                  labelText: localization.translate('password'),
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-                onSubmitted: (value) {
-                  Navigator.of(dialogContext).pop(value);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(null),
-              child: Text(localization.translate('cancel')),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(passwordController.text);
-              },
-              child: Text(localization.translate('confirm')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handlePhoneChange(
-    BuildContext sheetContext,
-    BuildContext rootContext,
-    LocalizationService localization,
-    String newPhone,
-  ) async {
-    // If phone is empty, just update the profile
-    if (newPhone.isEmpty) {
-      final userModelService = rootContext.read<UserProfileModelService>();
-      await userModelService.enable2FA(phoneNumber: null);
-      return;
-    }
-
-    // Format phone number - handle both cases: with and without +1 prefix
-    final digitsOnly = newPhone.replaceAll(RegExp(r'[^0-9]'), '');
-    String e164Phone;
-    
-    if (digitsOnly.length == 10) {
-      // 10 digits - add +1 prefix
-      e164Phone = '+1$digitsOnly';
-    } else if (digitsOnly.length == 11 && digitsOnly.startsWith('1')) {
-      // 11 digits starting with 1 - already has country code
-      e164Phone = '+$digitsOnly';
-    } else {
-      if (sheetContext.mounted) {
-        ScaffoldMessenger.of(sheetContext).showSnackBar(
-          SnackBar(
-            content: Text(localization.translate('settings_phone_invalid')),
-          ),
-        );
-      }
-      return;
-    }
-    
-    // Show verification dialog
-    final verified = await _showPhoneVerificationDialog(
-      sheetContext,
-      localization,
-      e164Phone,
-    );
-
-    if (verified == true) {
-      // Update UserProfile with new phone
-      final userModelService = rootContext.read<UserProfileModelService>();
-      await userModelService.enable2FA(phoneNumber: e164Phone);
-    }
-  }
-
-  Future<bool?> _showPhoneVerificationDialog(
-    BuildContext context,
-    LocalizationService localization,
-    String phoneNumber,
-  ) async {
-    final codeController = TextEditingController();
-    String? verificationId;
-    int? resendToken;
-    bool isLoading = false;
-    String? errorMessage;
-
-    // Send verification code immediately when dialog opens
-    Future<void> sendVerificationCode() async {
-      isLoading = true;
-      errorMessage = null;
-
-      try {
-        await FirebaseAuth.instance.verifyPhoneNumber(
-          phoneNumber: phoneNumber,
-          timeout: const Duration(seconds: 60),
-          verificationCompleted: (PhoneAuthCredential credential) async {
-            // Auto-verification not used here
-          },
-          verificationFailed: (FirebaseAuthException e) {
-            if (context.mounted) {
-              errorMessage = e.message ?? localization.translate('settings_phone_verification_failed');
-              isLoading = false;
-            }
-          },
-          codeSent: (String verId, int? token) {
-            if (context.mounted) {
-              verificationId = verId;
-              resendToken = token;
-              isLoading = false;
-            }
-          },
-          codeAutoRetrievalTimeout: (String verId) {
-            verificationId = verId;
-          },
-          forceResendingToken: resendToken,
-        );
-      } catch (e) {
-        if (context.mounted) {
-          errorMessage = e.toString();
-          isLoading = false;
-        }
-      }
-    }
-
-    Future<bool> verifyCode() async {
-      if (codeController.text.trim().isEmpty) {
-        errorMessage = localization.translate('settings_phone_code_required');
-        return false;
-      }
-
-      isLoading = true;
-      errorMessage = null;
-
-      try {
-        final credential = PhoneAuthProvider.credential(
-          verificationId: verificationId!,
-          smsCode: codeController.text.trim(),
-        );
-
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) {
-          throw Exception('No user logged in');
-        }
-
-        // Unlink old phone if exists
-        try {
-          await user.unlink(PhoneAuthProvider.PROVIDER_ID);
-        } catch (e) {
-          // Ignore error if no phone was linked
-        }
-
-        // Link new phone
-        await user.linkWithCredential(credential);
-        return true;
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'credential-already-in-use') {
-          errorMessage = localization.translate('settings_phone_already_in_use');
-        } else {
-          errorMessage = localization.translate('settings_phone_update_failed');
-        }
-        return false;
-      } catch (e) {
-        errorMessage = e.toString();
-        return false;
-      } finally {
-        isLoading = false;
-      }
-    }
-
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-          // Send verification code when dialog opens
-          if (verificationId == null && !isLoading) {
-            sendVerificationCode();
-          }
-          
-          return AlertDialog(
-            title: Text(localization.translate('settings_change_phone_title')),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  localization.translate('settings_phone_code_sent'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: codeController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: localization.translate('settings_phone_code_label'),
-                    hintText: '123456',
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                if (errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      errorMessage!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
-                    ),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLoading ? null : () => Navigator.of(dialogContext).pop(false),
-                child: Text(localization.translate('cancel')),
-              ),
-              FilledButton(
-                onPressed: isLoading ? null : () async {
-                  final success = await verifyCode();
-                  if (success && dialogContext.mounted) {
-                    Navigator.of(dialogContext).pop(true);
-                  } else {
-                    setState(() {});
-                  }
-                },
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(localization.translate('settings_phone_verify')),
-              ),
-            ],
-          );
-        },
-      ),
-    );
   }
 
   Future<void> _showEditChildSheet(Child child) async {
@@ -1104,36 +493,17 @@ class _SettingsPageState extends State<SettingsPage> {
 
     final userProfileModelService = context.read<UserProfileModelService>();
     final userProfileService = context.read<UserProfileService>();
-    final parentDataService = context.read<ParentDataService>();
     final childDataService = context.read<ChildDataService>();
-    final userModelService = context.read<UserModelService>();
 
-    final parentIds = <String>{};
     final profileId = userProfileModelService.userProfile?.id;
-    if (profileId != null) {
-      parentIds.add(profileId);
-    }
-    final legacyParentId = userModelService.parent?.id;
-    if (legacyParentId != null) {
-      parentIds.add(legacyParentId);
-    }
-
-    bool success = parentIds.isNotEmpty;
+    
+    bool success = profileId != null;
 
     if (profileId != null) {
       success = await userProfileService.removeChild(profileId, child.id!);
-    }
-
-    if (success && legacyParentId != null) {
-      success = await parentDataService.removeChildFromParent(
-        legacyParentId,
-        child.id!,
-      );
-    }
-
-    if (success) {
-      for (final id in parentIds) {
-        await childDataService.removeParentFromChild(child.id!, id);
+      
+      if (success) {
+        await childDataService.removeParentFromChild(child.id!, profileId);
       }
     }
 
@@ -1256,10 +626,10 @@ class _SettingsPageState extends State<SettingsPage> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             children: [
-                _ProfileCard(
-                  profile: profile,
-                  localization: localization,
-                ),
+              _ProfileCard(
+                profile: profile,
+                localization: localization,
+              ),
               const SizedBox(height: 20),
               _LanguageCard(
                 selectedLanguage: _selectedLanguage,
@@ -1311,7 +681,7 @@ class _ProfileCard extends StatelessWidget {
     required this.profile,
     required this.localization,
   });
-  
+
   final UserProfile? profile;
   final LocalizationService localization;
 
@@ -1323,7 +693,6 @@ class _ProfileCard extends StatelessWidget {
         : localization.translate('profile');
     final email = profile?.email ?? '—';
     final role = profile?.role.name ?? 'parent';
-    final phone = profile?.phoneNumber ?? localization.translate('settings_phone_not_set');
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -1369,12 +738,6 @@ class _ProfileCard extends StatelessWidget {
                   ),
                   Text(
                     '${localization.translate('settings_role_label')}: ${role[0].toUpperCase()}${role.substring(1)}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    '${localization.translate('settings_phone_label')}: $phone',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

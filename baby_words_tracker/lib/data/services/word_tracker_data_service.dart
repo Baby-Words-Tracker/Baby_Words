@@ -90,12 +90,14 @@ class WordTrackerDataService {
 
   Future<List<WordTracker>> getWordsFromTime(
       String childId, DateTime time) async {
+    // Convert to UTC to avoid DST issues - Firestore stores timestamps in UTC
+    final timeUtc = time.toUtc();
     final List<DataWithId> data = await fireRepo.subFieldGreaterThan(
         Child.collectionName,
         childId,
         WordTracker.collectionName,
         "firstUtterance",
-        time);
+        timeUtc);
 
     List<WordTracker> words = List.empty(growable: true);
     for (DataWithId word in data) {
@@ -107,8 +109,10 @@ class WordTrackerDataService {
 
   Future<List<WordTracker>> getWordsFromDate(
       String childId, DateTime date) async {
-    // Calculate start and end of the day for the given date
-    DateTime startOfDay = DateTime(date.year, date.month, date.day);
+    // Calculate start and end of the day for the given date in UTC
+    // Use UTC to avoid DST issues - Firestore stores timestamps in UTC
+    final dateUtc = date.toUtc();
+    DateTime startOfDay = DateTime.utc(dateUtc.year, dateUtc.month, dateUtc.day);
     DateTime endOfDay = startOfDay
         .add(const Duration(days: 1))
         .subtract(const Duration(seconds: 1));
@@ -124,8 +128,10 @@ class WordTrackerDataService {
 
   Future<List<WordTracker>> getWordsFromDateRange(
       String childId, DateTime date, int range) async {
-    // Calculate start and end of the day for the given date
-    DateTime startOfDateRange = DateTime(date.year, date.month, date.day);
+    // Calculate start and end of the day for the given date in UTC
+    // Use UTC to avoid DST issues - Firestore stores timestamps in UTC
+    final dateUtc = date.toUtc();
+    DateTime startOfDateRange = DateTime.utc(dateUtc.year, dateUtc.month, dateUtc.day);
     DateTime endOfDateRange = startOfDateRange
         .add(Duration(days: range))
         .subtract(const Duration(seconds: 1));
