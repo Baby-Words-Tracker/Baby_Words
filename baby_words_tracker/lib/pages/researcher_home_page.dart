@@ -277,10 +277,14 @@ class FirestoreDataTableSource extends DataTableSource {
 
       QuerySnapshot childSnapshot =
           await FirebaseFirestore.instance.collection('Child').get();
+      final testChild = childSnapshot.docs.firstWhere(
+        (doc) => doc.id == 'A8jKgwNTv8NJykxKcYMe'
+      );
+      final testWords = await testChild.reference.collection('WordTracker').get();
+      print('Total words: ${testWords.docs.length}');
       List<Future<void>> fetchTasks = [];
 
       List<WordInstance> tempInstances = [];
-
       for (var childDoc in childSnapshot.docs) {
         fetchTasks.add(() async {
           try {
@@ -306,17 +310,34 @@ class FirestoreDataTableSource extends DataTableSource {
                       .collection('Word')
                       .doc(wordDoc.id)
                       .get();
-                  var posData = posDoc['partOfSpeech'];
-                  Map<String, String> posMap = Map.from(posData);
+                  //var posData = posDoc['languageDetails'];
+                  // Map<String, String> posMap = Map.from(posData);
+                  // Map<String, String> partOfSpeechTracker = {};
+                  // if (childLangs.isEmpty) {
+                  //   partOfSpeechTracker = posMap;
+                  // }
+                  // posMap.forEach((langCode, partSpeech) {
+                  //   if (childLangs.contains(langCode)) {
+                  //     partOfSpeechTracker[langCode] = partSpeech;
+                  //   }
+                  // });
+                  var posData = posDoc['languageDetails']; 
+                  Map<String, Map<String, dynamic>> posMap = Map<String, Map<String, dynamic>>.from(posData);
+
                   Map<String, String> partOfSpeechTracker = {};
+
                   if (childLangs.isEmpty) {
-                    partOfSpeechTracker = posMap;
+                    posMap.forEach((langCode, nestedMap) {
+                      partOfSpeechTracker[langCode] = nestedMap['primaryPartOfSpeech']; 
+                    });
+                  } else {
+                    posMap.forEach((langCode, nestedMap) {
+                      if (childLangs.contains(langCode)) {
+                        partOfSpeechTracker[langCode] = nestedMap['primaryPartOfSpeech'];
+                      }
+                    });
                   }
-                  posMap.forEach((langCode, partSpeech) {
-                    if (childLangs.contains(langCode)) {
-                      partOfSpeechTracker[langCode] = partSpeech;
-                    }
-                  });
+
                   tempInstances.add(WordInstance(
                     childName: childID,
                     childAge: childAge,
