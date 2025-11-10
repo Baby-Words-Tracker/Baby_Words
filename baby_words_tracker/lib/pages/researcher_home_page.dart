@@ -192,7 +192,7 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
               (wordInstance) => wordInstance.childName, columnIndex, ascending),
         ),
         DataColumn(
-          label: const Text("Age"),
+          label: const Text("Age (Months)"),
           onSort: (columnIndex, ascending) => _sort(
               (wordInstance) => wordInstance.childAge, columnIndex, ascending),
         ),
@@ -297,12 +297,19 @@ class FirestoreDataTableSource extends DataTableSource {
             List<dynamic> childLangs = childDoc['language'];
             DateTime childBirthday =
                 (childDoc['birthday'] as Timestamp).toDate();
-            int childAge = DateTime.now().year - childBirthday.year;
+            //int childAgeYear = DateTime.now().year - childBirthday.year;
+            int years = DateTime.now().year - childBirthday.year;
+            int months = DateTime.now().month - childBirthday.month;
 
             if (childBirthday.isAfter(
-                DateTime.now().subtract(Duration(days: 365 * childAge)))) {
-              childAge--;
+                DateTime.now().subtract(Duration(days: 365 * years)))) {
+              years--;
             }
+            if (DateTime.now().day < childBirthday.day){
+              months = months - 1;
+            }
+            
+            int childAgeMonths = years * 12 + months;
 
             QuerySnapshot wordTrackerSnapshot =
                 await childDoc.reference.collection('WordTracker').get();
@@ -345,7 +352,7 @@ class FirestoreDataTableSource extends DataTableSource {
 
                   tempInstances.add(WordInstance(
                     childName: childID,
-                    childAge: childAge,
+                    childAge: childAgeMonths,
                     id: wordDoc.id,
                     firstUtterance: wordDoc['firstUtterance'] != null
                         ? (wordDoc['firstUtterance'] as Timestamp)
