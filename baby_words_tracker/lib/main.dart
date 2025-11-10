@@ -7,6 +7,8 @@ import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/phrase_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
+import 'package:baby_words_tracker/pages/notifications_page.dart';
+
 
 // Auth
 import 'package:baby_words_tracker/auth/authentication_service.dart';
@@ -340,6 +342,7 @@ class MyApp extends StatelessWidget {
           SettingsPage.routeName: (context) => const SettingsPage(),
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),
           AdminPage.routeName: (context) => const AdminPage(),
+          NotificationsPage.routeName: (context) => const NotificationsPage(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),
