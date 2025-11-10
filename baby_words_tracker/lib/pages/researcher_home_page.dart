@@ -10,6 +10,11 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+// final FirebaseFirestore testDb = FirebaseFirestore.instance;
+// void connectEmulator() {
+//   testDb.useFirestoreEmulator('localhost', 8080);
+// }
+
 class ResearcherHomePage extends StatefulWidget {
   const ResearcherHomePage({super.key});
 

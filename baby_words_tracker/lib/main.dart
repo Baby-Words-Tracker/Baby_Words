@@ -40,9 +40,12 @@ import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 // Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Flutter
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
 
 // Provider
 import 'package:provider/provider.dart';
@@ -70,6 +73,11 @@ void main() async {
       } else {
         rethrow;
       }
+    }
+
+    if (kDebugMode) {
+      debugPrint('Connecting to emulator');
+      FirebaseFirestore.instance.useFirestoreEmulator('localhost',8080);
     }
 
     // Connect to Firebase Emulators in debug mode, but not for production. Uncomment for development.
