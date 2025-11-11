@@ -570,20 +570,20 @@ class _FilterMenuState extends State<FilterMenu> {
                   borderRadius: BorderRadius.circular(28),
                 ),
                 child:
-              DropdownMenu<FieldLabel>(
-                initialSelection: null,
-                controller: fieldController,
-                requestFocusOnTap: true,
-                label: const Text('Field'),
-                onSelected: (FieldLabel? field) {
-                  setState(() {
-                    selectedField = field;
-                    entryController.clear();
-                    _updateSuggestions();
-                  });
-                },
-                dropdownMenuEntries: FieldLabel.entries,
-              ),),
+                  DropdownMenu<FieldLabel>(
+                    initialSelection: null,
+                    controller: fieldController,
+                    requestFocusOnTap: true,
+                    label: const Text('Field'),
+                    onSelected: (FieldLabel? field) {
+                      setState(() {
+                        selectedField = field;
+                        entryController.clear();
+                        _updateSuggestions();
+                      });
+                    },
+                    dropdownMenuEntries: FieldLabel.entries,
+                  ),),
               const SizedBox(width: 24),
               Expanded(
                 child: Autocomplete<String>(
@@ -608,10 +608,10 @@ class _FilterMenuState extends State<FilterMenu> {
                     return TextField(
                       controller: controller,
                       focusNode: focusNode,
-                      decoration: const InputDecoration(
+                      decoration:  InputDecoration(
                         labelText: 'Entry',
-                        border: OutlineInputBorder(),
-                      ),
+                        border: baseBorder,
+                        ),
                       onChanged: (String value) {
                         selectedEntry = value;
                       },
