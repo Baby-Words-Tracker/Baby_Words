@@ -9,6 +9,8 @@ import 'package:collection/collection.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/pages/shared/top_bar.dart';
+import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 // final FirebaseFirestore testDb = FirebaseFirestore.instance;
 // void connectEmulator() {
@@ -70,25 +72,75 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     }
 
     final theme = Theme.of(context);
+    final localizationService = context.watch<LocalizationService>();
+    final Color barColor = theme.colorScheme.secondaryContainer;
+    final Color onBarColor = theme.colorScheme.onSecondaryContainer;
+    final brandTranslation = localizationService.translate('word_buds').trim();
+    final String brandLabel =
+        brandTranslation.isEmpty ? 'WordBuds' : brandTranslation;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Row(
+        backgroundColor: barColor,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 24,
-              child: Image.asset(
-                'assets/lecs_mascot_64x64.png',
-                fit: BoxFit.contain,
-                width: 38,
-                height: 38,
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    brandLabel,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: onBarColor.withOpacity(0.85),
+                        ) ??
+                        TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: onBarColor.withOpacity(0.85),
+                        ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            const Expanded(child: Text("WordBuds"))
+            // CircleAvatar(
+            //   radius: 24,
+            //   child: Image.asset(
+            //     'assets/lecs_mascot_64x64.png',
+            //     fit: BoxFit.contain,
+            //     width: 38,
+            //     height: 38,
+            //   ),
+            // ),
+            Expanded(
+              child: Center(
+                child: Image.asset(
+                  'assets/lecs_mascot_64x64.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),           
+            //const SizedBox(width: 8),
+            //const Expanded(child: Text("WordBuds"))
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerRight,
+              )
+              )
           ],
-        ),
+        )),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -126,7 +178,7 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
             },
           ),
         ],
-        automaticallyImplyLeading: false,
+        //automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -135,12 +187,15 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
             child: SizedBox(
               height: screenHeight,
               child: Column(children: [
-                const Text('Hello, Researcher!',
-                    style: TextStyle(
-                      color: Color(0xFF9E1B32),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    )),
+                 Text('Hello, Researcher!',
+                    // style: TextStyle(
+                    //   color: Color(0xFF9E1B32),
+                    //   fontSize: 24,
+                    //   fontWeight: FontWeight.bold,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      //fontWeight: FontWeight.w700,
+                    ),
+                    ),
                 FilterMenu(
                     onFilterChanged: updateFilter, dataSource: wordInstances),
                 Expanded(
@@ -182,34 +237,35 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
   @override
   Widget build(BuildContext context) {
     final rows = widget.dataSource.getFilteredData();
+    final theme = Theme.of(context);
     final dataTable = DataTable(
       sortColumnIndex: _sortColumnIndex,
       sortAscending: _isAscending,
       columns: [
         DataColumn(
-          label: const Text("Child"),
+          label: Text("Child", style: theme.textTheme.titleMedium),
           onSort: (columnIndex, ascending) => _sort(
               (wordInstance) => wordInstance.childName, columnIndex, ascending),
         ),
         DataColumn(
-          label: const Text("Age (Months)"),
+          label: Text("Age (Months)", style: theme.textTheme.titleMedium),
           onSort: (columnIndex, ascending) => _sort(
               (wordInstance) => wordInstance.childAge, columnIndex, ascending),
         ),
         DataColumn(
-          label: const Text("Word"),
+          label: Text("Word", style: theme.textTheme.titleMedium),
           onSort: (columnIndex, ascending) =>
               _sort((wordInstance) => wordInstance.id, columnIndex, ascending),
         ),
         DataColumn(
-          label: const Text("Part of Speech"),
+          label: Text("Part of Speech", style: theme.textTheme.titleMedium),
           onSort: (columnIndex, ascending) => _sort(
               (wordInstance) => wordInstance.partOfSpeech,
               columnIndex,
               ascending),
         ),
         DataColumn(
-          label: const Text("First Utterance"),
+          label: Text("First Utterance", style: theme.textTheme.titleMedium),
           numeric: true,
           onSort: (columnIndex, ascending) => _sort(
               (wordInstance) => wordInstance.firstUtterance,
@@ -217,17 +273,33 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
               ascending),
         ),
       ],
-      rows: rows
-          .map((wordInstance) => DataRow(
-                cells: [
-                  DataCell(Text(wordInstance.childName)),
-                  DataCell(Text(wordInstance.childAge.toString())),
-                  DataCell(Text(wordInstance.id)),
-                  DataCell(Text(wordInstance.partOfSpeech)),
-                  DataCell(Text(wordInstance.firstUtterance)),
-                ],
-              ))
-          .toList(),
+      rows: rows.asMap().entries.map((entry) {
+        final index = entry.key;
+        final row = entry.value;
+
+        return DataRow(
+          color: WidgetStateProperty.resolveWith<Color?>(
+            (_) => index.isEven ? theme.colorScheme.surface : theme.colorScheme.surfaceContainerHigh,
+          ),
+          cells: [
+            DataCell(Text(row.childName, style: theme.textTheme.titleSmall)),
+            DataCell(Text(row.childAge.toString(), style: theme.textTheme.titleSmall)),
+            DataCell(Text(row.id, style: theme.textTheme.titleSmall)),
+            DataCell(Text(row.partOfSpeech, style: theme.textTheme.titleSmall)),
+            DataCell(Text(row.firstUtterance, style: theme.textTheme.titleSmall)),
+          ],
+        );
+      }).toList(),
+          // .map((wordInstance) => DataRow(
+          //       cells: [
+          //         DataCell(Text(wordInstance.childName)),
+          //         DataCell(Text(wordInstance.childAge.toString())),
+          //         DataCell(Text(wordInstance.id)),
+          //         DataCell(Text(wordInstance.partOfSpeech)),
+          //         DataCell(Text(wordInstance.firstUtterance)),
+          //       ],
+          //     ))
+          // .toList(),
     );
 
     List<List<String>> dataList = dataTable.rows.map((dataRow) {
@@ -249,7 +321,10 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
     ];
 
     return Column(
+      
       children: [
+        Card( 
+          child:
         SizedBox(
           height: 350,
           child: SingleChildScrollView(
@@ -258,15 +333,17 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
               child: dataTable,
             ),
           ),
-        ),
+        ),),
         const SizedBox(
           height: 10,
         ),
-        ElevatedButton(
+         SizedBox(
+              child: FilledButton(
             onPressed: () {
               download_csv.downloadAsCSV(header, dataList);
             },
-            child: const Text('Download as CSV'))
+            child: Text('Download as CSV',
+          )))
       ],
     );
   }
@@ -466,8 +543,20 @@ class _FilterMenuState extends State<FilterMenu> {
     _updateSuggestions();
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final outlineColor = theme.colorScheme.outlineVariant.withOpacity(0.6);
+    final baseBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: BorderSide(color: outlineColor),
+    );
+        final focusedBorder = OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.4),
+        );
     return Column(
       children: [
         Padding(
@@ -475,6 +564,12 @@ class _FilterMenuState extends State<FilterMenu> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child:
               DropdownMenu<FieldLabel>(
                 initialSelection: null,
                 controller: fieldController,
@@ -488,7 +583,7 @@ class _FilterMenuState extends State<FilterMenu> {
                   });
                 },
                 dropdownMenuEntries: FieldLabel.entries,
-              ),
+              ),),
               const SizedBox(width: 24),
               Expanded(
                 child: Autocomplete<String>(
@@ -530,7 +625,8 @@ class _FilterMenuState extends State<FilterMenu> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
+            SizedBox(
+              child: FilledButton(
               onPressed: () {
                 setState(() {
                   filterMessage =
@@ -539,9 +635,10 @@ class _FilterMenuState extends State<FilterMenu> {
                 widget.onFilterChanged(selectedField, selectedEntry);
               },
               child: const Text('Filter'),
-            ),
+            )),
             const SizedBox(width: 20),
-            ElevatedButton(
+             SizedBox(
+              child: FilledButton(
               onPressed: () {
                 setState(() {
                   selectedField = null;
@@ -552,7 +649,7 @@ class _FilterMenuState extends State<FilterMenu> {
                 widget.onFilterChanged(null, null);
               },
               child: const Text('Clear Filter'),
-            )
+            ))
           ],
         ),
         const SizedBox(height: 20),
