@@ -1,5 +1,4 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/util/policies_and_consent/privacy_policy_information.dart';
@@ -81,32 +80,23 @@ Future<void> getUserConsent(BuildContext context) async {
 
         final userProfileModelService = context.read<UserProfileModelService>();
         final userProfileService = context.read<UserProfileService>();
-        final userModelService = context.read<UserModelService>();
 
-        // Try new system first, fall back to old if needed
-        try {
-          final userId = userProfileModelService.userProfile?.id;
+        final userId = userProfileModelService.userProfile?.id;
 
-          if (userId != null) {
-            await userProfileService.updateUserProfile(
-              userId,
-              {
-                'acceptedPrivacyPolicy': true,
-                'policyVersion': PrivacyPolicyInformation.privacyPolicyVersion,
-                'consentDate': DateTime.now().toIso8601String(),
-              },
-            );
-            debugPrint(
-                "PrivacyPolicyUtils: Privacy policy acceptance saved to UserProfile");
-          } else {
-            debugPrint(
-                "PrivacyPolicyUtils: No userId found, falling back to old system");
-            await userModelService.acceptPrivacyPolicy();
-          }
-        } catch (e) {
+        if (userId != null) {
+          await userProfileService.updateUserProfile(
+            userId,
+            {
+              'acceptedPrivacyPolicy': true,
+              'policyVersion': PrivacyPolicyInformation.privacyPolicyVersion,
+              'consentDate': DateTime.now().toIso8601String(),
+            },
+          );
           debugPrint(
-              "PrivacyPolicyUtils: Error with new system, trying old: $e");
-          await userModelService.acceptPrivacyPolicy();
+              "PrivacyPolicyUtils: Privacy policy acceptance saved to UserProfile");
+        } else {
+          debugPrint(
+              "PrivacyPolicyUtils: No userId found, cannot save acceptance");
         }
       } else {
         debugPrint(
@@ -132,16 +122,6 @@ bool checkPrivacyPolicy(BuildContext context) {
       final hasAccepted = userProfile.acceptedPrivacyPolicy;
       debugPrint(
           "PrivacyPolicyUtils: User ${userProfile.id} has accepted privacy policy: $hasAccepted");
-      return hasAccepted;
-    }
-
-    // Fallback to legacy model during migration.
-    final currentUserModel =
-        context.read<UserModelService>().getCurrentUserModel();
-    if (currentUserModel != null) {
-      final hasAccepted = currentUserModel.acceptedPrivacyPolicy;
-      debugPrint(
-          "PrivacyPolicyUtils: Legacy user ${currentUserModel.id} acceptance: $hasAccepted");
       return hasAccepted;
     }
 

@@ -1,23 +1,20 @@
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/parent.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/util/safe_synchronizer.dart';
-import 'package:baby_words_tracker/util/user_type.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
 class CurrentChildrenService extends ChangeNotifier {
   late final SafeSynchronizer _parentSynchronizer;
 
-  // Parent? _parent;
   List<Child> _children = List.empty(growable: true);
   int _childIndex = 0;
   bool _dataRetrieved = false;
+  int _notifyCount = 0;
+  DateTime? _lastNotifyTime;
 
-  final UserModelService _userService;
-  final UserProfileModelService? _userProfileService;
+  final UserProfileModelService _userProfileService;
   final ChildDataService _childService;
 
   int getChildIndex() {
@@ -25,35 +22,53 @@ class CurrentChildrenService extends ChangeNotifier {
   }
 
   CurrentChildrenService({
-    required UserModelService userService,
-    UserProfileModelService? userProfileService,
+    required UserProfileModelService userProfileService,
     required ChildDataService childService,
-  })  : _userService = userService,
-        _userProfileService = userProfileService,
+  })  : _userProfileService = userProfileService,
         _childService = childService {
+    debugPrint("CurrentChildrenService: Initializing");
     _parentSynchronizer = SafeSynchronizer(() async {
-      // Try new system first
-      if (_userProfileService != null) {
-        final profile = _userProfileService.userProfile;
-        if (profile != null && profile.isParent && profile.childIDs.isNotEmpty) {
-          return updateChildrenFromIds(profile.childIDs);
-        }
-      }
+      debugPrint("CurrentChildrenService: Starting synchronization");
+      final profile = _userProfileService.userProfile;
       
-      // Fallback to old system
-      Parent? parent = _userService.parent;
-      if (_userService.userType != UserType.parent || parent == null) {
+      // No profile yet - user not authenticated
+      if (profile == null || !profile.isParent) {
+        debugPrint("CurrentChildrenService: No profile or not a parent, clearing children");
         _children.clear();
         _childIndex = 0;
         _dataRetrieved = false;
+        final now = DateTime.now();
+        final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+        debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - no profile (${timeSinceLastNotify}ms since last)");
+        _lastNotifyTime = now;
         notifyListeners();
         return Future.value();
-      } else {
-        return updateChildren(parent);
       }
+      
+      debugPrint("CurrentChildrenService: Profile found with ${profile.childIDs.length} children");
+      
+      // Profile exists but no children yet
+      if (profile.childIDs.isEmpty) {
+        debugPrint("CurrentChildrenService: No children in profile, setting empty state");
+        _children.clear();
+        _childIndex = 0;
+        _dataRetrieved = true; // Empty is a valid state
+        final now = DateTime.now();
+        final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+        debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - empty children (${timeSinceLastNotify}ms since last)");
+        _lastNotifyTime = now;
+        notifyListeners();
+        return Future.value();
+      }
+      
+      // Load children from profile
+      debugPrint("CurrentChildrenService: Loading children: ${profile.childIDs}");
+      return updateChildrenFromIds(profile.childIDs);
     });
-    _userService.addListener(_parentSynchronizer.safeSynchronize);
-    _userProfileService?.addListener(_parentSynchronizer.safeSynchronize);
+    
+    // Listen to UserProfile changes
+    debugPrint("CurrentChildrenService: Setting up listener for UserProfile changes");
+    _userProfileService.addListener(_parentSynchronizer.safeSynchronize);
   }
 
   List<Child>? getCurrChildren() {
@@ -67,25 +82,26 @@ class CurrentChildrenService extends ChangeNotifier {
     return _children[_childIndex];
   }
 
-  Future<void> updateChildren(Parent parent) async {
-    List<Child> children =
-        (await _childService.getMultipleChildren(parent.childIDs));
-    children.sortBy((child) => child.name);
-    _children = children;
-    _dataRetrieved = true;
-    notifyListeners();
-  }
-
   Future<void> updateChildrenFromIds(List<String> childIDs) async {
+    debugPrint("CurrentChildrenService: updateChildrenFromIds called with ${childIDs.length} IDs");
+    
     if (childIDs.isEmpty) {
+      debugPrint("CurrentChildrenService: Empty childIDs, clearing");
       _children.clear();
       _childIndex = 0;
       _dataRetrieved = false;
+      final now = DateTime.now();
+      final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+      debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - cleared (${timeSinceLastNotify}ms since last)");
+      _lastNotifyTime = now;
       notifyListeners();
       return;
     }
     
+    debugPrint("CurrentChildrenService: Fetching children from ChildDataService...");
     List<Child> children = await _childService.getMultipleChildren(childIDs);
+    debugPrint("CurrentChildrenService: Received ${children.length} children");
+    
     children.sortBy((child) => child.name);
     _children = children;
     
@@ -95,6 +111,11 @@ class CurrentChildrenService extends ChangeNotifier {
     }
     
     _dataRetrieved = true;
+    debugPrint("CurrentChildrenService: Children loaded successfully, notifying listeners");
+    final now = DateTime.now();
+    final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+    debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - children loaded (${timeSinceLastNotify}ms since last)");
+    _lastNotifyTime = now;
     notifyListeners();
   }
 
@@ -103,16 +124,28 @@ class CurrentChildrenService extends ChangeNotifier {
     for (var child in _children) {
       if (child.id == newChildID) {
         _childIndex = i;
+        final now = DateTime.now();
+        final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+        debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - switched to child $newChildID (${timeSinceLastNotify}ms since last)");
+        _lastNotifyTime = now;
         notifyListeners();
         return;
       }
       i++;
     }
+    final now = DateTime.now();
+    final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+    debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - child $newChildID not found (${timeSinceLastNotify}ms since last)");
+    _lastNotifyTime = now;
     notifyListeners();
   }
 
   void switchChildByIndex(int newChildIndex) {
     _childIndex = newChildIndex;
+    final now = DateTime.now();
+    final timeSinceLastNotify = _lastNotifyTime != null ? now.difference(_lastNotifyTime!).inMilliseconds : null;
+    debugPrint("CurrentChildrenService: notifyListeners() #${++_notifyCount} - switched to index $newChildIndex (${timeSinceLastNotify}ms since last)");
+    _lastNotifyTime = now;
     notifyListeners();
   }
 

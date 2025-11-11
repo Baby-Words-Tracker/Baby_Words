@@ -302,13 +302,11 @@ class _WordLogPageState extends State<WordLogPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LocalizationService, CurrentChildrenService,
-        MediaStorageService>(
+    return Consumer2<LocalizationService, CurrentChildrenService>(
       builder: (
         context,
         localization,
         currentChildrenService,
-        videoStorage,
         _,
       ) {
         final theme = Theme.of(context);
@@ -378,12 +376,19 @@ class _WordLogPageState extends State<WordLogPage> {
                                     localization: localization,
                                     availableLanguages: child.language,
                                   ),
-                                  onSelect: (tracker) => _showWordDetails(
-                                    childId: child.id!,
-                                    tracker: tracker,
-                                    localization: localization,
-                                    videoStorage: videoStorage,
-                                  ),
+                                  onSelect: (tracker) {
+                                    // Get MediaStorageService only when tapped (lazy loading)
+                                    final videoStorage = Provider.of<MediaStorageService>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    _showWordDetails(
+                                      childId: child.id!,
+                                      tracker: tracker,
+                                      localization: localization,
+                                      videoStorage: videoStorage,
+                                    );
+                                  },
                                 )
                               : _PhraseListView(
                                   key: const ValueKey('phrase_log'),
@@ -395,12 +400,19 @@ class _WordLogPageState extends State<WordLogPage> {
                                     tracker: tracker,
                                     localization: localization,
                                   ),
-                                  onSelect: (tracker) => _showPhraseDetails(
-                                    childId: child.id!,
-                                    tracker: tracker,
-                                    localization: localization,
-                                    videoStorage: videoStorage,
-                                  ),
+                                  onSelect: (tracker) {
+                                    // Get MediaStorageService only when tapped (lazy loading)
+                                    final videoStorage = Provider.of<MediaStorageService>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    _showPhraseDetails(
+                                      childId: child.id!,
+                                      tracker: tracker,
+                                      localization: localization,
+                                      videoStorage: videoStorage,
+                                    );
+                                  },
                                 ),
                         ),
                       ),

@@ -7,10 +7,11 @@ import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/phrase_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
+import 'package:baby_words_tracker/pages/notifications_page.dart';
+
 
 // Auth
 import 'package:baby_words_tracker/auth/authentication_service.dart';
-import 'package:baby_words_tracker/auth/user_model_service.dart';
 import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 
 //L10n
@@ -122,33 +123,23 @@ void main() async {
             ),
             lazy: false,
           ),
+          // MediaStorageService - lazy loading to prevent blocking I/O on startup
           ChangeNotifierProvider<MediaStorageService>(
             create: (context) => MediaStorageService(
               userProfileModelService:
                   Provider.of<UserProfileModelService>(context, listen: false),
             ),
-            lazy: false,
+            lazy: true,
           ),
-          // OLD: Keep for backward compatibility during transition
-          ChangeNotifierProvider<UserModelService>(
-            create: (context) => UserModelService(
-              authenticationService:
-                  Provider.of<AuthenticationService>(context, listen: false),
-              generalUserService:
-                  Provider.of<GeneralUserService>(context, listen: false),
-            ),
-            lazy: false,
-          ),
+          // CurrentChildrenService - uses new UserProfile system only
           ChangeNotifierProvider(
             create: (context) => CurrentChildrenService(
               childService:
                   Provider.of<ChildDataService>(context, listen: false),
-              userService:
-                  Provider.of<UserModelService>(context, listen: false),
               userProfileService:
                   Provider.of<UserProfileModelService>(context, listen: false),
             ),
-            lazy: false,
+            lazy: true,
           ),
         ],
         child: const MyApp(),
@@ -335,8 +326,7 @@ class MyApp extends StatelessWidget {
         ),
         themeMode:
             ThemeMode.system, // Set light or dark mode based on system settings
-        initialRoute:
-            NewAuthGate.routeName, // NEW: Use new auth gate with UserProfile
+        initialRoute: NewAuthGate.routeName,
         routes: {
           //Navigate app using named routes
           HomePage.routeName: (context) => const ParentDashboard(),
@@ -352,6 +342,7 @@ class MyApp extends StatelessWidget {
           SettingsPage.routeName: (context) => const SettingsPage(),
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),
           AdminPage.routeName: (context) => const AdminPage(),
+          NotificationsPage.routeName: (context) => const NotificationsPage(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),

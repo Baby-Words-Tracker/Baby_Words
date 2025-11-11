@@ -15,7 +15,9 @@ class MediaStorageService extends ChangeNotifier {
   MediaStorageService({
     required UserProfileModelService userProfileModelService,
   }) : _userProfileModelService = userProfileModelService {
+    debugPrint("MediaStorageService: Initializing");
     _userProfileModelService.addListener(_syncParentContext);
+    debugPrint("MediaStorageService: Starting initial sync");
     _syncParentContext();
   }
 
@@ -153,12 +155,18 @@ class MediaStorageService extends ChangeNotifier {
   }
 
   Future<void> _syncParentContext() async {
-    if (!isFeatureEnabled) return;
+    debugPrint("MediaStorageService: _syncParentContext called");
+    if (!isFeatureEnabled) {
+      debugPrint("MediaStorageService: Feature not enabled, skipping");
+      return;
+    }
     final profile = _userProfileModelService.userProfile;
     final parentId = profile != null && profile.isParent ? profile.id : null;
+    debugPrint("MediaStorageService: Parent ID: $parentId");
 
     if (parentId == null) {
       if (_parentId != null) {
+        debugPrint("MediaStorageService: Clearing parent context");
         _parentId = null;
         _parentDirectory = null;
         _videos.clear();
@@ -169,29 +177,41 @@ class MediaStorageService extends ChangeNotifier {
     }
 
     if (parentId == _parentId && _initialised) {
+      debugPrint("MediaStorageService: Already initialized for this parent");
       return;
     }
 
     _parentId = parentId;
+    debugPrint("MediaStorageService: Loading media for parent $parentId");
     await _loadForParent(parentId);
   }
 
   Future<void> _loadForParent(String parentId) async {
-    if (_isUnsupportedPlatform) return;
+    debugPrint("MediaStorageService: _loadForParent started for $parentId");
+    if (_isUnsupportedPlatform) {
+      debugPrint("MediaStorageService: Unsupported platform");
+      return;
+    }
     _isLoading = true;
     notifyListeners();
     try {
+      debugPrint("MediaStorageService: Getting application documents directory");
       final docsDir = await getApplicationDocumentsDirectory();
       final parentDir =
           Directory(p.join(docsDir.path, 'parents', parentId, 'videos'));
+      debugPrint("MediaStorageService: Creating parent directory: ${parentDir.path}");
       await parentDir.create(recursive: true);
 
       _parentDirectory = parentDir;
 
       final manifestFile = File(p.join(parentDir.path, 'manifest.json'));
       if (await manifestFile.exists()) {
-        final decoded = jsonDecode(await manifestFile.readAsString());
+        debugPrint("MediaStorageService: Loading manifest file");
+        final manifestContent = await manifestFile.readAsString();
+        debugPrint("MediaStorageService: Manifest size: ${manifestContent.length} bytes");
+        final decoded = jsonDecode(manifestContent);
         final Map<String, dynamic> map = decoded as Map<String, dynamic>;
+        debugPrint("MediaStorageService: Found ${map.length} media entries");
         _videos
           ..clear()
           ..addEntries(map.entries.map((entry) {
@@ -201,16 +221,20 @@ class MediaStorageService extends ChangeNotifier {
               LocalMediaEntry.fromJson(value),
             );
           }));
+        debugPrint("MediaStorageService: Successfully loaded ${_videos.length} media entries");
       } else {
+        debugPrint("MediaStorageService: No manifest file found, starting fresh");
         _videos.clear();
       }
       _initialised = true;
+      debugPrint("MediaStorageService: Initialization complete");
     } catch (e) {
-      debugPrint('VideoStorageService: failed to load manifest: $e');
+      debugPrint('MediaStorageService: failed to load manifest: $e');
       _videos.clear();
       _initialised = false;
     } finally {
       _isLoading = false;
+      debugPrint("MediaStorageService: Notifying listeners");
       notifyListeners();
     }
   }

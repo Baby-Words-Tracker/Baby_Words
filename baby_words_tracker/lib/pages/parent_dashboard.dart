@@ -4,7 +4,8 @@ import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/pages/stats.dart';
+import 'package:baby_words_tracker/pages/wip_page.dart';
+// import 'package:baby_words_tracker/pages/stats.dart'; // Disabled temporarily
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +26,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
   @override
   void initState() {
     super.initState();
+    debugPrint("ParentDashboard: initState called");
     _tabs = [
       _DashboardTab(
         labelKey: 'home_title',
@@ -52,7 +54,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         showTitle: true,
         icon: Icons.bar_chart_outlined,
         selectedIcon: Icons.bar_chart_outlined,
-        child: const StatsPage(showChrome: false),
+        child: const WorkInProgressPage(featureName: 'Statistics'),
       ),
       _DashboardTab(
         labelKey: 'settings',
@@ -66,11 +68,13 @@ class _ParentDashboardState extends State<ParentDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint("ParentDashboard: build() called");
     final localization = context.watch<LocalizationService>();
     final navigation = context.watch<MainNavigationController>();
     final theme = Theme.of(context);
 
     final currentIndex = navigation.index.clamp(0, _tabs.length - 1);
+    debugPrint("ParentDashboard: Current tab index: $currentIndex");
     final currentTab = _tabs[currentIndex];
     final String? pageTitle = currentTab.showTitle
         ? localization.translate(currentTab.labelKey)
@@ -84,6 +88,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
       ),
       body: PageStorage(
         bucket: _bucket,
+        // Use IndexedStack to keep widgets alive between tab switches
         child: IndexedStack(
           index: currentIndex,
           children: _tabs
