@@ -66,3 +66,7 @@ baby_words_tracker/.dart-tool/dart-flutter-telemetry-session.json
 baby_words_tracker/.dart-tool/CLIENT_ID
 baby_words_tracker/.dart-tool/dart-flutter-telemetry.config
 baby_words_tracker/.dart-tool/dart-flutter-telemetry-dismissed-surveys.json
+
+# CSV and JSON files in scripts directory only
+scripts/**/*.csv
+scripts/**/*.json
