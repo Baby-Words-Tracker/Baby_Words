@@ -11,14 +11,14 @@ db = firestore.client()
 
 # 2. Load your data from the csv file
 
-df = pd.read_csv('wordbank_vocab_data.csv')
-df.to_json('wordbank_vocab_data.json', orient='records', indent=4)
-with open('wordbank_vocab_data.json', 'r') as f:
+df = pd.read_csv('byChild_englishAmerican_WG.csv')
+df.to_json('byChild_englishAmerican_WG.json', orient='records', indent=4)
+with open('byChild_englishAmerican_WG.json', 'r') as f:
     data = json.load(f)
 
 
 # 3. Reference the collection you want to upload to
-collection_ref = db.collection('Wordbank') # Naming the collection
+collection_ref = db.collection('byChild_EngAmerican_WG') # Naming the collection
 
 # 4. Iterate and upload in batches of 500
 batch = db.batch()
