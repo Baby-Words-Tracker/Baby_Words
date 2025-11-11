@@ -58,3 +58,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+#Data Preprocessing requirements
+# data_preprocessing/requirements.txt
+data_preprocessing/serviceAccountKey.json
