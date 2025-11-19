@@ -75,10 +75,10 @@ void main() async {
       }
     }
 
-    // if (kDebugMode) {
-    //   debugPrint('Connecting to emulator');
-    //   FirebaseFirestore.instance.useFirestoreEmulator('localhost',8080);
-    // }
+    if (kDebugMode) {
+      debugPrint('Connecting to emulator');
+      FirebaseFirestore.instance.useFirestoreEmulator('localhost',8080);
+    }
 
     // Connect to Firebase Emulators in debug mode, but not for production. Uncomment for development.
     // await setupFirebaseEmulators();

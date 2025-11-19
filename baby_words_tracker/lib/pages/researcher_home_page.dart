@@ -248,7 +248,7 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
               (wordInstance) => wordInstance.childName, columnIndex, ascending),
         ),
         DataColumn(
-          label: Text("Age (Months)", style: theme.textTheme.titleMedium),
+          label: Text("Current Age", style: theme.textTheme.titleMedium),
           onSort: (columnIndex, ascending) => _sort(
               (wordInstance) => wordInstance.childAge, columnIndex, ascending),
         ),
@@ -272,6 +272,14 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
               columnIndex,
               ascending),
         ),
+         DataColumn(
+          label: Text("Age At First Utterance", style: theme.textTheme.titleMedium),
+          numeric: true,
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.ageOfUtterance,
+              columnIndex,
+              ascending),
+        ),
       ],
       rows: rows.asMap().entries.map((entry) {
         final index = entry.key;
@@ -287,6 +295,7 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
             DataCell(Text(row.id, style: theme.textTheme.titleSmall)),
             DataCell(Text(row.partOfSpeech, style: theme.textTheme.titleSmall)),
             DataCell(Text(row.firstUtterance, style: theme.textTheme.titleSmall)),
+            DataCell(Text(row.ageOfUtterance.toString(), style: theme.textTheme.titleSmall)),
           ],
         );
       }).toList(),
@@ -359,11 +368,6 @@ class FirestoreDataTableSource extends DataTableSource {
 
       QuerySnapshot childSnapshot =
           await FirebaseFirestore.instance.collection('Child').get();
-      final testChild = childSnapshot.docs.firstWhere(
-        (doc) => doc.id == 'A8jKgwNTv8NJykxKcYMe'
-      );
-      final testWords = await testChild.reference.collection('WordTracker').get();
-      print('Total words: ${testWords.docs.length}');
       List<Future<void>> fetchTasks = [];
 
       List<WordInstance> tempInstances = [];
@@ -399,17 +403,7 @@ class FirestoreDataTableSource extends DataTableSource {
                       .collection('Word')
                       .doc(wordDoc.id)
                       .get();
-                  //var posData = posDoc['languageDetails'];
-                  // Map<String, String> posMap = Map.from(posData);
-                  // Map<String, String> partOfSpeechTracker = {};
-                  // if (childLangs.isEmpty) {
-                  //   partOfSpeechTracker = posMap;
-                  // }
-                  // posMap.forEach((langCode, partSpeech) {
-                  //   if (childLangs.contains(langCode)) {
-                  //     partOfSpeechTracker[langCode] = partSpeech;
-                  //   }
-                  // });
+
                   var posData = posDoc['languageDetails']; 
                   Map<String, Map<String, dynamic>> posMap = Map<String, Map<String, dynamic>>.from(posData);
 
@@ -427,6 +421,28 @@ class FirestoreDataTableSource extends DataTableSource {
                     });
                   }
 
+                //   DateTime childBirthday =
+                // (childDoc['birthday'] as Timestamp).toDate();
+                // //int childAgeYear = DateTime.now().year - childBirthday.year;
+                // int years = DateTime.now().year - childBirthday.year;
+                // int months = DateTime.now().month - childBirthday.month;
+
+                // if (childBirthday.isAfter(
+                //     DateTime.now().subtract(Duration(days: 365 * years)))) {
+                //   years--;
+                // }
+                // if (DateTime.now().day < childBirthday.day){
+                //   months = months - 1;
+                // }
+
+                DateTime utteranceAge = (wordDoc['firstUtterance'] as Timestamp).toDate();
+                int utteranceDif = (utteranceAge.year - childBirthday.year) * 12 + (utteranceAge.month - childBirthday.month);
+                if (utteranceAge.day < childBirthday.day){
+                  utteranceDif -= 1;
+                }
+
+                print(utteranceDif);
+
                   tempInstances.add(WordInstance(
                     childName: childID,
                     childAge: childAgeMonths,
@@ -436,6 +452,7 @@ class FirestoreDataTableSource extends DataTableSource {
                             .toDate()
                             .toString()
                         : 'Unknown',
+                    ageOfUtterance: utteranceDif,
                     partOfSpeech: partOfSpeechTracker.toString(),
                   ));
                 } catch (e) {
@@ -502,6 +519,7 @@ class FirestoreDataTableSource extends DataTableSource {
       DataCell(Text(wordInstance.childAge.toString())),
       DataCell(Text(wordInstance.id)),
       DataCell(Text(wordInstance.firstUtterance)),
+      DataCell(Text(wordInstance.ageOfUtterance.toString())),
     ]);
   }
 
@@ -713,13 +731,15 @@ class WordInstance {
   final String id;
   final String partOfSpeech;
   final String firstUtterance;
+  final int ageOfUtterance;
 
   WordInstance(
       {required this.childName,
       required this.childAge,
       required this.id,
       required this.partOfSpeech,
-      required this.firstUtterance});
+      required this.firstUtterance,
+      required this.ageOfUtterance});
 }
 
 typedef FieldEntry = DropdownMenuEntry<FieldLabel>;
