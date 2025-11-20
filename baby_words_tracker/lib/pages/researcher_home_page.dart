@@ -212,6 +212,43 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
   }
 }
 
+class WordDataSource extends DataTableSource {
+ 
+  final List<WordInstance> filteredInstances;
+  final BuildContext context;
+
+  WordDataSource(this.filteredInstances, this.context);
+  
+
+  @override
+  DataRow getRow(int index) {
+    final theme = Theme.of(context);
+    if (index >= filteredInstances.length) return null!;
+    final wordInstance = filteredInstances[index];
+    return DataRow(
+      color: WidgetStateProperty.resolveWith<Color?>(
+            (_) => index.isEven ? theme.colorScheme.surface : theme.colorScheme.surfaceContainerHigh,
+          ),
+      cells: [
+      DataCell(Text(wordInstance.childName)),
+      DataCell(Text(wordInstance.childAge.toString())),
+      DataCell(Text(wordInstance.id)),
+      DataCell(Text(wordInstance.partOfSpeech)),
+      DataCell(Text(wordInstance.firstUtterance)),
+      DataCell(Text(wordInstance.ageOfUtterance.toString())),
+    ]);
+  }
+
+  @override
+  int get rowCount => filteredInstances.length;
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get selectedRowCount => 0;
+}
+
 class WordTrackerTable extends StatefulWidget {
   final FirestoreDataTableSource dataSource;
 
@@ -238,7 +275,56 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
   Widget build(BuildContext context) {
     final rows = widget.dataSource.getFilteredData();
     final theme = Theme.of(context);
-    final dataTable = DataTable(
+    final dataTable = PaginatedDataTable(
+      sortColumnIndex: _sortColumnIndex,
+      sortAscending: _isAscending,
+      columns: [
+        DataColumn(
+          label: Text("Child", style: theme.textTheme.titleMedium),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.childName, columnIndex, ascending),
+        ),
+        DataColumn(
+          label: Text("Current Age", style: theme.textTheme.titleMedium),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.childAge, columnIndex, ascending),
+        ),
+        DataColumn(
+          label: Text("Word", style: theme.textTheme.titleMedium),
+          onSort: (columnIndex, ascending) =>
+              _sort((wordInstance) => wordInstance.id, columnIndex, ascending),
+        ),
+        DataColumn(
+          label: Text("Part of Speech", style: theme.textTheme.titleMedium),
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.partOfSpeech,
+              columnIndex,
+              ascending),
+        ),
+        DataColumn(
+          label: Text("First Utterance", style: theme.textTheme.titleMedium),
+          numeric: true,
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.firstUtterance,
+              columnIndex,
+              ascending),
+        ),
+         DataColumn(
+          label: Text("Age At First Utterance", style: theme.textTheme.titleMedium),
+          numeric: true,
+          onSort: (columnIndex, ascending) => _sort(
+              (wordInstance) => wordInstance.ageOfUtterance,
+              columnIndex,
+              ascending),
+        ),
+      ],
+      source: WordDataSource(rows, context),
+      rowsPerPage: 10,
+      columnSpacing: 20,
+      showCheckboxColumn: false,
+      );
+
+    final dataTable2 = DataTable(
       sortColumnIndex: _sortColumnIndex,
       sortAscending: _isAscending,
       columns: [
@@ -311,7 +397,9 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
           // .toList(),
     );
 
-    List<List<String>> dataList = dataTable.rows.map((dataRow) {
+
+
+    List<List<String>> dataList = dataTable2.rows.map((dataRow) {
       return dataRow.cells.map((dataCell) {
         if (dataCell.child is Text) {
           return (dataCell.child as Text).data ?? "";
@@ -329,21 +417,21 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
       'First Utterance'
     ];
 
-    return Column(
-      
-      children: [
-        Card( 
-          child:
-        SizedBox(
-          height: 350,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: dataTable,
-            ),
+    return Center(
+      child: Column(
+        children: [
+          Card(child:
+          SizedBox(
+            width: 1100,
+            height: 350,
+            child:
+            SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: SizedBox(child: dataTable)
+            )
+          )
           ),
-        ),),
-        const SizedBox(
+          SizedBox(
           height: 10,
         ),
          SizedBox(
@@ -353,21 +441,88 @@ class _WordTrackerTableState extends State<WordTrackerTable> {
             },
             child: Text('Download as CSV',
           )))
-      ],
+        ]
+      ),
     );
+
+    // return Center(
+    //   child: Column(
+    //   children: [
+    //     Card( 
+    //       child:
+    //     SizedBox(
+    //       height: 350,
+    //       width: 1500,
+    //       child: dataTable,
+    //       // child: SingleChildScrollView(
+    //       //   scrollDirection: Axis.horizontal,
+    //       //   child: SingleChildScrollView(
+    //       //     child: dataTable2,
+    //       //   ),
+    //       // ),
+    //     ),),
+    //     const SizedBox(
+    //       height: 10,
+    //     ),
+    //      SizedBox(
+    //           child: FilledButton(
+    //         onPressed: () {
+    //           download_csv.downloadAsCSV(header, dataList);
+    //         },
+    //         child: Text('Download as CSV',
+    //       )))
+    //   ],
+    // ));
   }
 }
 
+
+enum Filter {
+  child,
+  word,
+  age,
+  partofspeech,
+}
+
+Filter? getFilterFromField(FieldLabel ? field){
+        if (field == null) return null;
+        switch (field){
+          case FieldLabel.child:
+            return Filter.child;
+          case FieldLabel.word:
+            return Filter.word;
+          case FieldLabel.age:
+            return Filter.age;
+          case FieldLabel.partofspeech:
+            return Filter.partofspeech;
+        }
+      }
+
+Query baseQueryBuilder({
+  required Filter? activeFilter,
+  String? filterValue,
+}){
+  if (activeFilter == null || filterValue == null || filterValue.isEmpty) {
+      return FirebaseFirestore.instance.collection('Child');
+  }
+
+  return FirebaseFirestore.instance.collection("Child");
+}
 class FirestoreDataTableSource extends DataTableSource {
   List<WordInstance> _wordInstances = [];
   List<WordInstance> _filteredInstances = [];
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({Filter? activeFilter, String? filterValue}) async {
     try {
       debugPrint('Querying Firestore...');
 
+      // QuerySnapshot childSnapshot =
+      //     await FirebaseFirestore.instance.collection('Child').get();
       QuerySnapshot childSnapshot =
-          await FirebaseFirestore.instance.collection('Child').get();
+        await baseQueryBuilder(
+          activeFilter: activeFilter, 
+          filterValue: filterValue
+        ).get();
       List<Future<void>> fetchTasks = [];
 
       List<WordInstance> tempInstances = [];
@@ -421,27 +576,11 @@ class FirestoreDataTableSource extends DataTableSource {
                     });
                   }
 
-                //   DateTime childBirthday =
-                // (childDoc['birthday'] as Timestamp).toDate();
-                // //int childAgeYear = DateTime.now().year - childBirthday.year;
-                // int years = DateTime.now().year - childBirthday.year;
-                // int months = DateTime.now().month - childBirthday.month;
-
-                // if (childBirthday.isAfter(
-                //     DateTime.now().subtract(Duration(days: 365 * years)))) {
-                //   years--;
-                // }
-                // if (DateTime.now().day < childBirthday.day){
-                //   months = months - 1;
-                // }
-
                 DateTime utteranceAge = (wordDoc['firstUtterance'] as Timestamp).toDate();
                 int utteranceDif = (utteranceAge.year - childBirthday.year) * 12 + (utteranceAge.month - childBirthday.month);
                 if (utteranceAge.day < childBirthday.day){
                   utteranceDif -= 1;
                 }
-
-                print(utteranceDif);
 
                   tempInstances.add(WordInstance(
                     childName: childID,
@@ -476,20 +615,22 @@ class FirestoreDataTableSource extends DataTableSource {
   }
 
   void filterData(FieldLabel? selectedField, String? selectedEntry) {
+    final activeFilter = getFilterFromField(selectedField);
     if (selectedField == null ||
         selectedEntry == null ||
-        selectedEntry.isEmpty) {
+        selectedEntry.isEmpty ||
+        activeFilter == null) {
       _filteredInstances = List.from(_wordInstances);
     } else {
       _filteredInstances = _wordInstances.where((word) {
-        switch (selectedField) {
-          case FieldLabel.child:
+        switch (activeFilter) {
+          case Filter.child:
             return word.childName == selectedEntry;
-          case FieldLabel.word:
+          case Filter.word:
             return word.id == selectedEntry;
-          case FieldLabel.age:
+          case Filter.age:
             return word.childAge.toString() == selectedEntry;
-          case FieldLabel.partofspeech:
+          case Filter.partofspeech:
             return word.partOfSpeech == selectedEntry;
         }
       }).toList();
@@ -639,7 +780,7 @@ class _FilterMenuState extends State<FilterMenu> {
               ),
             ],
           ),
-        ),
+        ),      
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -677,6 +818,7 @@ class _FilterMenuState extends State<FilterMenu> {
                   fontSize: 18,
                   color: Color(0xFF9E1B32),
                   fontWeight: FontWeight.bold)),
+      SizedBox(child: Text("(Ages are displayed in months)")),
       ],
     );
   }
