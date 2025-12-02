@@ -160,7 +160,7 @@ class _ResearcherAdminPageState extends State<ResearcherAdminPage> {
             child: SizedBox(
              // height: screenHeight,
               child: Column(children: [
-                 Text('Admin',
+                 Text('Users',
                     // style: TextStyle(
                     //   color: Color(0xFF9E1B32),
                     //   fontSize: 24,
@@ -170,7 +170,7 @@ class _ResearcherAdminPageState extends State<ResearcherAdminPage> {
                     ),
                     ),
                     SizedBox(height: 30),
-                    SizedBox(height:500, child: UserList()),
+                    SizedBox(height: 550, child: SingleChildScrollView(child: SizedBox( width: 800, height: 600, child: UserList()))),
               ]),
             ),
           ),
@@ -233,10 +233,19 @@ Widget buildUserCard(BuildContext context, DocumentSnapshot userDoc) {
       children: [
         Column(
           children: [
-            Text('Email Verified: ${data['emailVerified']}'),
-            _RoleDropdown(currentValue: data['role'], onChanged: (value) async {
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), child: 
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Email Verified: ${data['emailVerified'].toString().toUpperCase()}'),
+                  Text('Survey Completed: ${data['surveyCompleted'].toString().toUpperCase()}'),
+                  Text('Two Factor Enabled: ${data['twoFactorEnabled'].toString().toUpperCase()}'),
+                  Text('Status: ${data['status'].toString().toUpperCase()}'),
+            ])),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), child: 
+            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [ _RoleDropdown(currentValue: data['role'], onChanged: (value) async {
                 await FirebaseFirestore.instance.collection('UserProfile').doc(userId).update({'role' : value});
-            })
+            })]))
           ]
         )
       ]
