@@ -146,7 +146,8 @@ class _AuthGateState extends State<AuthGate> {
               return const HomePage();
             } else if (userModelService.userType == UserType.researcher) {
               return const ResearcherHomePage();
-            } else {
+            } 
+             else {
               throw Exception('Unexpected user state occured');
             }
           },

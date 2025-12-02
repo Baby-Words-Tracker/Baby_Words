@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ResearcherAdminPage extends StatefulWidget {
   static const routeName = '/researcher-admin';
@@ -170,7 +172,7 @@ class _ResearcherAdminPageState extends State<ResearcherAdminPage> {
                     ),
                     ),
                     SizedBox(height: 30),
-                    SizedBox(height: 550, child: SingleChildScrollView(child: SizedBox( width: 1000, height: 600, child: UserList()))),
+                    SizedBox(height: 450, child: SingleChildScrollView(child: SizedBox( width: 1000, height: 600, child: UserList()))),
               ]),
             ),
           ),
@@ -242,10 +244,10 @@ Widget buildUserCard(BuildContext context, DocumentSnapshot userDoc) {
             Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), child: 
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Email Verified: ${data['emailVerified'].toString().toUpperCase()}'),
-                  Text('Survey Completed: ${data['surveyCompleted'].toString().toUpperCase()}'),
-                  Text('Two Factor Enabled: ${data['twoFactorEnabled'].toString().toUpperCase()}'),
-                  Text('Status: ${data['status'].toString().toUpperCase()}'),
+                  Text('Email Verified: ${data['emailVerified'].toString().toUpperCase()}' ?? 'N/A'),
+                  Text('Survey Completed: ${data['surveyCompleted'].toString().toUpperCase()}'?? 'N/A'),
+                  Text('Two Factor Enabled: ${data['twoFactorEnabled'].toString().toUpperCase()}'?? 'N/A'),
+                  Text('Status: ${data['status'].toString().toUpperCase()}'?? 'N/A'),
             ])),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), child: 
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -257,7 +259,7 @@ Widget buildUserCard(BuildContext context, DocumentSnapshot userDoc) {
                 child: Text('Disable User')),
               FilledButton(
                 onPressed: () async {
-                  await FirebaseFirestore.instance.collection('UserProfile').doc(userId).update({'status' : 'inactive'});
+                  await FirebaseFirestore.instance.collection('UserProfile').doc(userId).update({'status' : 'active'});
                 }, 
                 child: Text('Enable User')),
               _RoleDropdown(currentValue: data['role'], onChanged: (value) async {
@@ -275,10 +277,24 @@ class UserList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("Auth user: ${FirebaseAuth.instance.currentUser}");
     return StreamBuilder(
       stream: FirebaseFirestore.instance.collection('UserProfile').snapshots(),
       builder: (context, snapshot) {
-       
+       if (snapshot.hasError) {
+      return Text("Error: ${snapshot.error}");
+    }
+
+    // Waiting for data
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // No data yet or empty collection
+    if (!snapshot.hasData || snapshot.data == null) {
+      return const Center(child: Text("No data found."));
+    }
+    print("Snapshot size: ${snapshot.data?.docs.length}");
        final users = snapshot.data!.docs;
        return ListView.builder(
         itemCount: users.length,
