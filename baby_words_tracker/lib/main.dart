@@ -24,6 +24,7 @@ import 'package:baby_words_tracker/pages/new_auth_gate.dart';
 import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
+
 import 'pages/add_entry_page.dart';
 import 'pages/home_page.dart';
 import 'pages/log_page.dart';
@@ -31,6 +32,8 @@ import 'pages/stats.dart';
 import 'pages/upload_video.dart';
 import 'pages/display_media_page.dart';
 import 'pages/parent_dashboard.dart';
+import 'pages/researcher_admin_page.dart';
+import 'pages/researcher_home_page.dart';
 
 // Util
 import 'package:baby_words_tracker/util/current_children_service.dart';
@@ -351,6 +354,8 @@ class MyApp extends StatelessWidget {
           StatsPage.routeName: (context) => const StatsPage(),
           AddEntryPage.routeName: (context) => const AddEntryPage(),
           WordLogPage.routeName: (context) => const WordLogPage(),
+          ResearcherAdminPage.routeName: (context) => const ResearcherAdminPage(),
+          ResearcherHomePage.routeName: (context) => const ResearcherHomePage(),
           AuthGate.routeName: (context) =>
               const AuthGate(), // OLD: Keep for reference
           NewAuthGate.routeName: (context) => const NewAuthGate(), // NEW

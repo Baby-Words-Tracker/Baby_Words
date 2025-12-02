@@ -1,6 +1,7 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
+import 'package:baby_words_tracker/pages/researcher_admin_page.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:baby_words_tracker/util/user_roles.dart';
@@ -12,12 +13,8 @@ import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 
-// final FirebaseFirestore testDb = FirebaseFirestore.instance;
-// void connectEmulator() {
-//   testDb.useFirestoreEmulator('localhost', 8080);
-// }
-
 class ResearcherHomePage extends StatefulWidget {
+  static const routeName = '/researcher-home';
   const ResearcherHomePage({super.key});
 
   @override
@@ -112,15 +109,6 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                 ],
               ),
             ),
-            // CircleAvatar(
-            //   radius: 24,
-            //   child: Image.asset(
-            //     'assets/lecs_mascot_64x64.png',
-            //     fit: BoxFit.contain,
-            //     width: 38,
-            //     height: 38,
-            //   ),
-            // ),
             Expanded(
               child: Center(
                 child: Image.asset(
@@ -142,6 +130,19 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
           ],
         )),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<ProfileScreen>(
+                  builder: (context) => ResearcherAdminPage(
+                    
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
