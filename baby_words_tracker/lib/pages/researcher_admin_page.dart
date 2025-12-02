@@ -170,7 +170,7 @@ class _ResearcherAdminPageState extends State<ResearcherAdminPage> {
                     ),
                     ),
                     SizedBox(height: 30),
-                    SizedBox(height: 550, child: SingleChildScrollView(child: SizedBox( width: 800, height: 600, child: UserList()))),
+                    SizedBox(height: 550, child: SingleChildScrollView(child: SizedBox( width: 1000, height: 600, child: UserList()))),
               ]),
             ),
           ),
@@ -195,22 +195,28 @@ class _RoleDropdown extends StatefulWidget {
 }
 
 class _RoleDropdownState extends State<_RoleDropdown> {
-  late String selected;
-
+  String? selected;
+  
   @override
   void initState(){
     super.initState();
-    selected = widget.currentValue;
+    selected = null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return DropdownButton<String>(
       value: selected,
-      items: const [
-        DropdownMenuItem(value: 'parent', child: Text('Parent')),
-        DropdownMenuItem(value: 'researcher', child: Text('Researcher')),
-      ],
+      hint: Text("Change Role"),
+      menuMaxHeight: 200,
+      borderRadius: BorderRadius.circular(18),
+      style: theme.textTheme.bodyMedium,
+      // items: const [
+      //   DropdownMenuItem(value: 'parent', child: Text('Parent')),
+      //   DropdownMenuItem(value: 'researcher', child: Text('Researcher')),
+      // ],
+      items: ['parent', 'researcher'].map((role) => DropdownMenuItem(value: role, child: Text(role),)).toList(),
       onChanged: (value) {
         if (value == null) return;
         setState(() => selected = value);
@@ -243,7 +249,18 @@ Widget buildUserCard(BuildContext context, DocumentSnapshot userDoc) {
             ])),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), child: 
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [ _RoleDropdown(currentValue: data['role'], onChanged: (value) async {
+            children: [ 
+              FilledButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance.collection('UserProfile').doc(userId).update({'status' : 'inactive'});
+                }, 
+                child: Text('Disable User')),
+              FilledButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance.collection('UserProfile').doc(userId).update({'status' : 'inactive'});
+                }, 
+                child: Text('Enable User')),
+              _RoleDropdown(currentValue: data['role'], onChanged: (value) async {
                 await FirebaseFirestore.instance.collection('UserProfile').doc(userId).update({'role' : value});
             })]))
           ]
