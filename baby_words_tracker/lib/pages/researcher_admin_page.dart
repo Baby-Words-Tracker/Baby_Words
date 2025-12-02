@@ -236,7 +236,7 @@ Widget buildUserCard(BuildContext context, DocumentSnapshot userDoc) {
   return Card(
     margin: EdgeInsets.all(16),
     child: ExpansionTile(
-      title: Text(data['email'] ?? 'No email'),
+      title: Text(userId ?? 'N/A'),
       subtitle: Text(role),
       children: [
         Column(
