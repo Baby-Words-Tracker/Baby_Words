@@ -245,8 +245,8 @@ class AllLocalizations {
       "save": "Save",
 
       //sign in
-      "welcome_sign_in": "Welcome to BabyWordsTracker, please sign in!",
-      "welcome_sign_up": "Welcome to BabyWordsTracker, please sign up!",
+      "welcome_sign_in": "Welcome to WordBuds, please sign in!",
+      "welcome_sign_up": "Welcome to WordBuds, please sign up!",
       "terms_and_conditions":
           "By signing in, you agree to our terms and conditions.",
       "child_to_new_parent": "Give Another Parent Access To Current Child:",
@@ -473,9 +473,9 @@ class AllLocalizations {
       "words_already_processed":
           "Las palabras seleccionadas ya están enriquecidas.",
       "welcome_sign_in":
-          "¡Bienvenido a BabyWordsTracker, por favor inicia sesión!",
+          "¡Bienvenido a WordBuds, por favor inicia sesión!",
       "welcome_sign_up":
-          "¡Bienvenido a BabyWordsTracker, por favor regístrate!",
+          "¡Bienvenido a WordBuds, por favor regístrate!",
       "terms_and_conditions":
           "Al iniciar sesión, aceptas nuestros términos y condiciones.",
       "over_num_days": "¿Durante cuántos días...",
