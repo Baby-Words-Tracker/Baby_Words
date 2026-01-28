@@ -19,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
+import 'package:file_picker/file_picker.dart' as filepicker;
+
 class AddEntryPage extends StatefulWidget {
   static const routeName = '/add-entry';
   final bool showChrome;
@@ -141,7 +143,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await filepicker.FilePicker.platform.pickFiles(
         allowMultiple: false,
         type: FileType.media,
       );

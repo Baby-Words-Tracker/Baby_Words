@@ -486,7 +486,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = S3PCDVP82T;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "BabyWords: Baby Word Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "WordBuds: Baby Word Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -684,7 +684,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = S3PCDVP82T;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "BabyWords: Baby Word Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "WordBuds: Baby Word Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -722,7 +722,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = S3PCDVP82T;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "BabyWords: Baby Word Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "WordBuds: Baby Word Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
