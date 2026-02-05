@@ -56,8 +56,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB-YEoreyKTUiopZo8OkFW1d9qUnmIKpPM',
-    appId: '1:37552098276:android:e325a32d1990f42f60d5f1',
+    apiKey: 'AIzaSyBDIz_fg2QDq7hYjrJGC_AMhwm1A2STDPg',
+    appId: '1:37552098276:android:c95511cdf8e79ae760d5f1',
     messagingSenderId: '37552098276',
     projectId: 'baby-word-tracker',
     storageBucket: 'baby-word-tracker.firebasestorage.app',
