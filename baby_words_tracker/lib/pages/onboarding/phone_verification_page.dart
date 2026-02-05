@@ -146,7 +146,7 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
         },
         verificationFailed: (FirebaseAuthException e) {
           debugPrint(
-              'PhoneVerificationPage: Verification failed: ${e.message}');
+              'PhoneVerificationPage: Verification failed. Code: ${e.code}. Message: ${e.message}. Full error: $e');
           if (mounted) {
             setState(() {
               _errorMessage = e.message ?? 'Verification failed';
