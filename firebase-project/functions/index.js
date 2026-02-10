@@ -23,6 +23,7 @@ const auth = require("firebase-functions/v1/auth");
 
 // v2 functions
 const https = require("firebase-functions/v2/https");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 
 
 admin.initializeApp();
@@ -478,3 +479,148 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
     );
   }
 });
+
+/**
+ * Nightly Notification Job
+ * Runs every day at 8:00 PM (America/Chicago)
+ * Checks for users with 'nightlyNotificationsEnabled' and sends a prompt.
+ */
+exports.sendNightlyNotifications = onSchedule({
+  schedule: "every day 11:45",
+  timeZone: "America/Chicago",
+}, async (event) => {
+  logger.log("Starting nightly notification job...");
+
+  try {
+    const snapshot = await db.collection("UserProfile")
+        .where("notificationsEnabled", "==", true)
+        .where("nightlyNotificationsEnabled", "==", true)
+        .get();
+
+    if (snapshot.empty) {
+      logger.log("No users found for nightly notifications.");
+      return;
+    }
+
+    logger.log(`Found ${snapshot.size} users for nightly notifications.`);
+
+    const messages = [];
+    snapshot.docs.forEach((doc) => {
+      const user = doc.data();
+      if (user.fcmToken) {
+        messages.push({
+          token: user.fcmToken,
+          notification: {
+            title: "Nightly Word Check",
+            body: "Time to log your little one's words for today!",
+          },
+        });
+      }
+    });
+
+    if (messages.length > 0) {
+      const response = await admin.messaging().sendEach(messages);
+      logger.log(`Nightly: Sent ${response.successCount} messages, ` +
+          `${response.failureCount} failed.`);
+    }
+  } catch (error) {
+    logger.error("Error in nightly notification job:", error);
+  }
+});
+
+/**
+ * Weekly Notification Job
+ * Runs every Monday at 9:00 AM (America/Chicago)
+ * Checks for users with 'weeklyNotificationsEnabled' and sends a summary.
+ */
+exports.sendWeeklyNotifications = onSchedule({
+  schedule: "every wednesday 11:50",
+  timeZone: "America/Chicago",
+}, async (event) => {
+  logger.log("Starting weekly notification job...");
+
+  try {
+    const snapshot = await db.collection("UserProfile")
+        .where("notificationsEnabled", "==", true)
+        .where("weeklyNotificationsEnabled", "==", true)
+        .get();
+
+    if (snapshot.empty) {
+      logger.log("No users found for weekly notifications.");
+      return;
+    }
+
+    logger.log(`Found ${snapshot.size} users for weekly notifications.`);
+
+    const messages = [];
+    snapshot.docs.forEach((doc) => {
+      const user = doc.data();
+      if (user.fcmToken) {
+        messages.push({
+          token: user.fcmToken,
+          notification: {
+            title: "Weekly Summary",
+            body: "Check out your child's progress from last week!",
+          },
+        });
+      }
+    });
+
+    if (messages.length > 0) {
+      const response = await admin.messaging().sendEach(messages);
+      logger.log(`Weekly: Sent ${response.successCount} messages, ` +
+          `${response.failureCount} failed.`);
+    }
+  } catch (error) {
+    logger.error("Error in weekly notification job:", error);
+  }
+});
+
+/**
+ * Debug Notification Job
+ * Runs every 5 minutes
+ * Checks for users with 'notificationsEnabled' and logs them.
+ */
+
+// uncomment then firebase deploy to test
+
+// exports.sendDebugNotifications = onSchedule({
+//   schedule: "every 5 minutes",
+// }, async (event) => {
+//   logger.log("Starting debug notification job...");
+
+//   try {
+//     const snapshot = await db.collection("UserProfile")
+//         .where("notificationsEnabled", "==", true)
+//         .get();
+
+//     if (snapshot.empty) {
+//       logger.log("No users found for debug notifications.");
+//       return;
+//     }
+
+//     logger.log(`Found ${snapshot.size} users for debug notifications.`);
+
+//     const messages = [];
+//     snapshot.docs.forEach((doc) => {
+//       const user = doc.data();
+//       if (user.fcmToken) {
+//         messages.push({
+//           token: user.fcmToken,
+//           notification: {
+//             title: "Debug Notification",
+//             body: "This is a test notification sent every 5 minutes.",
+//           },
+//         });
+//       }
+//     });
+
+//     if (messages.length > 0) {
+//       const response = await admin.messaging().sendEach(messages);
+//       logger.log(`Debug: Sent ${response.successCount} messages, ` +
+//           `${response.failureCount} failed.`);
+//     }
+//   } catch (error) {
+//     logger.error("Error in debug notification job:", error);
+//   }
+// });
