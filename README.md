@@ -12,3 +12,23 @@ The baby words tracker app is designed to be used on iOS, android, and all web b
 
 # Building the iOS App
 run this in the flutter folder to open the xcode environment `open ios/Runner.xcworkspace`
+
+# Deploying Firebase Project
+## Node Functions
+navigate to `firebase-project/functions` and run:
+
+`npm install`
+
+## Python Functions
+Ensure you have python 3.10 installed. Make a virtual environment with Python 3.10
+
+```bash
+
+python3.10 -m venv venv
+
+source venv/bin/activate
+
+cd python_functions
+
+pip install -r requirements.txt
+```

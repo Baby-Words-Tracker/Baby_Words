@@ -7,6 +7,7 @@ import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/phrase_tracker_data_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
+import 'package:baby_words_tracker/data/services/notification_service.dart';
 import 'package:baby_words_tracker/pages/notifications_page.dart';
 
 
@@ -140,6 +141,16 @@ void main() async {
                   Provider.of<UserProfileModelService>(context, listen: false),
             ),
             lazy: true,
+          ),
+          // NotificationService
+          ChangeNotifierProvider<NotificationService>(
+            create: (context) => NotificationService(
+              userProfileService:
+                  Provider.of<UserProfileService>(context, listen: false),
+              authService:
+                  Provider.of<AuthenticationService>(context, listen: false),
+            )..initialize(),
+            lazy: false,
           ),
         ],
         child: const MyApp(),
