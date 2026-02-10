@@ -16,6 +16,7 @@ class WordTracker {
   final String? videoId;
   final String? phraseId;
   final String? phraseText;
+  final String? partOfSpeech;
 
   WordTracker({
     this.id,
@@ -25,6 +26,7 @@ class WordTracker {
     this.videoId,
     this.phraseId,
     this.phraseText,
+    this.partOfSpeech,
   });
 
   WordTracker copyWith({
@@ -35,6 +37,7 @@ class WordTracker {
     String? videoId,
     String? phraseId,
     String? phraseText,
+    String? partOfSpeech,
   }) {
     return WordTracker(
       id: id ?? this.id,
@@ -44,6 +47,7 @@ class WordTracker {
       videoId: videoId ?? this.videoId,
       phraseId: phraseId ?? this.phraseId,
       phraseText: phraseText ?? this.phraseText,
+      partOfSpeech: partOfSpeech ?? this.partOfSpeech,
     );
   }
 
@@ -56,6 +60,8 @@ class WordTracker {
       if (phraseId != null && phraseId!.isNotEmpty) 'phraseId': phraseId,
       if (phraseText != null && phraseText!.isNotEmpty)
         'phraseText': phraseText,
+      if (partOfSpeech != null && partOfSpeech!.isNotEmpty)
+        'partOfSpeech': partOfSpeech,
     };
   }
 
@@ -72,6 +78,7 @@ class WordTracker {
       videoId: map['videoId'] as String?,
       phraseId: map['phraseId'] as String?,
       phraseText: map['phraseText'] as String?,
+      partOfSpeech: map['partOfSpeech'] as String?,
     );
   }
 
@@ -93,6 +100,7 @@ class WordTracker {
     String? videoId,
     String? phraseId,
     String? phraseText,
+    String? partOfSpeech,
   }) {
     Map<String, dynamic> map = {};
 
@@ -114,13 +122,16 @@ class WordTracker {
     if (phraseText != null) {
       map['phraseText'] = phraseText;
     }
+    if (partOfSpeech != null) {
+      map['partOfSpeech'] = partOfSpeech;
+    }
 
     return map;
   }
 
   @override
   String toString() {
-    return 'WordTracker(wordID: $id, firstUtterance: $firstUtterance, language: $language, note: $note, videoId: $videoId, phraseId: $phraseId)';
+    return 'WordTracker(wordID: $id, firstUtterance: $firstUtterance, language: $language, note: $note, videoId: $videoId, phraseId: $phraseId, partOfSpeech: $partOfSpeech)';
   }
 
   @override
@@ -134,7 +145,8 @@ class WordTracker {
         other.note == note &&
         other.videoId == videoId &&
         other.phraseId == phraseId &&
-        other.phraseText == phraseText;
+        other.phraseText == phraseText &&
+        other.partOfSpeech == partOfSpeech;
   }
 
   @override
@@ -146,5 +158,6 @@ class WordTracker {
         videoId,
         phraseId,
         phraseText,
+        partOfSpeech,
       ]);
 }
