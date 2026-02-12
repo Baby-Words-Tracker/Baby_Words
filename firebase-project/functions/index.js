@@ -486,7 +486,7 @@ exports.getEmailUIDTable = https.onCall(async (req, context) => {
  * Checks for users with 'nightlyNotificationsEnabled' and sends a prompt.
  */
 exports.sendNightlyNotifications = onSchedule({
-  schedule: "every day 11:45",
+  schedule: "every day 20:00",
   timeZone: "America/Chicago",
 }, async (event) => {
   logger.log("Starting nightly notification job...");
@@ -534,7 +534,7 @@ exports.sendNightlyNotifications = onSchedule({
  * Checks for users with 'weeklyNotificationsEnabled' and sends a summary.
  */
 exports.sendWeeklyNotifications = onSchedule({
-  schedule: "every wednesday 11:50",
+  schedule: "every monday 9:00",
   timeZone: "America/Chicago",
 }, async (event) => {
   logger.log("Starting weekly notification job...");
