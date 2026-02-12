@@ -107,11 +107,17 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
     }
   }
 
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Your First Child'),
+        title: const Text( //const
+                  'Add Your First Child',
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+              ),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -127,6 +133,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                   'Let\'s get started! 🎈',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: const Color.fromARGB(255, 35, 35, 35),
                       ),
                 ),
                 const SizedBox(height: 12),
@@ -134,7 +141,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                 Text(
                   'Add your child to start tracking their language development',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
+                        color: const Color.fromARGB(255, 95, 95, 95),
                       ),
                 ),
                 const SizedBox(height: 32),
@@ -199,8 +206,9 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                   children: [
                     _buildLanguageChip('English', LanguageCode.en),
                     _buildLanguageChip('Spanish', LanguageCode.es),
-                    _buildLanguageChip('Mandarin', LanguageCode.zh),
-                    _buildLanguageChip('French', LanguageCode.fr),
+                    //Mandarin and French dictionaries not connected yet
+                    //_buildLanguageChip('Mandarin', LanguageCode.zh),
+                    //_buildLanguageChip('French', LanguageCode.fr),
                     // Add more as needed
                   ],
                 ),
