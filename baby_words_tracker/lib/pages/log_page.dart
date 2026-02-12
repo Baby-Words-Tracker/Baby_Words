@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
 
 class WordLogPage extends StatefulWidget {
   static const routeName = '/log';
@@ -188,6 +189,9 @@ class _WordLogPageState extends State<WordLogPage> {
         availableLanguages: availableLanguages,
         initialNote: tracker.note,
         localization: localization,
+        initialPartOfSpeech: tracker.partOfSpeech,
+        // We populate this with all values so the user can correct a wrong tag
+        availablePartOfSpeech: PartOfSpeech.values.map((e) => e.name).toList(),
       ),
     );
 
@@ -207,6 +211,7 @@ class _WordLogPageState extends State<WordLogPage> {
       id: normalizedId,
       language: resolvedLanguage,
       note: result.note.isEmpty ? null : result.note,
+      partOfSpeech: result.partOfSpeech,
     );
 
     final wordTrackerService = context.read<WordTrackerDataService>();
@@ -378,7 +383,8 @@ class _WordLogPageState extends State<WordLogPage> {
                                   ),
                                   onSelect: (tracker) {
                                     // Get MediaStorageService only when tapped (lazy loading)
-                                    final videoStorage = Provider.of<MediaStorageService>(
+                                    final videoStorage =
+                                        Provider.of<MediaStorageService>(
                                       context,
                                       listen: false,
                                     );
@@ -402,7 +408,8 @@ class _WordLogPageState extends State<WordLogPage> {
                                   ),
                                   onSelect: (tracker) {
                                     // Get MediaStorageService only when tapped (lazy loading)
-                                    final videoStorage = Provider.of<MediaStorageService>(
+                                    final videoStorage =
+                                        Provider.of<MediaStorageService>(
                                       context,
                                       listen: false,
                                     );
