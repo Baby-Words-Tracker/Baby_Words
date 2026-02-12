@@ -104,7 +104,25 @@ class _ParentDashboardState extends State<ParentDashboard> {
       bottomNavigationBar: NavigationBar(
         height: 74,
         selectedIndex: currentIndex,
-        onDestinationSelected: navigation.setIndex,
+        onDestinationSelected: (index) {
+          if (index == 2) {
+            showModalBottomSheet(
+              context: context,
+              useRootNavigator: true,
+              isScrollControlled: true,
+              backgroundColor: Colors.white,
+              builder: (context) => FractionallySizedBox(
+                heightFactor: 0.92,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  child: const AddEntryPage(showChrome: false, isModal: true),
+                ),
+              ),
+            );
+          } else {
+            navigation.setIndex(index);
+          }
+        },
         destinations: _tabs
             .map(
               (tab) => NavigationDestination(
