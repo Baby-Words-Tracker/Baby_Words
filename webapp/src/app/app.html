@@ -1,0 +1,652 @@
+<!-- TODO MOVE TO OWN CSS FILE -->
+<style>
+  :host {
+    --bright-blue: oklch(51.01% 0.274 263.83);
+    --electric-violet: oklch(53.18% 0.28 296.97);
+    --french-violet: oklch(47.66% 0.246 305.88);
+    --vivid-pink: oklch(69.02% 0.277 332.77);
+    --hot-red: oklch(61.42% 0.238 15.34);
+    --orange-red: oklch(63.32% 0.24 31.68);
+
+    --gray-900: oklch(19.37% 0.006 300.98);
+    --gray-700: oklch(36.98% 0.014 302.71);
+    --gray-400: oklch(70.9% 0.015 304.04);
+
+    --red-to-pink-to-purple-vertical-gradient: linear-gradient(
+      180deg,
+      var(--orange-red) 0%,
+      var(--vivid-pink) 50%,
+      var(--electric-violet) 100%
+    );
+
+    --red-to-pink-to-purple-horizontal-gradient: linear-gradient(
+      90deg,
+      var(--orange-red) 0%,
+      var(--vivid-pink) 50%,
+      var(--electric-violet) 100%
+    );
+
+    --pill-accent: var(--bright-blue);
+
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol";
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    font-size: 3.125rem;
+    color: var(--gray-900);
+    font-weight: 500;
+    line-height: 100%;
+    letter-spacing: -0.125rem;
+    margin: 0;
+    font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol";
+  }
+
+  p {
+    margin: 0;
+    color: var(--gray-700);
+  }
+
+  main {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    box-sizing: inherit;
+    position: relative;
+  }
+
+  .content {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+  }
+
+  .wordbank-section {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .collection-dropdowns {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .collection-dropdown {
+    border: 1px solid color-mix(in srgb, var(--gray-400) 60%, transparent);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .collection-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    background: color-mix(in srgb, var(--pill-accent) 10%, white);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .collection-toggle:hover {
+    background: color-mix(in srgb, var(--pill-accent) 18%, white);
+  }
+
+  .toggle-icon {
+    font-size: 0.7rem;
+    color: var(--gray-700);
+  }
+
+  .collection-name {
+    color: var(--gray-900);
+  }
+
+  .collection-count {
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--gray-700);
+  }
+
+  .collection-dropdown .wordbank-list {
+    border-top: 1px solid color-mix(in srgb, var(--gray-400) 40%, transparent);
+    margin: 0;
+    padding: 0.5rem;
+    background: color-mix(in srgb, var(--pill-accent) 4%, white);
+  }
+
+  .wordbank-section h2 {
+    font-size: 1.5rem;
+    color: var(--gray-900);
+    margin: 0 0 1rem 0;
+  }
+
+  .wordbank-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .wordbank-item {
+    padding: 1rem;
+    background: color-mix(in srgb, var(--pill-accent) 8%, transparent);
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--bright-blue);
+  }
+
+  .collection-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    background: var(--bright-blue);
+    color: white;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .wordbank-item-attributes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .wordbank-item .attribute {
+    font-size: 0.9rem;
+    color: var(--gray-700);
+  }
+
+  .wordbank-item .attribute strong {
+    color: var(--gray-900);
+    margin-right: 0.5rem;
+  }
+
+  .empty-state,
+  .loading-state {
+    color: var(--gray-700);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .logout-btn {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    background: color-mix(in srgb, var(--hot-red) 15%, transparent);
+    color: var(--hot-red);
+    border: 1px solid var(--hot-red);
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .logout-btn:hover {
+    background: color-mix(in srgb, var(--hot-red) 25%, transparent);
+  }
+
+  .header-bar {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .view-dropdown {
+    position: relative;
+  }
+
+  .view-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: color-mix(in srgb, var(--pill-accent) 12%, white);
+    color: var(--gray-900);
+    border: 1px solid color-mix(in srgb, var(--gray-400) 60%, transparent);
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .view-dropdown-btn:hover {
+    background: color-mix(in srgb, var(--pill-accent) 20%, white);
+  }
+
+  .view-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.25rem;
+    min-width: 10rem;
+    padding: 0.25rem;
+    background: white;
+    border: 1px solid color-mix(in srgb, var(--gray-400) 60%, transparent);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    z-index: 10;
+  }
+
+  .view-dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    color: var(--gray-900);
+  }
+
+  .view-dropdown-menu button:hover {
+    background: color-mix(in srgb, var(--pill-accent) 15%, transparent);
+  }
+
+  .view-dropdown-menu button.active {
+    background: color-mix(in srgb, var(--pill-accent) 12%, transparent);
+    font-weight: 600;
+  }
+
+  .admin-panel {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 2rem;
+  }
+
+  .admin-panel h2 {
+    font-size: 1.5rem;
+    color: var(--gray-900);
+    margin: 0 0 1rem 0;
+  }
+
+  .admin-add-card {
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    background: color-mix(in srgb, var(--pill-accent) 6%, white);
+    border: 1px solid color-mix(in srgb, var(--gray-400) 50%, transparent);
+    border-radius: 0.75rem;
+  }
+
+  .admin-add-card h3 {
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    color: var(--gray-900);
+  }
+
+  .admin-add-card .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .admin-add-card label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--gray-700);
+  }
+
+  .admin-add-card input,
+  .admin-add-card select {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--gray-400);
+    border-radius: 0.4rem;
+    box-sizing: border-box;
+  }
+
+  .admin-add-card .btn-add {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: var(--bright-blue);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .admin-add-card .btn-add:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--bright-blue) 85%, black);
+  }
+
+  .admin-add-card .btn-add:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .admin-msg {
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0 0;
+  }
+
+  .admin-msg.success { color: oklch(0.45 0.15 145); }
+  .admin-msg.error { color: var(--hot-red); }
+
+  .admin-list .wordbank-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .admin-list .wordbank-item-attributes {
+    flex: 1;
+  }
+
+  .btn-remove {
+    flex-shrink: 0;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8rem;
+    background: color-mix(in srgb, var(--hot-red) 12%, white);
+    color: var(--hot-red);
+    border: 1px solid var(--hot-red);
+    border-radius: 0.4rem;
+    cursor: pointer;
+  }
+
+  .btn-remove:hover {
+    background: color-mix(in srgb, var(--hot-red) 22%, white);
+  }
+
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 50vh;
+    padding: 1rem;
+  }
+
+  .login-form {
+    width: 100%;
+    max-width: 360px;
+    padding: 2rem;
+    background: color-mix(in srgb, var(--pill-accent) 6%, white);
+    border-radius: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--gray-400) 50%, transparent);
+  }
+
+  .login-form h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
+    color: var(--gray-900);
+  }
+
+  .login-form .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .login-form label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+  }
+
+  .login-form input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    font-size: 1rem;
+    border: 1px solid var(--gray-400);
+    border-radius: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .login-form input:focus {
+    outline: none;
+    border-color: var(--bright-blue);
+  }
+
+  .login-error {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+    color: var(--hot-red);
+  }
+
+  .login-submit {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    background: var(--bright-blue);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .login-submit:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--bright-blue) 85%, black);
+  }
+
+  .login-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @media screen and (max-width: 650px) {
+    .content {
+      max-width: 100%;
+    }
+  }
+</style>
+
+<main class="main">
+  @if (authState$ | async; as user) {
+  <button type="button" class="logout-btn" (click)="logout()">Log out</button>
+  <div class="header-bar">
+    <div class="view-dropdown" (click)="$event.stopPropagation()">
+      <button
+        type="button"
+        class="view-dropdown-btn"
+        (click)="toggleViewDropdown()"
+        [attr.aria-expanded]="showViewDropdown()"
+        aria-haspopup="listbox"
+      >
+        {{ currentView() === 'admin' ? 'Admin panel' : 'Dashboard' }} ▼
+      </button>
+      @if (showViewDropdown()) {
+        <div class="view-dropdown-menu" role="listbox">
+          <button
+            type="button"
+            role="option"
+            [class.active]="currentView() === 'dashboard'"
+            (click)="setView('dashboard')"
+          >
+            Dashboard
+          </button>
+          <button
+            type="button"
+            role="option"
+            [class.active]="currentView() === 'admin'"
+            (click)="setView('admin')"
+          >
+            Admin panel
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="content">
+    <div class="left-side">
+      @if (currentView() === 'dashboard') {
+      <section class="wordbank-section">
+        <h2>UserProfile</h2>
+        @if (itemsByCollection$ | async; as groups) {
+          @if (groups.length === 0) {
+            <p class="empty-state">No items found in UserProfile collection.</p>
+          } @else {
+            <div class="collection-dropdowns">
+              @for (group of groups; track group.collection) {
+                <div class="collection-dropdown">
+                  <button
+                    type="button"
+                    class="collection-toggle"
+                    (click)="toggleCollection(group.collection)"
+                    [attr.aria-expanded]="isExpanded(group.collection)"
+                  >
+                    <span class="toggle-icon">{{ isExpanded(group.collection) ? '▼' : '▶' }}</span>
+                    <span class="collection-name">{{ group.collection }}</span>
+                    <span class="collection-count">({{ group.items.length }})</span>
+                  </button>
+                  @if (isExpanded(group.collection)) {
+                    <ul class="wordbank-list">
+                      @for (item of group.items; track item._collection + item.id) {
+                        <li class="wordbank-item">
+                          <div class="wordbank-item-attributes">
+                            @for (entry of getDisplayEntries(item); track entry[0]) {
+                              <div class="attribute">
+                                <strong>{{ entry[0] }}:</strong> {{ formatValue(entry[1]) }}
+                              </div>
+                            }
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <p class="loading-state">Loading...</p>
+        }
+      </section>
+      }
+
+      @if (currentView() === 'admin') {
+      <section class="admin-panel">
+        <h2>Admin panel</h2>
+        <div class="admin-add-card">
+          <h3>Add account to collection</h3>
+          <form [formGroup]="adminAddForm" (ngSubmit)="addAccount()">
+            <div class="form-group">
+              <label>Collection</label>
+              <select formControlName="collectionName">
+                @for (name of firebaseService.adminCollectionNames; track name) {
+                  <option [value]="name">{{ name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="admin-name">Name</label>
+              <input id="admin-name" type="text" formControlName="name" placeholder="Name" />
+            </div>
+            <div class="form-group">
+              <label for="admin-email">Email</label>
+              <input id="admin-email" type="email" formControlName="email" placeholder="Email" />
+            </div>
+            <div class="form-group">
+              <label for="admin-role">Role (optional)</label>
+              <input id="admin-role" type="text" formControlName="role" placeholder="e.g. user, admin" />
+            </div>
+            @if (adminAddMessage(); as msg) {
+              <p class="admin-msg" [class.success]="msg.includes('success')" [class.error]="!msg.includes('success')">{{ msg }}</p>
+            }
+            <button type="submit" class="btn-add" [disabled]="adminAddForm.invalid">Add account</button>
+          </form>
+        </div>
+        <h3 style="font-size: 1.1rem; margin: 0 0 0.5rem 0; color: var(--gray-900);">Accounts in collections</h3>
+        @if (adminRemoveMessage(); as msg) {
+          <p class="admin-msg" [class.success]="msg.includes('removed')" [class.error]="!msg.includes('removed')">{{ msg }}</p>
+        }
+        @if (itemsByCollection$ | async; as groups) {
+          @if (groups.length === 0) {
+            <p class="empty-state">No items in any collection.</p>
+          } @else {
+            <div class="collection-dropdowns admin-list">
+              @for (group of groups; track group.collection) {
+                <div class="collection-dropdown">
+                  <button
+                    type="button"
+                    class="collection-toggle"
+                    (click)="toggleCollection(group.collection)"
+                    [attr.aria-expanded]="isExpanded(group.collection)"
+                  >
+                    <span class="toggle-icon">{{ isExpanded(group.collection) ? '▼' : '▶' }}</span>
+                    <span class="collection-name">{{ group.collection }}</span>
+                    <span class="collection-count">({{ group.items.length }})</span>
+                  </button>
+                  @if (isExpanded(group.collection)) {
+                    <ul class="wordbank-list">
+                      @for (item of group.items; track item._collection + item.id) {
+                        <li class="wordbank-item">
+                          <div class="wordbank-item-attributes">
+                            @for (entry of getDisplayEntries(item); track entry[0]) {
+                              <div class="attribute">
+                                <strong>{{ entry[0] }}:</strong> {{ formatValue(entry[1]) }}
+                              </div>
+                            }
+                          </div>
+                          <!-- Removing accounts not allowed for now 
+                          <button
+                            type="button"
+                            class="btn-remove"
+                            (click)="removeAccount(item._collection, item.id)"
+                            title="Remove this account"
+                          >
+                            Remove
+                          </button> -->
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <p class="loading-state">Loading...</p>
+        }
+      </section>
+      }
+    </div>
+  </div>
+  } @else {
+  <div class="login-container">
+    <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
+      <h2>Sign in</h2>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="Email" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" formControlName="password" placeholder="Password" autocomplete="current-password" />
+      </div>
+      @if (errorMessage()) {
+        <p class="login-error">{{ errorMessage() }}</p>
+      }
+      <button type="submit" class="login-submit" [disabled]="loginForm.invalid">Log in</button>
+    </form>
+  </div>
+  }
+</main>
+
+<router-outlet />
