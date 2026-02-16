@@ -87,7 +87,7 @@ void main() {
         language: [LanguageCode.en],
         wordCount: 10,
         parentIDs: ['parent-1', 'parent-2'],
-        sex: 'Male',
+        sex: 'Female',
       );
 
       final differentChild = testChild.copyWith(name: 'Different Baby');
