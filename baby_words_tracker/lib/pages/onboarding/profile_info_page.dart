@@ -25,8 +25,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   @override
   void initState() {
     super.initState();
-    final profile =
-        Provider.of<UserProfileModelService>(context, listen: false).userProfile;
+    final profile = Provider.of<UserProfileModelService>(context, listen: false)
+        .userProfile;
     _firstNameController =
         TextEditingController(text: profile?.firstName ?? '');
     _lastNameController = TextEditingController(text: profile?.lastName ?? '');
@@ -61,11 +61,14 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         throw Exception('No profile available to update');
       }
 
-      await userProfileService.updateUserProfile(profile.id, {
-        'firstName': firstName,
-        'lastName': lastName,
-        'name': fullName,
-      }, isDemo: userProfileModelService.isDemoUser);
+      await userProfileService.updateUserProfile(
+          profile.id,
+          {
+            'firstName': firstName,
+            'lastName': lastName,
+            'name': fullName,
+          },
+          isDemo: userProfileModelService.isDemoUser);
 
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
@@ -129,9 +132,12 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Set Up Your Profile'),
+        title: const Text(
+          'Set Up Your Profile',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -216,12 +222,13 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                                 ),
                               )
                             : const Icon(Icons.save_outlined),
-                        label: Text(_isSaving ? 'Saving...' : 'Save and Continue'),
+                        label:
+                            Text(_isSaving ? 'Saving...' : 'Save and Continue'),
                       ),
                     ],
                   ),
