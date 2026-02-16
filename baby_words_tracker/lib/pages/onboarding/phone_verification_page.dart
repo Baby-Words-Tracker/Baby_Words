@@ -290,6 +290,7 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
         title: const Text('Phone Verification'),
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
+        
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

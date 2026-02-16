@@ -70,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final localization = context.read<LocalizationService>();
     final nameController = TextEditingController();
     DateTime? selectedBirthday;
+    String selectedSex = 'Female';
     final Set<LanguageCode> selectedLanguages = {LanguageCode.en};
 
     await showModalBottomSheet<void>(
@@ -136,7 +137,33 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     textCapitalization: TextCapitalization.words,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Sex',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    height: 60,
+                    width: 120,
+                    child: DropdownButton<String>(
+                      value: selectedSex,
+                      items: ['Female', 'Male'].map((String option) {
+                        return DropdownMenuItem<String>(
+                          value: option,
+                          child: Text(option),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setModalState(() {
+                          selectedSex = newValue ?? 'Unknown';
+                        });
+                      },
+                    ),
+                  ),
+
                   TextField(
                     readOnly: true,
                     onTap: pickBirthday,
@@ -176,7 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: FilledButton(
                       onPressed: () async {
                         final name = nameController.text.trim();
-                        if (name.isEmpty || selectedBirthday == null) {
+                        if (name.isEmpty || selectedBirthday == null || selectedSex == null) {
                           await showAlertIfMounted(
                             context,
                             localization.translate('child_not_added'),
@@ -190,6 +217,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           name,
                           selectedBirthday!,
                           selectedLanguages.toList(),
+                          selectedSex,
                         );
 
                         if (!mounted) return;
@@ -235,6 +263,7 @@ class _SettingsPageState extends State<SettingsPage> {
     DateTime selectedBirthday = child.birthday;
     final Set<LanguageCode> selectedLanguages =
         child.language.isNotEmpty ? child.language.toSet() : {LanguageCode.en};
+    String selectedSex = child.sex ?? 'Female';
     bool isSaving = false;
 
     bool isSameDate(DateTime a, DateTime b) {
@@ -303,8 +332,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 final bool languagesChanged =
                     !selectedLanguages.containsAll(existingLanguages) ||
                         !existingLanguages.containsAll(selectedLanguages);
+                final bool sexChanged = selectedSex != child.sex;
 
-                if (!nameChanged && !birthdayChanged && !languagesChanged) {
+                if (!nameChanged && !birthdayChanged && !languagesChanged && !sexChanged) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(rootContext).showSnackBar(
                     SnackBar(
@@ -339,6 +369,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             language: languagesChanged
                                 ? selectedLanguages.toList()
                                 : null,
+                            sex: sexChanged ? selectedSex: null,
                           );
                   if (!success) {
                     throw Exception('child-update-failed');
@@ -398,6 +429,28 @@ class _SettingsPageState extends State<SettingsPage> {
                       labelText: localization.translate('choose_name'),
                     ),
                     textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Sex',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButton<String>(
+                    value: selectedSex,
+                    items: ['Female', 'Male'].map((String option) {
+                      return DropdownMenuItem<String>(
+                        value: option,
+                        child: Text(option),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setModalState(() {
+                        selectedSex = newValue ?? 'Female';
+                      });
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextField(

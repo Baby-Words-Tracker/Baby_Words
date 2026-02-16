@@ -38,7 +38,7 @@ dependencies:
   provider: ^6.0.5
 
   # adds syncfusion and csv for graph figures
-  syncfusion_flutter_charts: ^31.2.5
+  syncfusion_flutter_charts: ^32.1.25
   csv: ^6.0.0
 
   # The following adds the Cupertino Icons font to your application.
