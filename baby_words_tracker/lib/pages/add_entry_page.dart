@@ -18,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
 
 import 'package:file_picker/file_picker.dart' as filepicker;
 
@@ -42,6 +43,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   List<LanguageCode> _availableLanguages = const [LanguageCode.en];
   LanguageCode? _selectedLanguage;
+  String? _selectedPartOfSpeech;
 
   late WordDataService _wordDataService;
   late WordTrackerDataService _wordTrackerDataService;
@@ -292,6 +294,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
           language: language,
           rawInput: input.trim(),
           note: note,
+          partOfSpeech: _selectedPartOfSpeech,
         );
       } else {
         await _submitPhraseEntry(
@@ -338,15 +341,16 @@ class _AddEntryPageState extends State<AddEntryPage> {
     required LanguageCode language,
     required String rawInput,
     required String note,
+    String? partOfSpeech,
   }) async {
     final normalisedWord = normaliseForDocumentId(rawInput);
-    
+
     // Check if word already exists
     final existingWord = await _wordTrackerDataService.getWordTracker(
       childId,
       normalisedWord,
     );
-    
+
     if (existingWord != null) {
       // Word already logged, show toast and return
       if (mounted) {
@@ -358,7 +362,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
       }
       return;
     }
-    
+
     await _wordDataService.queueWordForProcessing(
       wordId: normalisedWord,
       language: language,
@@ -380,6 +384,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
         language: language,
         note: note.isEmpty ? null : note,
         videoId: videoId,
+        partOfSpeech: partOfSpeech,
       ),
     );
   }
@@ -409,12 +414,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
         childId,
         word,
       );
-      
+
       // Skip if word already logged (silently for phrases)
       if (existingWord != null) {
         continue;
       }
-      
+
       await _wordDataService.queueWordForProcessing(
         wordId: word,
         language: language,
@@ -467,7 +472,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
         );
         final notesLabel = localization.translate('note_optional');
         final notesHint = localization.translate('note_hint');
-        
+
         final attachmentsEnabled = !kIsWeb && FeatureFlags.parentLocalVideos;
         final attachmentsReady = attachmentsEnabled && videoStorage.isReady;
         final outlineColor = theme.colorScheme.outlineVariant.withOpacity(0.6);
@@ -595,6 +600,39 @@ class _AddEntryPageState extends State<AddEntryPage> {
                           focusedBorder: focusedBorder,
                         ),
                       ),
+                      if (_entryMode == EntryMode.word) ...[
+                        const SizedBox(height: 20),
+                        Text(
+                          'Part of Speech', // TODO: Add to localization
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: _selectedPartOfSpeech,
+                          items: PartOfSpeech.values.map((pos) {
+                            String label = pos.displayName;
+                            if (pos.name == 'personal_pronoun') { //hard-code to address these cases because they kept appearing as "unknown" duplicates
+                              label = 'Personal Pronoun';
+                            } else if (pos.name == 'interjection') {
+                              label = 'Interjection';
+                            }
+                            return DropdownMenuItem<String>(
+                              value: pos.name,
+                              child: Text(label),
+                            );
+                          }).toList(),
+                          onChanged: (value) =>
+                              setState(() => _selectedPartOfSpeech = value),
+                          decoration: InputDecoration(
+                            filled: true,
+                            enabledBorder: baseBorder,
+                            focusedBorder: focusedBorder,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -682,7 +720,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
                               const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -706,7 +745,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
                                     _handleAttachmentSelection(localization),
                                 icon: const Icon(Icons.upload_rounded),
                                 label: Text(
-                                  localization.translate('attachment_pick_button'),
+                                  localization
+                                      .translate('attachment_pick_button'),
                                 ),
                               )
                             else

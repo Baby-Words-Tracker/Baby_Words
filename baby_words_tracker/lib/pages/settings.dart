@@ -66,6 +66,75 @@ class _SettingsPageState extends State<SettingsPage> {
     await localizationService.changeLocale(newLanguage);
   }
 
+  Future<void> _toggleNotifications(bool enabled) async {
+    final localizationService = context.read<LocalizationService>();
+    final userProfileModelService = context.read<UserProfileModelService>();
+    final userProfileService = context.read<UserProfileService>();
+
+    final userId = userProfileModelService.userProfile?.id;
+
+    if (userId != null) {
+      try {
+        await userProfileService.updateUserProfile(userId, {
+          'notificationsEnabled': enabled,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(localizationService
+                  .translate('settings_notifications_update_success')),
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Error updating notifications: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(localizationService
+                  .translate('settings_notifications_update_failed')),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _toggleNightlyNotifications(bool enabled) async {
+    final userProfileModelService = context.read<UserProfileModelService>();
+    final userProfileService = context.read<UserProfileService>();
+
+    final userId = userProfileModelService.userProfile?.id;
+
+    if (userId != null) {
+      try {
+        await userProfileService.updateUserProfile(userId, {
+          'nightlyNotificationsEnabled': enabled,
+        });
+      } catch (e) {
+        debugPrint('Error updating nightly notifications: $e');
+      }
+    }
+  }
+
+  Future<void> _toggleWeeklyNotifications(bool enabled) async {
+    final userProfileModelService = context.read<UserProfileModelService>();
+    final userProfileService = context.read<UserProfileService>();
+
+    final userId = userProfileModelService.userProfile?.id;
+
+    if (userId != null) {
+      try {
+        await userProfileService.updateUserProfile(userId, {
+          'weeklyNotificationsEnabled': enabled,
+        });
+      } catch (e) {
+        debugPrint('Error updating weekly notifications: $e');
+      }
+    }
+  }
+
   Future<void> _showAddChildSheet() async {
     final localization = context.read<LocalizationService>();
     final nameController = TextEditingController();
@@ -690,6 +759,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 localization: localization,
               ),
               const SizedBox(height: 20),
+
+              _NotificationsCard(
+                notificationsEnabled: profile?.notificationsEnabled ?? true,
+                nightlyNotificationsEnabled:
+                    profile?.nightlyNotificationsEnabled ?? true,
+                weeklyNotificationsEnabled:
+                    profile?.weeklyNotificationsEnabled ?? true,
+                onNotificationsChanged: _toggleNotifications,
+                onNightlyNotificationsChanged: _toggleNightlyNotifications,
+                onWeeklyNotificationsChanged: _toggleWeeklyNotifications,
+                localization: localization,
+              ),
+              const SizedBox(height: 20),
+
+              // Chil
               _ChildrenCard(
                 children: children,
                 currentChildId: currentChildId,
@@ -999,6 +1083,83 @@ class _ChildrenCard extends StatelessWidget {
                 localization.translate('settings_share_child_button'),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationsCard extends StatelessWidget {
+  const _NotificationsCard({
+    required this.notificationsEnabled,
+    required this.nightlyNotificationsEnabled,
+    required this.weeklyNotificationsEnabled,
+    required this.onNotificationsChanged,
+    required this.onNightlyNotificationsChanged,
+    required this.onWeeklyNotificationsChanged,
+    required this.localization,
+  });
+
+  final bool notificationsEnabled;
+  final bool nightlyNotificationsEnabled;
+  final bool weeklyNotificationsEnabled;
+  final ValueChanged<bool> onNotificationsChanged;
+  final ValueChanged<bool> onNightlyNotificationsChanged;
+  final ValueChanged<bool> onWeeklyNotificationsChanged;
+  final LocalizationService localization;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localization.translate('settings_notifications_title'),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                localization.translate('settings_notifications_label'),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              value: notificationsEnabled,
+              onChanged: onNotificationsChanged,
+            ),
+            if (notificationsEnabled) ...[
+              const Divider(),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.only(left: 16),
+                title: Text(
+                  localization.translate('settings_notifications_nightly'),
+                  style: theme.textTheme.bodyLarge,
+                ),
+                value: nightlyNotificationsEnabled,
+                onChanged: onNightlyNotificationsChanged,
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.only(left: 16),
+                title: Text(
+                  localization.translate('settings_notifications_weekly'),
+                  style: theme.textTheme.bodyLarge,
+                ),
+                value: weeklyNotificationsEnabled,
+                onChanged: onWeeklyNotificationsChanged,
+              ),
+            ],
           ],
         ),
       ),

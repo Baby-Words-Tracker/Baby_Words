@@ -1,4 +1,4 @@
-package com.example.baby_words_tracker
+package org.wordbuds.android
 
 import io.flutter.embedding.android.FlutterActivity
 

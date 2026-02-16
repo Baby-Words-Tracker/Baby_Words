@@ -70,3 +70,5 @@ baby_words_tracker/.dart-tool/dart-flutter-telemetry-dismissed-surveys.json
 # CSV and JSON files in scripts directory only
 scripts/**/*.csv
 scripts/**/*.json
+
+firebase-project/functions_python/venv

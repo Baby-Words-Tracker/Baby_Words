@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.baby_words_tracker"
+    namespace = "org.wordbuds.android"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
