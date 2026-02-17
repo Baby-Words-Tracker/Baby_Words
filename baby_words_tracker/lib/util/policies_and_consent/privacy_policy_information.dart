@@ -1,6 +1,6 @@
 class PrivacyPolicyInformation {
   static const String privacyPolicyUrl =
-      'https://baby-words-tracker.web.app/privacy_policy.html';
+      'https://baby-word-tracker.web.app/privacy_policy.html';
   static const String privacyPolicyVersion = '1.0.0';
   static const String privacyPolicyText =
       'This app collects and uses personal data to provide a better user experience. '

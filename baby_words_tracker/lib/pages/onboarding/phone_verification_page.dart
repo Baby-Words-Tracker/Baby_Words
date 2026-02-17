@@ -287,10 +287,12 @@ class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Phone Verification'),
+        title: const Text(
+          'Phone Verification',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        
+        foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
