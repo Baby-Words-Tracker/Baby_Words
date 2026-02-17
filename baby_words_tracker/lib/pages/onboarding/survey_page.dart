@@ -123,9 +123,12 @@ class _SurveyPageState extends State<SurveyPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Research Survey'),
+        title: const Text(
+          'Research Survey',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: theme.colorScheme.surface,
-        foregroundColor: theme.colorScheme.onSurface,
+        foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

@@ -21,6 +21,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
   DateTime? _selectedBirthday;
   final List<LanguageCode> _selectedLanguages = [LanguageCode.en];
   bool _isAdding = false;
+  String _selectedSex = 'Female';
 
   @override
   void dispose() {
@@ -43,13 +44,36 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
       });
     }
   }
+  Future<void> _selectSex() async {
+    
+  }
 
   Future<void> _addChild() async {
-    if (!_formKey.currentState!.validate()) return;
+    debugPrint('🔵🔵🔵 _addChild STARTED 🔵🔵🔵');
+    debugPrint('🔵 Form valid: ${_formKey.currentState?.validate()}');
+    debugPrint('🔵 Birthday: $_selectedBirthday');
+    debugPrint('🔵 Sex: $_selectedSex');
+    debugPrint('🔵 Name: ${_nameController.text}');
+    
+    if (!_formKey.currentState!.validate()) {
+      debugPrint('❌ Form validation failed');
+      return;
+    }
     if (_selectedBirthday == null) {
+      debugPrint('❌ Birthday not selected');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a birthday'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    if (_selectedSex.isEmpty) {
+      debugPrint('❌ Sex not selected: $_selectedSex');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a sex'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -61,13 +85,17 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
     });
 
     try {
+      debugPrint('🔵 About to call addChildToCurrParent');
+      debugPrint('🔵 name: ${_nameController.text.trim()}, sex: $_selectedSex, birthday: $_selectedBirthday');
       // Use existing child creation logic
       await addChildToCurrParent(
         context,
         _nameController.text.trim(),
         _selectedBirthday!,
         _selectedLanguages,
+        _selectedSex,
       );
+      debugPrint('🔵 addChildToCurrParent completed successfully');
 
       debugPrint('✅ First child added successfully!');
 
@@ -89,6 +117,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
       }
     } catch (e) {
       debugPrint('❌ Error adding first child: $e');
+      debugPrint('❌ Stack trace: ${StackTrace.current}');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -163,6 +192,33 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 24),
+                
+                // Sex selection
+                const Text(
+                  'Sex',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButton<String>(
+                  value: _selectedSex,
+                  items: ['Female', 'Male'].map((String option) {
+                    return DropdownMenuItem<String>(
+                      value: option,
+                      child: Text(option),
+                    );
+                  }).toList(),
+                  onChanged: _isAdding
+                      ? null
+                      : (String? newValue) {
+                          setState(() {
+                            _selectedSex = newValue ?? 'Unknown';
+                          });
+                        },
                 ),
                 const SizedBox(height: 24),
 
@@ -242,23 +298,12 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                 const SizedBox(height: 32),
 
                 // Add child button
-                FilledButton.icon(
-                  onPressed: _isAdding ? null : _addChild,
-                  icon: _isAdding
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Icon(Icons.check_circle),
-                  label: Text(_isAdding ? 'Adding...' : 'Add Child & Continue'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
+                ElevatedButton(
+                  onPressed: () {
+                    debugPrint('🔵 Button pressed!');
+                    _addChild();
+                  },
+                  child: const Text('Add Child & Continue'),
                 ),
 
                 const SizedBox(height: 16),
