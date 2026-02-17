@@ -18,13 +18,15 @@ class ChildDataService extends ChangeNotifier {
       String cName,
       List<LanguageCode> language,
       int cWordCount,
-      List<String> cParentIDs) async {
+      List<String> cParentIDs,
+      String cSex) async {
     final object = Child(
         birthday: cBirthDay,
         name: cName,
         language: language,
         wordCount: cWordCount,
-        parentIDs: cParentIDs);
+        parentIDs: cParentIDs,
+        sex: cSex);
     String? returnId =
         await firebaseRepo.create(Child.collectionName, object.toMap());
 
@@ -41,6 +43,7 @@ class ChildDataService extends ChangeNotifier {
     String? name,
     DateTime? birthday,
     List<LanguageCode>? language,
+    String? sex,
   }) async {
     final Map<String, dynamic> updates = {};
     if (name != null) {
@@ -51,6 +54,9 @@ class ChildDataService extends ChangeNotifier {
     }
     if (language != null) {
       updates['languageCodes'] = language.map((code) => code.name).toList();
+    }
+    if (sex != null){
+      updates['sex'] = sex;
     }
     if (updates.isEmpty) {
       return true;

@@ -179,8 +179,10 @@ Consumer addCurrentChildToOtherParentFeature(
   });
 }
 
-Future<void> addChildToCurrParent(BuildContext context, String name,
-    DateTime bday, List<LanguageCode> langauges) async {
+Future<void> addChildToCurrParent(BuildContext context, String name, //added sex as an option
+    DateTime bday, List<LanguageCode> langauges, String sex) async { //languages spelled wrong- issue?
+  debugPrint('🔵 addChildToCurrParent called with name: $name, sex: $sex');
+  
   // Use new user model service and user profile service
   final userProfileModelService = context.read<UserProfileModelService>();
   final userProfileService = context.read<UserProfileService>();
@@ -189,20 +191,26 @@ Future<void> addChildToCurrParent(BuildContext context, String name,
   final parentDataService = context.read<ParentDataService>();
   final userId = userProfileModelService.userProfile?.id;
 
+  debugPrint('🔵 userId: $userId, isParent: ${userProfileModelService.isParent}');
+
   if (userId != null && userProfileModelService.isParent) {
     // Create child
     final childDataService = context.read<ChildDataService>();
     Child? child;
     try {
+      debugPrint('🔵 Calling childDataService.createChild');
       child = await childDataService.createChild(
         bday,
         name,
         langauges,
         0,
         [userId],
+        sex,
       );
+      debugPrint('🔵 Child created: ${child?.id}');
     } catch (e) {
-      debugPrint('Error creating child: $e');
+      debugPrint('❌ Error creating child: $e');
+      debugPrint('❌ Stack trace: ${StackTrace.current}');
       child = null;
     }
 
@@ -252,7 +260,8 @@ Future<void> addChildToCurrParent(BuildContext context, String name,
 Consumer childAddingFeature(
     BuildContext context,
     TextEditingController nameController,
-    TextEditingController dateController) {
+    TextEditingController dateController,
+    String sex) {
   return Consumer<LocalizationService>(
       builder: (context, localizationService, child) {
     return Column(
@@ -293,7 +302,7 @@ Consumer childAddingFeature(
             {
               //add child
               addChildToCurrParent(context, nameController.text,
-                  DateTime.parse(dateController.text), [LanguageCode.en]);
+                  DateTime.parse(dateController.text), [LanguageCode.en], sex); //added sex as a parameter
               //added indicator
               showAlertMessage(
                   context,

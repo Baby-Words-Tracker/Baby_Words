@@ -15,6 +15,7 @@ class MockData {
     language: [LanguageCode.en],
     wordCount: 25,
     parentIDs: ['parent-1'],
+    sex: 'Female',
   );
 
   static Child get mockChild2 => Child(
@@ -24,6 +25,7 @@ class MockData {
     language: [LanguageCode.en, LanguageCode.es],
     wordCount: 50,
     parentIDs: ['parent-1', 'parent-2'],
+    sex: 'Male',
   );
 
   static List<Child> get mockChildren => [mockChild1, mockChild2];
@@ -90,6 +92,7 @@ class MockData {
       language: languages ?? [LanguageCode.en],
       wordCount: wordCount ?? 0,
       parentIDs: parentIDs ?? ['test-parent'],
+      sex: 'Male',
     );
   }
 
