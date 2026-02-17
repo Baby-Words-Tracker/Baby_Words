@@ -65,6 +65,7 @@ void main() {
         [LanguageCode.en],
         0,
         ['parent-123'],
+        'Female'
       );
 
       // Assert: Verify child was created with correct data
@@ -73,6 +74,7 @@ void main() {
       expect(child.wordCount, equals(0));
       expect(child.language, contains(LanguageCode.en));
       expect(child.parentIDs, contains('parent-123'));
+      expect(child.sex, equals('Female'));
       expect(child.id, isNotNull);
 
       final storedChild = await service.getChild(child.id!);
@@ -92,6 +94,7 @@ void main() {
         [LanguageCode.en, LanguageCode.es],
         25,
         ['parent-456'],
+        'Male'
       );
 
       expect(createdChild, isNotNull);
@@ -107,6 +110,7 @@ void main() {
       expect(retrievedChild.language, hasLength(2));
       expect(retrievedChild.language, contains(LanguageCode.en));
       expect(retrievedChild.language, contains(LanguageCode.es));
+      expect(retrievedChild.sex, equals('Male'));
     });
 
     test('should retrieve multiple children through service', () async {
@@ -120,6 +124,7 @@ void main() {
           [LanguageCode.en],
           i * 5,
           ['parent-multi'],
+          'Female',
         );
         expect(child, isNotNull);
         childIds.add(child!.id!);
@@ -134,6 +139,7 @@ void main() {
         expect(children[i].name, equals('Multi Child $i'));
         expect(children[i].wordCount, equals(i * 5));
         expect(children[i].parentIDs, contains('parent-multi'));
+        expect(children[i].sex, equals('Female'));
       }
     });
 
@@ -145,6 +151,7 @@ void main() {
         [LanguageCode.en],
         42,
         ['parent-count'],
+        'Male',
       );
 
       expect(child, isNotNull);
@@ -179,6 +186,7 @@ void main() {
         [LanguageCode.en],
         0,
         ['parent-notify'],
+        'Female'
       );
 
       // Assert: Verify notification was sent
@@ -193,6 +201,7 @@ void main() {
         [LanguageCode.en, LanguageCode.es],
         0,
         ['parent-lang'],
+        'Female',
       );
 
       expect(child, isNotNull);
