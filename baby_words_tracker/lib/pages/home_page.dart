@@ -190,12 +190,21 @@ class _HomePageState extends State<HomePage> {
                       localization: localization,
                       wordCountStream: _wordCountStream!,
                       onAddEntry: () {
-                        if (widget.showChrome) {
-                          Navigator.of(context)
-                              .pushNamed(AddEntryPage.routeName);
-                        } else {
-                          context.read<MainNavigationController>().setIndex(2);
-                        }
+                        showModalBottomSheet(
+                          context: context,
+                          useRootNavigator: true,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.white,
+                          builder: (context) => FractionallySizedBox(
+                            heightFactor: 0.92,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(24)),
+                              child: const AddEntryPage(
+                                  showChrome: false, isModal: true),
+                            ),
+                          ),
+                        );
                       },
                     ),
                     const SizedBox(height: 24),

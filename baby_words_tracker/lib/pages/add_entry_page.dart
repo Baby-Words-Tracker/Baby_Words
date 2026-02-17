@@ -25,8 +25,13 @@ import 'package:file_picker/file_picker.dart' as filepicker;
 class AddEntryPage extends StatefulWidget {
   static const routeName = '/add-entry';
   final bool showChrome;
+  final bool isModal;
 
-  const AddEntryPage({super.key, this.showChrome = true});
+  const AddEntryPage({
+    super.key,
+    this.showChrome = true,
+    this.isModal = false,
+  });
 
   @override
   State<AddEntryPage> createState() => _AddEntryPageState();
@@ -769,27 +774,81 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 ),
               ),
               const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSubmitting
-                      ? null
-                      : () => _submitEntry(localization, videoStorage),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(localization.translate('submit')),
+              if (!widget.isModal)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => _submitEntry(localization, videoStorage),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(localization.translate('Save')),
+                  ),
                 ),
-              ),
               const SizedBox(height: 32),
             ],
           ),
         );
 
         if (!widget.showChrome) {
+          if (widget.isModal) {
+            return Scaffold(
+              body: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: FilledButton.tonal(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(localization.translate('cancel')),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'Log Entry',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () =>
+                                      _submitEntry(localization, videoStorage),
+                              child: _isSubmitting
+                                  ? SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: theme.colorScheme.onPrimary,
+                                      ),
+                                    )
+                                  : Text(localization.translate('Save')),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(child: body),
+                ],
+              ),
+            );
+          }
           return body;
         }
 
