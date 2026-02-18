@@ -450,6 +450,35 @@
     cursor: not-allowed;
   }
 
+  .access-denied {
+    text-align: center;
+    padding: 3rem;
+  }
+
+  .access-denied h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-900);
+  }
+
+  .access-denied p {
+    margin: 0 0 1.5rem 0;
+    color: var(--gray-700);
+  }
+
+  .inline-edit {
+    min-width: 8rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--gray-400);
+    border-radius: 0.25rem;
+    background: white;
+  }
+
+  .inline-edit:focus {
+    outline: none;
+    border-color: var(--bright-blue);
+  }
+
   @media screen and (max-width: 650px) {
     .content {
       max-width: 100%;
@@ -458,7 +487,16 @@
 </style>
 
 <main class="main">
-  @if (authState$ | async; as user) {
+  @if (authWithRole$ | async; as auth) {
+  @if (auth.user && !auth.isAdmin) {
+  <div class="content">
+    <div class="access-denied">
+      <h2>Access denied</h2>
+      <p>Admin access is required to view the dashboard.</p>
+      <button type="button" class="logout-btn" (click)="logout()">Log out</button>
+    </div>
+  </div>
+  } @else if (auth.user && auth.isAdmin) {
   <button type="button" class="logout-btn" (click)="logout()">Log out</button>
   <div class="header-bar">
     <div class="view-dropdown" (click)="$event.stopPropagation()">
@@ -497,46 +535,8 @@
     <div class="left-side">
       @if (currentView() === 'dashboard') {
       <section class="wordbank-section">
-        <h2>UserProfile</h2>
-        @if (itemsByCollection$ | async; as groups) {
-          @if (groups.length === 0) {
-            <p class="empty-state">No items found in UserProfile collection.</p>
-          } @else {
-            <div class="collection-dropdowns">
-              @for (group of groups; track group.collection) {
-                <div class="collection-dropdown">
-                  <button
-                    type="button"
-                    class="collection-toggle"
-                    (click)="toggleCollection(group.collection)"
-                    [attr.aria-expanded]="isExpanded(group.collection)"
-                  >
-                    <span class="toggle-icon">{{ isExpanded(group.collection) ? '▼' : '▶' }}</span>
-                    <span class="collection-name">{{ group.collection }}</span>
-                    <span class="collection-count">({{ group.items.length }})</span>
-                  </button>
-                  @if (isExpanded(group.collection)) {
-                    <ul class="wordbank-list">
-                      @for (item of group.items; track item._collection + item.id) {
-                        <li class="wordbank-item">
-                          <div class="wordbank-item-attributes">
-                            @for (entry of getDisplayEntries(item); track entry[0]) {
-                              <div class="attribute">
-                                <strong>{{ entry[0] }}:</strong> {{ formatValue(entry[1]) }}
-                              </div>
-                            }
-                          </div>
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
-              }
-            </div>
-          }
-        } @else {
-          <p class="loading-state">Loading...</p>
-        }
+        <h2>Dashboard</h2>
+        <p class="empty-state">Select Admin panel to manage user profiles.</p>
       </section>
       }
 
@@ -572,7 +572,7 @@
             <button type="submit" class="btn-add" [disabled]="adminAddForm.invalid">Add account</button>
           </form>
         </div>
-        <h3 style="font-size: 1.1rem; margin: 0 0 0.5rem 0; color: var(--gray-900);">Accounts in collections</h3>
+        <h3 style="font-size: 1.1rem; margin: 0 0 0.5rem 0; color: var(--gray-900);">User Profiles</h3>
         @if (adminRemoveMessage(); as msg) {
           <p class="admin-msg" [class.success]="msg.includes('removed')" [class.error]="!msg.includes('removed')">{{ msg }}</p>
         }
@@ -600,7 +600,18 @@
                           <div class="wordbank-item-attributes">
                             @for (entry of getDisplayEntries(item); track entry[0]) {
                               <div class="attribute">
-                                <strong>{{ entry[0] }}:</strong> {{ formatValue(entry[1]) }}
+                                <strong>{{ entry[0] }}:</strong>
+                                @if (item._collection === 'UserProfile' && auth.isAdmin && isEditableType(entry[1])) {
+                                  <input
+                                    type="text"
+                                    class="inline-edit"
+                                    [value]="formatValue(entry[1])"
+                                    (blur)="saveFieldEdit(item, entry[0], $any($event.target).value)"
+                                    (keydown.enter)="$any($event.target).blur()"
+                                  />
+                                } @else {
+                                  {{ formatValue(entry[1]) }}
+                                }
                               </div>
                             }
                           </div>
@@ -646,6 +657,7 @@
       <button type="submit" class="login-submit" [disabled]="loginForm.invalid">Log in</button>
     </form>
   </div>
+  }
   }
 </main>
 

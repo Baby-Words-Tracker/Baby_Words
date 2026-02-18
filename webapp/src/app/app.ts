@@ -2,7 +2,7 @@ import { AsyncPipe, KeyValuePipe } from '@angular/common';
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
-import { map } from 'rxjs';
+import { from, map, Observable, of, switchMap } from 'rxjs';
 import { AuthService } from './services/auth.service';
 import {
   FirestoreItem,
@@ -25,6 +25,18 @@ export class App {
   protected readonly authService = inject(AuthService);
   protected readonly firebaseService = inject(FirebaseHandlerService);
   protected readonly authState$ = this.authService.authState$;
+
+  /** Resolves to { user, isAdmin } once profile is loaded. Non-admins cannot view dashboard. */
+  protected readonly authWithRole$ = this.authState$.pipe(
+    switchMap((user) =>
+      user
+        ? from(this.firebaseService.getCurrentUserProfile(user.uid)).pipe(
+            map((p) => ({ user, isAdmin: p?.role === 'admin' }))
+          )
+        : of({ user: null as import('firebase/auth').User | null, isAdmin: false })
+    )
+  );
+
   protected readonly allItems$ = this.firebaseService.getAllItems();
   protected readonly itemsByCollection$ = this.allItems$.pipe(
     map((items) => {
@@ -34,10 +46,17 @@ export class App {
         if (!groups.has(col)) groups.set(col, []);
         groups.get(col)!.push(item);
       }
-      return Array.from(groups.entries()).map(([collection, items]) => ({
-        collection,
-        items
-      }));
+      return Array.from(groups.entries()).map(([collection, groupItems]) => {
+        const sorted =
+          collection === 'UserProfile'
+            ? [...groupItems].sort((a, b) => {
+                const ea = (a['email'] as string) ?? '';
+                const eb = (b['email'] as string) ?? '';
+                return ea.localeCompare(eb, undefined, { sensitivity: 'base' });
+              })
+            : groupItems;
+        return { collection, items: sorted };
+      });
     })
   );
   protected readonly expandedCollections = signal<Set<string>>(
@@ -80,8 +99,10 @@ export class App {
       await this.firebaseService.addItem(collectionName, {
         name: name.trim(),
         email: email.trim(),
-        ...(role?.trim() ? { role: role.trim() } : {})
+        status: 'active',
+        ...(role?.trim() ? { role: role.trim() } : { role: 'parent' })
       });
+      this.firebaseService.refreshItems();
       this.adminAddForm.patchValue({ name: '', email: '', role: '' });
       this.adminAddMessage.set('Account added successfully.');
     } catch (err) {
@@ -150,11 +171,46 @@ export class App {
     );
   }
 
+  protected async saveFieldEdit(
+    item: FirestoreItem,
+    field: string,
+    newValue: string
+  ): Promise<void> {
+    if (item._collection !== 'UserProfile' || !item.id) return;
+    let parsed: unknown = newValue;
+    const raw = item[field];
+    if (typeof raw === 'boolean') parsed = newValue === 'true';
+    else if (Array.isArray(raw)) {
+      try {
+        parsed = JSON.parse(newValue || '[]');
+      } catch {
+        return;
+      }
+    }
+    try {
+      await this.firebaseService.updateItem(item._collection, item.id, {
+        [field]: parsed
+      });
+      this.firebaseService.refreshItems();
+      (item as Record<string, unknown>)[field] = parsed;
+    } catch (err) {
+      console.error('Failed to update:', err);
+    }
+  }
+
   protected formatValue(value: unknown): string {
     if (value == null) return '';
     if (typeof value === 'object' && 'toDate' in value && typeof (value as { toDate: () => Date }).toDate === 'function') {
       return (value as { toDate: () => Date }).toDate().toLocaleString();
     }
+    if (Array.isArray(value)) return JSON.stringify(value);
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
     return String(value);
+  }
+
+  protected isEditableType(value: unknown): boolean {
+    if (value == null) return true;
+    if (typeof value === 'object' && 'toDate' in value) return false; // Timestamps read-only
+    return typeof value === 'string' || typeof value === 'boolean' || Array.isArray(value);
   }
 }
