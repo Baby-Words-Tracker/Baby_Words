@@ -171,6 +171,21 @@ export class App {
     );
   }
 
+  protected handleFieldEditBlur(
+    item: FirestoreItem,
+    field: string,
+    newValue: string,
+    inputEl: HTMLInputElement
+  ): void {
+    const original = this.formatValue(item[field]);
+    if (newValue === original) return;
+    if (!confirm('Are you sure you want to save this change?')) {
+      inputEl.value = original;
+      return;
+    }
+    this.saveFieldEdit(item, field, newValue);
+  }
+
   protected async saveFieldEdit(
     item: FirestoreItem,
     field: string,
