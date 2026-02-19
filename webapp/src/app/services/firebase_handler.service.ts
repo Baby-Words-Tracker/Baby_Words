@@ -79,8 +79,10 @@ export class FirebaseHandlerService {
   ): Promise<string> {
     const colRef = collection(this.firestore, collectionName);
     const payload = { ...data };
-    if (collectionName === 'UserProfile' && payload['createdAt'] === undefined) {
-      payload['createdAt'] = serverTimestamp();
+    if (collectionName === 'UserProfile') {
+      const now = serverTimestamp();
+      if (payload['createdAt'] === undefined) payload['createdAt'] = now;
+      if (payload['updatedAt'] === undefined) payload['updatedAt'] = now;
     }
     const ref = await addDoc(colRef, payload);
     return ref.id;

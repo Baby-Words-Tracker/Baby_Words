@@ -1,3 +1,5 @@
+
+
 <main class="main">
   @if (authWithRole$ | async; as auth) {
   @if (auth.user && !auth.isAdmin) {
@@ -67,8 +69,16 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="admin-name">Name</label>
-              <input id="admin-name" type="text" formControlName="name" placeholder="Name" />
+              <label for="admin-firstName">First name</label>
+              <input id="admin-firstName" type="text" formControlName="firstName" placeholder="First name" />
+            </div>
+            <div class="form-group">
+              <label for="admin-lastName">Last name</label>
+              <input id="admin-lastName" type="text" formControlName="lastName" placeholder="Last name" />
+            </div>
+            <div class="form-group">
+              <label for="admin-phoneNumber">Phone # (optional)</label>
+              <input id="admin-phoneNumber" type="tel" formControlName="phoneNumber" placeholder="Phone number" />
             </div>
             <div class="form-group">
               <label for="admin-email">Email</label>

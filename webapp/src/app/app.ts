@@ -86,24 +86,44 @@ export class App {
 
   protected readonly adminAddForm = inject(FormBuilder).group({
     collectionName: ['UserProfile'],
-    name: ['', Validators.required],
+    firstName: [''],
+    lastName: [''],
+    phoneNumber: [''],
     email: ['', [Validators.required, Validators.email]],
     role: ['']
   });
 
   protected async addAccount(): Promise<void> {
     this.adminAddMessage.set(null);
-    const { collectionName, name, email, role } = this.adminAddForm.value;
-    if (!collectionName || !name || !email || this.adminAddForm.invalid) return;
+    const { collectionName, firstName, lastName, phoneNumber, email, role } = this.adminAddForm.value;
+    if (!collectionName || !email || this.adminAddForm.invalid) return;
+    const roleVal = role?.trim() ? role.trim().toLowerCase() : 'parent';
+    const validRoles = ['admin', 'researcher', 'parent'];
+    const finalRole = validRoles.includes(roleVal) ? roleVal : 'parent';
     try {
       await this.firebaseService.addItem(collectionName, {
-        name: name.trim(),
-        email: email.trim(),
+        role: finalRole,
         status: 'active',
-        ...(role?.trim() ? { role: role.trim() } : { role: 'parent' })
+        email: email.trim(),
+        name: `${(firstName ?? '').trim()} ${(lastName ?? '').trim()}`.trim() || null,
+        firstName: firstName?.trim() || null,
+        lastName: lastName?.trim() || null,
+        phoneNumber: phoneNumber?.trim() || null,
+        institution: null,
+        emailVerified: false,
+        twoFactorEnabled: false,
+        twoFactorEnabledAt: null,
+        acceptedPrivacyPolicy: false,
+        policyVersion: null,
+        consentDate: null,
+        surveyCompleted: false,
+        surveyVersion: null,
+        surveyCompletedAt: null,
+        childIDs: [],
+        preferredLanguage: null
       });
       this.firebaseService.refreshItems();
-      this.adminAddForm.patchValue({ name: '', email: '', role: '' });
+      this.adminAddForm.patchValue({ firstName: '', lastName: '', phoneNumber: '', email: '', role: '' });
       this.adminAddMessage.set('Account added successfully.');
     } catch (err) {
       this.adminAddMessage.set(
