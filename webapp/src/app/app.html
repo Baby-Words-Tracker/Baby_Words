@@ -123,7 +123,7 @@
                             @for (entry of getDisplayEntries(item); track entry[0]) {
                               <div class="attribute">
                                 <strong>{{ entry[0] }}:</strong>
-                                @if (item._collection === 'UserProfile' && auth.isAdmin && isEditableType(entry[1])) {
+                                @if (item._collection === 'UserProfile' && auth.isAdmin && isEditingProfile(item) && isEditableType(entry[1])) {
                                   <input
                                     type="text"
                                     class="inline-edit"
@@ -137,6 +137,15 @@
                               </div>
                             }
                           </div>
+                          @if (item._collection === 'UserProfile' && auth.isAdmin) {
+                            <div class="profile-item-actions">
+                              @if (isEditingProfile(item)) {
+                                <button type="button" class="btn-done" (click)="stopEditingProfile()">Done</button>
+                              } @else {
+                                <button type="button" class="btn-edit" (click)="startEditingProfile(item)">Edit</button>
+                              }
+                            </div>
+                          }
                           <!-- Removing accounts not allowed for now 
                           <button
                             type="button"

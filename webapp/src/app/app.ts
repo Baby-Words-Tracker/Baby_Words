@@ -67,12 +67,15 @@ export class App {
   protected readonly showViewDropdown = signal(false);
   protected readonly adminAddMessage = signal<string | null>(null);
   protected readonly adminRemoveMessage = signal<string | null>(null);
+  /** ID of the UserProfile item currently in edit mode, or null if none. */
+  protected readonly editingProfileId = signal<string | null>(null);
 
   protected setView(view: 'dashboard' | 'admin'): void {
     this.currentView.set(view);
     this.showViewDropdown.set(false);
     this.adminAddMessage.set(null);
     this.adminRemoveMessage.set(null);
+    this.editingProfileId.set(null);
   }
 
   protected toggleViewDropdown(): void {
@@ -156,6 +159,19 @@ export class App {
   protected isExpanded(name: string): boolean {
     return this.expandedCollections().has(name);
   }
+
+  protected startEditingProfile(item: FirestoreItem): void {
+    if (item._collection === 'UserProfile' && item.id) this.editingProfileId.set(item.id);
+  }
+
+  protected stopEditingProfile(): void {
+    this.editingProfileId.set(null);
+  }
+
+  protected isEditingProfile(item: FirestoreItem): boolean {
+    return item._collection === 'UserProfile' && item.id === this.editingProfileId();
+  }
+
   protected readonly errorMessage = signal<string | null>(null);
 
   protected readonly loginForm = inject(FormBuilder).group({
