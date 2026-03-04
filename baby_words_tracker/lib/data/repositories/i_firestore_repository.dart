@@ -22,6 +22,9 @@ abstract class IFirestoreRepository {
   Future<List<DataWithId>> queryByField(
       String collectionName, String field, dynamic value,
       {int? limit});
+  
+  // Get all documents from a collection (used by CsvExportService)
+  Future<List<DataWithId>> readAll(String collectionName);
 
   // Array operations (used by ParentDataService)
   Future<bool> appendToArrayField(
