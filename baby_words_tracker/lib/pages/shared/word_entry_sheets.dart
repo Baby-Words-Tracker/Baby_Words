@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/language_code.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:baby_words_tracker/video/local_media_entry.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
@@ -64,6 +65,18 @@ class WordDetailSheet extends StatelessWidget {
                   .translate('log_details_recorded')
                   .replaceFirst('{date}', dateLabel),
             ),
+            if (tracker.partOfSpeech != null)
+              WordDetailInfoRow(
+                icon: Icons.category_outlined,
+                label: 'Part of Speech', // TODO: Add to localization
+                value: (() {
+                  try {
+                    return PartofspeechExtension.fromString(tracker.partOfSpeech!).displayName;
+                  } catch (_) {
+                    return tracker.partOfSpeech;
+                  }
+                })(),
+              ),
             if (tracker.phraseText != null && tracker.phraseText!.isNotEmpty)
               WordDetailInfoRow(
                 icon: Icons.menu_book_outlined,
@@ -93,11 +106,13 @@ class WordEditResult {
     required this.word,
     required this.language,
     required this.note,
+    this.partOfSpeech,
   });
 
   final String word;
   final LanguageCode? language;
   final String note;
+  final String? partOfSpeech;
 }
 
 class WordEditSheet extends StatefulWidget {
@@ -108,6 +123,8 @@ class WordEditSheet extends StatefulWidget {
     required this.availableLanguages,
     required this.initialNote,
     required this.localization,
+    this.initialPartOfSpeech,
+    this.availablePartOfSpeech = const [],
   });
 
   final String initialWord;
@@ -115,6 +132,8 @@ class WordEditSheet extends StatefulWidget {
   final List<LanguageCode> availableLanguages;
   final String? initialNote;
   final LocalizationService localization;
+  final String? initialPartOfSpeech;
+  final List<String> availablePartOfSpeech;
 
   @override
   State<WordEditSheet> createState() => _WordEditSheetState();
@@ -124,6 +143,7 @@ class _WordEditSheetState extends State<WordEditSheet> {
   late final TextEditingController _wordController;
   late final TextEditingController _noteController;
   late LanguageCode? _selectedLanguage;
+  String? _selectedPartOfSpeech;
   String? _wordError;
 
   List<LanguageCode> get _languages => widget.availableLanguages.isNotEmpty
@@ -139,6 +159,7 @@ class _WordEditSheetState extends State<WordEditSheet> {
         (widget.availableLanguages.isNotEmpty
             ? widget.availableLanguages.first
             : LanguageCode.en);
+    _selectedPartOfSpeech = widget.initialPartOfSpeech;
   }
 
   @override
@@ -161,6 +182,7 @@ class _WordEditSheetState extends State<WordEditSheet> {
         word: rawWord,
         language: _selectedLanguage,
         note: _noteController.text.trim(),
+        partOfSpeech: _selectedPartOfSpeech,
       ),
     );
   }
@@ -218,6 +240,34 @@ class _WordEditSheetState extends State<WordEditSheet> {
               ),
             ),
             const SizedBox(height: 16),
+            if (widget.availablePartOfSpeech.isNotEmpty) ...[
+              DropdownButtonFormField<String>(
+                value: _selectedPartOfSpeech,
+                items: widget.availablePartOfSpeech.map((String posString) {
+                  // Attempt to get a nice display name, fallback to the string itself
+                  String label = posString;
+                  try {
+                    label = PartofspeechExtension.fromString(posString).displayName;
+                  } catch (_) {}
+                  
+                  if (posString == 'personal_pronoun') { //hard-code to address these cases because they kept appearing as "unknown" duplicates
+                    label = 'Personal Pronoun';
+                  } else if (posString == 'interjection') {
+                    label = 'Interjection';
+                  }
+                  
+                  return DropdownMenuItem<String>(
+                    value: posString,
+                    child: Text(label),
+                  );
+                }).toList(),
+                onChanged: (value) => setState(() => _selectedPartOfSpeech = value),
+                decoration: InputDecoration(
+                  labelText: 'Part of Speech', // You might want to add this to localization
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             TextField(
               controller: _noteController,
               maxLines: 3,

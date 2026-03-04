@@ -277,6 +277,16 @@ Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
     final currWord = wordMap[tracker.id ?? "invalid id"] ?? defaultWord;
 
     final language = tracker.language ?? LanguageCode.en;
+
+    // If the user manually selected a POS, use that
+    if (tracker.partOfSpeech != null) {
+      try {
+        final pos = PartofspeechExtension.fromString(tracker.partOfSpeech!);
+        data[pos] = (data[pos] ?? 0) + 1;
+        continue;
+      } catch (_) {}
+    }
+
     final detail = currWord.detailForLanguage(language) ??
         currWord.languageDetails.values.firstOrNull;
 

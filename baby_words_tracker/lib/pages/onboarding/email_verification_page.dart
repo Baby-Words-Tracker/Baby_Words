@@ -173,9 +173,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Email'),
+        title: const Text(
+          'Verify Email',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

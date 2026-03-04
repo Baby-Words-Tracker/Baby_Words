@@ -43,14 +43,14 @@ jobs:
         working-directory: baby_words_tracker
         run: flutter test
 
-      # # Verify builds work for different platforms
-      # - name: Build APK (Android)
-      #   working-directory: baby_words_tracker
-      #   run: flutter build apk --debug
-
-      - name: Build Web
+      # Verify builds work for different platforms
+      - name: Build APK (Android)
         working-directory: baby_words_tracker
-        run: flutter build web
+        run: flutter build apk --debug
+
+      # - name: Build Web
+      #   working-directory: baby_words_tracker
+      #   run: flutter build web
 
       # iOS build commented out - requires macOS runner which costs more
       # - name: Build iOS (requires macOS runner)  

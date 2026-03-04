@@ -16,6 +16,7 @@ void main() {
         language: [LanguageCode.en],
         wordCount: 10,
         parentIDs: ['parent-1', 'parent-2'],
+        sex: 'Female',
       );
     });
 
@@ -26,6 +27,7 @@ void main() {
       expect(testChild.language, contains(LanguageCode.en));
       expect(testChild.wordCount, equals(10));
       expect(testChild.parentIDs, hasLength(2));
+      expect(testChild.sex, equals('Female'));
     });
 
     test('should create child without id (for new children)', () {
@@ -35,11 +37,13 @@ void main() {
         language: [LanguageCode.es],
         wordCount: 0,
         parentIDs: ['parent-1'],
+        sex: 'Male',
       );
 
       expect(newChild.id, isNull);
       expect(newChild.name, equals('New Baby'));
       expect(newChild.wordCount, equals(0));
+      expect(newChild.sex, equals('Male'));
     });
 
     test('should copy child with new values', () {
@@ -53,6 +57,7 @@ void main() {
       expect(copiedChild.wordCount, equals(15));
       expect(copiedChild.birthday, equals(testChild.birthday));
       expect(copiedChild.parentIDs, equals(testChild.parentIDs));
+      expect(copiedChild.sex, equals(testChild.sex));
     });
 
     test('should convert to and from map correctly', () {
@@ -62,6 +67,7 @@ void main() {
       expect(map['wordCount'], equals(10));
       expect(map['parentIDs'], equals(['parent-1', 'parent-2']));
       expect(map['languageCodes'], equals(['en']));
+      expect(map['sex'], equals('Female'));
     });
 
     test('should convert to JSON string', () {
@@ -81,6 +87,7 @@ void main() {
         language: [LanguageCode.en],
         wordCount: 10,
         parentIDs: ['parent-1', 'parent-2'],
+        sex: 'Female',
       );
 
       final differentChild = testChild.copyWith(name: 'Different Baby');
