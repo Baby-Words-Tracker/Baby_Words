@@ -549,6 +549,19 @@ class FirestoreRepository implements IFirestoreRepository {
     }
   }
 
+  @override
+  Future<List<DataWithId>> readAll(String collectionName) async {
+    try {
+      final snapshot = await database.collection(collectionName).get();
+      debugPrint(
+          "Read all from collection $collectionName returned ${snapshot.docs.length} documents");
+      return snapshot.docs.map((doc) => DataWithId.fromFirestore(doc)).toList();
+    } catch (e) {
+      debugPrint("Error reading all documents from collection $collectionName: $e");
+      return [];
+    }
+  }
+
   Future<List<DataWithId>> subQueryByField(String collectionName, String docId,
       String subcollection, String field, dynamic value) async {
     try {

@@ -1,4 +1,5 @@
 import "package:baby_words_tracker/util/cloud_function_utils.dart";
+import 'package:baby_words_tracker/data/services/csv_export_service.dart';
 import 'package:baby_words_tracker/data/services/general_user_service.dart';
 import 'package:baby_words_tracker/exceptions/action_failed_exception.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart';
@@ -195,10 +196,74 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
+  Future<void> _downloadCSV() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Exporting word data to CSV...'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final csvService = CsvExportService();
+      final success = await csvService.exportAllWordsToCSV();
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CSV export successful! File has been downloaded.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to export CSV. Please try again.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error downloading CSV: $e');
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Page')),
+      appBar: AppBar(
+        title: const Text('Admin Page'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Download Word List as CSV',
+            onPressed: _downloadCSV,
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
