@@ -206,7 +206,7 @@ class _AddFirstChildPageState extends State<AddFirstChildPage> {
                 const SizedBox(height: 12),
                 DropdownButton<String>(
                   value: _selectedSex,
-                  items: ['Female', 'Male'].map((String option) {
+                  items: ['Female', 'Male', 'Not specified'].map((String option) {
                     return DropdownMenuItem<String>(
                       value: option,
                       child: Text(option),
