@@ -216,10 +216,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 6),
                   SizedBox(
                     height: 60,
-                    width: 120,
+                    width: 160,
                     child: DropdownButton<String>(
                       value: selectedSex,
-                      items: ['Female', 'Male'].map((String option) {
+                      items: ['Female', 'Male', 'Not specified'].map((String option) {
                         return DropdownMenuItem<String>(
                           value: option,
                           child: Text(option),
@@ -509,7 +509,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 6),
                   DropdownButton<String>(
                     value: selectedSex,
-                    items: ['Female', 'Male'].map((String option) {
+                    items: ['Female', 'Male', 'Not specified'].map((String option) {
                       return DropdownMenuItem<String>(
                         value: option,
                         child: Text(option),
