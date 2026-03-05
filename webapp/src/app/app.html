@@ -45,7 +45,7 @@
       }
     </div>
   </div>
-  <div class="content">
+  <div class="content" [class.content-wide]="currentView() === 'admin'">
     <div class="left-side">
       @if (currentView() === 'dashboard') {
       <section class="wordbank-section">
@@ -57,115 +57,161 @@
       @if (currentView() === 'admin') {
       <section class="admin-panel">
         <h2>Admin panel</h2>
-        <div class="admin-add-card">
-          <h3>Add account to collection</h3>
-          <form [formGroup]="adminAddForm" (ngSubmit)="addAccount()">
-            <div class="form-group">
-              <label>Collection</label>
-              <select formControlName="collectionName">
-                @for (name of firebaseService.adminCollectionNames; track name) {
-                  <option [value]="name">{{ name }}</option>
+        <div class="admin-layout">
+          <div class="admin-left">
+            <h3 class="user-list-heading">Users</h3>
+            <div class="user-list-filters">
+              <div class="user-list-filter">
+                <label for="role-filter">Role</label>
+                <select
+                  id="role-filter"
+                  [value]="roleFilter()"
+                  (change)="setRoleFilter($any($event.target).value)"
+                >
+                  <option value="all">All roles</option>
+                  <option value="parent">Parent</option>
+                  <option value="researcher">Researcher</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="user-list-filter">
+                <label for="admin-sort">Sort by</label>
+                <select
+                  id="admin-sort"
+                  [value]="sortMode()"
+                  (change)="setSortMode($any($event.target).value)"
+                >
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="createdAtNewest">Date created (newest)</option>
+                  <option value="createdAtOldest">Date created (oldest)</option>
+                </select>
+              </div>
+            </div>
+            <div class="user-list-scroll">
+              @if (userProfiles$ | async; as profiles) {
+                @if (profiles.length === 0) {
+                  <p class="empty-state">No user profiles.</p>
+                } @else {
+                  <ul class="user-list">
+                    @for (item of profiles; track item.id) {
+                      <li
+                        class="user-list-item"
+                        [class.selected]="isSelectedUserProfile(item)"
+                        (click)="selectUserProfile(item)"
+                      >
+                        <span class="user-list-name">{{ getUserDisplayName(item) }}</span>
+                        <span class="user-list-email">{{ item['email'] ?? '—' }}</span>
+                      </li>
+                    }
+                  </ul>
                 }
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="admin-firstName">First name</label>
-              <input id="admin-firstName" type="text" formControlName="firstName" placeholder="First name" />
-            </div>
-            <div class="form-group">
-              <label for="admin-lastName">Last name</label>
-              <input id="admin-lastName" type="text" formControlName="lastName" placeholder="Last name" />
-            </div>
-            <div class="form-group">
-              <label for="admin-phoneNumber">Phone # (optional)</label>
-              <input id="admin-phoneNumber" type="tel" formControlName="phoneNumber" placeholder="Phone number" />
-            </div>
-            <div class="form-group">
-              <label for="admin-email">Email</label>
-              <input id="admin-email" type="email" formControlName="email" placeholder="Email" />
-            </div>
-            <div class="form-group">
-              <label for="admin-role">Role (optional)</label>
-              <input id="admin-role" type="text" formControlName="role" placeholder="e.g. user, admin" />
-            </div>
-            @if (adminAddMessage(); as msg) {
-              <p class="admin-msg" [class.success]="msg.includes('success')" [class.error]="!msg.includes('success')">{{ msg }}</p>
-            }
-            <button type="submit" class="btn-add" [disabled]="adminAddForm.invalid">Add account</button>
-          </form>
-        </div>
-        <h3 style="font-size: 1.1rem; margin: 0 0 0.5rem 0; color: var(--gray-900);">User Profiles</h3>
-        @if (adminRemoveMessage(); as msg) {
-          <p class="admin-msg" [class.success]="msg.includes('removed')" [class.error]="!msg.includes('removed')">{{ msg }}</p>
-        }
-        @if (itemsByCollection$ | async; as groups) {
-          @if (groups.length === 0) {
-            <p class="empty-state">No items in any collection.</p>
-          } @else {
-            <div class="collection-dropdowns admin-list">
-              @for (group of groups; track group.collection) {
-                <div class="collection-dropdown">
-                  <button
-                    type="button"
-                    class="collection-toggle"
-                    (click)="toggleCollection(group.collection)"
-                    [attr.aria-expanded]="isExpanded(group.collection)"
-                  >
-                    <span class="toggle-icon">{{ isExpanded(group.collection) ? '▼' : '▶' }}</span>
-                    <span class="collection-name">{{ group.collection }}</span>
-                    <span class="collection-count">({{ group.items.length }})</span>
-                  </button>
-                  @if (isExpanded(group.collection)) {
-                    <ul class="wordbank-list">
-                      @for (item of group.items; track item._collection + item.id) {
-                        <li class="wordbank-item">
-                          <div class="wordbank-item-attributes">
-                            @for (entry of getDisplayEntries(item); track entry[0]) {
-                              <div class="attribute">
-                                <strong>{{ entry[0] }}:</strong>
-                                @if (item._collection === 'UserProfile' && auth.isAdmin && isEditingProfile(item) && isEditableType(entry[1])) {
-                                  <input
-                                    type="text"
-                                    class="inline-edit"
-                                    [value]="formatValue(entry[1])"
-                                    (blur)="handleFieldEditBlur(item, entry[0], $any($event.target).value, $event.target)"
-                                    (keydown.enter)="$any($event.target).blur()"
-                                  />
-                                } @else {
-                                  {{ formatValue(entry[1]) }}
-                                }
-                              </div>
-                            }
-                          </div>
-                          @if (item._collection === 'UserProfile' && auth.isAdmin) {
-                            <div class="profile-item-actions">
-                              @if (isEditingProfile(item)) {
-                                <button type="button" class="btn-done" (click)="stopEditingProfile()">Done</button>
-                              } @else {
-                                <button type="button" class="btn-edit" (click)="startEditingProfile(item)">Edit</button>
-                              }
-                            </div>
-                          }
-                          <!-- Removing accounts not allowed for now 
-                          <button
-                            type="button"
-                            class="btn-remove"
-                            (click)="removeAccount(item._collection, item.id)"
-                            title="Remove this account"
-                          >
-                            Remove
-                          </button> -->
-                        </li>
-                      }
-                    </ul>
-                  }
-                </div>
+              } @else {
+                <p class="loading-state">Loading...</p>
               }
             </div>
-          }
-        } @else {
-          <p class="loading-state">Loading...</p>
-        }
+          </div>
+          <div class="admin-right">
+            <div class="admin-add-trigger">
+              <button
+                type="button"
+                class="btn-primary"
+                (click)="openCreateUserModal()"
+              >
+                Create new User Account
+              </button>
+            </div>
+            @if (adminRemoveMessage(); as msg) {
+              <p class="admin-msg" [class.success]="msg.includes('removed')" [class.error]="!msg.includes('removed')">{{ msg }}</p>
+            }
+            <div class="user-profile-details">
+              <h3 class="user-profile-details-heading">User profile</h3>
+              @if (selectedUserProfile$ | async; as item) {
+                <div class="wordbank-item admin-list">
+                  <div class="wordbank-item-attributes">
+                    @for (entry of getDisplayEntries(item); track entry[0]) {
+                      <div class="attribute">
+                        <strong>{{ entry[0] }}:</strong>
+                        @if (auth.isAdmin && isEditingProfile(item) && isEditableType(entry[1])) {
+                          <input
+                            type="text"
+                            class="inline-edit"
+                            [value]="formatValue(entry[1])"
+                            (blur)="handleFieldEditBlur(item, entry[0], $any($event.target).value, $event.target)"
+                            (keydown.enter)="$any($event.target).blur()"
+                          />
+                        } @else {
+                          {{ formatValue(entry[1]) }}
+                        }
+                      </div>
+                    }
+                  </div>
+                  @if (auth.isAdmin) {
+                    <div class="profile-item-actions">
+                      @if (isEditingProfile(item)) {
+                        <button type="button" class="btn-done" (click)="stopEditingProfile()">Done</button>
+                      } @else {
+                        <button type="button" class="btn-edit" (click)="startEditingProfile(item)">Edit</button>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="empty-state">Select a user from the list to view and edit their profile.</p>
+              }
+            </div>
+            @if (showCreateUserModal()) {
+              <div class="modal-backdrop" (click)="closeCreateUserModal()">
+                <div class="modal-dialog" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="modal-close"
+                    (click)="closeCreateUserModal()"
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                  <div class="admin-add-card">
+                    <h3>Create new User Account</h3>
+                    <form [formGroup]="adminAddForm" (ngSubmit)="addAccount()">
+                      <div class="form-group">
+                        <label>Collection</label>
+                        <select formControlName="collectionName">
+                          @for (name of firebaseService.adminCollectionNames; track name) {
+                            <option [value]="name">{{ name }}</option>
+                          }
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-firstName">First name</label>
+                        <input id="admin-firstName" type="text" formControlName="firstName" placeholder="First name" />
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-lastName">Last name</label>
+                        <input id="admin-lastName" type="text" formControlName="lastName" placeholder="Last name" />
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-phoneNumber">Phone # (optional)</label>
+                        <input id="admin-phoneNumber" type="tel" formControlName="phoneNumber" placeholder="Phone number" />
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-email">Email</label>
+                        <input id="admin-email" type="email" formControlName="email" placeholder="Email" />
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-role">Role (optional)</label>
+                        <input id="admin-role" type="text" formControlName="role" placeholder="e.g. user, admin" />
+                      </div>
+                      @if (adminAddMessage(); as msg) {
+                        <p class="admin-msg" [class.success]="msg.includes('success')" [class.error]="!msg.includes('success')">{{ msg }}</p>
+                      }
+                      <button type="submit" class="btn-add" [disabled]="adminAddForm.invalid">Create account</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
       </section>
       }
     </div>

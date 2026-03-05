@@ -1,8 +1,9 @@
-import { AsyncPipe, KeyValuePipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
-import { from, map, Observable, of, switchMap } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { combineLatest, from, map, of, switchMap, tap } from 'rxjs';
 import { AuthService } from './services/auth.service';
 import {
   FirestoreItem,
@@ -16,7 +17,7 @@ export interface CollectionGroup {
 
 @Component({
   selector: 'app-root',
-  imports: [AsyncPipe, KeyValuePipe, ReactiveFormsModule, RouterOutlet],
+  imports: [AsyncPipe, ReactiveFormsModule, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -38,6 +39,87 @@ export class App {
   );
 
   protected readonly allItems$ = this.firebaseService.getAllItems();
+  protected readonly sortMode = signal<'alphabetical' | 'createdAtNewest' | 'createdAtOldest'>('alphabetical');
+  private readonly sortMode$ = toObservable(this.sortMode);
+  protected readonly roleFilter = signal<'all' | 'parent' | 'admin' | 'researcher'>('all');
+  private readonly roleFilter$ = toObservable(this.roleFilter);
+  protected readonly selectedUserProfileId = signal<string | null>(null);
+  private readonly selectedUserProfileId$ = toObservable(this.selectedUserProfileId);
+  protected readonly showCreateUserModal = signal(false);
+
+  protected readonly userProfiles$ = combineLatest([
+    this.allItems$,
+    this.sortMode$,
+    this.roleFilter$
+  ]).pipe(
+    map(([items, sortMode, roleFilter]) => {
+      const userProfiles = items.filter((item) => {
+        if (item._collection !== 'UserProfile') return false;
+        if (roleFilter === 'all') return true;
+        const role = (item['role'] as string | undefined)?.toLowerCase() ?? '';
+        return role === roleFilter;
+      });
+
+      const getDisplayName = (item: FirestoreItem): string => {
+        const name = (item['name'] as string) ?? '';
+        const firstName = (item['firstName'] as string) ?? '';
+        const lastName = (item['lastName'] as string) ?? '';
+        const email = (item['email'] as string) ?? '';
+        const combinedName = `${firstName} ${lastName}`.trim();
+        const display = (name || combinedName || email).trim();
+        return display || email || '(No name)';
+      };
+
+      const getCreatedAtMs = (item: FirestoreItem): number => {
+        const raw = item['createdAt'];
+        if (!raw) return 0;
+        if (typeof raw === 'object' && 'toDate' in (raw as { toDate?: () => Date })) {
+          const date = (raw as { toDate: () => Date }).toDate();
+          return date instanceof Date ? date.getTime() : 0;
+        }
+        if (typeof raw === 'number') return raw;
+        const parsed = new Date(String(raw)).getTime();
+        return Number.isNaN(parsed) ? 0 : parsed;
+      };
+
+      const sorted = [...userProfiles].sort((a, b) => {
+        if (sortMode === 'alphabetical') {
+          return getDisplayName(a).localeCompare(getDisplayName(b), undefined, {
+            sensitivity: 'base'
+          });
+        }
+        const aMs = getCreatedAtMs(a);
+        const bMs = getCreatedAtMs(b);
+        if (sortMode === 'createdAtNewest') {
+          return bMs - aMs;
+        }
+        // createdAtOldest
+        return aMs - bMs;
+      });
+
+      return sorted;
+    }),
+    tap((profiles) => {
+      if (!profiles.length) {
+        this.selectedUserProfileId.set(null);
+        return;
+      }
+      const currentId = this.selectedUserProfileId();
+      if (!currentId || !profiles.some((p) => p.id === currentId)) {
+        this.selectedUserProfileId.set(profiles[0]?.id ?? null);
+      }
+    })
+  );
+
+  protected readonly selectedUserProfile$ = combineLatest([
+    this.userProfiles$,
+    this.selectedUserProfileId$
+  ]).pipe(
+    map(([profiles, selectedId]) =>
+      profiles.find((p) => p.id === selectedId) ?? null
+    )
+  );
+
   protected readonly itemsByCollection$ = this.allItems$.pipe(
     map((items) => {
       const groups = new Map<string, FirestoreItem[]>();
@@ -46,17 +128,10 @@ export class App {
         if (!groups.has(col)) groups.set(col, []);
         groups.get(col)!.push(item);
       }
-      return Array.from(groups.entries()).map(([collection, groupItems]) => {
-        const sorted =
-          collection === 'UserProfile'
-            ? [...groupItems].sort((a, b) => {
-                const ea = (a['email'] as string) ?? '';
-                const eb = (b['email'] as string) ?? '';
-                return ea.localeCompare(eb, undefined, { sensitivity: 'base' });
-              })
-            : groupItems;
-        return { collection, items: sorted };
-      });
+      return Array.from(groups.entries()).map(([collection, groupItems]) => ({
+        collection,
+        items: groupItems
+      }));
     })
   );
   protected readonly expandedCollections = signal<Set<string>>(
@@ -76,6 +151,17 @@ export class App {
     this.adminAddMessage.set(null);
     this.adminRemoveMessage.set(null);
     this.editingProfileId.set(null);
+    if (view !== 'admin') {
+      this.selectedUserProfileId.set(null);
+    }
+  }
+
+  protected setSortMode(mode: 'alphabetical' | 'createdAtNewest' | 'createdAtOldest'): void {
+    this.sortMode.set(mode);
+  }
+
+  protected setRoleFilter(role: 'all' | 'parent' | 'admin' | 'researcher'): void {
+    this.roleFilter.set(role);
   }
 
   protected toggleViewDropdown(): void {
@@ -128,6 +214,7 @@ export class App {
       this.firebaseService.refreshItems();
       this.adminAddForm.patchValue({ firstName: '', lastName: '', phoneNumber: '', email: '', role: '' });
       this.adminAddMessage.set('Account added successfully.');
+      this.showCreateUserModal.set(false);
     } catch (err) {
       this.adminAddMessage.set(
         err instanceof Error ? err.message : 'Failed to add account'
@@ -170,6 +257,25 @@ export class App {
 
   protected isEditingProfile(item: FirestoreItem): boolean {
     return item._collection === 'UserProfile' && item.id === this.editingProfileId();
+  }
+
+  protected selectUserProfile(item: FirestoreItem): void {
+    if (item._collection !== 'UserProfile' || !item.id) return;
+    this.selectedUserProfileId.set(item.id);
+    this.stopEditingProfile();
+  }
+
+  protected isSelectedUserProfile(item: FirestoreItem): boolean {
+    return item._collection === 'UserProfile' && item.id === this.selectedUserProfileId();
+  }
+
+  protected openCreateUserModal(): void {
+    this.showCreateUserModal.set(true);
+    this.adminAddMessage.set(null);
+  }
+
+  protected closeCreateUserModal(): void {
+    this.showCreateUserModal.set(false);
   }
 
   protected readonly errorMessage = signal<string | null>(null);
@@ -257,6 +363,16 @@ export class App {
     if (Array.isArray(value)) return JSON.stringify(value);
     if (typeof value === 'boolean') return value ? 'true' : 'false';
     return String(value);
+  }
+
+  protected getUserDisplayName(item: FirestoreItem): string {
+    const name = (item['name'] as string) ?? '';
+    const firstName = (item['firstName'] as string) ?? '';
+    const lastName = (item['lastName'] as string) ?? '';
+    const email = (item['email'] as string) ?? '';
+    const combinedName = `${firstName} ${lastName}`.trim();
+    const display = (name || combinedName || email).trim();
+    return display || email || '(No name)';
   }
 
   protected isEditableType(value: unknown): boolean {
