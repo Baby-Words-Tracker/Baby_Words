@@ -119,7 +119,20 @@
               >
                 Create new User Account
               </button>
+              <button
+                type="button"
+                class="btn-secondary"
+                (click)="exportAllWords()"
+                style="margin-left: 0.5rem;"
+              >
+                Export all words
+              </button>
             </div>
+            @if (exportMessage(); as emsg) {
+              <p class="admin-msg" [class.success]="emsg.includes('started')" [class.error]="!emsg.includes('started')">
+                {{ emsg }}
+              </p>
+            }
             @if (adminRemoveMessage(); as msg) {
               <p class="admin-msg" [class.success]="msg.includes('removed')" [class.error]="!msg.includes('removed')">{{ msg }}</p>
             }

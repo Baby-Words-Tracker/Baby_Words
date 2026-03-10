@@ -428,6 +428,21 @@ main {
   background: var(--primary-dark);
 }
 
+.admin-add-trigger .btn-secondary {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid var(--primary);
+  background: white;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.admin-add-trigger .btn-secondary:hover {
+  background: var(--primary-light);
+}
+
 .admin-panel h2 {
   font-size: 1.5rem;
   color: var(--gray-900);

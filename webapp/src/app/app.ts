@@ -9,6 +9,7 @@ import {
   FirestoreItem,
   FirebaseHandlerService
 } from './services/firebase_handler.service';
+import { CsvExportService } from './services/csv-export.service';
 
 export interface CollectionGroup {
   collection: string;
@@ -25,6 +26,7 @@ export class App {
   protected readonly title = signal('wordbuds');
   protected readonly authService = inject(AuthService);
   protected readonly firebaseService = inject(FirebaseHandlerService);
+  protected readonly csvExport = inject(CsvExportService);
   protected readonly authState$ = this.authService.authState$;
 
   /** Resolves to { user, isAdmin } once profile is loaded. Non-admins cannot view dashboard. */
@@ -141,6 +143,7 @@ export class App {
   protected readonly currentView = signal<'dashboard' | 'admin'>('dashboard');
   protected readonly showViewDropdown = signal(false);
   protected readonly adminAddMessage = signal<string | null>(null);
+  protected readonly exportMessage = signal<string | null>(null);
   protected readonly adminRemoveMessage = signal<string | null>(null);
   /** ID of the UserProfile item currently in edit mode, or null if none. */
   protected readonly editingProfileId = signal<string | null>(null);
@@ -215,10 +218,19 @@ export class App {
       this.adminAddForm.patchValue({ firstName: '', lastName: '', phoneNumber: '', email: '', role: '' });
       this.adminAddMessage.set('Account added successfully.');
       this.showCreateUserModal.set(false);
-    } catch (err) {
-      this.adminAddMessage.set(
-        err instanceof Error ? err.message : 'Failed to add account'
-      );
+    } finally {
+      // after account add we could optionally clear exportMessage
+      this.exportMessage.set(null);
+    }
+  }
+
+  protected async exportAllWords(): Promise<void> {
+    this.exportMessage.set(null);
+    try {
+      const ok = await this.csvExport.exportAllWordsToCSV();
+      this.exportMessage.set(ok ? 'Export started' : 'Nothing to export');
+    } catch (e) {
+      this.exportMessage.set(e instanceof Error ? e.message : 'Export failed');
     }
   }
   // remove account not allowed according to firebase rules
@@ -233,6 +245,7 @@ export class App {
   //     );
   //   }
   // }
+
 
   protected toggleCollection(name: string): void {
     this.expandedCollections.update((set) => {
@@ -301,7 +314,7 @@ export class App {
     this.authService.logout();
   }
 
-  protected getDisplayEntries(item: FirestoreItem): [string, unknown][] {
+  protected getDisplayEntries(item: FirestoreItem): [string, any][] {
     const allowed =
       item._collection === 'UserProfile'
         ? this.firebaseService.userProfileDisplayFields
@@ -334,7 +347,7 @@ export class App {
     newValue: string
   ): Promise<void> {
     if (item._collection !== 'UserProfile' || !item.id) return;
-    let parsed: unknown = newValue;
+    let parsed: any = newValue;
     const raw = item[field];
     if (typeof raw === 'boolean') parsed = newValue === 'true';
     else if (Array.isArray(raw)) {
@@ -349,13 +362,13 @@ export class App {
         [field]: parsed
       });
       this.firebaseService.refreshItems();
-      (item as Record<string, unknown>)[field] = parsed;
+      (item as Record<string, any>)[field] = parsed;
     } catch (err) {
       console.error('Failed to update:', err);
     }
   }
 
-  protected formatValue(value: unknown): string {
+  protected formatValue(value: any): string {
     if (value == null) return '';
     if (typeof value === 'object' && 'toDate' in value && typeof (value as { toDate: () => Date }).toDate === 'function') {
       return (value as { toDate: () => Date }).toDate().toLocaleString();
@@ -375,7 +388,7 @@ export class App {
     return display || email || '(No name)';
   }
 
-  protected isEditableType(value: unknown): boolean {
+  protected isEditableType(value: any): boolean {
     if (value == null) return true;
     if (typeof value === 'object' && 'toDate' in value) return false; // Timestamps read-only
     return typeof value === 'string' || typeof value === 'boolean' || Array.isArray(value);
