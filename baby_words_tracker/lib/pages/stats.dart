@@ -1,30 +1,15 @@
-import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
+import 'package:baby_words_tracker/data/models/child.dart';
+import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/util/current_children_service.dart';
-import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:baby_words_tracker/util/graph_type.dart';
-import 'package:baby_words_tracker/util/language_code.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
-import 'package:baby_words_tracker/data/models/child.dart';
-import 'package:baby_words_tracker/data/models/word.dart';
-import 'package:baby_words_tracker/data/models/word_tracker.dart';
-import 'package:baby_words_tracker/data/services/word_tracker_data_service.dart';
-import 'package:baby_words_tracker/data/services/child_data_service.dart';
-import 'package:baby_words_tracker/data/services/word_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
-
-final List<GraphType> graphsWithLength = [
-  GraphType.newWordsPerDay
-]; // List of GraphTypes that have a length parameter, to be expanded when more graph types are added
+import 'package:baby_words_tracker/util/current_children_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class StatsPage extends StatefulWidget {
-  // Using a stateful widget to allow for changing the graph length and type
-  static const routeName = '/stats'; // Route name for navigation
+  static const routeName = '/stats';
 
   final bool showChrome;
 
@@ -35,537 +20,595 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
-  //Default graph setup
-  int graphLength = 7;
-  GraphType graphType = GraphType
-      .newWordsPerDay; // Use the enum GraphType to determine what graph should be displayed
+  String? _currentChildId;
+  Stream<int>? _pastWeekCountStream;
+  Stream<List<_DailyWordCount>>? _dailyWordCountStream;
+  Stream<Map<DateTime, int>>? _monthlyWordCountStream;
 
-  // Declared as a function to allow child widgets to update the state of the parent widget
-  void updateLength(int length) {
-    setState(() {
-      graphLength = length;
+  @override
+  void dispose() {
+    _pastWeekCountStream = null;
+    _dailyWordCountStream = null;
+    _monthlyWordCountStream = null;
+    super.dispose();
+  }
+
+  Stream<int> _watchPastWeekCount(String childId) {
+    final lastWeek = DateTime.now().subtract(const Duration(days: 7));
+
+    return FirebaseFirestore.instance
+        .collection(Child.collectionName)
+        .doc(childId)
+        .collection(WordTracker.collectionName)
+        .where('firstUtterance', isGreaterThanOrEqualTo: lastWeek)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length)
+        .distinct();
+  }
+
+  Stream<List<_DailyWordCount>> _watchLast7DaysWordCounts(String childId) {
+    final now = DateTime.now();
+    final startDay = DateTime(now.year, now.month, now.day)
+        .subtract(const Duration(days: 6));
+
+    return FirebaseFirestore.instance
+        .collection(Child.collectionName)
+        .doc(childId)
+        .collection(WordTracker.collectionName)
+        .where('firstUtterance', isGreaterThanOrEqualTo: startDay)
+        .snapshots()
+        .map((snapshot) {
+      final counts = <DateTime, int>{
+        for (int i = 0; i < 7; i++)
+          startDay.add(Duration(days: i)): 0,
+      };
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final raw = data['firstUtterance'];
+
+        DateTime? utterance;
+        if (raw is Timestamp) {
+          utterance = raw.toDate();
+        } else if (raw is DateTime) {
+          utterance = raw;
+        }
+
+        if (utterance == null) {
+          continue;
+        }
+
+        final day = DateTime(
+          utterance.year,
+          utterance.month,
+          utterance.day,
+        );
+
+        if (counts.containsKey(day)) {
+          counts[day] = (counts[day] ?? 0) + 1;
+        }
+      }
+
+      final sortedDays = counts.keys.toList()..sort();
+      return sortedDays
+          .map((day) => _DailyWordCount(
+                dayLabel: _weekdayLabel(day.weekday),
+                count: counts[day] ?? 0,
+              ))
+          .toList();
     });
   }
 
-  void updateType(GraphType type) {
-    setState(() {
-      graphType = type;
-    });
+  String _weekdayLabel(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Mon';
+      case DateTime.tuesday:
+        return 'Tue';
+      case DateTime.wednesday:
+        return 'Wed';
+      case DateTime.thursday:
+        return 'Thu';
+      case DateTime.friday:
+        return 'Fri';
+      case DateTime.saturday:
+        return 'Sat';
+      default:
+        return 'Sun';
+    }
   }
 
-  //Initialize Graph Cache
-  // If we get a request for a graph with a repeat type, length, and childID, use the one from the cache
-  // Saves time and database calls
-  Map<(GraphType, int, String), dynamic> graphCache = {};
+  Stream<Map<DateTime, int>> _watchCurrentMonthWordCounts(String childId) {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
-  //controller for an editable text box, allowing for reading of user input
-  final TextEditingController textcontroller1 = TextEditingController();
+    return FirebaseFirestore.instance
+        .collection(Child.collectionName)
+        .doc(childId)
+        .collection(WordTracker.collectionName)
+        .where('firstUtterance',
+            isGreaterThanOrEqualTo: firstDayOfMonth,
+            isLessThanOrEqualTo: lastDayOfMonth)
+        .snapshots()
+        .map((snapshot) {
+      final counts = <DateTime, int>{};
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final raw = data['firstUtterance'];
+
+        DateTime? utterance;
+        if (raw is Timestamp) {
+          utterance = raw.toDate();
+        } else if (raw is DateTime) {
+          utterance = raw;
+        }
+
+        if (utterance == null) continue;
+
+        final day = DateTime(
+          utterance.year,
+          utterance.month,
+          utterance.day,
+        );
+
+        counts[day] = (counts[day] ?? 0) + 1;
+      }
+
+      return counts;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Use new user model service
-    final userProfileModelService = context.read<UserProfileModelService>();
-    if (!userProfileModelService.isParent) {
-      return const Text("Invalid User Type");
-    }
+    return Consumer2<LocalizationService, CurrentChildrenService>(
+      builder: (context, localization, currentChildrenService, _) {
+        final child = currentChildrenService.getCurrChild();
 
-    Child? currChild = context
-        .watch<CurrentChildrenService>()
-        .getCurrChild(); //Live update the current child based on the one selected in TopBar
-    String? currChildId;
-    if (currChild != null) {
-      currChildId = currChild
-          .id; //ChildId is used for database queries for graphs and stats
-    }
+        // Only recreate stream if child has changed
+        if (child?.id != _currentChildId) {
+          _currentChildId = child?.id;
+          if (child?.id != null) {
+            _pastWeekCountStream = _watchPastWeekCount(child!.id!);
+            _dailyWordCountStream = _watchLast7DaysWordCounts(child.id!);
+            _monthlyWordCountStream = _watchCurrentMonthWordCounts(child.id!);
+          } else {
+            _pastWeekCountStream = null;
+            _dailyWordCountStream = null;
+            _monthlyWordCountStream = null;
+          }
+        }
 
-    final localizationService = context.read<LocalizationService>();
-
-    if (currChildId == null) {
-      final placeholder = Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.auto_graph_outlined,
-                size: 64,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withOpacity(0.6),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                localizationService.translate('log_no_child_selected'),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+        final content = child == null ||
+                _pastWeekCountStream == null ||
+                _dailyWordCountStream == null ||
+                _monthlyWordCountStream == null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.auto_graph_outlined,
+                        size: 64,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        localization.translate('log_no_child_selected'),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        localization.translate('log_add_child_hint'),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withOpacity(0.8),
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _WeeklySummaryWithBarChart(
+                      weeklyStream: _pastWeekCountStream!,
+                      dailyStream: _dailyWordCountStream!,
+                      localization: localization,
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                localizationService.translate('log_add_child_hint'),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant
-                          .withOpacity(0.8),
+                    const SizedBox(height: 16),
+                    _MonthlyCalendarHeatmap(
+                      stream: _monthlyWordCountStream!,
+                      localization: localization,
                     ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                  ],
+                ),
+              );
+
+        if (!widget.showChrome) {
+          return content;
+        }
+
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          appBar: TopBar(
+            pageName: localization.translate("learning_summary"),
           ),
-        ),
-      );
+          body: content,
+          bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
+        );
+      },
+    );
+  }
+}
 
-      if (!widget.showChrome) {
-        return placeholder;
-      }
+class _WeeklySummaryWithBarChart extends StatelessWidget {
+  const _WeeklySummaryWithBarChart({
+    required this.weeklyStream,
+    required this.dailyStream,
+    required this.localization,
+  });
 
-      return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: TopBar(
-          pageName: localizationService.translate("learning_summary"),
-        ),
-        body: placeholder,
-        bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
-      );
-    }
+  final Stream<int> weeklyStream;
+  final Stream<List<_DailyWordCount>> dailyStream;
+  final LocalizationService localization;
 
-    final content = SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Consumer2<LocalizationService, WordTrackerDataService>(
-            builder: (context, localizationService, trackerService, child) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          StreamBuilder<int>(
+            stream: weeklyStream,
+            builder: (context, snapshot) {
+              final count = snapshot.data ?? 0;
+              return Row(
                 children: [
-                  const SizedBox(height: 25.0),
-                  Text(
-                    localizationService.translate(graphType.displayName),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 30.0,
-                      color: Color(0xFF9E1B32),
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.auto_graph_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 28,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  graphSwitcher(
-                    graphType,
-                    context.read<ChildDataService>(),
-                    context.read<WordDataService>(),
-                    context.read<WordTrackerDataService>(),
-                    graphLength,
-                    graphCache,
-                    id: currChildId!,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          localization.translate('home_weekly_heading'),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          localization
+                              .translate('home_weekly_caption')
+                              .replaceFirst('{count}', count.toString()),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  lengthChangeFeature(
-                    context,
-                    graphType,
-                    textcontroller1,
-                    updateLength,
-                  ),
-                  const SizedBox(height: 5),
-                  graphTypeSelectDropdown(graphType, updateType),
                 ],
               );
             },
           ),
-        ),
+          const SizedBox(height: 16),
+          StreamBuilder<List<_DailyWordCount>>(
+            stream: dailyStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final data = snapshot.data ?? const <_DailyWordCount>[];
+              final highestCount = data.isEmpty
+                  ? 1
+                  : data
+                      .map((entry) => entry.count)
+                      .reduce((a, b) => a > b ? a : b)
+                      .clamp(1, 1000000);
+
+              return SizedBox(
+                height: 180,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (final entry in data)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                entry.count.toString(),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                height: entry.count == 0
+                                    ? 2
+                                    : (entry.count / highestCount) * 100,
+                                width: 18,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                entry.dayLabel,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
+  }
+}
 
-    if (!widget.showChrome) {
-      return content;
-    }
+class _DailyWordCount {
+  const _DailyWordCount({
+    required this.dayLabel,
+    required this.count,
+  });
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: TopBar(
-        pageName: localizationService.translate("learning_summary"),
+  final String dayLabel;
+  final int count;
+}
+
+class _MonthlyCalendarHeatmap extends StatelessWidget {
+  const _MonthlyCalendarHeatmap({
+    required this.stream,
+    required this.localization,
+  });
+
+  final Stream<Map<DateTime, int>> stream;
+  final LocalizationService localization;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+    final daysInMonth = lastDayOfMonth.day;
+
+    // Get what day of the week the month starts on (1 = Monday, 7 = Sunday)
+    final firstWeekday = firstDayOfMonth.weekday;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(24),
       ),
-      bottomNavigationBar: const CustomBottomBar(StatsPage.routeName),
-      body: content,
-    );
-  }
-}
+      child: StreamBuilder<Map<DateTime, int>>(
+        stream: stream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 200,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-//Queries the database and returns the words learned over the past `days` days as time series data
-Future<List<List<WordTracker>>> getTimeSeriesNewWords(
-    ChildDataService childService,
-    WordTrackerDataService trackerService,
-    int days,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  //for the number of days, grab the amount of words learned
-  DateTime now = DateTime.now();
-  List<List<WordTracker>> data = List.empty(growable: true);
+          final data = snapshot.data ?? <DateTime, int>{};
+          final maxCount = data.values.isEmpty
+              ? 1
+              : data.values.reduce((a, b) => a > b ? a : b).clamp(1, 1000000);
 
-  for (var i = 0; i < days; i++) {
-    DateTime targetDay = DateTime(now.year, now.month, now.day - i);
-    data.add(await trackerService.getWordsFromDate(id, targetDay));
-  }
-  return data;
-}
+          // Month name
+          final monthNames = [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December'
+          ];
 
-//Simple switch statement to allow for differen graphs in 1 widget
-// Returns: Widget, the graph to be displayed
-Widget graphSwitcher(
-    GraphType type,
-    ChildDataService childService,
-    WordDataService wordService,
-    WordTrackerDataService trackerService,
-    int days,
-    Map<(GraphType, int, String), dynamic> cache,
-    {String id =
-        "gz1Qe32xJcF0oRGmhw7f"}) // switch statement to decide what graph to display
-{
-  switch (type) {
-    case GraphType.newWordsPerDay:
-      return newWordsPerDayGraph(childService, trackerService, days, cache,
-          id: id);
-    case GraphType.wordsByPartOfSpeech:
-      return wordsByPartOfSpeechGraph(childService, wordService, cache, id: id);
-    // ignore: unreachable_switch_default
-    default:
-      return const Text("Graph Switch Failed.");
-  }
-}
-
-//Get the number of words of each part of a speech a child has learned
-//Integrates with cache to prevent over querying. Data will only update upon reloading the page
-//Returns: List<(int, PartOfSpeech)>, a list of tuples containing the number of words and the part of speech
-Future<List<(int, PartOfSpeech)>> getPartOfSpeechNumWords(
-    ChildDataService childService,
-    WordDataService wordService,
-    Map<(GraphType, int, String), dynamic> cache,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  if (cache.containsKey((GraphType.wordsByPartOfSpeech, -1, id))) {
-    return cache[(GraphType.wordsByPartOfSpeech, -1, id)];
-  }
-  Map<PartOfSpeech, int> data = <PartOfSpeech, int>{};
-
-  //for the number of days, grab the amount of words learned
-  List<WordTracker> allWordsFromChild = await childService.getAllKnownWords(id);
-
-  // Extract all word IDs from trackers
-  List<String> wordIds = allWordsFromChild
-      .where((tracker) => tracker.id != null)
-      .map((tracker) => tracker.id!)
-      .toList();
-
-  // Batch fetch all words
-  List<Word> words = await wordService.getMultipleWords(wordIds);
-
-  Map<String, Word> wordMap = {for (var word in words) word.word: word};
-
-  for (var tracker in allWordsFromChild) {
-    final defaultWord = Word(
-      word: "invalid word",
-      languageCodes: {LanguageCode.en},
-      languageDetails: {
-        LanguageCode.en: WordLanguageDetail(
-          primaryPartOfSpeech: PartOfSpeech.noun.name.toUpperCase(),
-          allPOS: [PartOfSpeech.noun.name.toUpperCase()],
-        ),
-      },
-    );
-
-    final currWord = wordMap[tracker.id ?? "invalid id"] ?? defaultWord;
-
-    final language = tracker.language ?? LanguageCode.en;
-
-    // If the user manually selected a POS, use that
-    if (tracker.partOfSpeech != null) {
-      try {
-        final pos = PartofspeechExtension.fromString(tracker.partOfSpeech!);
-        data[pos] = (data[pos] ?? 0) + 1;
-        continue;
-      } catch (_) {}
-    }
-
-    final detail = currWord.detailForLanguage(language) ??
-        currWord.languageDetails.values.firstOrNull;
-
-    if (detail?.primaryPartOfSpeech != null) {
-      final primaryPos =
-          PartofspeechExtension.fromString(detail!.primaryPartOfSpeech!);
-      data[primaryPos] = (data[primaryPos] ?? 0) + 1;
-    }
-  }
-  List<MapEntry<PartOfSpeech, int>> entries = data.entries.toList();
-  List<(int, PartOfSpeech)> listData = List.empty(growable: true);
-  for (var entry in entries) {
-    listData.add((entry.value, entry.key));
-  }
-  listData.sort((a, b) => a.$2.displayName.compareTo(b.$2.displayName));
-  cache[(GraphType.wordsByPartOfSpeech, -1, id)] = listData;
-  return listData;
-}
-
-//Turns the info about the number of words learned by part of speech into a chart
-//Returns: Widget, the graph to be displayed
-FutureBuilder<List<(int, PartOfSpeech)>> wordsByPartOfSpeechGraph(
-    ChildDataService childService,
-    WordDataService wordService,
-    Map<(GraphType, int, String), dynamic> cache,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) {
-  return FutureBuilder<List<(int, PartOfSpeech)>>(
-      future: getPartOfSpeechNumWords(childService, wordService, cache,
-          id: id), // Call async function
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child: CircularProgressIndicator()); // Show loading
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}')); // Show error
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No Data Available'));
-        }
-
-        final partOfSpeechCounts = snapshot.data!;
-
-        return Consumer<LocalizationService>(
-            builder: (context, localizationService, child) {
-          return SfCartesianChart(
-            backgroundColor: Colors.white,
-            plotAreaBackgroundColor: Colors.white,
-            palette: const [
-              Color(0xFF9E1B32), // Crimson Flame
-              Color(0xFF828A8F), // Capstone Gray
-              Colors.white, // Victory White
-            ],
-            primaryXAxis: const CategoryAxis(),
-            series: [
-              ColumnSeries<(int, PartOfSpeech), String>(
-                dataSource: partOfSpeechCounts,
-                xValueMapper: ((int, PartOfSpeech) data, _) =>
-                    localizationService.translate(data.$2.displayName),
-                yValueMapper: ((int, PartOfSpeech) data, _) => data.$1,
-                // borderColor: const Color.fromARGB(255, 0, 0, 0),
-                // borderWidth: 2, // Capstone Gray
-              )
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${monthNames[now.month - 1]} ${now.year}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Weekday headers
+              Row(
+                children: [
+                  for (final day in ['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          day,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Calendar grid
+              _buildCalendarGrid(
+                theme,
+                firstWeekday,
+                daysInMonth,
+                data,
+                maxCount,
+                now,
+              ),
             ],
           );
-        });
-      });
-}
-
-//Queries the database and returns the number of new words learned over the past `days` days as time series data
-//Integrates with cache to prevent over querying. Data will only update upon reloading the page
-//Returns: List<(int, DateTime)>, a list of tuples containing the number of words and their associated date
-Future<List<(int, DateTime)>> getTimeSeriesNumNewWordsDateRange(
-    ChildDataService childService,
-    WordTrackerDataService trackerService,
-    int days,
-    Map<(GraphType, int, String), dynamic> cache,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) async {
-  if (cache.containsKey((GraphType.newWordsPerDay, days, id))) {
-    return cache[(GraphType.newWordsPerDay, days, id)];
-  }
-  DateTime now = DateTime.now();
-  //for the number of days, grab the amount of words learned
-  DateTime startDay = DateTime(now.year, now.month,
-      now.day - (days - 1)); //get the day i days before today
-  List<WordTracker> wordsFromTargetDateRange =
-      await trackerService.getWordsFromDateRange(id, startDay, days);
-  var groupedByDay = groupBy(
-      wordsFromTargetDateRange,
-      (tracker) => DateTime(tracker.firstUtterance.year,
-          tracker.firstUtterance.month, tracker.firstUtterance.day));
-  Map<DateTime, int> countByDay = groupedByDay.map((day, list) => MapEntry(
-      day, list.length)); //count the amount of words learned on each day
-
-  List<(int, DateTime)> data = [];
-  // Set<DateTime> existingDates = countByDay.keys.toSet();
-
-  for (DateTime date = startDay;
-      date.isBefore(now);
-      date = date.add(Duration(days: 1))) {
-    date = DateTime(date.year, date.month, date.day, 0);
-    data.add((countByDay[date] ?? 0, date));
+        },
+      ),
+    );
   }
 
-  cache[(GraphType.newWordsPerDay, days, id)] = data;
-  return data;
-}
+  Widget _buildCalendarGrid(
+    ThemeData theme,
+    int firstWeekday,
+    int daysInMonth,
+    Map<DateTime, int> data,
+    int maxCount,
+    DateTime now,
+  ) {
+    final rows = <Widget>[];
+    int dayCounter = 1;
 
-//Turns the info from the past `days` days into a chart showing the amount of words learned per day
-//Returns: Widget, the graph to be displayed
-FutureBuilder<List<(int, DateTime)>> newWordsPerDayGraph(
-    ChildDataService childService,
-    WordTrackerDataService trackerService,
-    int days,
-    Map<(GraphType, int, String), dynamic> cache,
-    {String id = "gz1Qe32xJcF0oRGmhw7f"}) {
-  return FutureBuilder<List<(int, DateTime)>>(
-      future: getTimeSeriesNumNewWordsDateRange(
-          childService, trackerService, days, cache,
-          id: id), // Call async function
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child: CircularProgressIndicator()); // Show loading
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}')); // Show error
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No Data Available'));
-        }
+    // Build rows (weeks)
+    while (dayCounter <= daysInMonth) {
+      final weekCells = <Widget>[];
 
-        final timeSeriesData = snapshot.data!;
-
-        return SfCartesianChart(
-          backgroundColor: Colors.white,
-          plotAreaBackgroundColor: Colors.white,
-          palette: const [
-            Color(0xFF9E1B32), // Crimson Flame
-            Color(0xFF828A8F), // Capstone Gray
-            Colors.white, // Victory White
-          ],
-          primaryXAxis: const CategoryAxis(),
-          series: [
-            ColumnSeries<(int, DateTime), String>(
-              dataSource: timeSeriesData
-                  .toList(), // use the first 10 elements for the chart
-              //TODO: change this to use DD/MM when locale is es
-              xValueMapper: ((int, DateTime) data, _) =>
-                  "${data.$2.month.toString().padLeft(2, '0')}/${data.$2.day.toString().padLeft(2, '0')}", //messed up one liner to convert to MM/DD format
-              yValueMapper: ((int, DateTime) data, _) => data.$1,
-              // borderColor: const Color.fromARGB(255, 0, 0, 0),
-              // borderWidth: 2, // Capstone Gray
-            )
-          ],
-        );
-      });
-}
-
-//Allows the user to change the length of the graph, if the graph type allows for it. If not, does not display anything
-//Uses function passed in from parent to update the length of the graph
-//Returns: Widget, the text field and button to change the length of the graph
-Widget lengthChangeFeature(
-    BuildContext context,
-    GraphType type,
-    TextEditingController inputController,
-    void Function(int length) changeParentLength) {
-  if (!graphsWithLength.contains(type)) return const SizedBox();
-  return Consumer<LocalizationService>(
-      builder: (context, localizationService, child) {
-    return Column(
-      children: [
-        TextField(
-          controller: inputController,
-          keyboardType: TextInputType.number, // Numeric keyboard
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.digitsOnly // Only allows digits (0-9)
-          ],
-          decoration: InputDecoration(
-            //border: OutlineInputBorder(),
-            hintText: localizationService
-                .translate("over_num_days"), //'Over how many days...',
-            hintStyle: const TextStyle(color: Colors.white),
-            filled: true,
-            fillColor: const Color(0xFF9E1B32),
-          ),
-        ),
-        const SizedBox(
-          height: 5.0,
-        ),
-        Center(
-            child: OutlinedButton(
-          onPressed: () {
-            if (inputController.text != "") //update the length of time
-            {
-              changeParentLength(int.parse(inputController.text));
-            }
-          },
-          style: OutlinedButton.styleFrom(
-            backgroundColor: const Color(0xFF828A8F),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      // Build 7 days for this week
+      for (int i = 1; i <= 7; i++) {
+        if ((dayCounter == 1 && i < firstWeekday) || dayCounter > daysInMonth) {
+          // Empty cell before month starts or after month ends
+          weekCells.add(
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Container(),
+              ),
             ),
-            side: const BorderSide(color: Colors.white, width: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 0),
-          ),
-          child: Text(localizationService.translate("submit"),
-              style: TextStyle(fontSize: 18)),
-        )),
-      ],
-    );
-  });
-}
+          );
+        } else {
+          // Valid day in month
+          final dayDate = DateTime(now.year, now.month, dayCounter);
+          final count = data[dayDate] ?? 0;
+          final isToday = dayDate.year == now.year &&
+              dayDate.month == now.month &&
+              dayDate.day == now.day;
 
-//Drop down menu to select the type of graph to display
-// Uses the GraphType enum to determine the type of graph to display
-// Returns: Widget, the dropdown menu to select the graph type
-// Uses function passed in from parent to update the graph type
-Consumer graphTypeSelectDropdown(
-    GraphType currType, void Function(GraphType type) changeParentGraphType) {
-  List<String> options = List.empty(growable: true);
-  for (var graphType in GraphType.values) {
-    //generate a list of all the string names of the graph types
-    options.add(graphType.optionName);
-  }
-  return Consumer<LocalizationService>(
-      builder: (context, localizationService, child) {
-    return DropdownButton<String>(
-      value: currType.optionName,
-      hint: Text(localizationService.translate("select_option")),
-      icon: const Icon(Icons.arrow_downward),
-      onChanged: (String? newValue) {
-        changeParentGraphType(
-            GraphTypeExtension.fromOptionName(newValue ?? ""));
-      },
-      items: options.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(localizationService.translate(value),
-              style: const TextStyle(
-                  fontSize: 18.0,
-                  color: Color(0xFF9E1B32),
-                  fontWeight: FontWeight.bold)),
-        );
-      }).toList(),
-    );
-  });
-}
+          weekCells.add(
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _getColorForCount(theme, count, maxCount),
+                      borderRadius: BorderRadius.circular(6),
+                      border: isToday
+                          ? Border.all(
+                              color: theme.colorScheme.primary,
+                              width: 2,
+                            )
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        dayCounter.toString(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: count > 0
+                              ? Colors.white
+                              : theme.colorScheme.onSurfaceVariant,
+                          fontWeight:
+                              count > 0 ? FontWeight.w600 : FontWeight.normal,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          dayCounter++;
+        }
+      }
 
-//Displays the number of words the child knows, using the ChildDataService to query the database
-// Returns a FutureBuilder that builds a text widget declaring the number of words
-FutureBuilder<int> wordsKnownFeature(BuildContext context, String currChildId) {
-  return FutureBuilder<int>(
-      future: context.read<ChildDataService>().getNumWords(currChildId),
-      builder: (context, numWords) {
-        return Text("Your child knows ${numWords.data} words!");
-      });
-}
-
-// ---------------------
-// -- TESTING SECTION --
-// ---------------------
-
-Future<void>
-    addThisManyDaysWorthOfExampleDataToTestChildInALinearIncreasingFormat(int n,
-        WordTrackerDataService trackerService) //testing function FIXME:remove
-async {
-  DateTime now = DateTime.now();
-  for (var i = 0; i < n; i++) {
-    DateTime targetDay = DateTime(now.year, now.month,
-        now.day - (n - i - 1)); //get the day i days before today
-    for (var j = 0; j < i + 1; j++) {
-      trackerService.createWordTracker(
-        "gz1Qe32xJcF0oRGmhw7f",
-        "test${i.toString()}${j.toString()}",
-        WordTracker(
-          id: "test${i.toString()}${j.toString()}",
-          firstUtterance: targetDay,
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(children: weekCells),
         ),
       );
     }
+
+    return Column(children: rows);
+  }
+
+  Color _getColorForCount(ThemeData theme, int count, int maxCount) {
+    if (count == 0) {
+      return theme.colorScheme.surfaceContainerHigh;
+    }
+
+    // GitHub-style intensity levels
+    final intensity = (count / maxCount).clamp(0.0, 1.0);
+    final baseColor = theme.colorScheme.primary;
+
+    if (intensity <= 0.25) {
+      return baseColor.withOpacity(0.3);
+    } else if (intensity <= 0.5) {
+      return baseColor.withOpacity(0.5);
+    } else if (intensity <= 0.75) {
+      return baseColor.withOpacity(0.7);
+    } else {
+      return baseColor;
+    }
   }
 }
-
-// below this is the testing word adding functionality

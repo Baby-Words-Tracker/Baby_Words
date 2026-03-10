@@ -36,27 +36,12 @@ class _HomePageState extends State<HomePage> {
   String? _currentChildId;
   Stream<int>? _wordCountStream;
   Stream<List<WordTracker>>? _recentWordsStream;
-  Stream<int>? _pastWeekCountStream;
 
   @override
   void dispose() {
     _wordCountStream = null;
     _recentWordsStream = null;
-    _pastWeekCountStream = null;
     super.dispose();
-  }
-
-  Stream<int> _watchPastWeekCount(String childId) {
-    final lastWeek = DateTime.now().subtract(const Duration(days: 7));
-
-    return FirebaseFirestore.instance
-        .collection(Child.collectionName)
-        .doc(childId)
-        .collection(WordTracker.collectionName)
-        .where('firstUtterance', isGreaterThanOrEqualTo: lastWeek)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length)
-        .distinct();
   }
 
   Stream<List<WordTracker>> _watchRecentWords(String childId,
@@ -166,11 +151,9 @@ class _HomePageState extends State<HomePage> {
           if (child?.id != null) {
             _wordCountStream = _watchWordCount(child!.id!);
             _recentWordsStream = _watchRecentWords(child.id!);
-            _pastWeekCountStream = _watchPastWeekCount(child.id!);
           } else {
             _wordCountStream = null;
             _recentWordsStream = null;
-            _pastWeekCountStream = null;
           }
         }
 
@@ -206,11 +189,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         );
                       },
-                    ),
-                    const SizedBox(height: 24),
-                    _WeeklySummaryCard(
-                      stream: _pastWeekCountStream!,
-                      localization: localization,
                     ),
                     const SizedBox(height: 24),
                     _RecentWordsSection(
@@ -328,73 +306,6 @@ class _OverviewCard extends StatelessWidget {
             label: Text(localization.translate('home_add_entry_cta')),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _WeeklySummaryCard extends StatelessWidget {
-  const _WeeklySummaryCard({
-    required this.stream,
-    required this.localization,
-  });
-
-  final Stream<int> stream;
-  final LocalizationService localization;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: StreamBuilder<int>(
-        stream: stream,
-        builder: (context, snapshot) {
-          final count = snapshot.data ?? 0;
-          return Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.auto_graph_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localization.translate('home_weekly_heading'),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      localization
-                          .translate('home_weekly_caption')
-                          .replaceFirst('{count}', count.toString()),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }

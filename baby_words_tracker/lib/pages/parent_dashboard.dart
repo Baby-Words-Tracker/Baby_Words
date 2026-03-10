@@ -4,8 +4,7 @@ import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/pages/wip_page.dart';
-// import 'package:baby_words_tracker/pages/stats.dart'; // Disabled temporarily
+import 'package:baby_words_tracker/pages/stats.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +53,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         showTitle: true,
         icon: Icons.bar_chart_outlined,
         selectedIcon: Icons.bar_chart_outlined,
-        child: const WorkInProgressPage(featureName: 'Statistics'),
+        child: const StatsPage(showChrome: false),
       ),
       _DashboardTab(
         labelKey: 'settings',
