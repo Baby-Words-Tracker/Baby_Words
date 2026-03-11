@@ -235,11 +235,24 @@ class UserProfileModelService extends ChangeNotifier {
       return;
     }
 
-    await _userProfileService.acceptPrivacyPolicy(
+    final success = await _userProfileService.acceptPrivacyPolicy(
       _userProfile!.id,
       policyVersion,
       isDemo: isDemoUser,
     );
+
+    if (!success) {
+      throw Exception('Failed to save privacy policy acceptance');
+    }
+
+    _userProfile = _userProfile!.copyWith(
+      acceptedPrivacyPolicy: accepted,
+      policyVersion: policyVersion,
+      consentDate: DateTime.now(),
+    );
+    debugPrint(
+        "UserProfileModelService: notifyListeners() #${++_notifyCount} - privacy policy accepted");
+    notifyListeners();
   }
 
   /// Mark survey as complete
@@ -249,11 +262,24 @@ class UserProfileModelService extends ChangeNotifier {
       return;
     }
 
-    await _userProfileService.markSurveyComplete(
+    final success = await _userProfileService.markSurveyComplete(
       _userProfile!.id,
       surveyVersion,
       isDemo: isDemoUser,
     );
+
+    if (!success) {
+      throw Exception('Failed to mark survey as complete');
+    }
+
+    _userProfile = _userProfile!.copyWith(
+      surveyCompleted: true,
+      surveyVersion: surveyVersion,
+      surveyCompletedAt: DateTime.now(),
+    );
+    debugPrint(
+        "UserProfileModelService: notifyListeners() #${++_notifyCount} - survey completed");
+    notifyListeners();
   }
 
   /// Enable 2FA
