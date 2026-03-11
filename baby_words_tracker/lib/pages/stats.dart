@@ -422,8 +422,8 @@ class _MonthlyCalendarHeatmap extends StatelessWidget {
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
     final daysInMonth = lastDayOfMonth.day;
 
-    // Get what day of the week the month starts on (1 = Monday, 7 = Sunday)
-    final firstWeekday = firstDayOfMonth.weekday;
+    // Convert Dart weekday (Mon=1..Sun=7) to Sunday-first index (Sun=1..Sat=7)
+    final firstWeekday = (firstDayOfMonth.weekday % 7) + 1;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -476,7 +476,7 @@ class _MonthlyCalendarHeatmap extends StatelessWidget {
               // Weekday headers
               Row(
                 children: [
-                  for (final day in ['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+                  for (final day in ['S', 'M', 'T', 'W', 'T', 'F', 'S'])
                     Expanded(
                       child: Center(
                         child: Text(
