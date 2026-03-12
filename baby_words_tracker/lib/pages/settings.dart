@@ -135,6 +135,33 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // banner widget shown at top of settings list
+  Widget _settingsBanner(LocalizationService loc, BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info, size: 28),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              loc.translate('settings_banner_text'),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showAddChildSheet() async {
     final localization = context.read<LocalizationService>();
     final nameController = TextEditingController();
@@ -743,11 +770,12 @@ class _SettingsPageState extends State<SettingsPage> {
         final profile = profileService.userProfile;
         final children = childrenService.getCurrChildren() ?? const <Child>[];
         final currentChildId = childrenService.getCurrChild()?.id;
-
+        final showBanner = children.any((c) => c.sex == 'Not specified');
         final content = SafeArea(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             children: [
+              if(showBanner) _settingsBanner(localization, context),
               _ProfileCard(
                 profile: profile,
                 localization: localization,
