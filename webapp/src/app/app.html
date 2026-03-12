@@ -21,7 +21,7 @@
         [attr.aria-expanded]="showViewDropdown()"
         aria-haspopup="listbox"
       >
-        {{ currentView() === 'admin' ? 'Admin panel' : 'Dashboard' }} ▼
+        {{ currentView() === 'admin' ? 'Admin panel' : currentView() === 'researchers' ? 'Researchers panel' : 'Dashboard' }} ▼
       </button>
       @if (showViewDropdown()) {
         <div class="view-dropdown-menu" role="listbox">
@@ -41,11 +41,19 @@
           >
             Admin panel
           </button>
+          <button
+            type="button"
+            role="option"
+            [class.active]="currentView() === 'researchers'"
+            (click)="setView('researchers')"
+          >
+            Researchers panel
+          </button>
         </div>
       }
     </div>
   </div>
-  <div class="content" [class.content-wide]="currentView() === 'admin'">
+  <div class="content" [class.content-wide]="currentView() === 'admin' || currentView() === 'researchers'">
     <div class="left-side">
       @if (currentView() === 'dashboard') {
       <section class="wordbank-section">
@@ -220,6 +228,83 @@
                       <button type="submit" class="btn-add" [disabled]="adminAddForm.invalid">Create account</button>
                     </form>
                   </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+      }
+
+      @if (currentView() === 'researchers') {
+      <section class="researchers-panel">
+        <h2>Researchers panel</h2>
+        <div class="researchers-layout">
+          <div class="researchers-left">
+            <h3 class="user-list-heading">Children</h3>
+            <div class="user-list-filters">
+              <div class="user-list-filter">
+                <label for="researchers-sort">Sort by</label>
+                <select
+                  id="researchers-sort"
+                  [value]="researchersChildrenSort()"
+                  (change)="setResearchersChildrenSort($any($event.target).value)"
+                >
+                  <option value="wordCountDesc">Word count (most)</option>
+                  <option value="wordCountAsc">Word count (least)</option>
+                </select>
+              </div>
+            </div>
+            <div class="user-list-scroll">
+              @if (researchersChildrenLoading()) {
+                <p class="loading-state">Loading...</p>
+              } @else if (researchersChildrenList().length === 0) {
+                <p class="empty-state">No children.</p>
+              } @else {
+                <ul class="user-list">
+                  @for (child of researchersChildrenSorted(); track child.id; let i = $index) {
+                    <li
+                      class="user-list-item"
+                      [class.selected]="selectedResearcherChildId() === child.id"
+                      (click)="selectResearcherChild(child.id)"
+                    >
+                      <span class="user-list-name">Child {{ i + 1 }} ({{ child.wordCount }} words)</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+          <div class="researchers-right">
+            <div class="admin-add-trigger">
+              <button
+                type="button"
+                class="btn-secondary"
+                (click)="exportAllWords()"
+              >
+                Export all words
+              </button>
+            </div>
+            @if (exportMessage(); as emsg) {
+              <p class="admin-msg" [class.success]="emsg.includes('started')" [class.error]="!emsg.includes('started')">
+                {{ emsg }}
+              </p>
+            }
+            @if (selectedResearcherChildId() === null) {
+              <p class="empty-state">Select a child to view their utterances over time.</p>
+            } @else if (researchersLoading()) {
+              <p class="loading-state">Loading utterance data...</p>
+            } @else if (researchersChartData().labels.length === 0) {
+              <p class="empty-state">No utterance data for this child.</p>
+            } @else {
+              <div class="researchers-chart-container">
+                <div class="chart-wrapper">
+                  <canvas
+                    baseChart
+                    type="bar"
+                    [data]="researchersChartData()"
+                    [options]="researchersChartOptions"
+                  ></canvas>
                 </div>
               </div>
             }

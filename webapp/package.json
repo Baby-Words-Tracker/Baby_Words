@@ -30,7 +30,9 @@
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
     "@angular/router": "^21.1.0",
+    "chart.js": "^4.4.6",
     "firebase": "^11.0.0",
+    "ng2-charts": "^6.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

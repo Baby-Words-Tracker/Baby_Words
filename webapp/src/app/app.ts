@@ -1,15 +1,17 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, from, map, of, switchMap, tap } from 'rxjs';
+import { BaseChartDirective } from 'ng2-charts';
 import { AuthService } from './services/auth.service';
 import {
   FirestoreItem,
   FirebaseHandlerService
 } from './services/firebase_handler.service';
 import { CsvExportService } from './services/csv-export.service';
+import { ResearchersDataService } from './services/researchers-data.service';
 
 export interface CollectionGroup {
   collection: string;
@@ -18,7 +20,7 @@ export interface CollectionGroup {
 
 @Component({
   selector: 'app-root',
-  imports: [AsyncPipe, ReactiveFormsModule, RouterOutlet],
+  imports: [AsyncPipe, ReactiveFormsModule, RouterOutlet, BaseChartDirective],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -27,6 +29,7 @@ export class App {
   protected readonly authService = inject(AuthService);
   protected readonly firebaseService = inject(FirebaseHandlerService);
   protected readonly csvExport = inject(CsvExportService);
+  protected readonly researchersData = inject(ResearchersDataService);
   protected readonly authState$ = this.authService.authState$;
 
   /** Resolves to { user, isAdmin } once profile is loaded. Non-admins cannot view dashboard. */
@@ -140,7 +143,7 @@ export class App {
     new Set(['UserProfile'])
   );
 
-  protected readonly currentView = signal<'dashboard' | 'admin'>('dashboard');
+  protected readonly currentView = signal<'dashboard' | 'admin' | 'researchers'>('dashboard');
   protected readonly showViewDropdown = signal(false);
   protected readonly adminAddMessage = signal<string | null>(null);
   protected readonly exportMessage = signal<string | null>(null);
@@ -148,7 +151,25 @@ export class App {
   /** ID of the UserProfile item currently in edit mode, or null if none. */
   protected readonly editingProfileId = signal<string | null>(null);
 
-  protected setView(view: 'dashboard' | 'admin'): void {
+  protected readonly researchersChildrenList = signal<{ id: string; wordCount: number }[]>([]);
+  protected readonly researchersChildrenLoading = signal(false);
+  protected readonly selectedResearcherChildId = signal<string | null>(null);
+  protected readonly researchersChildrenSort = signal<'wordCountDesc' | 'wordCountAsc'>('wordCountDesc');
+  protected readonly researchersChildrenSorted = computed(() => {
+    const sortMode = this.researchersChildrenSort();
+    const list = this.researchersChildrenList();
+    return [...list].sort((a, b) => {
+      if (sortMode === 'wordCountAsc') return a.wordCount - b.wordCount;
+      return b.wordCount - a.wordCount;
+    });
+  });
+  protected readonly researchersLoading = signal(false);
+  protected readonly researchersChartData = signal<{ labels: string[]; datasets: { label: string; data: number[] }[] }>({
+    labels: [],
+    datasets: [{ label: 'Utterances', data: [] }]
+  });
+
+  protected setView(view: 'dashboard' | 'admin' | 'researchers'): void {
     this.currentView.set(view);
     this.showViewDropdown.set(false);
     this.adminAddMessage.set(null);
@@ -156,6 +177,61 @@ export class App {
     this.editingProfileId.set(null);
     if (view !== 'admin') {
       this.selectedUserProfileId.set(null);
+    }
+    if (view === 'researchers') {
+      this.selectedResearcherChildId.set(null);
+      this.researchersChartData.set({ labels: [], datasets: [{ label: 'Utterances', data: [] }] });
+      this.loadResearchersChildrenList();
+    }
+  }
+
+  protected readonly researchersChartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      title: { display: true, text: 'Utterances over time' }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  };
+
+  protected async loadResearchersChildrenList(): Promise<void> {
+    this.researchersChildrenLoading.set(true);
+    try {
+      const children = await this.researchersData.getChildrenWithWordCount();
+      this.researchersChildrenList.set(children);
+    } catch (e) {
+      console.error('Researchers children list load failed:', e);
+      this.researchersChildrenList.set([]);
+    } finally {
+      this.researchersChildrenLoading.set(false);
+    }
+  }
+
+  protected setResearchersChildrenSort(sort: 'wordCountDesc' | 'wordCountAsc'): void {
+    this.researchersChildrenSort.set(sort);
+  }
+
+  protected selectResearcherChild(childId: string): void {
+    this.selectedResearcherChildId.set(childId);
+    this.loadResearchersChartData(childId);
+  }
+
+  protected async loadResearchersChartData(childId: string): Promise<void> {
+    this.researchersLoading.set(true);
+    try {
+      const events = await this.researchersData.getUtteranceEventsForChild(childId);
+      const { labels, counts } = this.researchersData.aggregateByDay(events);
+      this.researchersChartData.set({
+        labels,
+        datasets: [{ label: 'Utterances', data: counts }]
+      });
+    } catch (e) {
+      console.error('Researchers chart load failed:', e);
+      this.researchersChartData.set({ labels: [], datasets: [{ label: 'Utterances', data: [] }] });
+    } finally {
+      this.researchersLoading.set(false);
     }
   }
 
