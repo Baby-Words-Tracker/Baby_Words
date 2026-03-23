@@ -98,6 +98,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# Pin transitive Firebase platform-interface packages to prevent version
+# mismatches between cloud_firestore and fake_cloud_firestore in CI.
+dependency_overrides:
+  cloud_firestore_platform_interface: 7.0.6
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

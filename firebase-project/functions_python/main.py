@@ -121,7 +121,7 @@ def _enrich_word(word: str, language: str) -> EnrichmentResult:
     return EnrichmentResult(
         lemma=lemma,
         language_part_of_speech=part_of_speech,
-        primary_part_of_speech=primary_part_of_speech,  # This will now use your JSON value!
+        primary_part_of_speech=primary_part_of_speech,  # This will use the JSON value
         primary_category=primary_category,
         all_pos=sorted(pos_labels),
         all_categories=all_categories,
