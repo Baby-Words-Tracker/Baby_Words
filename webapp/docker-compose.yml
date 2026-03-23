@@ -1,0 +1,10 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wordbuds-webapp:latest
+    container_name: wordbuds-webapp
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

@@ -50,6 +50,20 @@ enum OnboardingStep {
 /// Centralized manager for the onboarding flow
 /// Determines which step the user should see based on their profile and auth state
 class OnboardingFlowManager {
+  static const bool _requirePhoneVerification = false;
+
+  static List<OnboardingStep> _activeStepsFor(UserProfile profile) {
+    final steps = <OnboardingStep>[
+      OnboardingStep.profileInfo,
+      OnboardingStep.emailVerification,
+      if (_requirePhoneVerification) OnboardingStep.phoneVerification,
+      OnboardingStep.privacyPolicy,
+      if (profile.isParent && profile.requiresSurvey) OnboardingStep.survey,
+      OnboardingStep.completed,
+    ];
+    return steps;
+  }
+
   /// Get the current onboarding step for a user
   /// Returns null if user is not authenticated or no profile exists
   static OnboardingStep? getCurrentStep({
@@ -75,8 +89,8 @@ class OnboardingFlowManager {
       return OnboardingStep.emailVerification;
     }
     
-    // Require two-factor setup for every user
-    if (!userProfile.twoFactorEnabled) {
+    // Optional phone verification / 2FA setup
+    if (_requirePhoneVerification && !userProfile.twoFactorEnabled) {
       return OnboardingStep.phoneVerification;
     }
     
@@ -123,6 +137,8 @@ class OnboardingFlowManager {
     required User? firebaseUser,
     required UserProfile? userProfile,
   }) {
+    if (userProfile == null) return 0.0;
+
     final currentStep = getCurrentStep(
       firebaseUser: firebaseUser,
       userProfile: userProfile,
@@ -131,10 +147,13 @@ class OnboardingFlowManager {
     if (currentStep == null) return 0.0;
     if (currentStep == OnboardingStep.completed) return 1.0;
     
-    // Calculate progress based on step index
-    // Exclude 'completed' from total count
-    final totalSteps = OnboardingStep.values.length - 1;
-    final currentIndex = OnboardingStep.values.indexOf(currentStep);
+    final activeSteps = _activeStepsFor(userProfile);
+    final totalSteps = activeSteps.length - 1;
+    final currentIndex = activeSteps.indexOf(currentStep);
+
+    if (currentIndex < 0 || totalSteps <= 0) {
+      return 0.0;
+    }
     
     return currentIndex / totalSteps;
   }
@@ -144,6 +163,8 @@ class OnboardingFlowManager {
     required User? firebaseUser,
     required UserProfile? userProfile,
   }) {
+    if (userProfile == null) return [];
+
     final currentStep = getCurrentStep(
       firebaseUser: firebaseUser,
       userProfile: userProfile,
@@ -151,8 +172,14 @@ class OnboardingFlowManager {
     
     if (currentStep == null) return [];
     
-    final currentIndex = OnboardingStep.values.indexOf(currentStep);
-    return OnboardingStep.values.sublist(0, currentIndex);
+    final activeSteps = _activeStepsFor(userProfile);
+    final currentIndex = activeSteps.indexOf(currentStep);
+
+    if (currentIndex <= 0) {
+      return [];
+    }
+
+    return activeSteps.sublist(0, currentIndex);
   }
   
   /// Debug string showing current state
