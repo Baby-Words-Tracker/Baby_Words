@@ -102,6 +102,19 @@ class MockFirestoreRepository implements IFirestoreRepository {
   }
 
   @override
+  Future<List<DataWithId>> readAll(String collectionName) async {
+    try {
+      final snapshot = await fakeFirestore.collection(collectionName).get();
+      return snapshot.docs.map((doc) => DataWithId(
+        id: doc.id,
+        data: doc.data(),
+      )).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  @override
   Future<bool> updateFieldForSubcollection(String collectionName, String subcollectionName, 
       String docId, String subDocId, String field, dynamic value) async {
     try {

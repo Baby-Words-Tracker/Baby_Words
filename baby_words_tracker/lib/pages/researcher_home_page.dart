@@ -1,4 +1,5 @@
 import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/data/services/csv_export_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
 import 'package:baby_words_tracker/util/download_as_csv.dart' as download_csv;
@@ -51,6 +52,61 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
     });
     debugPrint(
         "Filter updated: Field -> $selectedField, Entry -> $selectedEntry");
+  }
+
+  Future<void> _downloadCSV() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text('Exporting ${wordInstances.length} words to CSV...'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final csvService = CsvExportService();
+      final success = await csvService.exportAllWordsToCSV();
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CSV export successful! File has been downloaded.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to export CSV. Please try again.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error downloading CSV: $e');
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -119,6 +175,11 @@ class _ResearcherHomePageState extends State<ResearcherHomePage> {
                 );
               }
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Download Word List as CSV',
+            onPressed: _downloadCSV,
           ),
         ],
         automaticallyImplyLeading: false,

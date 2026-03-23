@@ -4,8 +4,7 @@ import 'package:baby_words_tracker/pages/home_page.dart';
 import 'package:baby_words_tracker/pages/log_page.dart';
 import 'package:baby_words_tracker/pages/settings.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
-import 'package:baby_words_tracker/pages/wip_page.dart';
-// import 'package:baby_words_tracker/pages/stats.dart'; // Disabled temporarily
+import 'package:baby_words_tracker/pages/stats.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +53,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         showTitle: true,
         icon: Icons.bar_chart_outlined,
         selectedIcon: Icons.bar_chart_outlined,
-        child: const WorkInProgressPage(featureName: 'Statistics'),
+        child: const StatsPage(showChrome: false),
       ),
       _DashboardTab(
         labelKey: 'settings',
@@ -104,7 +103,25 @@ class _ParentDashboardState extends State<ParentDashboard> {
       bottomNavigationBar: NavigationBar(
         height: 74,
         selectedIndex: currentIndex,
-        onDestinationSelected: navigation.setIndex,
+        onDestinationSelected: (index) {
+          if (index == 2) {
+            showModalBottomSheet(
+              context: context,
+              useRootNavigator: true,
+              isScrollControlled: true,
+              backgroundColor: Colors.white,
+              builder: (context) => FractionallySizedBox(
+                heightFactor: 0.92,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  child: const AddEntryPage(showChrome: false, isModal: true),
+                ),
+              ),
+            );
+          } else {
+            navigation.setIndex(index);
+          }
+        },
         destinations: _tabs
             .map(
               (tab) => NavigationDestination(

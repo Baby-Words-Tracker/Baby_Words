@@ -13,6 +13,7 @@ import 'package:baby_words_tracker/video/local_media_entry.dart';
 import 'package:baby_words_tracker/video/media_storage_service.dart';
 import 'package:baby_words_tracker/pages/add_entry_page.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
+import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -30,35 +31,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final DateFormat _dateFormat = DateFormat.MMMd();
-  
+
   // Cache the current child ID to detect when we need to recreate streams
   String? _currentChildId;
   Stream<int>? _wordCountStream;
   Stream<List<WordTracker>>? _recentWordsStream;
-  Stream<int>? _pastWeekCountStream;
-  
+
   @override
   void dispose() {
     _wordCountStream = null;
     _recentWordsStream = null;
-    _pastWeekCountStream = null;
     super.dispose();
   }
-  
-  Stream<int> _watchPastWeekCount(String childId) {
-    final lastWeek = DateTime.now().subtract(const Duration(days: 7));
 
-    return FirebaseFirestore.instance
-        .collection(Child.collectionName)
-        .doc(childId)
-        .collection(WordTracker.collectionName)
-        .where('firstUtterance', isGreaterThanOrEqualTo: lastWeek)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length)
-        .distinct();
-  }
-  
-  Stream<List<WordTracker>> _watchRecentWords(String childId, {int limit = 10}) {
+  Stream<List<WordTracker>> _watchRecentWords(String childId,
+      {int limit = 10}) {
     return FirebaseFirestore.instance
         .collection(Child.collectionName)
         .doc(childId)
@@ -67,40 +54,38 @@ class _HomePageState extends State<HomePage> {
         .limit(limit)
         .snapshots()
         .map((snapshot) {
-          final words = snapshot.docs
-              .map((doc) {
-                try {
-                  return WordTracker.fromDataWithId(DataWithId.fromFirestore(doc));
-                } catch (e) {
-                  debugPrint("Error parsing word doc ${doc.id}: $e");
-                  return null;
-                }
-              })
-              .whereType<WordTracker>()
-              .toList();
-          return words;
-        })
-        .distinct((prev, next) {
-          if (prev.length != next.length) return false;
-          for (int i = 0; i < prev.length; i++) {
-            if (prev[i].id != next[i].id) return false;
-          }
-          return true;
-        });
+      final words = snapshot.docs
+          .map((doc) {
+            try {
+              return WordTracker.fromDataWithId(DataWithId.fromFirestore(doc));
+            } catch (e) {
+              debugPrint("Error parsing word doc ${doc.id}: $e");
+              return null;
+            }
+          })
+          .whereType<WordTracker>()
+          .toList();
+      return words;
+    }).distinct((prev, next) {
+      if (prev.length != next.length) return false;
+      for (int i = 0; i < prev.length; i++) {
+        if (prev[i].id != next[i].id) return false;
+      }
+      return true;
+    });
   }
-  
+
   Stream<int> _watchWordCount(String childId) {
     return FirebaseFirestore.instance
         .collection(Child.collectionName)
         .doc(childId)
         .snapshots()
         .map((snapshot) {
-          final data = snapshot.data();
-          if (data == null) return 0;
-          final value = data[Child.wordCountFieldName];
-          return value is int ? value : (value is num ? value.toInt() : 0);
-        })
-        .distinct();
+      final data = snapshot.data();
+      if (data == null) return 0;
+      final value = data[Child.wordCountFieldName];
+      return value is int ? value : (value is num ? value.toInt() : 0);
+    }).distinct();
   }
 
   Future<void> _showWordDetails({
@@ -151,7 +136,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Consumer2<LocalizationService, CurrentChildrenService>(
       builder: (
         context,
@@ -160,18 +144,16 @@ class _HomePageState extends State<HomePage> {
         _,
       ) {
         final child = currentChildrenService.getCurrChild();
-        
+
         // Only recreate streams if child has changed
         if (child?.id != _currentChildId) {
           _currentChildId = child?.id;
           if (child?.id != null) {
             _wordCountStream = _watchWordCount(child!.id!);
             _recentWordsStream = _watchRecentWords(child.id!);
-            _pastWeekCountStream = _watchPastWeekCount(child.id!);
           } else {
             _wordCountStream = null;
             _recentWordsStream = null;
-            _pastWeekCountStream = null;
           }
         }
 
@@ -191,18 +173,22 @@ class _HomePageState extends State<HomePage> {
                       localization: localization,
                       wordCountStream: _wordCountStream!,
                       onAddEntry: () {
-                        if (widget.showChrome) {
-                          Navigator.of(context)
-                              .pushNamed(AddEntryPage.routeName);
-                        } else {
-                          context.read<MainNavigationController>().setIndex(2);
-                        }
+                        showModalBottomSheet(
+                          context: context,
+                          useRootNavigator: true,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.white,
+                          builder: (context) => FractionallySizedBox(
+                            heightFactor: 0.92,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(24)),
+                              child: const AddEntryPage(
+                                  showChrome: false, isModal: true),
+                            ),
+                          ),
+                        );
                       },
-                    ),
-                    const SizedBox(height: 24),
-                    _WeeklySummaryCard(
-                      stream: _pastWeekCountStream!,
-                      localization: localization,
                     ),
                     const SizedBox(height: 24),
                     _RecentWordsSection(
@@ -211,7 +197,9 @@ class _HomePageState extends State<HomePage> {
                       dateFormat: _dateFormat,
                       onTap: (tracker) {
                         // Get MediaStorageService only when tapped (lazy loading)
-                        final videoStorage = Provider.of<MediaStorageService>(context, listen: false);
+                        final videoStorage = Provider.of<MediaStorageService>(
+                            context,
+                            listen: false);
                         _showWordDetails(
                           tracker: tracker,
                           localization: localization,
@@ -318,73 +306,6 @@ class _OverviewCard extends StatelessWidget {
             label: Text(localization.translate('home_add_entry_cta')),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _WeeklySummaryCard extends StatelessWidget {
-  const _WeeklySummaryCard({
-    required this.stream,
-    required this.localization,
-  });
-
-  final Stream<int> stream;
-  final LocalizationService localization;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: StreamBuilder<int>(
-        stream: stream,
-        builder: (context, snapshot) {
-          final count = snapshot.data ?? 0;
-          return Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.auto_graph_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localization.translate('home_weekly_heading'),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      localization
-                          .translate('home_weekly_caption')
-                          .replaceFirst('{count}', count.toString()),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }
@@ -531,9 +452,18 @@ class _RecentWordTile extends StatelessWidget {
     final languageLabel = tracker.language?.displayName ??
         localization.translate('language_unknown');
 
+    String? posLabel;
+    if (tracker.partOfSpeech != null) {
+      try {
+        posLabel =
+            PartofspeechExtension.fromString(tracker.partOfSpeech!).displayName;
+      } catch (_) {}
+    }
+
     final subtitle = [
       dateLabel,
       languageLabel,
+      if (posLabel != null) posLabel,
       if (tracker.phraseText != null && tracker.phraseText!.isNotEmpty)
         localization
             .translate('home_recent_from_phrase')

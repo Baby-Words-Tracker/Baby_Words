@@ -65,3 +65,4 @@ data_preprocessing/serviceAccountKey.json
 
 # node modules
 node_modules/
+data_preprocessing/serviceAccountKey.json.firebase/

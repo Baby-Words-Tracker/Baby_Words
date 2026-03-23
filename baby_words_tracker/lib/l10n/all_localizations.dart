@@ -243,6 +243,7 @@ class AllLocalizations {
       "delete": "Delete",
       "cancel": "Cancel",
       "save": "Save",
+      "settings_banner_text": "Please update child's sex under 'Children' tab.",
 
       //sign in
       "welcome_sign_in": "Welcome to WordBuds, please sign in!",
@@ -256,6 +257,12 @@ class AllLocalizations {
       //top bar
       "curr_child": "Current child: ",
       "select_child": "Select Child",
+      "settings_notifications_title": "Notifications",
+      "settings_notifications_label": "Enable Notifications",
+      "settings_notifications_nightly": "Nightly Recommendations",
+      "settings_notifications_weekly": "Weekly Summary",
+      "settings_notifications_update_success": "Notification settings updated.",
+      "settings_notifications_update_failed": "Failed to update notification settings.",
     },
     'es': {
       "add_words": "Añadir Palabras",
@@ -511,6 +518,12 @@ class AllLocalizations {
       "get_email-uid_data": "Obtener Datos de Correo Electrónico-UID",
       "roles": "Roles",
       "user_is_disabled": "Usuario Deshabilitado",
+      "settings_notifications_title": "Notificaciones",
+      "settings_notifications_label": "Habilitar Notificaciones",
+      "settings_notifications_nightly": "Recomendaciones Nocturnas",
+      "settings_notifications_weekly": "Resumen Semanal",
+      "settings_notifications_update_success": "Configuración de notificaciones actualizada.",
+      "settings_notifications_update_failed": "Error al actualizar la configuración de notificaciones.",
     }
   };
 }

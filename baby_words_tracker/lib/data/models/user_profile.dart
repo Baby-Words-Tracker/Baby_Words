@@ -92,6 +92,9 @@ class UserProfile {
   // Parent-specific fields
   final List<String> childIDs;
   final LanguageCode? preferredLanguage;
+  final bool notificationsEnabled;
+  final bool nightlyNotificationsEnabled;
+  final bool weeklyNotificationsEnabled;
   
   // Metadata
   final DateTime? createdAt;
@@ -118,6 +121,9 @@ class UserProfile {
     this.surveyCompletedAt,
     this.childIDs = const [],
     this.preferredLanguage,
+    this.notificationsEnabled = true,
+    this.nightlyNotificationsEnabled = true,
+    this.weeklyNotificationsEnabled = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -181,6 +187,9 @@ class UserProfile {
     DateTime? surveyCompletedAt,
     List<String>? childIDs,
     LanguageCode? preferredLanguage,
+    bool? notificationsEnabled,
+    bool? nightlyNotificationsEnabled,
+    bool? weeklyNotificationsEnabled,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -205,6 +214,9 @@ class UserProfile {
       surveyCompletedAt: surveyCompletedAt ?? this.surveyCompletedAt,
       childIDs: childIDs ?? this.childIDs,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      nightlyNotificationsEnabled: nightlyNotificationsEnabled ?? this.nightlyNotificationsEnabled,
+      weeklyNotificationsEnabled: weeklyNotificationsEnabled ?? this.weeklyNotificationsEnabled,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -231,6 +243,9 @@ class UserProfile {
       'surveyCompletedAt': surveyCompletedAt,
       'childIDs': childIDs,
       'preferredLanguage': preferredLanguage?.name,
+      'notificationsEnabled': notificationsEnabled,
+      'nightlyNotificationsEnabled': nightlyNotificationsEnabled,
+      'weeklyNotificationsEnabled': weeklyNotificationsEnabled,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -269,6 +284,11 @@ class UserProfile {
       preferredLanguage: map['preferredLanguage'] != null
           ? LanguageCode.values.byName(map['preferredLanguage'] as String)
           : null,
+      notificationsEnabled: map['notificationsEnabled'] as bool? ?? true,
+      nightlyNotificationsEnabled:
+          map['nightlyNotificationsEnabled'] as bool? ?? true,
+      weeklyNotificationsEnabled:
+          map['weeklyNotificationsEnabled'] as bool? ?? true,
       createdAt: map['createdAt'] != null
           ? convertToDateTime(map['createdAt'])
           : null,
@@ -309,6 +329,9 @@ class UserProfile {
     DateTime? surveyCompletedAt,
     List<String>? childIDs,
     LanguageCode? preferredLanguage,
+    bool? notificationsEnabled,
+    bool? nightlyNotificationsEnabled,
+    bool? weeklyNotificationsEnabled,
   }) {
     Map<String, dynamic> map = {
       'updatedAt': DateTime.now(),
@@ -338,6 +361,15 @@ class UserProfile {
     if (childIDs != null) map['childIDs'] = childIDs;
     if (preferredLanguage != null) {
       map['preferredLanguage'] = preferredLanguage.name;
+    }
+    if (notificationsEnabled != null) {
+      map['notificationsEnabled'] = notificationsEnabled;
+    }
+    if (nightlyNotificationsEnabled != null) {
+      map['nightlyNotificationsEnabled'] = nightlyNotificationsEnabled;
+    }
+    if (weeklyNotificationsEnabled != null) {
+      map['weeklyNotificationsEnabled'] = weeklyNotificationsEnabled;
     }
 
     return map;

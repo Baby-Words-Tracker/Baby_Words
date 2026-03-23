@@ -16,6 +16,7 @@ class Child {
   final List<LanguageCode> language;
   final int wordCount;
   final List<String> parentIDs;
+  final String? sex; //added sex as a new field
 
   Child({
     this.id,
@@ -24,6 +25,7 @@ class Child {
     required this.language,
     required this.wordCount,
     required this.parentIDs,
+    required this.sex,
   });
 
   Child copyWith({
@@ -33,6 +35,7 @@ class Child {
     List<LanguageCode>? language,
     int? wordCount,
     List<String>? parentIDs,
+    String? sex,
   }) {
     return Child(
       id: id ?? this.id,
@@ -41,6 +44,7 @@ class Child {
       language: language ?? this.language,
       wordCount: wordCount ?? this.wordCount,
       parentIDs: parentIDs ?? this.parentIDs,
+      sex: sex ?? this.sex,
     );
   }
 
@@ -51,6 +55,7 @@ class Child {
       'languageCodes': language.map((i) => i.name).toList(),
       wordCountFieldName: wordCount,
       'parentIDs': parentIDs as List<dynamic>,
+      'sex': sex,
     };
   }
 
@@ -70,6 +75,7 @@ class Child {
       parentIDs:
           (map['parentIDs'] as List<dynamic>?)?.whereType<String>().toList() ??
               [],
+      sex: (map['sex'] ?? 'Unknown') as String,
     );
   }
 
@@ -86,7 +92,7 @@ class Child {
 
   @override
   String toString() {
-    return 'Child(id: $id, birthday: $birthday, name: $name, wordCount: $wordCount, parentIDs: $parentIDs)';
+    return 'Child(id: $id, birthday: $birthday, name: $name, wordCount: $wordCount, parentIDs: $parentIDs, sex: $sex)';
   }
 
   @override
@@ -100,7 +106,8 @@ class Child {
         other.birthday == birthday &&
         other.name == name &&
         other.wordCount == wordCount &&
-        listEquals(other.parentIDs, parentIDs);
+        listEquals(other.parentIDs, parentIDs) &&
+        other.sex == sex;
   }
 
   @override
