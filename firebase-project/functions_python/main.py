@@ -7,16 +7,19 @@ from typing import Dict, List, Optional, Set
 
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(__file__), "nltk_data")
-os.environ["NLTK_DATA"] = NLTK_DATA_PATH  # let nltk auto-detect
-import nltk
-nltk.data.path.insert(0, NLTK_DATA_PATH)
 
 import firebase_admin
 from firebase_admin import firestore
 from firebase_functions import firestore_fn
 
-from nltk.corpus import wordnet
-
+try:
+    from word_lookup import get_pos_from_json, get_pos_from_corpus
+except ImportError:
+    logging.warning("Could not import 'word_lookup.py'. The JSON word list and Brown corpus will not be used.")
+    def get_pos_from_json(word: str) -> None:
+        return None
+    def get_pos_from_corpus(word: str) -> None:
+        return None
 
 # Initialise Firebase app once at import time.
 app = firebase_admin.initialize_app()
@@ -77,17 +80,33 @@ def _enrich_word(word: str, language: str) -> EnrichmentResult:
     if token is None:
         raise ValueError("Word contains no alphabetic characters")
 
+    # 1. Get the spaCy guess
     part_of_speech = _POS_MAPPING.get(token.pos_, "unknown")
-    primary_part_of_speech = part_of_speech.replace(" ", "_").upper()
+    spacy_primary_pos = part_of_speech.replace(" ", "_").upper()
     lemma = token.lemma_.lower()
     lang_code = "spa" if language == "es" else "eng"
+
+    # 2. OVERRIDE with JSON lookup, then Brown corpus, then fall back to spaCy (English only)
+    primary_part_of_speech = spacy_primary_pos
+    if language == "en":
+        json_pos = get_pos_from_json(word)
+        if json_pos:
+            primary_part_of_speech = json_pos
+        else:
+            corpus_pos = get_pos_from_corpus(word)
+            if corpus_pos:
+                primary_part_of_speech = corpus_pos
 
     categories: Set[str] = set()
     pos_labels: Set[str] = {primary_part_of_speech}
 
     try:
+        import nltk
+        nltk.data.path.insert(0, NLTK_DATA_PATH)
+        os.environ.setdefault("NLTK_DATA", NLTK_DATA_PATH)
+        from nltk.corpus import wordnet
         synsets = wordnet.synsets(word, lang=lang_code)
-    except LookupError:  # pragma: no cover - handled via download attempt
+    except LookupError:
         synsets = []
 
     for synset in synsets:
@@ -102,7 +121,7 @@ def _enrich_word(word: str, language: str) -> EnrichmentResult:
     return EnrichmentResult(
         lemma=lemma,
         language_part_of_speech=part_of_speech,
-        primary_part_of_speech=primary_part_of_speech,
+        primary_part_of_speech=primary_part_of_speech,  # This will now use your JSON value!
         primary_category=primary_category,
         all_pos=sorted(pos_labels),
         all_categories=all_categories,
@@ -159,6 +178,38 @@ def _update_document(
     snapshot.reference.update(updates)
 
 
+def _propagate_pos_to_trackers(word_id: str, language: str, pos: str) -> None:
+    """Updates all WordTracker documents for this word with the determined part of speech."""
+    client = firestore.client()
+    # Query all WordTrackers for this word.
+    # IMPORTANT: This requires a Collection Group Index on 'id' for 'WordTracker'.
+    # Note: Filtering by language in code to avoid requiring a composite index immediately.
+    trackers = client.collection_group("WordTracker").where("id", "==", word_id).stream()
+
+    batch = client.batch()
+    count = 0
+    updates_made = False
+
+    for doc in trackers:
+        data = doc.to_dict()
+        # Ensure we only update trackers for the correct language
+        # Relaxed check: ensure language matches if present, or update if missing
+        if data.get("language") == language or data.get("language") is None:
+            batch.update(doc.reference, {"partOfSpeech": pos})
+            count += 1
+            updates_made = True
+
+        if count >= 400:
+            batch.commit()
+            batch = client.batch()
+            count = 0
+            updates_made = False
+
+    if updates_made:
+        logging.info("Propagating POS '%s' to %d trackers for word '%s'", pos, count, word_id)
+        batch.commit()
+
+
 @firestore_fn.on_document_written(document="Word/{wordId}", region="us-central1", memory=1024, timeout_sec = 540)
 def process_word(event: firestore_fn.Event[firestore.DocumentSnapshot]) -> None:
     snapshot = event.data.after
@@ -186,3 +237,8 @@ def process_word(event: firestore_fn.Event[firestore.DocumentSnapshot]) -> None:
         return
 
     _update_document(snapshot, language, enrichment, pending, data)
+
+    try:
+        _propagate_pos_to_trackers(snapshot.id, language, enrichment.primary_part_of_speech.lower())
+    except Exception as error:
+        logging.warning("Failed to propagate POS to trackers for %s: %s", snapshot.id, error)

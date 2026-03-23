@@ -1,3 +1,4 @@
+import 'dart:async'; 
 import 'dart:io';
 
 import 'package:baby_words_tracker/data/models/phrase_tracker.dart';
@@ -18,7 +19,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
-import 'package:baby_words_tracker/util/part_of_speech.dart';
 
 import 'package:file_picker/file_picker.dart' as filepicker;
 
@@ -41,6 +41,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
   final TextEditingController _entryController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
 
+  Timer? _debounce;
+
   EntryMode _entryMode = EntryMode.word;
   String? _entryError;
   _AttachmentSelection? _attachment;
@@ -48,7 +50,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   List<LanguageCode> _availableLanguages = const [LanguageCode.en];
   LanguageCode? _selectedLanguage;
-  String? _selectedPartOfSpeech;
 
   late WordDataService _wordDataService;
   late WordTrackerDataService _wordTrackerDataService;
@@ -77,12 +78,19 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   @override
   void dispose() {
+    _debounce?.cancel(); // Cancel the timer to prevent memory leaks
     if (_initialised) {
       _currentChildrenService.removeListener(_handleChildContextChanged);
     }
     _entryController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  void _onWordInputChanged(String input) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    // Debounce retained in case other listeners are added later.
+    _debounce = Timer(const Duration(milliseconds: 500), () {});
   }
 
   void _handleChildContextChanged() {
@@ -299,7 +307,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
           language: language,
           rawInput: input.trim(),
           note: note,
-          partOfSpeech: _selectedPartOfSpeech,
         );
       } else {
         await _submitPhraseEntry(
@@ -346,7 +353,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     required LanguageCode language,
     required String rawInput,
     required String note,
-    String? partOfSpeech,
+    String? partOfSpeech, // Added missing parameter
   }) async {
     final normalisedWord = normaliseForDocumentId(rawInput);
 
@@ -368,11 +375,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
       return;
     }
 
-    await _wordDataService.queueWordForProcessing(
-      wordId: normalisedWord,
-      language: language,
-    );
-
     final videoId = await _storeAttachment(
       storage: videoStorage,
       localization: localization,
@@ -389,8 +391,13 @@ class _AddEntryPageState extends State<AddEntryPage> {
         language: language,
         note: note.isEmpty ? null : note,
         videoId: videoId,
-        partOfSpeech: partOfSpeech,
+        partOfSpeech: partOfSpeech, // Update null to use parameter
       ),
+    );
+
+    await _wordDataService.queueWordForProcessing(
+      wordId: normalisedWord,
+      language: language,
     );
   }
 
@@ -425,11 +432,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
         continue;
       }
 
-      await _wordDataService.queueWordForProcessing(
-        wordId: word,
-        language: language,
-      );
-
       await _wordTrackerDataService.addOrUpdateWordTracker(
         childId,
         word,
@@ -442,6 +444,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
           phraseId: phraseId,
           phraseText: trimmedPhrase,
         ),
+      );
+
+      await _wordDataService.queueWordForProcessing(
+        wordId: word,
+        language: language,
       );
     }
 
@@ -553,6 +560,14 @@ class _AddEntryPageState extends State<AddEntryPage> {
                         controller: _entryController,
                         maxLines: _entryMode == EntryMode.phrase ? 3 : 1,
                         minLines: 1,
+                        onChanged: (value) {
+                          // Clear errors when typing starts
+                          if (_entryError != null) {
+                            setState(() => _entryError = null);
+                          }
+                          // Trigger POS lookup
+                          _onWordInputChanged(value);
+                        },
                         decoration: InputDecoration(
                           labelText: entryLabel,
                           hintText: entryHint,
@@ -597,6 +612,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
                                 setState(() {
                                   _selectedLanguage = value;
                                 });
+                                // Re-run lookup for the newly selected language
+                                if (_entryMode == EntryMode.word) {
+                                  _onWordInputChanged(_entryController.text);
+                                }
                               }
                             : null,
                         decoration: InputDecoration(
@@ -605,39 +624,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
                           focusedBorder: focusedBorder,
                         ),
                       ),
-                      if (_entryMode == EntryMode.word) ...[
-                        const SizedBox(height: 20),
-                        Text(
-                          'Part of Speech', // TODO: Add to localization
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: _selectedPartOfSpeech,
-                          items: PartOfSpeech.values.map((pos) {
-                            String label = pos.displayName;
-                            if (pos.name == 'personal_pronoun') { //hard-code to address these cases because they kept appearing as "unknown" duplicates
-                              label = 'Personal Pronoun';
-                            } else if (pos.name == 'interjection') {
-                              label = 'Interjection';
-                            }
-                            return DropdownMenuItem<String>(
-                              value: pos.name,
-                              child: Text(label),
-                            );
-                          }).toList(),
-                          onChanged: (value) =>
-                              setState(() => _selectedPartOfSpeech = value),
-                          decoration: InputDecoration(
-                            filled: true,
-                            enabledBorder: baseBorder,
-                            focusedBorder: focusedBorder,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -984,3 +970,4 @@ String _describeAttachmentKind(
       return localization.translate('attachment_type_file');
   }
 }
+
