@@ -55,8 +55,10 @@ def setup_nltk_data():
     
     # Required corpora
     required_corpora = [
-        'wordnet',      # English WordNet
-        'omw-1.4',      # Open Multilingual WordNet
+        'wordnet',          # English WordNet
+        'omw-1.4',          # Open Multilingual WordNet
+        'brown',            # Brown corpus (POS fallback via universal tagset)
+        'universal_tagset', # Universal POS tag mapping used by Brown corpus
     ]
     
     logger.info("Starting NLTK data download...")

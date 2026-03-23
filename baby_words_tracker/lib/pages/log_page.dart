@@ -139,6 +139,18 @@ class _WordLogPageState extends State<WordLogPage> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// Returns [tracker.partOfSpeech] if already set, otherwise fetches the
+  /// Word document and returns the primaryPartOfSpeech for the tracker's language.
+  Future<String?> _resolvePartOfSpeech(WordTracker tracker) async {
+    if (tracker.partOfSpeech != null) return tracker.partOfSpeech;
+    final wordId = tracker.id;
+    if (wordId == null) return null;
+    final wordData = await context.read<WordDataService>().getWord(wordId);
+    final lang = tracker.language ?? LanguageCode.en;
+    final primary = wordData?.languageDetails[lang]?.primaryPartOfSpeech;
+    return primary?.toLowerCase();
+  }
+
   Future<void> _showWordDetails({
     required String childId,
     required WordTracker tracker,
@@ -152,6 +164,12 @@ class _WordLogPageState extends State<WordLogPage> {
         ? videoStorage.entryForKey(tracker.videoId!)
         : null;
 
+    final resolvedPos = await _resolvePartOfSpeech(tracker);
+    final resolvedTracker = resolvedPos != null && tracker.partOfSpeech == null
+        ? tracker.copyWith(partOfSpeech: resolvedPos)
+        : tracker;
+
+    if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -159,7 +177,7 @@ class _WordLogPageState extends State<WordLogPage> {
       builder: (context) {
         return WordDetailSheet(
           displayWord: displayWord,
-          tracker: tracker,
+          tracker: resolvedTracker,
           languageLabel: languageLabel,
           dateLabel: _dateFormat.format(tracker.firstUtterance),
           localization: localization,
@@ -178,7 +196,9 @@ class _WordLogPageState extends State<WordLogPage> {
     required List<LanguageCode> availableLanguages,
   }) async {
     final displayWord = tracker.id?.capitalizeOrNA() ?? '';
+    final resolvedPos = await _resolvePartOfSpeech(tracker);
 
+    if (!mounted) return;
     final result = await showModalBottomSheet<WordEditResult>(
       context: context,
       isScrollControlled: true,
@@ -189,7 +209,7 @@ class _WordLogPageState extends State<WordLogPage> {
         availableLanguages: availableLanguages,
         initialNote: tracker.note,
         localization: localization,
-        initialPartOfSpeech: tracker.partOfSpeech,
+        initialPartOfSpeech: resolvedPos,
         // We populate this with all values so the user can correct a wrong tag
         availablePartOfSpeech: PartOfSpeech.values.map((e) => e.name).toList(),
       ),
@@ -395,6 +415,7 @@ class _WordLogPageState extends State<WordLogPage> {
                                       videoStorage: videoStorage,
                                     );
                                   },
+                                  resolvePos: _resolvePartOfSpeech,
                                 )
                               : _PhraseListView(
                                   key: const ValueKey('phrase_log'),
@@ -490,6 +511,7 @@ class _WordListView extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
     required this.onSelect,
+    required this.resolvePos,
   });
 
   final Stream<List<WordTracker>> stream;
@@ -498,6 +520,7 @@ class _WordListView extends StatelessWidget {
   final ValueChanged<WordTracker> onDelete;
   final ValueChanged<WordTracker> onEdit;
   final ValueChanged<WordTracker> onSelect;
+  final Future<String?> Function(WordTracker) resolvePos;
 
   @override
   Widget build(BuildContext context) {
@@ -528,71 +551,81 @@ class _WordListView extends StatelessWidget {
             final languageLabel = word.language?.displayName ??
                 localization.translate('language_unknown');
 
-            final subtitleParts = <String>[
-              dateLabel,
-              languageLabel,
-              if (word.phraseText != null && word.phraseText!.isNotEmpty)
-                localization
-                    .translate('log_from_phrase')
-                    .replaceFirst('{phrase}', word.phraseText!),
-            ];
+            return FutureBuilder<String?>(
+              future: resolvePos(word),
+              builder: (context, posSnapshot) {
+                final posLabel = posSnapshot.data != null
+                    ? PartofspeechExtension.fromString(posSnapshot.data!).displayName
+                    : null;
 
-            return Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: ListTile(
-                title: Text(
-                  displayWord,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                final subtitleParts = <String>[
+                  dateLabel,
+                  languageLabel,
+                  if (word.phraseText != null && word.phraseText!.isNotEmpty)
+                    localization
+                        .translate('log_from_phrase')
+                        .replaceFirst('{phrase}', word.phraseText!),
+                  if (posLabel != null && posLabel != 'Unknown') posLabel,
+                ];
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
-                subtitle: Text(
-                  subtitleParts.join(' • '),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  child: ListTile(
+                    title: Text(
+                      displayWord,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      subtitleParts.join(' • '),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (word.note != null && word.note!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Icon(
+                              Icons.sticky_note_2_outlined,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                        if (word.videoId != null && word.videoId!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Icon(
+                              Icons.attachment_rounded,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined),
+                          tooltip: localization.translate('edit'),
+                          color: theme.colorScheme.primary,
+                          onPressed: () => onEdit(word),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip:
+                              localization.translate('log_delete_word_tooltip'),
+                          color: theme.colorScheme.error,
+                          onPressed: () => onDelete(word),
+                        ),
+                      ],
+                    ),
+                    onTap: () => onSelect(word),
                   ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (word.note != null && word.note!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Icon(
-                          Icons.sticky_note_2_outlined,
-                          color: theme.colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                    if (word.videoId != null && word.videoId!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Icon(
-                          Icons.attachment_rounded,
-                          color: theme.colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined),
-                      tooltip: localization.translate('edit'),
-                      color: theme.colorScheme.primary,
-                      onPressed: () => onEdit(word),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      tooltip:
-                          localization.translate('log_delete_word_tooltip'),
-                      color: theme.colorScheme.error,
-                      onPressed: () => onDelete(word),
-                    ),
-                  ],
-                ),
-                onTap: () => onSelect(word),
-              ),
+                );
+              },
             );
           },
         );
