@@ -13,6 +13,16 @@ The baby words tracker app is designed to be used on iOS, android, and all web b
 # Building the iOS App
 run this in the flutter folder to open the xcode environment `open ios/Runner.xcworkspace`
 
+# Buildling the Web App
+Ensure npm, node.js, and angular CLI are installed
+- Node & npm
+https://nodejs.org/
+- Angular
+With npm installed: run `npm install -g @angular/cli` into CLI
+https://angular.dev/overview for more info
+
+For Development: in the "webapp" directory, run `ng serve`
+For Production: ```ng build`` will create the /dist for web server deployment
 # Deploying Firebase Project
 ## Node Functions
 navigate to `firebase-project/functions` and run:
