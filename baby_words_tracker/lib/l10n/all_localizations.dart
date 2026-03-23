@@ -243,6 +243,7 @@ class AllLocalizations {
       "delete": "Delete",
       "cancel": "Cancel",
       "save": "Save",
+      "settings_banner_text": "Please update child's sex under 'Children' tab.",
 
       //sign in
       "welcome_sign_in": "Welcome to WordBuds, please sign in!",
