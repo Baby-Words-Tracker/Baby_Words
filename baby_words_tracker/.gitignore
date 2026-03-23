@@ -62,3 +62,6 @@ app.*.map.json
 #Data Preprocessing requirements
 # data_preprocessing/requirements.txt
 data_preprocessing/serviceAccountKey.json
+
+# node modules
+node_modules/
