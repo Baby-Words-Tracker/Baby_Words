@@ -7,38 +7,18 @@ As part of the requirments for CS495, a website was created to tack the progress
 https://baby-words-tracker.github.io/Baby_Words/index.html
 
 # The App
-The baby words tracker app is designed to be used on iOS, android, and all web browsers (thanks flutter!). To test our app, download the repository and use the command ```flutter run``` from inside the baby-words-tracker directory. From there, choose the platform your testing on from the given options. If you are on a desktop, please select your prefered web browser instead of your OS. If you don't have flutter installed on you machine, follow the steps found here: https://docs.flutter.dev/get-started/install before trying to test this project.
+WordBuds is designed to work on iOS and Android using the Flutter framework. 
 
+To test our app, download the repository and use the command ```flutter run``` from inside the baby-words-tracker directory. From there, choose the platform your testing on from the given options. 
 
-# Building the iOS App
-run this in the flutter folder to open the xcode environment `open ios/Runner.xcworkspace`
+If you don't have flutter installed on you machine, follow the steps found here: https://docs.flutter.dev/get-started/install before trying to test this project.
 
-# Buildling the Web App
-Ensure npm, node.js, and angular CLI are installed
-- Node & npm
-https://nodejs.org/
-- Angular
-With npm installed: run `npm install -g @angular/cli` into CLI
-https://angular.dev/overview for more info
+# The Web App
+We have developed an admin and researcher dashboard that can be accessed on any web browser using
 
-For Development: in the "webapp" directory, run `ng serve`
-For Production: ```ng build`` will create the /dist for web server deployment
-# Deploying Firebase Project
-## Node Functions
-navigate to `firebase-project/functions` and run:
+http://wordbuds.info:8080
 
-`npm install`
+# How to Deploy
+A deployment guide can be found in the repo under `docs/deployment.md`, or on the project website.
 
-## Python Functions
-Ensure you have python 3.10 installed. Make a virtual environment with Python 3.10
-
-```bash
-
-python3.10 -m venv venv
-
-source venv/bin/activate
-
-cd python_functions
-
-pip install -r requirements.txt
-```
+# How to Develop
