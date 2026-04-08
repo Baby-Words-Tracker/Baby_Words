@@ -7,38 +7,20 @@ As part of the requirments for CS495, a website was created to tack the progress
 https://baby-words-tracker.github.io/Baby_Words/index.html
 
 # The App
-The baby words tracker app is designed to be used on iOS, android, and all web browsers (thanks flutter!). To test our app, download the repository and use the command ```flutter run``` from inside the baby-words-tracker directory. From there, choose the platform your testing on from the given options. If you are on a desktop, please select your prefered web browser instead of your OS. If you don't have flutter installed on you machine, follow the steps found here: https://docs.flutter.dev/get-started/install before trying to test this project.
+WordBuds is designed to work on iOS and Android using the Flutter framework. 
 
+To test our app, download the repository and use the command ```flutter run``` from inside the `Baby_Words/baby-words-tracker` directory. From there, choose the platform your testing on from the given options. 
 
-# Building the iOS App
-run this in the flutter folder to open the xcode environment `open ios/Runner.xcworkspace`
+Detailed instructions can be found in `dev-docs/develop`
 
-# Buildling the Web App
-Ensure npm, node.js, and angular CLI are installed
-- Node & npm
-https://nodejs.org/
-- Angular
-With npm installed: run `npm install -g @angular/cli` into CLI
-https://angular.dev/overview for more info
+If you don't have flutter installed on you machine, follow the steps found here: https://docs.flutter.dev/get-started/install before trying to test this project.
 
-For Development: in the "webapp" directory, run `ng serve`
-For Production: ```ng build`` will create the /dist for web server deployment
-# Deploying Firebase Project
-## Node Functions
-navigate to `firebase-project/functions` and run:
+# The Admin Dashboard
+We have developed an admin and researcher dashboard that can be accessed on any web browser using
 
-`npm install`
+http://wordbuds.info:8080
 
-## Python Functions
-Ensure you have python 3.10 installed. Make a virtual environment with Python 3.10
+# How to Deploy
+A deployment guide can be found in the repo under `dev-docs/deployment.md`, or on the project website.
 
-```bash
-
-python3.10 -m venv venv
-
-source venv/bin/activate
-
-cd python_functions
-
-pip install -r requirements.txt
-```
+# How to Develop
