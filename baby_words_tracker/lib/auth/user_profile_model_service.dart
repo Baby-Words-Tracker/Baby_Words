@@ -352,6 +352,43 @@ class UserProfileModelService extends ChangeNotifier {
     await _synchronizer.safeSynchronize();
   }
 
+  /// Update the in-memory user profile without touching Firebase.
+  void updateLocalProfile({
+    String? fullName,
+    String? firstName,
+    String? lastName,
+    String? email,
+  }) {
+    if (_userProfile == null) return;
+
+    _userProfile = _userProfile!.copyWith(
+      name: fullName ?? _userProfile!.name,
+      firstName: firstName ?? _userProfile!.firstName,
+      lastName: lastName ?? _userProfile!.lastName,
+      email: email ?? _userProfile!.email,
+    );
+
+    notifyListeners();
+  }
+  /// Call this after the user verifies their email
+  Future<void> refreshEmailVerificationStatus() async {
+    // Reload from Firebase Auth
+    await _authenticationService.reloadUser();
+
+    if (_authenticationService.isEmailVerified && _userProfile != null && !_userProfile!.emailVerified) {
+      final success = await _userProfileService.updateUserProfile(
+        _userProfile!.id,
+        {'emailVerified': true},
+        isDemo: isDemoUser,
+      );
+
+      if (success) {
+        _userProfile = _userProfile!.copyWith(emailVerified: true);
+        notifyListeners();
+      }
+    }
+  }
+
   @override
   void dispose() {
     _listener?.dispose();
