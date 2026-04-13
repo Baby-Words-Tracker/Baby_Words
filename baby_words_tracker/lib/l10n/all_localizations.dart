@@ -456,6 +456,7 @@ class AllLocalizations {
       "delete": "Eliminar",
       "cancel": "Cancelar",
       "save": "Guardar",
+      "settings_banner_text": "Por favor, actualiza el sexo del niño en la pestaña 'Niños'.",
       "entry_mode_label": "Modo de entrada",
       "word_mode": "Palabra",
       "phrase_mode": "Frase",
