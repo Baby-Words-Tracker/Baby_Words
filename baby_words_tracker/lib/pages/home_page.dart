@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
+import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/pages/shared/word_entry_sheets.dart';
@@ -15,6 +17,7 @@ import 'package:baby_words_tracker/pages/add_entry_page.dart';
 import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -37,11 +40,92 @@ class _HomePageState extends State<HomePage> {
   Stream<int>? _wordCountStream;
   Stream<List<WordTracker>>? _recentWordsStream;
 
+  bool _showingShareDialog = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileService = context.read<UserProfileModelService>();
+      profileService.addListener(_onProfileChanged);
+      _checkPendingShares(profileService);
+    });
+  }
+
   @override
   void dispose() {
+    context.read<UserProfileModelService>().removeListener(_onProfileChanged);
     _wordCountStream = null;
     _recentWordsStream = null;
     super.dispose();
+  }
+
+  void _onProfileChanged() {
+    _checkPendingShares(context.read<UserProfileModelService>());
+  }
+
+  void _checkPendingShares(UserProfileModelService profileService) {
+    final pending = profileService.pendingChildIDs;
+    if (pending.isNotEmpty && mounted && !_showingShareDialog) {
+      _showingShareDialog = true;
+      _showPendingShareDialog(pending.first).then((_) {
+        _showingShareDialog = false;
+      });
+    }
+  }
+
+  Future<void> _showPendingShareDialog(String childId) async {
+    final childService = context.read<ChildDataService>();
+    final Child? child = await childService.getChild(childId);
+    final childName = child?.name ?? 'a child';
+
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Child Shared With You'),
+        content: Text(
+          'You have been invited to share access to $childName. Would you like to accept?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Decline'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Accept'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    final functions = FirebaseFunctions.instance;
+    if (confirmed == true) {
+      try {
+        await functions.httpsCallable('acceptChildShare').call({'childUid': childId});
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to accept: $e')),
+          );
+        }
+      }
+    } else {
+      try {
+        await functions.httpsCallable('declineChildShare').call({'childUid': childId});
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to decline: $e')),
+          );
+        }
+      }
+    }
   }
 
   Stream<List<WordTracker>> _watchRecentWords(String childId,

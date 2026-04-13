@@ -698,6 +698,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     final emailController = TextEditingController();
+    final outerContext = context;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -732,7 +733,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: localization.translate('choose_email'),
-                  prefixIcon: const Icon(Icons.alternate_email),
+                  prefixIcon: const Icon(Icons.email_outlined),
                 ),
               ),
               const SizedBox(height: 24),
@@ -750,7 +751,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       return;
                     }
                     Navigator.of(context).pop();
-                    await addCurrentChildToOtherParent(context, email);
+                    await addCurrentChildToOtherParent(outerContext, email);
                   },
                   child: Text(localization.translate('submit')),
                 ),
