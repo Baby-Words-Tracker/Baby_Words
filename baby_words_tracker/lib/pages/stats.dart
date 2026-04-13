@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
@@ -11,7 +11,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 
 class StatsPage extends StatefulWidget {
   static const routeName = '/stats';
@@ -30,12 +29,12 @@ class _StatsPageState extends State<StatsPage> {
   Stream<List<_DailyWordCount>>? _dailyWordCountStream;
   Stream<Map<DateTime, int>>? _monthlyWordCountStream;
   Stream<List<WordTracker>>? _allWordsStream;
-  late final Future<_NormCurve> _normCurveFuture;
+  late final Future<_NormWordData> _normCurveFuture;
 
   @override
   void initState() {
     super.initState();
-    _normCurveFuture = _NormCurveLoader.load();
+    _normCurveFuture = _NormCurveLoader.loadWordData();
   }
 
   @override
@@ -267,6 +266,12 @@ class _StatsPageState extends State<StatsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    _NormDevelopmentComparisonCard(
+                      child: child,
+                      wordsStream: _allWordsStream!,
+                      normCurveFuture: _normCurveFuture,
+                    ),
+                    const SizedBox(height: 16),
                     _WeeklySummaryWithBarChart(
                       weeklyStream: _pastWeekCountStream!,
                       dailyStream: _dailyWordCountStream!,
@@ -276,12 +281,6 @@ class _StatsPageState extends State<StatsPage> {
                     _MonthlyCalendarHeatmap(
                       stream: _monthlyWordCountStream!,
                       localization: localization,
-                    ),
-                    const SizedBox(height: 16),
-                    _NormDevelopmentComparisonCard(
-                      child: child,
-                      wordsStream: _allWordsStream!,
-                      normCurveFuture: _normCurveFuture,
                     ),
                   ],
                 ),
@@ -660,7 +659,7 @@ class _MonthlyCalendarHeatmap extends StatelessWidget {
   }
 }
 
-class _NormDevelopmentComparisonCard extends StatelessWidget {
+class _NormDevelopmentComparisonCard extends StatefulWidget {
   const _NormDevelopmentComparisonCard({
     required this.child,
     required this.wordsStream,
@@ -669,7 +668,38 @@ class _NormDevelopmentComparisonCard extends StatelessWidget {
 
   final Child child;
   final Stream<List<WordTracker>> wordsStream;
-  final Future<_NormCurve> normCurveFuture;
+  final Future<_NormWordData> normCurveFuture;
+
+  @override
+  State<_NormDevelopmentComparisonCard> createState() =>
+      _NormDevelopmentComparisonCardState();
+}
+
+class _NormDevelopmentComparisonCardState
+    extends State<_NormDevelopmentComparisonCard> {
+  late final Timer _rotationTimer;
+  int _currentWordIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationTimer = Timer.periodic(
+      const Duration(seconds: 4),
+      (_) {
+        if (mounted) {
+          setState(() {
+            _currentWordIndex++;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotationTimer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -681,127 +711,159 @@ class _NormDevelopmentComparisonCard extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: FutureBuilder<_NormCurve>(
-        future: normCurveFuture,
+      child: FutureBuilder<_NormWordData>(
+        future: widget.normCurveFuture,
         builder: (context, normSnapshot) {
           if (normSnapshot.connectionState == ConnectionState.waiting) {
             return const SizedBox(
-              height: 220,
+              height: 180,
               child: Center(child: CircularProgressIndicator()),
             );
           }
 
           if (normSnapshot.hasError) {
             return _NormInfo(
-              title: 'Development vs norm',
+              title: 'Word comparison',
               message: normSnapshot.error.toString(),
             );
           }
 
-          final normCurve = normSnapshot.data ?? _NormCurve.empty();
-          if (normCurve.curve.isEmpty) {
+          final normData = normSnapshot.data;
+          if (normData == null || normData.wordMonths.isEmpty) {
             return const _NormInfo(
-              title: 'Development vs norm',
+              title: 'Word comparison',
               message:
-                  'No usable month data found in assets/norm_words_by_month.json.',
+                  'No word data found in assets/norm_words_by_month.json.',
             );
           }
 
           return StreamBuilder<List<WordTracker>>(
-            stream: wordsStream,
+            stream: widget.wordsStream,
             builder: (context, wordsSnapshot) {
               if (wordsSnapshot.connectionState == ConnectionState.waiting) {
                 return const SizedBox(
-                  height: 220,
+                  height: 180,
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
 
-              final words = wordsSnapshot.data ?? const <WordTracker>[];
-              final childCurve = _buildChildCurve(
-                birthday: child.birthday,
-                words: words,
-              );
+              final childWords = wordsSnapshot.data ?? const <WordTracker>[];
+              
+              // Filter to only words in the norm dataset
+              final normWords = childWords
+                  .where((word) =>
+                      normData.wordMonths.containsKey(word.id?.toLowerCase() ?? ''))
+                  .toList();
+              
+              if (normWords.isEmpty) {
+                return _NormInfo(
+                  title: 'Word comparison',
+                  message:
+                      'No words from your list found in the norm dataset yet. Keep adding words!',
+                );
+              }
 
-              final childAgeMonths = _monthsBetween(child.birthday, DateTime.now())
-                  .clamp(0, 120);
-              final expectedAtAge = normCurve.curve.cumulativeCountAt(childAgeMonths);
-              final actualAtAge = childCurve.cumulativeCountAt(childAgeMonths);
-              final gap = actualAtAge - expectedAtAge;
+              final selectedIndex = _currentWordIndex % normWords.length;
+              final selectedWordTracker = normWords[selectedIndex];
+              final wordName = selectedWordTracker.id?.toLowerCase() ?? '';
+              final childLearnedMonth =
+                  _monthsBetween(widget.child.birthday, selectedWordTracker.firstUtterance);
 
-              final maxMonth = math.max(
-                childAgeMonths,
-                math.max(childCurve.maxMonth, normCurve.curve.maxMonth),
-              );
+              final normStats = normData.wordMonths[wordName];
+              final normMedian = normStats?.median ?? -1;
+              final normRange = normStats?.range ?? (0, 0);
 
-              final normData = [
-                for (int month = 0; month <= maxMonth; month++)
-                  _CurvePoint(month, normCurve.curve.cumulativeCountAt(month)),
-              ];
-              final childData = [
-                for (int month = 0; month <= maxMonth; month++)
-                  _CurvePoint(month, childCurve.cumulativeCountAt(month)),
-              ];
+              final comparison =
+                  _getComparisonLabel(childLearnedMonth, normMedian);
+              final comparisonColor = _getComparisonColor(theme,
+                  childLearnedMonth, normMedian);
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Development vs norm',
+                    'Word comparison',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 12),
                   Text(
-                    'Age $childAgeMonths months • Child: $actualAtAge • Norm: $expectedAtAge',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    gap >= 0
-                        ? '+$gap words compared with norm'
-                        : '$gap words compared with norm',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: gap >= 0
-                          ? Colors.green.shade700
-                          : theme.colorScheme.error,
-                      fontWeight: FontWeight.w600,
+                    wordName.toUpperCase(),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 220,
-                    child: SfCartesianChart(
-                      margin: EdgeInsets.zero,
-                      primaryXAxis: NumericAxis(
-                        title: AxisTitle(text: 'Age (months)'),
-                        interval: maxMonth > 24 ? 6 : 3,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Child learned',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$childLearnedMonth months',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.tertiary,
+                            ),
+                          ),
+                        ],
                       ),
-                      primaryYAxis: NumericAxis(
-                        title: AxisTitle(text: 'Cumulative words'),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Norm median',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            normMedian >= 0
+                                ? '$normMedian months'
+                                : 'not in norm',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ),
-                      legend: const Legend(isVisible: true),
-                      series: <CartesianSeries<_CurvePoint, int>>[
-                        LineSeries<_CurvePoint, int>(
-                          name: 'Norm',
-                          dataSource: normData,
-                          xValueMapper: (_CurvePoint p, _) => p.month,
-                          yValueMapper: (_CurvePoint p, _) => p.value,
-                          color: theme.colorScheme.primary.withOpacity(0.7),
-                          width: 2.5,
-                        ),
-                        LineSeries<_CurvePoint, int>(
-                          name: child.name,
-                          dataSource: childData,
-                          xValueMapper: (_CurvePoint p, _) => p.month,
-                          yValueMapper: (_CurvePoint p, _) => p.value,
-                          color: theme.colorScheme.tertiary,
-                          width: 3,
-                        ),
-                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (normMedian >= 0)
+                    Chip(
+                      label: Text(
+                        comparison,
+                        style: TextStyle(color: comparisonColor),
+                      ),
+                      backgroundColor: comparisonColor.withOpacity(0.15),
+                      side: BorderSide(color: comparisonColor),
+                    ),
+                  const SizedBox(height: 12),
+                  if (normRange.$1 >= 0 && normRange.$2 >= 0)
+                    Text(
+                      'Norm range: ${normRange.$1}–${normRange.$2} months',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${selectedIndex + 1}/${normWords.length} • Rotates every 4 seconds',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -813,25 +875,68 @@ class _NormDevelopmentComparisonCard extends StatelessWidget {
     );
   }
 
-  _CumulativeCurve _buildChildCurve({
-    required DateTime birthday,
-    required List<WordTracker> words,
-  }) {
-    final monthlyCounts = <int, int>{};
-    for (final word in words) {
-      final month = _monthsBetween(birthday, word.firstUtterance);
-      if (month < 0) {
-        continue;
-      }
-      monthlyCounts[month] = (monthlyCounts[month] ?? 0) + 1;
+  String _getComparisonLabel(int childMonth, int normMedian) {
+    if (normMedian < 0) {
+      return 'Not in norm dataset';
     }
-
-    final currentAgeMonths = _monthsBetween(birthday, DateTime.now()).clamp(0, 120);
-    return _CumulativeCurve.fromMonthlyCounts(
-      monthlyCounts,
-      maxMonth: currentAgeMonths,
-    );
+    final diff = normMedian - childMonth;
+    if (diff.abs() <= 1) {
+      return '✓ On pace';
+    } else if (diff > 0) {
+      return '↑ Ahead by $diff months';
+    } else {
+      return '↓ Behind by ${diff.abs()} months';
+    }
   }
+
+  Color _getComparisonColor(ThemeData theme, int childMonth, int normMedian) {
+    if (normMedian < 0) {
+      return theme.colorScheme.onSurfaceVariant;
+    }
+    final diff = (normMedian - childMonth).abs();
+    if (diff <= 1) {
+      return Colors.green.shade600;
+    } else if (normMedian > childMonth) {
+      return Colors.blue.shade600;
+    } else {
+      return theme.colorScheme.error;
+    }
+  }
+}
+
+class _WordNormStats {
+  const _WordNormStats({
+    required this.months,
+  });
+
+  final List<int> months;
+
+  int get median {
+    if (months.isEmpty) return -1;
+    final sorted = List<int>.from(months)..sort();
+    if (sorted.length % 2 == 0) {
+      return ((sorted[sorted.length ~/ 2 - 1] + sorted[sorted.length ~/ 2]) / 2)
+          .round();
+    }
+    return sorted[sorted.length ~/ 2];
+  }
+
+  double get mean {
+    if (months.isEmpty) return -1;
+    return months.reduce((a, b) => a + b) / months.length;
+  }
+
+  (int, int) get range {
+    if (months.isEmpty) return (-1, -1);
+    final sorted = List<int>.from(months)..sort();
+    return (sorted.first, sorted.last);
+  }
+}
+
+class _NormWordData {
+  const _NormWordData({required this.wordMonths});
+
+  final Map<String, _WordNormStats> wordMonths;
 }
 
 class _NormInfo extends StatelessWidget {
@@ -867,73 +972,10 @@ class _NormInfo extends StatelessWidget {
   }
 }
 
-class _CurvePoint {
-  const _CurvePoint(this.month, this.value);
-
-  final int month;
-  final int value;
-}
-
-class _CumulativeCurve {
-  const _CumulativeCurve(this.points);
-
-  final List<_CurvePoint> points;
-
-  bool get isEmpty => points.isEmpty;
-
-  int get maxMonth => points.isEmpty ? 0 : points.last.month;
-
-  int cumulativeCountAt(int month) {
-    if (points.isEmpty) {
-      return 0;
-    }
-
-    if (month <= points.first.month) {
-      return points.first.value;
-    }
-
-    for (int i = points.length - 1; i >= 0; i--) {
-      final point = points[i];
-      if (point.month <= month) {
-        return point.value;
-      }
-    }
-
-    return 0;
-  }
-
-  factory _CumulativeCurve.fromMonthlyCounts(
-    Map<int, int> monthlyCounts, {
-    required int maxMonth,
-  }) {
-    if (maxMonth < 0) {
-      return const _CumulativeCurve(<_CurvePoint>[]);
-    }
-
-    final points = <_CurvePoint>[];
-    int cumulative = 0;
-    for (int month = 0; month <= maxMonth; month++) {
-      cumulative += monthlyCounts[month] ?? 0;
-      points.add(_CurvePoint(month, cumulative));
-    }
-    return _CumulativeCurve(points);
-  }
-}
-
-class _NormCurve {
-  const _NormCurve({required this.curve});
-
-  final _CumulativeCurve curve;
-
-  factory _NormCurve.empty() {
-    return const _NormCurve(curve: _CumulativeCurve(<_CurvePoint>[]));
-  }
-}
-
 class _NormCurveLoader {
   static const String assetPath = 'assets/norm_words_by_month.json';
 
-  static Future<_NormCurve> load() async {
+  static Future<_NormWordData> loadWordData() async {
     String jsonString;
     try {
       jsonString = await rootBundle.loadString(assetPath);
@@ -944,73 +986,42 @@ class _NormCurveLoader {
     }
 
     final decoded = jsonDecode(jsonString);
-    final monthlyCounts = <int, int>{};
+    final wordMonths = <String, _WordNormStats>{};
 
-    if (decoded is List) {
-      for (final item in decoded) {
-        if (item is! Map<String, dynamic>) {
+    if (decoded is Map<String, dynamic>) {
+      for (final entry in decoded.entries) {
+        final word = entry.key.toLowerCase();
+        final value = entry.value;
+        if (value is! List) {
           continue;
         }
-        final month = _extractMonth(item);
-        if (month == null || month < 0) {
-          continue;
+
+        final months = <int>[];
+        for (final raw in value) {
+          final month = _toInt(raw);
+          if (month != null && month >= 0) {
+            months.add(month);
+          }
         }
-        monthlyCounts[month] = (monthlyCounts[month] ?? 0) + 1;
+
+        if (months.isNotEmpty) {
+          wordMonths[word] = _WordNormStats(months: months);
+        }
       }
-    } else if (decoded is Map<String, dynamic>) {
-      decoded.forEach((key, value) {
-        final month = int.tryParse(key);
-        if (month == null || month < 0) {
-          return;
-        }
-
-        int count;
-        if (value is int) {
-          count = value;
-        } else if (value is double) {
-          count = value.round();
-        } else if (value is String) {
-          count = int.tryParse(value) ?? 0;
-        } else {
-          count = 0;
-        }
-
-        if (count > 0) {
-          monthlyCounts[month] = (monthlyCounts[month] ?? 0) + count;
-        }
-      });
     }
 
-    if (monthlyCounts.isEmpty) {
-      return _NormCurve.empty();
-    }
-
-    final maxMonth = monthlyCounts.keys.reduce(math.max);
-    return _NormCurve(
-      curve: _CumulativeCurve.fromMonthlyCounts(
-        monthlyCounts,
-        maxMonth: maxMonth,
-      ),
-    );
+    return _NormWordData(wordMonths: wordMonths);
   }
 
-  static int? _extractMonth(Map<String, dynamic> item) {
-    final monthValue = item['month'] ??
-        item['ageMonth'] ??
-        item['age_month'] ??
-        item['learnedMonth'] ??
-        item['learned_month'] ??
-        item['monthLearned'] ??
-        item['month_learned'];
-
-    if (monthValue is int) {
-      return monthValue;
+  static int? _toInt(dynamic value) {
+    if (value is int) {
+      return value;
     }
-    if (monthValue is double) {
-      return monthValue.round();
+    if (value is double) {
+      return value.round();
     }
-    if (monthValue is String) {
-      return int.tryParse(monthValue);
+    if (value is String) {
+      return int.tryParse(value);
     }
     return null;
   }
