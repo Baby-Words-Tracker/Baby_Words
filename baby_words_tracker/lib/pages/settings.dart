@@ -39,119 +39,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _languageInitialised = true;
     }
   }
-  /* Old Version
-  Future<void> _showEditParentSheet() async {
-    final localization = context.read<LocalizationService>();
-    final profileService = context.read<UserProfileModelService>();
-    final userProfileService = context.read<UserProfileService>();
-
-    final profile = profileService.userProfile;
-    if (profile == null) return;
-
-    final nameController = TextEditingController(text: profile.fullName);
-    final emailController = TextEditingController(text: profile.email);
-
-    bool isSaving = false;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            Future<void> handleSave() async {
-              final name = nameController.text.trim();
-              final email = emailController.text.trim();
-
-              if (name.isEmpty || email.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(localization.translate('fields_required')),
-                  ),
-                );
-                return;
-              }
-
-              setModalState(() => isSaving = true);
-
-              try {
-                await userProfileService.updateUserProfile(
-                  profile.id!,
-                  {
-                    'fullName': name,
-                    'email': email,
-                  },
-                );
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localization
-                          .translate('settings_profile_update_success')),
-                    ),
-                  );
-                  Navigator.of(context).pop();
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localization
-                          .translate('settings_profile_update_failed')),
-                    ),
-                  );
-                }
-              } finally {
-                if (mounted) {
-                  setModalState(() => isSaving = false);
-                }
-              }
-            }
-
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    localization.translate('settings_profile_edit_title'),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: localization.translate('choose_name'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: localization.translate('choose_email'),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: isSaving ? null : handleSave,
-                    child: isSaving
-                        ? const CircularProgressIndicator()
-                        : Text(localization.translate('save')),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-  */
+  
   Future<void> _showEditParentSheet() async {
     final localization = context.read<LocalizationService>();
     final theme = Theme.of(context);
@@ -230,25 +118,25 @@ class _SettingsPageState extends State<SettingsPage> {
                       if (nameChanged) 'fullName': fullName,
                       if (nameChanged) 'firstName': trimmedFirst,
                       if (nameChanged) 'lastName': trimmedLast,
+                      if (nameChanged) 'name': fullName,
                       if (emailChanged) 'email': trimmedEmail,
                     },
-                  );
-
-                  // Update in-memory profile
-                  profileService.updateLocalProfile(
-                    fullName: fullName,
-                    firstName: trimmedFirst,
-                    lastName: trimmedLast,
-                    email: trimmedEmail,
                   );
 
                   if (!success) throw Exception('profile-update-failed');
 
                   if (mounted) {
+                    profileService.updateLocalProfile(
+                      fullName: fullName,
+                      firstName: trimmedFirst,
+                      lastName: trimmedLast,
+                      name: fullName,
+                      email: trimmedEmail,
+                    );
+                    Navigator.of(context).pop();
                     ScaffoldMessenger.of(rootContext).showSnackBar(
                       SnackBar(content: Text(localization.translate('settings_profile_update_success'))),
                     );
-                    Navigator.of(sheetContext).pop();
                   }
                 } catch (_) {
                   if (mounted) {
@@ -300,45 +188,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: () async {
-                      final authService = context.read<AuthenticationService>();
-                      final userProfileService = context.read<UserProfileModelService>();
-
-                      try {
-                        await authService.sendEmailVerification();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Verification email sent! Check your inbox.'),
-                          ),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to send verification email'),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(localization.translate('send_verification_email')),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Optional: Check verification status button
-                  FilledButton(
-                    onPressed: () async {
-                      final profileService = context.read<UserProfileModelService>();
-                      await profileService.refreshEmailVerificationStatus();
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Email verification status updated'),
-                        ),
-                      );
-                    },
-                    child: Text(localization.translate('check_verification_status')),
-                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
