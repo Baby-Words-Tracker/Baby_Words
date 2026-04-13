@@ -87,10 +87,7 @@ Future<void> addCurrentChildToOtherParent(
           builder: (context, localizationService, child) {
             return AlertDialog(
               title: Text(localizationService.translate("Confirm Action")),
-              content: Text(localizationService.translate("grant_permission") +
-                  otherParentEmail +
-                  localizationService.translate("access_child") +
-                  currChildName!),
+              content: Text('${localizationService.translate("grant_permission")} $otherParentEmail ${localizationService.translate("access_child")} ${currChildName!}'),
               actions: [
                 TextButton(
                   onPressed: () {

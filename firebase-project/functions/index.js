@@ -298,11 +298,7 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   try {
     checkIsAtLeast(req, Role.parent);
 
-    const parentCollection = db.collection("Parent");
-
-    // const parentQuerySnapshot = await parentCollection
-    //     .where("email", "==", targetEmail)
-    //     .get();
+    const userProfileCollection = db.collection("UserProfile");
 
     let targetUid;
     try {
@@ -314,7 +310,7 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
 
 
     await db.runTransaction(async (transaction) => {
-      const userRef = parentCollection.doc(req.auth.uid);
+      const userRef = userProfileCollection.doc(req.auth.uid);
       const userSnaphot = await transaction.get(userRef);
 
       if (!userSnaphot.exists ||
@@ -326,7 +322,7 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
         );
       }
 
-      const parentRef = parentCollection.doc(targetUid);
+      const parentRef = userProfileCollection.doc(targetUid);
       const parentUID = parentRef.id;
 
       const childCollection = db.collection("Child");
