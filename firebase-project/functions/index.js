@@ -337,11 +337,7 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
       }
 
       transaction.update(parentRef, {
-        childIDs: admin.firestore.FieldValue.arrayUnion(childUid),
-      });
-
-      transaction.update(childRef, {
-        parentIDs: admin.firestore.FieldValue.arrayUnion(parentUID),
+        pendingChildIDs: admin.firestore.FieldValue.arrayUnion(childUid),
       });
     });
   } catch (error) {
@@ -355,6 +351,70 @@ exports.addChildToOtherParent = https.onCall(async (req, context) => {
   return {
     message: `User ${targetEmail} has been given the child.`,
   };
+});
+
+/**
+ * Accepts a pending child share request
+ */
+exports.acceptChildShare = https.onCall(async (req) => {
+  const childUid = req.data.childUid;
+  checkEmpty(childUid, "childUid");
+
+  try {
+    checkIsAtLeast(req, Role.parent);
+    const callerUid = req.auth.uid;
+    const userProfileCollection = db.collection("UserProfile");
+
+    await db.runTransaction(async (transaction) => {
+      const userRef = userProfileCollection.doc(callerUid);
+      const userSnapshot = await transaction.get(userRef);
+
+      if (!userSnapshot.exists ||
+          !(userSnapshot.data().pendingChildIDs || []).includes(childUid)) {
+        throw new https.HttpsError(
+            "not-found",
+            "No pending share found for this child",
+        );
+      }
+
+      const childRef = db.collection("Child").doc(childUid);
+
+      transaction.update(userRef, {
+        pendingChildIDs: admin.firestore.FieldValue.arrayRemove(childUid),
+        childIDs: admin.firestore.FieldValue.arrayUnion(childUid),
+      });
+      transaction.update(childRef, {
+        parentIDs: admin.firestore.FieldValue.arrayUnion(callerUid),
+      });
+    });
+  } catch (error) {
+    logger.error(`Failed to accept child share: ${error}`);
+    return {message: `Failed to accept child share: ${error}`};
+  }
+
+  return {message: "Child share accepted successfully."};
+});
+
+/**
+ * Declines a pending child share request
+ */
+exports.declineChildShare = https.onCall(async (req) => {
+  const childUid = req.data.childUid;
+  checkEmpty(childUid, "childUid");
+
+  try {
+    checkIsAtLeast(req, Role.parent);
+    const callerUid = req.auth.uid;
+
+    await db.collection("UserProfile").doc(callerUid).update({
+      pendingChildIDs: admin.firestore.FieldValue.arrayRemove(childUid),
+    });
+  } catch (error) {
+    logger.error(`Failed to decline child share: ${error}`);
+    return {message: `Failed to decline child share: ${error}`};
+  }
+
+  return {message: "Child share declined."};
 });
 
 exports.getUserIdByEmail = https.onCall(async (req, context) => {
