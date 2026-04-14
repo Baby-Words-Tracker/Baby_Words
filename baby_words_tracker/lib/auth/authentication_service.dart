@@ -80,6 +80,43 @@ class AuthenticationService extends ChangeNotifier {
       debugPrint('Error signing out: $e');
     }
   }
+  /// Sends a verification email to the current user
+  Future<void> sendEmailVerification() async {
+    final currentUser = _firebaseAuthInstance.currentUser;
+    if (currentUser == null) {
+      throw Exception('No user signed in');
+    }
+
+    if (currentUser.emailVerified) {
+      debugPrint('AuthenticationService: Email already verified');
+      return;
+    }
+
+    try {
+      await currentUser.sendEmailVerification();
+      debugPrint('AuthenticationService: Verification email sent');
+    } catch (e) {
+      debugPrint('AuthenticationService: Failed to send verification email: $e');
+      rethrow;
+    }
+  }
+
+  /// Reloads the user from Firebase to get the latest emailVerified status
+  Future<void> reloadUser() async {
+    final currentUser = _firebaseAuthInstance.currentUser;
+    if (currentUser == null) return;
+
+    try {
+      await currentUser.reload();
+      _user = _firebaseAuthInstance.currentUser;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('AuthenticationService: Failed to reload user: $e');
+    }
+  }
+
+/// Returns whether the current user’s email is verified
+bool get isEmailVerified => _user?.emailVerified ?? false;
 
   User? get user => _user;
 
