@@ -798,14 +798,18 @@ class _NormDevelopmentComparisonCardState
               final childLearnedMonth =
                   _monthsBetween(widget.child.birthday, selectedWordTracker.firstUtterance);
 
-              final normStats = normData.wordMonths[wordName];
-              final normMedian = normStats?.median ?? -1;
+                final normStats = normData.wordMonths[wordName];
+                final normMean = normStats?.mean ?? -1;
               final normRange = normStats?.range ?? (0, 0);
+              final percentile = normStats?.percentileFor(childLearnedMonth);
 
               final comparison =
-                  _getComparisonLabel(childLearnedMonth, normMedian);
-              final comparisonColor = _getComparisonColor(theme,
-                  childLearnedMonth, normMedian);
+                  _getComparisonLabel(childLearnedMonth, normMean);
+                final comparisonColor = _getComparisonColor(
+                theme,
+                childLearnedMonth,
+                normMean,
+                );
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -904,27 +908,34 @@ class _NormDevelopmentComparisonCardState
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Norm median',
+                                    'Norm average',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    normMedian >= 0
-                                        ? '$normMedian months'
+                                    normMean >= 0
+                                        ? '${normMean.toStringAsFixed(1)} months'
                                         : 'not in norm',
                                     style: theme.textTheme.titleLarge?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       color: theme.colorScheme.primary,
                                     ),
                                   ),
+                                  if (percentile != null)
+                                    Text(
+                                      'Percentile: ${_ordinal(percentile)}',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          if (normMedian >= 0)
+                          if (normMean >= 0)
                             Chip(
                               label: Text(
                                 comparison,
@@ -961,28 +972,28 @@ class _NormDevelopmentComparisonCardState
     );
   }
 
-  String _getComparisonLabel(int childMonth, int normMedian) {
-    if (normMedian < 0) {
+  String _getComparisonLabel(int childMonth, double normMean) {
+    if (normMean < 0) {
       return 'Not in norm dataset';
     }
-    final diff = normMedian - childMonth;
+    final diff = normMean - childMonth;
     if (diff.abs() <= 1) {
       return '✓ On pace';
     } else if (diff > 0) {
-      return '↑ Ahead by $diff months';
+      return '↑ Ahead by ${diff.toStringAsFixed(1)} months';
     } else {
-      return '↓ Behind by ${diff.abs()} months';
+      return '↓ Behind by ${diff.abs().toStringAsFixed(1)} months';
     }
   }
 
-  Color _getComparisonColor(ThemeData theme, int childMonth, int normMedian) {
-    if (normMedian < 0) {
+  Color _getComparisonColor(ThemeData theme, int childMonth, double normMean) {
+    if (normMean < 0) {
       return theme.colorScheme.onSurfaceVariant;
     }
-    final diff = (normMedian - childMonth).abs();
+    final diff = (normMean - childMonth).abs();
     if (diff <= 1) {
       return Colors.green.shade600;
-    } else if (normMedian > childMonth) {
+    } else if (normMean > childMonth) {
       return Colors.blue.shade600;
     } else {
       return theme.colorScheme.error;
@@ -1016,6 +1027,42 @@ class _WordNormStats {
     if (months.isEmpty) return (-1, -1);
     final sorted = List<int>.from(months)..sort();
     return (sorted.first, sorted.last);
+  }
+
+  int? percentileFor(int childMonth) {
+    if (months.isEmpty) return null;
+
+    int laterCount = 0;
+    int equalCount = 0;
+    for (final month in months) {
+      if (month > childMonth) {
+        laterCount++;
+      } else if (month == childMonth) {
+        equalCount++;
+      }
+    }
+
+    final percentile =
+        ((laterCount + (0.5 * equalCount)) / months.length * 100).round();
+    return percentile.clamp(1, 99);
+  }
+}
+
+String _ordinal(int value) {
+  final mod100 = value % 100;
+  if (mod100 >= 11 && mod100 <= 13) {
+    return '${value}th';
+  }
+
+  switch (value % 10) {
+    case 1:
+      return '${value}st';
+    case 2:
+      return '${value}nd';
+    case 3:
+      return '${value}rd';
+    default:
+      return '${value}th';
   }
 }
 
