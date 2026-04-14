@@ -23,6 +23,7 @@ import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 // Pages
 import 'package:baby_words_tracker/pages/auth_gate.dart';
 import 'package:baby_words_tracker/pages/new_auth_gate.dart';
+import 'package:baby_words_tracker/pages/onboarding/demographic_survey.dart';
 import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
 import 'package:baby_words_tracker/pages/admin_page.dart';
@@ -348,6 +349,7 @@ class MyApp extends StatelessWidget {
               const AuthGate(), // OLD: Keep for reference
           NewAuthGate.routeName: (context) => const NewAuthGate(), // NEW
           SurveyPage.routeName: (context) => const SurveyPage(),
+          DemographicSurveyPage.routeName: (context) => const DemographicSurveyPage(),
           DisplayMediaPage.routeName: (context) => const DisplayMediaPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
           SettingsPage.routeName: (context) => const SettingsPage(),

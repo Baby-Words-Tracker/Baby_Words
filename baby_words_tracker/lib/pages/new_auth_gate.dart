@@ -7,6 +7,7 @@ import 'package:baby_words_tracker/pages/onboarding/email_verification_page.dart
 import 'package:baby_words_tracker/pages/onboarding/phone_verification_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/profile_info_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/privacy_policy_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/demographic_survey.dart';
 import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
 import 'package:baby_words_tracker/pages/tutorial/welcome_page.dart';
 import 'package:baby_words_tracker/pages/tutorial/add_first_child_page.dart';
@@ -133,7 +134,7 @@ class _NewAuthGateState extends State<NewAuthGate> {
             return const PrivacyPolicyPage();
           
           case OnboardingStep.survey:
-            return const SurveyPage();
+            return const DemographicSurveyPage();
           
           case OnboardingStep.completed:
             // Onboarding complete - check if tutorial is needed

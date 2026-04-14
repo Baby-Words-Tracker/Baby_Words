@@ -13,6 +13,7 @@ import 'package:baby_words_tracker/l10n/localization_service.dart';
 
 import 'researcher_home_page.dart';
 import 'home_page.dart';
+import 'onboarding/demographic_survey.dart';
 
 class AuthGate extends StatefulWidget {
   static const routeName = '/authGate';
@@ -143,6 +144,9 @@ class _AuthGateState extends State<AuthGate> {
             if (user == null) {
               throw Exception('User is null in auth_gate');
             } else if (userModelService.userType == UserType.parent) {
+              if (userModelService.parent?.demographicSurveyComplete != true) {
+                return const DemographicSurveyPage();
+              }
               return const HomePage();
             } else if (userModelService.userType == UserType.researcher) {
               return const ResearcherHomePage();
