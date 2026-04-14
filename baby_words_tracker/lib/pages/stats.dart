@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/pages/shared/bottom_bar.dart';
@@ -6,6 +9,7 @@ import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class StatsPage extends StatefulWidget {
@@ -24,13 +28,46 @@ class _StatsPageState extends State<StatsPage> {
   Stream<int>? _pastWeekCountStream;
   Stream<List<_DailyWordCount>>? _dailyWordCountStream;
   Stream<Map<DateTime, int>>? _monthlyWordCountStream;
+  Stream<List<WordTracker>>? _allWordsStream;
+  late final Future<_NormWordData> _normCurveFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _normCurveFuture = _NormCurveLoader.loadWordData();
+  }
 
   @override
   void dispose() {
     _pastWeekCountStream = null;
     _dailyWordCountStream = null;
     _monthlyWordCountStream = null;
+    _allWordsStream = null;
     super.dispose();
+  }
+
+  Stream<List<WordTracker>> _watchAllWords(String childId) {
+    return FirebaseFirestore.instance
+        .collection(Child.collectionName)
+        .doc(childId)
+        .collection(WordTracker.collectionName)
+        .orderBy('firstUtterance')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) {
+            try {
+              return WordTracker.fromMap(<String, dynamic>{
+                ...doc.data(),
+                'id': doc.id,
+              });
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<WordTracker>()
+          .toList();
+    });
   }
 
   Stream<int> _watchPastWeekCount(String childId) {
@@ -173,17 +210,20 @@ class _StatsPageState extends State<StatsPage> {
             _pastWeekCountStream = _watchPastWeekCount(child!.id!);
             _dailyWordCountStream = _watchLast7DaysWordCounts(child.id!);
             _monthlyWordCountStream = _watchCurrentMonthWordCounts(child.id!);
+            _allWordsStream = _watchAllWords(child.id!);
           } else {
             _pastWeekCountStream = null;
             _dailyWordCountStream = null;
             _monthlyWordCountStream = null;
+            _allWordsStream = null;
           }
         }
 
         final content = child == null ||
                 _pastWeekCountStream == null ||
                 _dailyWordCountStream == null ||
-                _monthlyWordCountStream == null
+                _monthlyWordCountStream == null ||
+                _allWordsStream == null
             ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -226,6 +266,12 @@ class _StatsPageState extends State<StatsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    _NormDevelopmentComparisonCard(
+                      child: child,
+                      wordsStream: _allWordsStream!,
+                      normCurveFuture: _normCurveFuture,
+                    ),
+                    const SizedBox(height: 16),
                     _WeeklySummaryWithBarChart(
                       weeklyStream: _pastWeekCountStream!,
                       dailyStream: _dailyWordCountStream!,
@@ -611,4 +657,513 @@ class _MonthlyCalendarHeatmap extends StatelessWidget {
       return baseColor;
     }
   }
+}
+
+class _NormDevelopmentComparisonCard extends StatefulWidget {
+  const _NormDevelopmentComparisonCard({
+    required this.child,
+    required this.wordsStream,
+    required this.normCurveFuture,
+  });
+
+  final Child child;
+  final Stream<List<WordTracker>> wordsStream;
+  final Future<_NormWordData> normCurveFuture;
+
+  @override
+  State<_NormDevelopmentComparisonCard> createState() =>
+      _NormDevelopmentComparisonCardState();
+}
+
+class _NormDevelopmentComparisonCardState
+    extends State<_NormDevelopmentComparisonCard> {
+  late final Timer _rotationTimer;
+  static const Duration _rotationInterval = Duration(seconds: 8);
+  static const Duration _resumeAutoAfter = Duration(seconds: 8);
+  int _currentWordIndex = 0;
+  DateTime _lastUserInteractionAt =
+      DateTime.now().subtract(_resumeAutoAfter);
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationTimer = Timer.periodic(
+      _rotationInterval,
+      (_) {
+        if (mounted && _isAutoAdvanceAllowed()) {
+          setState(() {
+            _currentWordIndex++;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotationTimer.cancel();
+    super.dispose();
+  }
+
+  bool _isAutoAdvanceAllowed() {
+    return DateTime.now().difference(_lastUserInteractionAt) >=
+        _resumeAutoAfter;
+  }
+
+  void _recordUserInteraction() {
+    _lastUserInteractionAt = DateTime.now();
+  }
+
+  void _goToNextWord() {
+    if (!mounted) return;
+    setState(() {
+      _recordUserInteraction();
+      _currentWordIndex++;
+    });
+  }
+
+  void _goToPreviousWord() {
+    if (!mounted) return;
+    setState(() {
+      _recordUserInteraction();
+      _currentWordIndex--;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: FutureBuilder<_NormWordData>(
+        future: widget.normCurveFuture,
+        builder: (context, normSnapshot) {
+          if (normSnapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 180,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (normSnapshot.hasError) {
+            return _NormInfo(
+              title: 'Word comparison',
+              message: normSnapshot.error.toString(),
+            );
+          }
+
+          final normData = normSnapshot.data;
+          if (normData == null || normData.wordMonths.isEmpty) {
+            return const _NormInfo(
+              title: 'Word comparison',
+              message:
+                  'No word data found in assets/norm_words_by_month.json.',
+            );
+          }
+
+          return StreamBuilder<List<WordTracker>>(
+            stream: widget.wordsStream,
+            builder: (context, wordsSnapshot) {
+              if (wordsSnapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final childWords = wordsSnapshot.data ?? const <WordTracker>[];
+              
+              // Filter to only words in the norm dataset
+              final normWords = childWords
+                  .where((word) =>
+                      normData.wordMonths.containsKey(word.id?.toLowerCase() ?? ''))
+                  .toList();
+              
+              if (normWords.isEmpty) {
+                return _NormInfo(
+                  title: 'Word comparison',
+                  message:
+                      'No words from your list found in the norm dataset yet. Keep adding words!',
+                );
+              }
+
+              final selectedIndex = _currentWordIndex % normWords.length;
+              final selectedWordTracker = normWords[selectedIndex];
+              final wordName = selectedWordTracker.id?.toLowerCase() ?? '';
+              final childLearnedMonth =
+                  _monthsBetween(widget.child.birthday, selectedWordTracker.firstUtterance);
+
+                final normStats = normData.wordMonths[wordName];
+                final normMean = normStats?.mean ?? -1;
+              final normRange = normStats?.range ?? (0, 0);
+              final percentile = normStats?.percentileFor(childLearnedMonth);
+
+              final comparison =
+                  _getComparisonLabel(childLearnedMonth, normMean);
+                final comparisonColor = _getComparisonColor(
+                theme,
+                childLearnedMonth,
+                normMean,
+                );
+
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity.abs() < 120) {
+                    return;
+                  }
+                  if (velocity < 0) {
+                    _goToNextWord();
+                  } else {
+                    _goToPreviousWord();
+                  }
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Word comparison',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          tooltip: 'Previous word',
+                          onPressed: _goToPreviousWord,
+                          icon: const Icon(Icons.chevron_left_rounded),
+                        ),
+                        IconButton(
+                          tooltip: 'Next word',
+                          onPressed: _goToNextWord,
+                          icon: const Icon(Icons.chevron_right_rounded),
+                        ),
+                      ],
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        final offsetTween = Tween<Offset>(
+                          begin: const Offset(0.25, 0),
+                          end: Offset.zero,
+                        );
+
+                        return ClipRect(
+                          child: SlideTransition(
+                            position: offsetTween.animate(animation),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        key: ValueKey<String>(
+                            '${selectedWordTracker.id}-$selectedIndex'),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            wordName.toUpperCase(),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Child learned',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$childLearnedMonth months',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.tertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Norm average',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    normMean >= 0
+                                        ? '${normMean.toStringAsFixed(1)} months'
+                                        : 'not in norm',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  if (percentile != null)
+                                    Text(
+                                      'Percentile: ${_ordinal(percentile)}',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (normMean >= 0)
+                            Chip(
+                              label: Text(
+                                comparison,
+                                style: TextStyle(color: comparisonColor),
+                              ),
+                              backgroundColor: comparisonColor.withOpacity(0.15),
+                              side: BorderSide(color: comparisonColor),
+                            ),
+                          const SizedBox(height: 12),
+                          if (normRange.$1 >= 0 && normRange.$2 >= 0)
+                            Text(
+                              'Norm range: ${normRange.$1}–${normRange.$2} months',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${selectedIndex + 1}/${normWords.length} • Auto-scroll resumes after 8s idle',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  String _getComparisonLabel(int childMonth, double normMean) {
+    if (normMean < 0) {
+      return 'Not in norm dataset';
+    }
+    final diff = normMean - childMonth;
+    if (diff.abs() <= 1) {
+      return '✓ On pace';
+    } else if (diff > 0) {
+      return '↑ Ahead by ${diff.toStringAsFixed(1)} months';
+    } else {
+      return '↓ Behind by ${diff.abs().toStringAsFixed(1)} months';
+    }
+  }
+
+  Color _getComparisonColor(ThemeData theme, int childMonth, double normMean) {
+    if (normMean < 0) {
+      return theme.colorScheme.onSurfaceVariant;
+    }
+    final diff = (normMean - childMonth).abs();
+    if (diff <= 1) {
+      return Colors.green.shade600;
+    } else if (normMean > childMonth) {
+      return Colors.blue.shade600;
+    } else {
+      return theme.colorScheme.error;
+    }
+  }
+}
+
+class _WordNormStats {
+  const _WordNormStats({
+    required this.months,
+  });
+
+  final List<int> months;
+
+  int get median {
+    if (months.isEmpty) return -1;
+    final sorted = List<int>.from(months)..sort();
+    if (sorted.length % 2 == 0) {
+      return ((sorted[sorted.length ~/ 2 - 1] + sorted[sorted.length ~/ 2]) / 2)
+          .round();
+    }
+    return sorted[sorted.length ~/ 2];
+  }
+
+  double get mean {
+    if (months.isEmpty) return -1;
+    return months.reduce((a, b) => a + b) / months.length;
+  }
+
+  (int, int) get range {
+    if (months.isEmpty) return (-1, -1);
+    final sorted = List<int>.from(months)..sort();
+    return (sorted.first, sorted.last);
+  }
+
+  int? percentileFor(int childMonth) {
+    if (months.isEmpty) return null;
+
+    int laterCount = 0;
+    int equalCount = 0;
+    for (final month in months) {
+      if (month > childMonth) {
+        laterCount++;
+      } else if (month == childMonth) {
+        equalCount++;
+      }
+    }
+
+    final percentile =
+        ((laterCount + (0.5 * equalCount)) / months.length * 100).round();
+    return percentile.clamp(1, 99);
+  }
+}
+
+String _ordinal(int value) {
+  final mod100 = value % 100;
+  if (mod100 >= 11 && mod100 <= 13) {
+    return '${value}th';
+  }
+
+  switch (value % 10) {
+    case 1:
+      return '${value}st';
+    case 2:
+      return '${value}nd';
+    case 3:
+      return '${value}rd';
+    default:
+      return '${value}th';
+  }
+}
+
+class _NormWordData {
+  const _NormWordData({required this.wordMonths});
+
+  final Map<String, _WordNormStats> wordMonths;
+}
+
+class _NormInfo extends StatelessWidget {
+  const _NormInfo({
+    required this.title,
+    required this.message,
+  });
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          message,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NormCurveLoader {
+  static const String assetPath = 'assets/norm_words_by_month.json';
+
+  static Future<_NormWordData> loadWordData() async {
+    String jsonString;
+    try {
+      jsonString = await rootBundle.loadString(assetPath);
+    } catch (_) {
+      throw Exception(
+        'Norm file not found at $assetPath. Add your JSON file and include it in pubspec assets.',
+      );
+    }
+
+    final decoded = jsonDecode(jsonString);
+    final wordMonths = <String, _WordNormStats>{};
+
+    if (decoded is Map<String, dynamic>) {
+      for (final entry in decoded.entries) {
+        final word = entry.key.toLowerCase();
+        final value = entry.value;
+        if (value is! List) {
+          continue;
+        }
+
+        final months = <int>[];
+        for (final raw in value) {
+          final month = _toInt(raw);
+          if (month != null && month >= 0) {
+            months.add(month);
+          }
+        }
+
+        if (months.isNotEmpty) {
+          wordMonths[word] = _WordNormStats(months: months);
+        }
+      }
+    }
+
+    return _NormWordData(wordMonths: wordMonths);
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is double) {
+      return value.round();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+}
+
+int _monthsBetween(DateTime start, DateTime end) {
+  int months = (end.year - start.year) * 12 + (end.month - start.month);
+  if (end.day < start.day) {
+    months -= 1;
+  }
+  return months;
 }
