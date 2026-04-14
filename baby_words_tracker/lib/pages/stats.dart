@@ -678,15 +678,19 @@ class _NormDevelopmentComparisonCard extends StatefulWidget {
 class _NormDevelopmentComparisonCardState
     extends State<_NormDevelopmentComparisonCard> {
   late final Timer _rotationTimer;
+  static const Duration _rotationInterval = Duration(seconds: 8);
+  static const Duration _resumeAutoAfter = Duration(seconds: 8);
   int _currentWordIndex = 0;
+  DateTime _lastUserInteractionAt =
+      DateTime.now().subtract(_resumeAutoAfter);
 
   @override
   void initState() {
     super.initState();
     _rotationTimer = Timer.periodic(
-      const Duration(seconds: 4),
+      _rotationInterval,
       (_) {
-        if (mounted) {
+        if (mounted && _isAutoAdvanceAllowed()) {
           setState(() {
             _currentWordIndex++;
           });
@@ -699,6 +703,31 @@ class _NormDevelopmentComparisonCardState
   void dispose() {
     _rotationTimer.cancel();
     super.dispose();
+  }
+
+  bool _isAutoAdvanceAllowed() {
+    return DateTime.now().difference(_lastUserInteractionAt) >=
+        _resumeAutoAfter;
+  }
+
+  void _recordUserInteraction() {
+    _lastUserInteractionAt = DateTime.now();
+  }
+
+  void _goToNextWord() {
+    if (!mounted) return;
+    setState(() {
+      _recordUserInteraction();
+      _currentWordIndex++;
+    });
+  }
+
+  void _goToPreviousWord() {
+    if (!mounted) return;
+    setState(() {
+      _recordUserInteraction();
+      _currentWordIndex--;
+    });
   }
 
   @override
@@ -778,95 +807,152 @@ class _NormDevelopmentComparisonCardState
               final comparisonColor = _getComparisonColor(theme,
                   childLearnedMonth, normMedian);
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Word comparison',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity.abs() < 120) {
+                    return;
+                  }
+                  if (velocity < 0) {
+                    _goToNextWord();
+                  } else {
+                    _goToPreviousWord();
+                  }
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Word comparison',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          tooltip: 'Previous word',
+                          onPressed: _goToPreviousWord,
+                          icon: const Icon(Icons.chevron_left_rounded),
+                        ),
+                        IconButton(
+                          tooltip: 'Next word',
+                          onPressed: _goToNextWord,
+                          icon: const Icon(Icons.chevron_right_rounded),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    wordName.toUpperCase(),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Child learned',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        final offsetTween = Tween<Offset>(
+                          begin: const Offset(0.25, 0),
+                          end: Offset.zero,
+                        );
+
+                        return ClipRect(
+                          child: SlideTransition(
+                            position: offsetTween.animate(animation),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                        );
+                      },
+                      child: Column(
+                        key: ValueKey<String>(
+                            '${selectedWordTracker.id}-$selectedIndex'),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
                           Text(
-                            '$childLearnedMonth months',
-                            style: theme.textTheme.titleLarge?.copyWith(
+                            wordName.toUpperCase(),
+                            style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.tertiary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Child learned',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$childLearnedMonth months',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.tertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Norm median',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    normMedian >= 0
+                                        ? '$normMedian months'
+                                        : 'not in norm',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (normMedian >= 0)
+                            Chip(
+                              label: Text(
+                                comparison,
+                                style: TextStyle(color: comparisonColor),
+                              ),
+                              backgroundColor: comparisonColor.withOpacity(0.15),
+                              side: BorderSide(color: comparisonColor),
+                            ),
+                          const SizedBox(height: 12),
+                          if (normRange.$1 >= 0 && normRange.$2 >= 0)
+                            Text(
+                              'Norm range: ${normRange.$1}–${normRange.$2} months',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${selectedIndex + 1}/${normWords.length} • Auto-scroll resumes after 8s idle',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Norm median',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            normMedian >= 0
-                                ? '$normMedian months'
-                                : 'not in norm',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  if (normMedian >= 0)
-                    Chip(
-                      label: Text(
-                        comparison,
-                        style: TextStyle(color: comparisonColor),
-                      ),
-                      backgroundColor: comparisonColor.withOpacity(0.15),
-                      side: BorderSide(color: comparisonColor),
                     ),
-                  const SizedBox(height: 12),
-                  if (normRange.$1 >= 0 && normRange.$2 >= 0)
-                    Text(
-                      'Norm range: ${normRange.$1}–${normRange.$2} months',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${selectedIndex + 1}/${normWords.length} • Rotates every 4 seconds',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           );
