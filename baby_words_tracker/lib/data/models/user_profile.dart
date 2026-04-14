@@ -91,6 +91,7 @@ class UserProfile {
   
   // Parent-specific fields
   final List<String> childIDs;
+  final List<String> pendingChildIDs;
   final LanguageCode? preferredLanguage;
   final bool notificationsEnabled;
   final bool nightlyNotificationsEnabled;
@@ -120,6 +121,7 @@ class UserProfile {
     this.surveyVersion,
     this.surveyCompletedAt,
     this.childIDs = const [],
+    this.pendingChildIDs = const [],
     this.preferredLanguage,
     this.notificationsEnabled = true,
     this.nightlyNotificationsEnabled = true,
@@ -186,6 +188,7 @@ class UserProfile {
     String? surveyVersion,
     DateTime? surveyCompletedAt,
     List<String>? childIDs,
+    List<String>? pendingChildIDs,
     LanguageCode? preferredLanguage,
     bool? notificationsEnabled,
     bool? nightlyNotificationsEnabled,
@@ -213,6 +216,7 @@ class UserProfile {
       surveyVersion: surveyVersion ?? this.surveyVersion,
       surveyCompletedAt: surveyCompletedAt ?? this.surveyCompletedAt,
       childIDs: childIDs ?? this.childIDs,
+      pendingChildIDs: pendingChildIDs ?? this.pendingChildIDs,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       nightlyNotificationsEnabled: nightlyNotificationsEnabled ?? this.nightlyNotificationsEnabled,
@@ -242,6 +246,7 @@ class UserProfile {
       'surveyVersion': surveyVersion,
       'surveyCompletedAt': surveyCompletedAt,
       'childIDs': childIDs,
+      'pendingChildIDs': pendingChildIDs,
       'preferredLanguage': preferredLanguage?.name,
       'notificationsEnabled': notificationsEnabled,
       'nightlyNotificationsEnabled': nightlyNotificationsEnabled,
@@ -278,6 +283,10 @@ class UserProfile {
           ? convertToDateTime(map['surveyCompletedAt'])
           : null,
       childIDs: (map['childIDs'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          [],
+      pendingChildIDs: (map['pendingChildIDs'] as List<dynamic>?)
               ?.whereType<String>()
               .toList() ??
           [],
@@ -400,7 +409,8 @@ class UserProfile {
         other.twoFactorEnabled == twoFactorEnabled &&
         other.acceptedPrivacyPolicy == acceptedPrivacyPolicy &&
         other.surveyCompleted == surveyCompleted &&
-        listEquals(other.childIDs, childIDs);
+        listEquals(other.childIDs, childIDs) &&
+        listEquals(other.pendingChildIDs, pendingChildIDs);
   }
 
   @override
@@ -419,5 +429,6 @@ class UserProfile {
         acceptedPrivacyPolicy,
         surveyCompleted,
         const DeepCollectionEquality().hash(childIDs),
+        const DeepCollectionEquality().hash(pendingChildIDs),
       ]);
 }

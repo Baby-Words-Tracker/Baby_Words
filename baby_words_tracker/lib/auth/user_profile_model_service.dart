@@ -216,6 +216,8 @@ class UserProfileModelService extends ChangeNotifier {
   bool get isDemoUser => _userProfile?.isDemoUser ?? false;
   bool get isActive => _userProfile?.isActive ?? false;
   
+  List<String> get pendingChildIDs => _userProfile?.pendingChildIDs ?? [];
+
   bool get requiresSurvey => _userProfile?.requiresSurvey ?? false;
   bool get requires2FA => _userProfile?.requires2FA ?? false;
   
