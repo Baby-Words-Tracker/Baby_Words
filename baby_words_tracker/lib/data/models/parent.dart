@@ -14,6 +14,7 @@ class Parent extends IUserModel {
 
   final bool consentFormComplete;
   final bool demographicSurveyComplete;
+  final String? surveyVersion;
   final bool preStudySurveyComplete;
 
   Parent({
@@ -22,6 +23,7 @@ class Parent extends IUserModel {
     List<String>? childIDs,
     this.consentFormComplete = false,
     this.demographicSurveyComplete = false,
+    this.surveyVersion,
     this.preStudySurveyComplete = false,
     super.acceptedPrivacyPolicy = false,
     super.policyVersion,
@@ -42,6 +44,7 @@ class Parent extends IUserModel {
     return Parent(
       id: id ?? this.id,
       language: language ?? this.language,
+      surveyVersion: surveyVersion ?? this.surveyVersion,  // ADD THIS
       childIDs: childIDs ?? this.childIDs,
       consentFormComplete: this.consentFormComplete,
       demographicSurveyComplete: this.demographicSurveyComplete,
@@ -61,6 +64,7 @@ class Parent extends IUserModel {
       'childIDs': childIDs,
       'consentFormComplete': consentFormComplete,
       'demographicSurveyComplete': demographicSurveyComplete,
+      'surveyVersion': surveyVersion,
       'preStudySurveyComplete': preStudySurveyComplete,
     };
   }
@@ -77,6 +81,7 @@ class Parent extends IUserModel {
       consentFormComplete: map['consentFormComplete'] as bool? ?? false,
       demographicSurveyComplete:
           map['demographicSurveyComplete'] as bool? ?? false,
+      surveyVersion: map['surveyVersion'] as String?,
       preStudySurveyComplete: map['preStudySurveyComplete'] as bool? ?? false,
       acceptedPrivacyPolicy: IUserModel.fromMapAcceptedPrivacyPolicy(map),
       policyVersion: IUserModel.fromMapPolicyVersion(map),
@@ -102,6 +107,7 @@ class Parent extends IUserModel {
     bool? demographicSurveyComplete,
     bool? preStudySurveyComplete,
     bool? acceptedPrivacyPolicy,
+    String? surveyVersion,
     String? policyVersion,
     DateTime? consentDate,
   }) {
@@ -115,6 +121,7 @@ class Parent extends IUserModel {
     if (demographicSurveyComplete != null) {
       map['demographicSurveyComplete'] = demographicSurveyComplete;
     }
+    if (surveyVersion != null) map['surveyVersion'] = surveyVersion;  // ADD THIS
     if (preStudySurveyComplete != null) {
       map['preStudySurveyComplete'] = preStudySurveyComplete;
     }
@@ -130,7 +137,7 @@ class Parent extends IUserModel {
 
   @override
   String toString() {
-    return 'Parent(${super.toString()}, childIDs: $childIDs, language: $language, consentFormComplete: $consentFormComplete, demographicSurveyComplete: $demographicSurveyComplete, preStudySurveyComplete: $preStudySurveyComplete)';
+    return 'Parent(${super.toString()}, childIDs: $childIDs, language: $language, consentFormComplete: $consentFormComplete, demographicSurveyComplete: $demographicSurveyComplete, surveyVersion: $surveyVersion, preStudySurveyComplete: $preStudySurveyComplete)';
   }
 
   @override
@@ -145,6 +152,7 @@ class Parent extends IUserModel {
         other.language == language &&
         other.consentFormComplete == consentFormComplete &&
         other.demographicSurveyComplete == demographicSurveyComplete &&
+        other.surveyVersion == surveyVersion &&  // ADD THIS
         other.preStudySurveyComplete == preStudySurveyComplete &&
         super == other;
   }
@@ -156,6 +164,7 @@ class Parent extends IUserModel {
         language,
         consentFormComplete,
         demographicSurveyComplete,
+        surveyVersion,
         preStudySurveyComplete,
         super.hashCode,
       ]);

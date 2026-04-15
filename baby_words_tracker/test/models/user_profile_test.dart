@@ -116,12 +116,12 @@ void main() {
       expect(profile.canAccessPlatform('web'), false);
     });
 
-    test('survey completion removes requirement', () {
+    test('correct survey type completion removes requirement', () {
       final profile = UserProfile(
         id: 'test123',
         role: UserRole.parent,
         surveyCompleted: true,
-        surveyVersion: 'v1.0',
+        surveyVersion: 'demographic-v1',
       );
 
       expect(profile.requiresSurvey, false);

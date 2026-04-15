@@ -325,6 +325,26 @@ class UserProfileModelService extends ChangeNotifier {
     }
   }
 
+  /// Update user profile fields and refresh the local profile copy.
+  Future<void> updateUserProfile(Map<String, dynamic> updates) async {
+    if (_userProfile == null) {
+      debugPrint("UserProfileModelService: Cannot update profile - no profile");
+      return;
+    }
+
+    final success = await _userProfileService.updateUserProfile(
+      _userProfile!.id,
+      updates,
+      isDemo: isDemoUser,
+    );
+
+    if (!success) {
+      throw Exception('Failed to update user profile');
+    }
+
+    await refreshUserProfile();
+  }
+
   /// Check if user can access given platform
   bool canAccessPlatform(String platform) {
     return _userProfile?.canAccessPlatform(platform) ?? false;
