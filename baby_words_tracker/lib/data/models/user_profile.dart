@@ -154,7 +154,7 @@ class UserProfile {
   }
   
   /// Check if user requires survey completion
-  bool get requiresSurvey => isParent && !surveyCompleted;
+  bool get requiresSurvey => isParent && !surveyCompleted || surveyVersion != 'demographic-v1';
   
   /// Check if user requires 2FA (required for ALL users)
   bool get requires2FA => !twoFactorEnabled;

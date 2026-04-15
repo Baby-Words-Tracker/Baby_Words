@@ -144,7 +144,7 @@ class _AuthGateState extends State<AuthGate> {
             if (user == null) {
               throw Exception('User is null in auth_gate');
             } else if (userModelService.userType == UserType.parent) {
-              if (userModelService.parent?.demographicSurveyComplete != true) {
+              if (userModelService.parent?.surveyVersion != 'demographic-v1') {
                 return const DemographicSurveyPage();
               }
               return const HomePage();
