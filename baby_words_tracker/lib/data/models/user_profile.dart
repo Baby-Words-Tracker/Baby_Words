@@ -135,7 +135,7 @@ class UserProfile {
   });
   
   // Helper getters
-  bool get isParent => role == UserRole.parent;
+  bool get isParent => role == UserRole.parent || role == UserRole.admin;
   bool get isResearcher => role == UserRole.researcher;
   bool get isAdmin => role == UserRole.admin;
   bool get isDemoUser => status == UserStatus.demo;

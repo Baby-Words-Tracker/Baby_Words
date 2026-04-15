@@ -19,8 +19,6 @@ import 'package:provider/provider.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'researcher_home_page.dart';
-import 'home_page.dart';
 import 'parent_dashboard.dart';
 
 /// New AuthGate with UserProfile-based authentication
@@ -174,15 +172,11 @@ class _NewAuthGateState extends State<NewAuthGate> {
         }
 
         // ==================== ALL CHECKS PASSED ====================
-        // Navigate to appropriate home screen based on role
+        // Navigate all authenticated roles to the parent dashboard
         if (user == null) {
           throw Exception('User is null in NewAuthGate');
-        } else if (userModelService.isParent) {
-          return const ParentDashboard();
-        } else if (userModelService.isResearcher || userModelService.isAdmin) {
-          return const ResearcherHomePage();
         } else {
-          throw Exception('Unexpected user role: ${profile.role.name}');
+          return const ParentDashboard();
         }
       },
     );

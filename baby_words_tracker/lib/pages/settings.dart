@@ -39,6 +39,183 @@ class _SettingsPageState extends State<SettingsPage> {
       _languageInitialised = true;
     }
   }
+  
+  Future<void> _showEditParentSheet() async {
+    final localization = context.read<LocalizationService>();
+    final theme = Theme.of(context);
+    final rootContext = context;
+
+    final profileService = context.read<UserProfileModelService>();
+    final userProfileService = context.read<UserProfileService>();
+
+    final profile = profileService.userProfile;
+    if (profile == null) return;
+
+    final firstNameController = TextEditingController(text: profile.firstName ?? '');
+    final lastNameController = TextEditingController(text: profile.lastName ?? '');
+    final emailController = TextEditingController(text: profile.email ?? '');
+
+    bool isSaving = false;
+
+    String getFullName() {
+      final first = firstNameController.text.trim();
+      final last = lastNameController.text.trim();
+      return [first, last].where((s) => s.isNotEmpty).join(' ');
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              Future<void> handleSave() async {
+                final trimmedFirst = firstNameController.text.trim();
+                final trimmedLast = lastNameController.text.trim();
+                final trimmedEmail = emailController.text.trim();
+                final fullName = getFullName();
+
+                if ((trimmedFirst.isEmpty && trimmedLast.isEmpty) || trimmedEmail.isEmpty) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(content: Text(localization.translate('fields_required'))),
+                  );
+                  return;
+                }
+
+                final bool nameChanged = fullName != (profile.fullName ?? '');
+                final bool emailChanged = trimmedEmail != (profile.email ?? '');
+
+                if (!nameChanged && !emailChanged) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(content: Text(localization.translate('settings_child_no_changes'))),
+                  );
+                  return;
+                }
+
+                if (profile.id == null) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    SnackBar(content: Text(localization.translate('settings_profile_update_failed'))),
+                  );
+                  return;
+                }
+
+                setModalState(() => isSaving = true);
+
+                try {
+                  final success = await userProfileService.updateUserProfile(
+                    profile.id!,
+                    {
+                      if (nameChanged) 'fullName': fullName,
+                      if (nameChanged) 'firstName': trimmedFirst,
+                      if (nameChanged) 'lastName': trimmedLast,
+                      if (nameChanged) 'name': fullName,
+                      if (emailChanged) 'email': trimmedEmail,
+                    },
+                  );
+
+                  if (!success) throw Exception('profile-update-failed');
+
+                  if (mounted) {
+                    profileService.updateLocalProfile(
+                      fullName: fullName,
+                      firstName: trimmedFirst,
+                      lastName: trimmedLast,
+                      name: fullName,
+                      email: trimmedEmail,
+                    );
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(content: Text(localization.translate('settings_profile_update_success'))),
+                    );
+                  }
+                } catch (_) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(content: Text(localization.translate('settings_profile_update_failed'))),
+                    );
+                  }
+                } finally {
+                  if (mounted) setModalState(() => isSaving = false);
+                }
+              }
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localization.translate('settings_profile_edit_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // First Name
+                  TextField(
+                    controller: firstNameController,
+                    decoration: InputDecoration(
+                      labelText: localization.translate('settings_profile_first_name'),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Last Name
+                  TextField(
+                    controller: lastNameController,
+                    decoration: InputDecoration(
+                      labelText: localization.translate('settings_profile_last_name'),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Email
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: localization.translate('choose_email'),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: isSaving ? null : () => Navigator.of(sheetContext).maybePop(),
+                        child: Text(localization.translate('cancel')),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton(
+                        onPressed: isSaving ? null : handleSave,
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(localization.translate('save')),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _changeLanguage(LanguageCode newLanguage) async {
     if (_selectedLanguage == newLanguage) return;
@@ -235,7 +412,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Sex',
+                    localization.translate('sex'),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -780,6 +957,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _ProfileCard(
                 profile: profile,
                 localization: localization,
+                onEditParent: _showEditParentSheet,
               ),
               const SizedBox(height: 20),
               _LanguageCard(
@@ -846,10 +1024,12 @@ class _ProfileCard extends StatelessWidget {
   const _ProfileCard({
     required this.profile,
     required this.localization,
+    required this.onEditParent,
   });
 
   final UserProfile? profile;
   final LocalizationService localization;
+  final VoidCallback onEditParent;
 
   @override
   Widget build(BuildContext context) {
@@ -907,6 +1087,12 @@ class _ProfileCard extends StatelessWidget {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    color: theme.colorScheme.primary,
+                    tooltip: localization.translate('edit'),
+                    onPressed: profile != null ? onEditParent : null,
                   ),
                 ],
               ),
