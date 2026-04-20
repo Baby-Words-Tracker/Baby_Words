@@ -23,4 +23,5 @@ http://wordbuds.info:8080
 # How to Deploy
 A deployment guide can be found in the repo under `dev-docs/deployment.md`, or on the project website.
 
-# How to Develop
+# Parent Data Export Feature
+Still in development, may cause bugs, ran out of time for development, so not pushed to main, but next step in getting researcher functionality finished.
