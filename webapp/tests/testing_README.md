@@ -2,7 +2,7 @@
 
 Run these commands from:
 
-`c:\Users\lildu\OneDrive\Desktop\wordbuds\Baby_Words\webapp`
+`\wordbuds\Baby_Words\webapp`
 
 ## 1) Install dependencies
 
