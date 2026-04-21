@@ -22,7 +22,7 @@ http://wordbuds.info:8080
 
 # User Guide and FAQ
 ## Video Guide
-A video can be found at the URL:
+A video can be found at the URL: https://drive.google.com/file/d/1m3LPCMKB9riD5N75xU4IXlMIt3hX7xg5/view?usp=sharing
 
 ## Written Docs
 A user guide can be found in the repo under `dev-docs/User Guide.pdf`
