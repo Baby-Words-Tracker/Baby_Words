@@ -72,3 +72,6 @@ scripts/**/*.csv
 scripts/**/*.json
 
 firebase-project/functions_python/venv
+node_modules/
+webapp/node_modules/
+webapp/.angular/cache/

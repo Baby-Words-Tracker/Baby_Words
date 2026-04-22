@@ -18,6 +18,23 @@ export interface CollectionGroup {
   items: FirestoreItem[];
 }
 
+type AppRole = 'admin' | 'researcher' | 'parent' | 'unknown';
+type DashboardView = 'dashboard' | 'admin' | 'researchers';
+
+interface DashboardPermissions {
+  canAccessAnyDashboard: boolean;
+  canAccessDashboard: boolean;
+  canAccessAdminPanel: boolean;
+  canAccessResearchersPanel: boolean;
+  defaultView: DashboardView;
+}
+
+interface AuthWithRole {
+  user: import('firebase/auth').User | null;
+  role: AppRole;
+  permissions: DashboardPermissions;
+}
+
 @Component({
   selector: 'app-root',
   imports: [AsyncPipe, ReactiveFormsModule, RouterOutlet, BaseChartDirective],
@@ -32,16 +49,45 @@ export class App {
   protected readonly researchersData = inject(ResearchersDataService);
   protected readonly authState$ = this.authService.authState$;
 
-  /** Resolves to { user, isAdmin } once profile is loaded. Non-admins cannot view dashboard. */
-  protected readonly authWithRole$ = this.authState$.pipe(
-    switchMap((user) =>
-      user
-        ? from(this.firebaseService.getCurrentUserProfile(user.uid)).pipe(
-            map((p) => ({ user, isAdmin: p?.role === 'admin' }))
-          )
-        : of({ user: null as import('firebase/auth').User | null, isAdmin: false })
-    )
+  protected readonly currentRole = signal<AppRole>('unknown');
+  protected readonly currentPermissions = signal<DashboardPermissions>(
+    this.getPermissionsForRole('unknown')
   );
+
+  /** Resolves to { user, role, permissions } once profile is loaded. */
+  protected readonly authWithRole$ = (() => {
+    const testOverride = this.getTestAuthOverride();
+    const stream = testOverride
+      ? of(testOverride)
+      : this.authState$.pipe(
+          switchMap((user) =>
+            user
+              ? from(this.firebaseService.getCurrentUserProfile(user.uid)).pipe(
+                  map((p): AuthWithRole => {
+                    const role = this.normalizeRole(p?.role);
+                    return {
+                      user,
+                      role,
+                      permissions: this.getPermissionsForRole(role)
+                    };
+                  })
+                )
+              : of({
+                  user: null as import('firebase/auth').User | null,
+                  role: 'unknown' as AppRole,
+                  permissions: this.getPermissionsForRole('unknown')
+                } satisfies AuthWithRole)
+          )
+        );
+
+    return stream.pipe(
+      tap((auth) => {
+        this.currentRole.set(auth.role);
+        this.currentPermissions.set(auth.permissions);
+        this.ensureCurrentViewAllowed(auth.permissions);
+      })
+    );
+  })();
 
   protected readonly allItems$ = this.firebaseService.getAllItems();
   protected readonly sortMode = signal<'alphabetical' | 'createdAtNewest' | 'createdAtOldest'>('alphabetical');
@@ -143,7 +189,7 @@ export class App {
     new Set(['UserProfile'])
   );
 
-  protected readonly currentView = signal<'dashboard' | 'admin' | 'researchers'>('dashboard');
+  protected readonly currentView = signal<DashboardView>('dashboard');
   protected readonly showViewDropdown = signal(false);
   protected readonly adminAddMessage = signal<string | null>(null);
   protected readonly exportMessage = signal<string | null>(null);
@@ -169,16 +215,20 @@ export class App {
     datasets: [{ label: 'Utterances', data: [] }]
   });
 
-  protected setView(view: 'dashboard' | 'admin' | 'researchers'): void {
-    this.currentView.set(view);
+  protected setView(view: DashboardView): void {
+    const normalizedView = this.normalizeViewForPermissions(
+      view,
+      this.currentPermissions()
+    );
+    this.currentView.set(normalizedView);
     this.showViewDropdown.set(false);
     this.adminAddMessage.set(null);
     this.adminRemoveMessage.set(null);
     this.editingProfileId.set(null);
-    if (view !== 'admin') {
+    if (normalizedView !== 'admin') {
       this.selectedUserProfileId.set(null);
     }
-    if (view === 'researchers') {
+    if (normalizedView === 'researchers') {
       this.selectedResearcherChildId.set(null);
       this.researchersChartData.set({ labels: [], datasets: [{ label: 'Utterances', data: [] }] });
       this.loadResearchersChildrenList();
@@ -468,5 +518,75 @@ export class App {
     if (value == null) return true;
     if (typeof value === 'object' && 'toDate' in value) return false; // Timestamps read-only
     return typeof value === 'string' || typeof value === 'boolean' || Array.isArray(value);
+  }
+
+  private normalizeRole(role: string | undefined): AppRole {
+    const value = role?.toLowerCase();
+    if (value === 'admin' || value === 'researcher' || value === 'parent') {
+      return value;
+    }
+    return 'unknown';
+  }
+
+  private getPermissionsForRole(role: AppRole): DashboardPermissions {
+    if (role === 'admin') {
+      return {
+        canAccessAnyDashboard: true,
+        canAccessDashboard: true,
+        canAccessAdminPanel: true,
+        canAccessResearchersPanel: true,
+        defaultView: 'dashboard'
+      };
+    }
+    if (role === 'researcher') {
+      return {
+        canAccessAnyDashboard: true,
+        canAccessDashboard: false,
+        canAccessAdminPanel: false,
+        canAccessResearchersPanel: true,
+        defaultView: 'researchers'
+      };
+    }
+    return {
+      canAccessAnyDashboard: false,
+      canAccessDashboard: false,
+      canAccessAdminPanel: false,
+      canAccessResearchersPanel: false,
+      defaultView: 'dashboard'
+    };
+  }
+
+  private normalizeViewForPermissions(
+    requestedView: DashboardView,
+    permissions: DashboardPermissions
+  ): DashboardView {
+    if (requestedView === 'dashboard' && permissions.canAccessDashboard) return requestedView;
+    if (requestedView === 'admin' && permissions.canAccessAdminPanel) return requestedView;
+    if (requestedView === 'researchers' && permissions.canAccessResearchersPanel) return requestedView;
+    return permissions.defaultView;
+  }
+
+  private ensureCurrentViewAllowed(permissions: DashboardPermissions): void {
+    const currentView = this.currentView();
+    const allowedView = this.normalizeViewForPermissions(currentView, permissions);
+    if (currentView !== allowedView) {
+      this.setView(allowedView);
+    }
+  }
+
+  private getTestAuthOverride(): AuthWithRole | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    const testRole = window.localStorage.getItem('wordbuds_test_role');
+    if (!testRole) {
+      return null;
+    }
+    const role = this.normalizeRole(testRole);
+    return {
+      user: { uid: 'test-user' } as import('firebase/auth').User,
+      role,
+      permissions: this.getPermissionsForRole(role)
+    };
   }
 }

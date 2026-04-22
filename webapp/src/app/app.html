@@ -2,15 +2,15 @@
 
 <main class="main">
   @if (authWithRole$ | async; as auth) {
-  @if (auth.user && !auth.isAdmin) {
+  @if (auth.user && !auth.permissions.canAccessAnyDashboard) {
   <div class="content">
     <div class="access-denied">
       <h2>Access denied</h2>
-      <p>Admin access is required to view the dashboard.</p>
+      <p>You do not have permission to view this dashboard.</p>
       <button type="button" class="logout-btn" (click)="logout()">Log out</button>
     </div>
   </div>
-  } @else if (auth.user && auth.isAdmin) {
+  } @else if (auth.user && auth.permissions.canAccessAnyDashboard) {
   <button type="button" class="logout-btn" (click)="logout()">Log out</button>
   <div class="header-bar">
     <div class="view-dropdown" (click)="$event.stopPropagation()">
@@ -25,6 +25,7 @@
       </button>
       @if (showViewDropdown()) {
         <div class="view-dropdown-menu" role="listbox">
+          @if (auth.permissions.canAccessDashboard) {
           <button
             type="button"
             role="option"
@@ -33,6 +34,8 @@
           >
             Dashboard
           </button>
+          }
+          @if (auth.permissions.canAccessAdminPanel) {
           <button
             type="button"
             role="option"
@@ -41,6 +44,8 @@
           >
             Admin panel
           </button>
+          }
+          @if (auth.permissions.canAccessResearchersPanel) {
           <button
             type="button"
             role="option"
@@ -49,20 +54,21 @@
           >
             Researchers panel
           </button>
+          }
         </div>
       }
     </div>
   </div>
   <div class="content" [class.content-wide]="currentView() === 'admin' || currentView() === 'researchers'">
     <div class="left-side">
-      @if (currentView() === 'dashboard') {
+      @if (currentView() === 'dashboard' && auth.permissions.canAccessDashboard) {
       <section class="wordbank-section">
         <h2>Dashboard</h2>
         <p class="empty-state">Select Admin panel to manage user profiles.</p>
       </section>
       }
 
-      @if (currentView() === 'admin') {
+      @if (currentView() === 'admin' && auth.permissions.canAccessAdminPanel) {
       <section class="admin-panel">
         <h2>Admin panel</h2>
         <div class="admin-layout">
@@ -152,7 +158,7 @@
                     @for (entry of getDisplayEntries(item); track entry[0]) {
                       <div class="attribute">
                         <strong>{{ entry[0] }}:</strong>
-                        @if (auth.isAdmin && isEditingProfile(item) && isEditableType(entry[1])) {
+                        @if (auth.permissions.canAccessAdminPanel && isEditingProfile(item) && isEditableType(entry[1])) {
                           <input
                             type="text"
                             class="inline-edit"
@@ -166,7 +172,7 @@
                       </div>
                     }
                   </div>
-                  @if (auth.isAdmin) {
+                  @if (auth.permissions.canAccessAdminPanel) {
                     <div class="profile-item-actions">
                       @if (isEditingProfile(item)) {
                         <button type="button" class="btn-done" (click)="stopEditingProfile()">Done</button>
@@ -236,7 +242,7 @@
       </section>
       }
 
-      @if (currentView() === 'researchers') {
+      @if (currentView() === 'researchers' && auth.permissions.canAccessResearchersPanel) {
       <section class="researchers-panel">
         <h2>Researchers panel</h2>
         <div class="researchers-layout">
