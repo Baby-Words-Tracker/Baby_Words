@@ -89,6 +89,9 @@ class UserProfile {
   final String? surveyVersion;
   final DateTime? surveyCompletedAt;
   
+  // Demographic data (optional)
+  final Map<String, dynamic>? demographicData;
+  
   // Parent-specific fields
   final List<String> childIDs;
   final List<String> pendingChildIDs;
@@ -120,6 +123,7 @@ class UserProfile {
     this.surveyCompleted = false,
     this.surveyVersion,
     this.surveyCompletedAt,
+    this.demographicData,
     this.childIDs = const [],
     this.pendingChildIDs = const [],
     this.preferredLanguage,
@@ -150,7 +154,7 @@ class UserProfile {
   }
   
   /// Check if user requires survey completion
-  bool get requiresSurvey => isParent && !surveyCompleted;
+  bool get requiresSurvey => isParent && !surveyCompleted || surveyVersion != 'demographic-v1';
   
   /// Check if user requires 2FA (required for ALL users)
   bool get requires2FA => !twoFactorEnabled;
@@ -187,6 +191,7 @@ class UserProfile {
     bool? surveyCompleted,
     String? surveyVersion,
     DateTime? surveyCompletedAt,
+    Map<String, dynamic>? demographicData,
     List<String>? childIDs,
     List<String>? pendingChildIDs,
     LanguageCode? preferredLanguage,
@@ -215,6 +220,7 @@ class UserProfile {
       surveyCompleted: surveyCompleted ?? this.surveyCompleted,
       surveyVersion: surveyVersion ?? this.surveyVersion,
       surveyCompletedAt: surveyCompletedAt ?? this.surveyCompletedAt,
+      demographicData: demographicData ?? this.demographicData,
       childIDs: childIDs ?? this.childIDs,
       pendingChildIDs: pendingChildIDs ?? this.pendingChildIDs,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
@@ -245,6 +251,7 @@ class UserProfile {
       'surveyCompleted': surveyCompleted,
       'surveyVersion': surveyVersion,
       'surveyCompletedAt': surveyCompletedAt,
+      'demographicData': demographicData,
       'childIDs': childIDs,
       'pendingChildIDs': pendingChildIDs,
       'preferredLanguage': preferredLanguage?.name,
@@ -282,6 +289,7 @@ class UserProfile {
       surveyCompletedAt: map['surveyCompletedAt'] != null
           ? convertToDateTime(map['surveyCompletedAt'])
           : null,
+      demographicData: map['demographicData'] as Map<String, dynamic>?,
       childIDs: (map['childIDs'] as List<dynamic>?)
               ?.whereType<String>()
               .toList() ??
@@ -336,6 +344,7 @@ class UserProfile {
     bool? surveyCompleted,
     String? surveyVersion,
     DateTime? surveyCompletedAt,
+    Map<String, dynamic>? demographicData,
     List<String>? childIDs,
     LanguageCode? preferredLanguage,
     bool? notificationsEnabled,
@@ -367,6 +376,7 @@ class UserProfile {
     if (surveyCompleted != null) map['surveyCompleted'] = surveyCompleted;
     if (surveyVersion != null) map['surveyVersion'] = surveyVersion;
     if (surveyCompletedAt != null) map['surveyCompletedAt'] = surveyCompletedAt;
+    if (demographicData != null) map['demographicData'] = demographicData;
     if (childIDs != null) map['childIDs'] = childIDs;
     if (preferredLanguage != null) {
       map['preferredLanguage'] = preferredLanguage.name;
