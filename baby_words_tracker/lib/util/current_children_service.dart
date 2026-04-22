@@ -33,7 +33,7 @@ class CurrentChildrenService extends ChangeNotifier {
       
       // No profile yet - user not authenticated
       if (profile == null || !profile.isParent) {
-        debugPrint("CurrentChildrenService: No profile or not a parent, clearing children");
+        debugPrint("CurrentChildrenService: No profile or not a parent-like account, clearing children");
         _children.clear();
         _childIndex = 0;
         _dataRetrieved = false;

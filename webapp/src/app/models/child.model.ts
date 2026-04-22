@@ -3,6 +3,7 @@ export interface ChildData {
   wordCount?: number;
   language?: { name: string }[];
   birthday?: unknown; // Firestore timestamp or ISO string
+  parentIDs?: string[];
 }
 
 export class Child implements ChildData {
@@ -12,6 +13,7 @@ export class Child implements ChildData {
   wordCount = 0;
   language: { name: string }[] = [];
   birthday = new Date(0);
+  parentIDs: string[] = [];
 
   static fromDataWithId(data: any): Child {
     const child = new Child();
@@ -27,6 +29,9 @@ export class Child implements ChildData {
           ? data.birthday.toDate()
           : new Date(data.birthday);
     }
+    child.parentIDs = Array.isArray(data.parentIDs)
+      ? data.parentIDs.map((id: any) => String(id))
+      : [];
     return child;
   }
 }

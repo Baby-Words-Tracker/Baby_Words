@@ -216,6 +216,8 @@ class UserProfileModelService extends ChangeNotifier {
   bool get isDemoUser => _userProfile?.isDemoUser ?? false;
   bool get isActive => _userProfile?.isActive ?? false;
   
+  List<String> get pendingChildIDs => _userProfile?.pendingChildIDs ?? [];
+
   bool get requiresSurvey => _userProfile?.requiresSurvey ?? false;
   bool get requires2FA => _userProfile?.requires2FA ?? false;
   
@@ -323,6 +325,26 @@ class UserProfileModelService extends ChangeNotifier {
     }
   }
 
+  /// Update user profile fields and refresh the local profile copy.
+  Future<void> updateUserProfile(Map<String, dynamic> updates) async {
+    if (_userProfile == null) {
+      debugPrint("UserProfileModelService: Cannot update profile - no profile");
+      return;
+    }
+
+    final success = await _userProfileService.updateUserProfile(
+      _userProfile!.id,
+      updates,
+      isDemo: isDemoUser,
+    );
+
+    if (!success) {
+      throw Exception('Failed to update user profile');
+    }
+
+    await refreshUserProfile();
+  }
+
   /// Check if user can access given platform
   bool canAccessPlatform(String platform) {
     return _userProfile?.canAccessPlatform(platform) ?? false;
@@ -348,6 +370,44 @@ class UserProfileModelService extends ChangeNotifier {
   Future<void> refreshUserProfile() async {
     debugPrint("UserProfileModelService: Force refreshing user profile");
     await _synchronizer.safeSynchronize();
+  }
+
+  /// Update the in-memory user profile without touching Firebase.
+  void updateLocalProfile({
+    String? fullName,
+    String? name,
+    String? firstName,
+    String? lastName,
+    String? email,
+  }) {
+    if (_userProfile == null) return;
+
+    _userProfile = _userProfile!.copyWith(
+      name: name ?? fullName ?? _userProfile!.name,
+      firstName: firstName ?? _userProfile!.firstName,
+      lastName: lastName ?? _userProfile!.lastName,
+      email: email ?? _userProfile!.email,
+    );
+
+    notifyListeners();
+  }
+  /// Call this after the user verifies their email
+  Future<void> refreshEmailVerificationStatus() async {
+    // Reload from Firebase Auth
+    await _authenticationService.reloadUser();
+
+    if (_authenticationService.isEmailVerified && _userProfile != null && !_userProfile!.emailVerified) {
+      final success = await _userProfileService.updateUserProfile(
+        _userProfile!.id,
+        {'emailVerified': true},
+        isDemo: isDemoUser,
+      );
+
+      if (success) {
+        _userProfile = _userProfile!.copyWith(emailVerified: true);
+        notifyListeners();
+      }
+    }
   }
 
   @override

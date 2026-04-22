@@ -89,8 +89,12 @@ class UserProfile {
   final String? surveyVersion;
   final DateTime? surveyCompletedAt;
   
+  // Demographic data (optional)
+  final Map<String, dynamic>? demographicData;
+  
   // Parent-specific fields
   final List<String> childIDs;
+  final List<String> pendingChildIDs;
   final LanguageCode? preferredLanguage;
   final bool notificationsEnabled;
   final bool nightlyNotificationsEnabled;
@@ -119,7 +123,9 @@ class UserProfile {
     this.surveyCompleted = false,
     this.surveyVersion,
     this.surveyCompletedAt,
+    this.demographicData,
     this.childIDs = const [],
+    this.pendingChildIDs = const [],
     this.preferredLanguage,
     this.notificationsEnabled = true,
     this.nightlyNotificationsEnabled = true,
@@ -129,7 +135,7 @@ class UserProfile {
   });
   
   // Helper getters
-  bool get isParent => role == UserRole.parent;
+  bool get isParent => role == UserRole.parent || role == UserRole.admin;
   bool get isResearcher => role == UserRole.researcher;
   bool get isAdmin => role == UserRole.admin;
   bool get isDemoUser => status == UserStatus.demo;
@@ -148,7 +154,7 @@ class UserProfile {
   }
   
   /// Check if user requires survey completion
-  bool get requiresSurvey => isParent && !surveyCompleted;
+  bool get requiresSurvey => isParent && !surveyCompleted || surveyVersion != 'demographic-v1';
   
   /// Check if user requires 2FA (required for ALL users)
   bool get requires2FA => !twoFactorEnabled;
@@ -185,7 +191,9 @@ class UserProfile {
     bool? surveyCompleted,
     String? surveyVersion,
     DateTime? surveyCompletedAt,
+    Map<String, dynamic>? demographicData,
     List<String>? childIDs,
+    List<String>? pendingChildIDs,
     LanguageCode? preferredLanguage,
     bool? notificationsEnabled,
     bool? nightlyNotificationsEnabled,
@@ -212,7 +220,9 @@ class UserProfile {
       surveyCompleted: surveyCompleted ?? this.surveyCompleted,
       surveyVersion: surveyVersion ?? this.surveyVersion,
       surveyCompletedAt: surveyCompletedAt ?? this.surveyCompletedAt,
+      demographicData: demographicData ?? this.demographicData,
       childIDs: childIDs ?? this.childIDs,
+      pendingChildIDs: pendingChildIDs ?? this.pendingChildIDs,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       nightlyNotificationsEnabled: nightlyNotificationsEnabled ?? this.nightlyNotificationsEnabled,
@@ -241,7 +251,9 @@ class UserProfile {
       'surveyCompleted': surveyCompleted,
       'surveyVersion': surveyVersion,
       'surveyCompletedAt': surveyCompletedAt,
+      'demographicData': demographicData,
       'childIDs': childIDs,
+      'pendingChildIDs': pendingChildIDs,
       'preferredLanguage': preferredLanguage?.name,
       'notificationsEnabled': notificationsEnabled,
       'nightlyNotificationsEnabled': nightlyNotificationsEnabled,
@@ -277,7 +289,12 @@ class UserProfile {
       surveyCompletedAt: map['surveyCompletedAt'] != null
           ? convertToDateTime(map['surveyCompletedAt'])
           : null,
+      demographicData: map['demographicData'] as Map<String, dynamic>?,
       childIDs: (map['childIDs'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          [],
+      pendingChildIDs: (map['pendingChildIDs'] as List<dynamic>?)
               ?.whereType<String>()
               .toList() ??
           [],
@@ -327,6 +344,7 @@ class UserProfile {
     bool? surveyCompleted,
     String? surveyVersion,
     DateTime? surveyCompletedAt,
+    Map<String, dynamic>? demographicData,
     List<String>? childIDs,
     LanguageCode? preferredLanguage,
     bool? notificationsEnabled,
@@ -358,6 +376,7 @@ class UserProfile {
     if (surveyCompleted != null) map['surveyCompleted'] = surveyCompleted;
     if (surveyVersion != null) map['surveyVersion'] = surveyVersion;
     if (surveyCompletedAt != null) map['surveyCompletedAt'] = surveyCompletedAt;
+    if (demographicData != null) map['demographicData'] = demographicData;
     if (childIDs != null) map['childIDs'] = childIDs;
     if (preferredLanguage != null) {
       map['preferredLanguage'] = preferredLanguage.name;
@@ -400,7 +419,8 @@ class UserProfile {
         other.twoFactorEnabled == twoFactorEnabled &&
         other.acceptedPrivacyPolicy == acceptedPrivacyPolicy &&
         other.surveyCompleted == surveyCompleted &&
-        listEquals(other.childIDs, childIDs);
+        listEquals(other.childIDs, childIDs) &&
+        listEquals(other.pendingChildIDs, pendingChildIDs);
   }
 
   @override
@@ -419,5 +439,6 @@ class UserProfile {
         acceptedPrivacyPolicy,
         surveyCompleted,
         const DeepCollectionEquality().hash(childIDs),
+        const DeepCollectionEquality().hash(pendingChildIDs),
       ]);
 }

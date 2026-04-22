@@ -11,7 +11,7 @@ WordBuds is designed to work on iOS and Android using the Flutter framework.
 
 To test our app, download the repository and use the command ```flutter run``` from inside the `Baby_Words/baby-words-tracker` directory. From there, choose the platform your testing on from the given options. 
 
-Detailed instructions can be found in `dev-docs/develop`
+Detailed instructions can be found in `dev-docs/Development Guide.pdf`
 
 If you don't have flutter installed on you machine, follow the steps found here: https://docs.flutter.dev/get-started/install before trying to test this project.
 
@@ -20,7 +20,21 @@ We have developed an admin and researcher dashboard that can be accessed on any 
 
 http://wordbuds.info:8080
 
-# How to Deploy
-A deployment guide can be found in the repo under `dev-docs/deployment.md`, or on the project website.
+# User Guide and FAQ
+## Video Guide
+A video can be found at the URL: https://drive.google.com/file/d/1m3LPCMKB9riD5N75xU4IXlMIt3hX7xg5/view?usp=sharing
 
-# How to Develop
+## Written Docs
+A user guide can be found in the repo under `dev-docs/User Guide.pdf`
+
+A FAQ can be found in the repo under `dev-docs/WordBudsFAQ.pdf`
+
+# Developer Docs
+## How to Develop
+A development guide can be found in the repo under `dev-docs/Development Guide.pdf`
+
+## How to Deploy
+A deployment guide can be found in the repo under `dev-docs/deployment.md`
+
+## How to Test
+A testing guide can be found in the repo under `dev-docs/Testing Plan and Cases.pdf`

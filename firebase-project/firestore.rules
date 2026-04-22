@@ -112,7 +112,9 @@ service cloud.firestore {
       }
       
       // Parents can read/update their own children
-      allow read, update: if isSignedIn() && isActive() && userOwnsChild();
+      // Also allow read if the child is pending acceptance (so name can be shown in dialog)
+      allow read: if isSignedIn() && isActive() && (userOwnsChild() || childId in getUserProfile().data.get('pendingChildIDs', []));
+      allow update: if isSignedIn() && isActive() && userOwnsChild();
       
       // Researchers can read all children (active users only)
       allow read: if isSignedIn() && isActive() && isResearcher();

@@ -3,6 +3,7 @@ import { IFirestoreRepository, FirestoreRepository } from './firestore-repositor
 import { Child } from '../models/child.model';
 import { Word } from '../models/word.model';
 import { WordTracker } from '../models/word-tracker.model';
+import { UserProfile } from '../models/user-profile.model';
 import { downloadAsCSV } from '../util/download-as-csv';
 
 @Injectable({ providedIn: 'root' })
@@ -83,6 +84,7 @@ export class CsvExportService {
             String(child.wordCount ?? ''),
             (child.language || []).map((l) => l.name).join(';'),
             child.birthday.toISOString(),
+            (child.parentIDs || []).join(';'),
             tracker.language?.name ?? ''
           ];
 
@@ -114,6 +116,7 @@ export class CsvExportService {
         'Child_Total_Word_Count',
         'Child_Languages',
         'Child_Birthday',
+        'Parent_IDs',
         'Utterance_Language'
       ];
 
@@ -121,9 +124,99 @@ export class CsvExportService {
       console.debug(
         `CsvExportService: Successfully exported ${csvData.length} words to CSV`
       );
+
+      // Export parent demographics as an extension
+      await this.exportParentDemographicsToCSV();
+
       return true;
     } catch (e) {
       console.debug('CsvExportService: Error exporting to CSV:', e);
+      return false;
+    }
+  }
+
+  /**
+   * exports demographic data for parent user profiles with surveyVersion "demographic-v1"
+   * returns true if successful
+   */
+  async exportParentDemographicsToCSV(): Promise<boolean> {
+    try {
+      console.debug('CsvExportService: Starting to export parent demographics to CSV');
+
+      const allUserProfiles = await this._getAllUserProfiles();
+      const parentProfiles = allUserProfiles.filter(
+        (profile) => profile.role === 'parent' && profile.surveyVersion === 'demographic-v1'
+      );
+
+      if (parentProfiles.length === 0) {
+        console.debug('CsvExportService: No qualifying parent profiles found');
+        return false;
+      }
+
+      console.debug(
+        `CsvExportService: Found ${parentProfiles.length} qualifying parent profiles`
+      );
+
+      const csvData: string[][] = [];
+
+      for (const profile of parentProfiles) {
+        if (!profile.demographicData) {
+          console.debug(`CsvExportService: Skipping profile ${profile.id} - no demographic data`);
+          continue;
+        }
+
+        const demo = profile.demographicData;
+        const row = [
+          profile.id ?? '',
+          demo.gender ?? '',
+          demo.otherChildCare ?? '',
+          demo.otherParentEducation ?? '',
+          (demo.childCareArrangements || []).join(';'),
+          demo.primaryLanguage ?? '',
+          demo.genderOther ?? '',
+          demo.educationLevel ?? '',
+          (demo.childAges || []).join(';'),
+          demo.householdIncome ?? '',
+          demo.numberOfAdults ?? '',
+          demo.otherLanguages ?? '',
+          demo.completedAt ?? '',
+          demo.ageRange ?? ''
+        ];
+
+        csvData.push(row);
+      }
+
+      if (csvData.length === 0) {
+        console.debug('CsvExportService: No demographic data found to export');
+        return false;
+      }
+
+      console.debug(`CsvExportService: Exporting ${csvData.length} demographic records`);
+
+      const csvHeader = [
+        'User_ID',
+        'Gender',
+        'Other_Child_Care',
+        'Other_Parent_Education',
+        'Child_Care_Arrangements',
+        'Primary_Language',
+        'Gender_Other',
+        'Education_Level',
+        'Child_Ages',
+        'Household_Income',
+        'Number_Of_Adults',
+        'Other_Languages',
+        'Completed_At',
+        'Age_Range'
+      ];
+
+      await downloadAsCSV(csvHeader, csvData, 'parent_demographics');
+      console.debug(
+        `CsvExportService: Successfully exported ${csvData.length} demographic records to CSV`
+      );
+      return true;
+    } catch (e) {
+      console.debug('CsvExportService: Error exporting demographics to CSV:', e);
       return false;
     }
   }
@@ -146,6 +239,16 @@ export class CsvExportService {
     } catch (e) {
       console.debug(`CsvExportService: Error getting word details for ${wordId}:`, e);
       return null;
+    }
+  }
+
+  private async _getAllUserProfiles(): Promise<UserProfile[]> {
+    try {
+      const data = await this.fireRepo.readAll(UserProfile.collectionName);
+      return data.map((d) => UserProfile.fromDataWithId(d));
+    } catch (e) {
+      console.debug('CsvExportService: Error getting all user profiles:', e);
+      return [];
     }
   }
 }
