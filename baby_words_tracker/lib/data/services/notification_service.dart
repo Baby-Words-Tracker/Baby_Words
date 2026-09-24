@@ -116,7 +116,7 @@ class NotificationService extends ChangeNotifier {
     tz.initializeTimeZones();
     try {
       final localTimeZone = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(localTimeZone));
+      tz.setLocalLocation(tz.getLocation(localTimeZone.identifier));
     } catch (e) {
       debugPrint('Unable to set local timezone for notifications: $e');
     }
