@@ -1,5 +1,6 @@
 import 'package:baby_words_tracker/data/models/user_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Defines the sequence of onboarding steps for new users
@@ -7,11 +8,11 @@ import 'package:flutter/material.dart';
 enum OnboardingStep {
   profileInfo,
   emailVerification,
-  phoneVerification,  // 2FA setup
+  phoneVerification, // 2FA setup
   privacyPolicy,
   survey,
   completed;
-  
+
   String get displayName {
     switch (this) {
       case OnboardingStep.profileInfo:
@@ -28,7 +29,7 @@ enum OnboardingStep {
         return 'Completed';
     }
   }
-  
+
   IconData get icon {
     switch (this) {
       case OnboardingStep.profileInfo:
@@ -51,6 +52,11 @@ enum OnboardingStep {
 /// Determines which step the user should see based on their profile and auth state
 class OnboardingFlowManager {
   static const bool _requirePhoneVerification = false;
+  static const bool _bypassEmailVerificationForLocalTesting =
+      bool.fromEnvironment('BYPASS_EMAIL_VERIFICATION', defaultValue: false);
+
+  static bool get _shouldBypassEmailVerification =>
+      kDebugMode && _bypassEmailVerificationForLocalTesting;
 
   static List<OnboardingStep> _activeStepsFor(UserProfile profile) {
     final steps = <OnboardingStep>[
@@ -74,7 +80,7 @@ class OnboardingFlowManager {
     if (firebaseUser == null || userProfile == null) {
       return null;
     }
-    
+
     // Collect required profile info for all users
     final needsFirstName =
         userProfile.firstName == null || userProfile.firstName!.isEmpty;
@@ -83,31 +89,32 @@ class OnboardingFlowManager {
     if (needsFirstName || needsLastName) {
       return OnboardingStep.profileInfo;
     }
-    
-    // All roles must verify email
-    if (!firebaseUser.emailVerified) {
+
+    // All roles must verify email unless explicitly bypassed for local debug testing.
+    // Run with: flutter run --dart-define=BYPASS_EMAIL_VERIFICATION=true
+    if (!firebaseUser.emailVerified && !_shouldBypassEmailVerification) {
       return OnboardingStep.emailVerification;
     }
-    
+
     // Optional phone verification / 2FA setup
     if (_requirePhoneVerification && !userProfile.twoFactorEnabled) {
       return OnboardingStep.phoneVerification;
     }
-    
+
     // Everyone must accept privacy policy
     if (!userProfile.acceptedPrivacyPolicy) {
       return OnboardingStep.privacyPolicy;
     }
-    
+
     // Only parents must complete research survey
     if (userProfile.isParent && userProfile.requiresSurvey) {
       return OnboardingStep.survey;
     }
-    
+
     // All steps completed!
     return OnboardingStep.completed;
   }
-  
+
   /// Check if user has completed all onboarding steps
   static bool isOnboardingComplete({
     required User? firebaseUser,
@@ -119,19 +126,19 @@ class OnboardingFlowManager {
     );
     return step == OnboardingStep.completed;
   }
-  
+
   /// Get the next step after the current one
   static OnboardingStep? getNextStep(OnboardingStep current) {
     final steps = OnboardingStep.values;
     final currentIndex = steps.indexOf(current);
-    
+
     if (currentIndex < 0 || currentIndex >= steps.length - 1) {
       return null; // No next step
     }
-    
+
     return steps[currentIndex + 1];
   }
-  
+
   /// Get progress through onboarding (0.0 to 1.0)
   static double getProgress({
     required User? firebaseUser,
@@ -143,10 +150,10 @@ class OnboardingFlowManager {
       firebaseUser: firebaseUser,
       userProfile: userProfile,
     );
-    
+
     if (currentStep == null) return 0.0;
     if (currentStep == OnboardingStep.completed) return 1.0;
-    
+
     final activeSteps = _activeStepsFor(userProfile);
     final totalSteps = activeSteps.length - 1;
     final currentIndex = activeSteps.indexOf(currentStep);
@@ -154,10 +161,10 @@ class OnboardingFlowManager {
     if (currentIndex < 0 || totalSteps <= 0) {
       return 0.0;
     }
-    
+
     return currentIndex / totalSteps;
   }
-  
+
   /// Get all steps that have been completed
   static List<OnboardingStep> getCompletedSteps({
     required User? firebaseUser,
@@ -169,9 +176,9 @@ class OnboardingFlowManager {
       firebaseUser: firebaseUser,
       userProfile: userProfile,
     );
-    
+
     if (currentStep == null) return [];
-    
+
     final activeSteps = _activeStepsFor(userProfile);
     final currentIndex = activeSteps.indexOf(currentStep);
 
@@ -181,7 +188,7 @@ class OnboardingFlowManager {
 
     return activeSteps.sublist(0, currentIndex);
   }
-  
+
   /// Debug string showing current state
   static String getDebugStatus({
     required User? firebaseUser,
@@ -195,7 +202,7 @@ class OnboardingFlowManager {
       firebaseUser: firebaseUser,
       userProfile: userProfile,
     );
-    
+
     return 'OnboardingFlow: Step=${step?.displayName ?? 'N/A'}, Progress=${(progress * 100).toStringAsFixed(0)}%';
   }
 }
