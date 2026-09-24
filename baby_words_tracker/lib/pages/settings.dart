@@ -3,6 +3,7 @@ import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/user_profile.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
+import 'package:baby_words_tracker/data/services/notification_service.dart';
 import 'package:baby_words_tracker/data/services/user_profile_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
 import 'package:baby_words_tracker/pages/profile_page.dart';
@@ -39,7 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _languageInitialised = true;
     }
   }
-  
+
   Future<void> _showEditParentSheet() async {
     final localization = context.read<LocalizationService>();
     final theme = Theme.of(context);
@@ -51,8 +52,10 @@ class _SettingsPageState extends State<SettingsPage> {
     final profile = profileService.userProfile;
     if (profile == null) return;
 
-    final firstNameController = TextEditingController(text: profile.firstName ?? '');
-    final lastNameController = TextEditingController(text: profile.lastName ?? '');
+    final firstNameController =
+        TextEditingController(text: profile.firstName ?? '');
+    final lastNameController =
+        TextEditingController(text: profile.lastName ?? '');
     final emailController = TextEditingController(text: profile.email ?? '');
 
     bool isSaving = false;
@@ -82,10 +85,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 final trimmedEmail = emailController.text.trim();
                 final fullName = getFullName();
 
-                if ((trimmedFirst.isEmpty && trimmedLast.isEmpty) || trimmedEmail.isEmpty) {
+                if ((trimmedFirst.isEmpty && trimmedLast.isEmpty) ||
+                    trimmedEmail.isEmpty) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(rootContext).showSnackBar(
-                    SnackBar(content: Text(localization.translate('fields_required'))),
+                    SnackBar(
+                        content:
+                            Text(localization.translate('fields_required'))),
                   );
                   return;
                 }
@@ -96,7 +102,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (!nameChanged && !emailChanged) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(rootContext).showSnackBar(
-                    SnackBar(content: Text(localization.translate('settings_child_no_changes'))),
+                    SnackBar(
+                        content: Text(localization
+                            .translate('settings_child_no_changes'))),
                   );
                   return;
                 }
@@ -104,7 +112,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (profile.id == null) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(rootContext).showSnackBar(
-                    SnackBar(content: Text(localization.translate('settings_profile_update_failed'))),
+                    SnackBar(
+                        content: Text(localization
+                            .translate('settings_profile_update_failed'))),
                   );
                   return;
                 }
@@ -135,13 +145,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(rootContext).showSnackBar(
-                      SnackBar(content: Text(localization.translate('settings_profile_update_success'))),
+                      SnackBar(
+                          content: Text(localization
+                              .translate('settings_profile_update_success'))),
                     );
                   }
                 } catch (_) {
                   if (mounted) {
                     ScaffoldMessenger.of(rootContext).showSnackBar(
-                      SnackBar(content: Text(localization.translate('settings_profile_update_failed'))),
+                      SnackBar(
+                          content: Text(localization
+                              .translate('settings_profile_update_failed'))),
                     );
                   }
                 } finally {
@@ -155,7 +169,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   Text(
                     localization.translate('settings_profile_edit_title'),
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 16),
 
@@ -163,7 +178,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   TextField(
                     controller: firstNameController,
                     decoration: InputDecoration(
-                      labelText: localization.translate('settings_profile_first_name'),
+                      labelText:
+                          localization.translate('settings_profile_first_name'),
                     ),
                     textCapitalization: TextCapitalization.words,
                   ),
@@ -173,7 +189,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   TextField(
                     controller: lastNameController,
                     decoration: InputDecoration(
-                      labelText: localization.translate('settings_profile_last_name'),
+                      labelText:
+                          localization.translate('settings_profile_last_name'),
                     ),
                     textCapitalization: TextCapitalization.words,
                   ),
@@ -192,7 +209,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: isSaving ? null : () => Navigator.of(sheetContext).maybePop(),
+                        onPressed: isSaving
+                            ? null
+                            : () => Navigator.of(sheetContext).maybePop(),
                         child: Text(localization.translate('cancel')),
                       ),
                       const SizedBox(width: 12),
@@ -202,7 +221,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Text(localization.translate('save')),
                       ),
@@ -247,6 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final localizationService = context.read<LocalizationService>();
     final userProfileModelService = context.read<UserProfileModelService>();
     final userProfileService = context.read<UserProfileService>();
+    final notificationService = context.read<NotificationService>();
 
     final userId = userProfileModelService.userProfile?.id;
 
@@ -255,6 +276,15 @@ class _SettingsPageState extends State<SettingsPage> {
         await userProfileService.updateUserProfile(userId, {
           'notificationsEnabled': enabled,
         });
+
+        final scheduledTimes =
+            userProfileModelService.userProfile?.scheduledNotificationMinutes ??
+                const <int>[];
+        if (enabled) {
+          await notificationService.scheduleDailyNotifications(scheduledTimes);
+        } else {
+          await notificationService.cancelScheduledNotifications();
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -312,6 +342,83 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _updateScheduledNotificationTimes(List<int> times) async {
+    final localizationService = context.read<LocalizationService>();
+    final userProfileModelService = context.read<UserProfileModelService>();
+    final userProfileService = context.read<UserProfileService>();
+    final notificationService = context.read<NotificationService>();
+
+    final userId = userProfileModelService.userProfile?.id;
+    if (userId == null) return;
+
+    final normalizedTimes = times
+        .where((minutes) => minutes >= 0 && minutes < 24 * 60)
+        .toSet()
+        .toList()
+      ..sort();
+
+    try {
+      await userProfileService.updateUserProfile(userId, {
+        'scheduledNotificationMinutes': normalizedTimes,
+      });
+      await notificationService.scheduleDailyNotifications(normalizedTimes);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localizationService
+                .translate('settings_notifications_update_success')),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error updating scheduled notifications: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localizationService
+                .translate('settings_notifications_update_failed')),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _addScheduledNotificationTime() async {
+    final currentTimes = context
+            .read<UserProfileModelService>()
+            .userProfile
+            ?.scheduledNotificationMinutes ??
+        const <int>[];
+    final initialMinutes = currentTimes.isNotEmpty
+        ? currentTimes.last
+        : TimeOfDay.now().hour * 60 + TimeOfDay.now().minute;
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: initialMinutes ~/ 60,
+        minute: initialMinutes % 60,
+      ),
+    );
+
+    if (picked == null) return;
+
+    final newTime = picked.hour * 60 + picked.minute;
+    await _updateScheduledNotificationTimes([...currentTimes, newTime]);
+  }
+
+  Future<void> _removeScheduledNotificationTime(int minutes) async {
+    final currentTimes = context
+            .read<UserProfileModelService>()
+            .userProfile
+            ?.scheduledNotificationMinutes ??
+        const <int>[];
+    await _updateScheduledNotificationTimes(
+      currentTimes.where((time) => time != minutes).toList(),
+    );
+  }
+
   // banner widget shown at top of settings list
   Widget _settingsBanner(LocalizationService loc, BuildContext context) {
     final theme = Theme.of(context);
@@ -330,8 +437,8 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Text(
               loc.translate('settings_banner_text'),
               style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -414,8 +521,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     localization.translate('sex'),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 6),
                   SizedBox(
@@ -423,7 +530,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     width: 160,
                     child: DropdownButton<String>(
                       value: selectedSex,
-                      items: ['Female', 'Male', 'Not specified'].map((String option) {
+                      items: ['Female', 'Male', 'Not specified']
+                          .map((String option) {
                         return DropdownMenuItem<String>(
                           value: option,
                           child: Text(option),
@@ -436,7 +544,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ),
-
                   TextField(
                     readOnly: true,
                     onTap: pickBirthday,
@@ -476,7 +583,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: FilledButton(
                       onPressed: () async {
                         final name = nameController.text.trim();
-                        if (name.isEmpty || selectedBirthday == null || selectedSex == null) {
+                        if (name.isEmpty ||
+                            selectedBirthday == null ||
+                            selectedSex == null) {
                           await showAlertIfMounted(
                             context,
                             localization.translate('child_not_added'),
@@ -607,7 +716,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         !existingLanguages.containsAll(selectedLanguages);
                 final bool sexChanged = selectedSex != child.sex;
 
-                if (!nameChanged && !birthdayChanged && !languagesChanged && !sexChanged) {
+                if (!nameChanged &&
+                    !birthdayChanged &&
+                    !languagesChanged &&
+                    !sexChanged) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(rootContext).showSnackBar(
                     SnackBar(
@@ -642,7 +754,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             language: languagesChanged
                                 ? selectedLanguages.toList()
                                 : null,
-                            sex: sexChanged ? selectedSex: null,
+                            sex: sexChanged ? selectedSex : null,
                           );
                   if (!success) {
                     throw Exception('child-update-failed');
@@ -713,7 +825,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 6),
                   DropdownButton<String>(
                     value: selectedSex,
-                    items: ['Female', 'Male', 'Not specified'].map((String option) {
+                    items: ['Female', 'Male', 'Not specified']
+                        .map((String option) {
                       return DropdownMenuItem<String>(
                         value: option,
                         child: Text(option),
@@ -822,12 +935,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final childDataService = context.read<ChildDataService>();
 
     final profileId = userProfileModelService.userProfile?.id;
-    
+
     bool success = profileId != null;
 
     if (profileId != null) {
       success = await userProfileService.removeChild(profileId, child.id!);
-      
+
       if (success) {
         await childDataService.removeParentFromChild(child.id!, profileId);
       }
@@ -953,7 +1066,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             children: [
-              if(showBanner) _settingsBanner(localization, context),
+              if (showBanner) _settingsBanner(localization, context),
               _ProfileCard(
                 profile: profile,
                 localization: localization,
@@ -973,9 +1086,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     profile?.nightlyNotificationsEnabled ?? true,
                 weeklyNotificationsEnabled:
                     profile?.weeklyNotificationsEnabled ?? true,
+                scheduledNotificationMinutes:
+                    profile?.scheduledNotificationMinutes ?? const [],
                 onNotificationsChanged: _toggleNotifications,
                 onNightlyNotificationsChanged: _toggleNightlyNotifications,
                 onWeeklyNotificationsChanged: _toggleWeeklyNotifications,
+                onAddScheduledNotification: _addScheduledNotificationTime,
+                onRemoveScheduledNotification: _removeScheduledNotificationTime,
                 localization: localization,
               ),
               const SizedBox(height: 20),
@@ -1310,18 +1427,24 @@ class _NotificationsCard extends StatelessWidget {
     required this.notificationsEnabled,
     required this.nightlyNotificationsEnabled,
     required this.weeklyNotificationsEnabled,
+    required this.scheduledNotificationMinutes,
     required this.onNotificationsChanged,
     required this.onNightlyNotificationsChanged,
     required this.onWeeklyNotificationsChanged,
+    required this.onAddScheduledNotification,
+    required this.onRemoveScheduledNotification,
     required this.localization,
   });
 
   final bool notificationsEnabled;
   final bool nightlyNotificationsEnabled;
   final bool weeklyNotificationsEnabled;
+  final List<int> scheduledNotificationMinutes;
   final ValueChanged<bool> onNotificationsChanged;
   final ValueChanged<bool> onNightlyNotificationsChanged;
   final ValueChanged<bool> onWeeklyNotificationsChanged;
+  final VoidCallback onAddScheduledNotification;
+  final ValueChanged<int> onRemoveScheduledNotification;
   final LocalizationService localization;
 
   @override
@@ -1374,6 +1497,87 @@ class _NotificationsCard extends StatelessWidget {
                 value: weeklyNotificationsEnabled,
                 onChanged: onWeeklyNotificationsChanged,
               ),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localization
+                          .translate('settings_notifications_scheduled_title'),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      localization.translate(
+                          'settings_notifications_scheduled_description'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (scheduledNotificationMinutes.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          localization
+                              .translate('settings_notifications_no_scheduled'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      )
+                    else
+                      ...scheduledNotificationMinutes.map((minutes) {
+                        final time = TimeOfDay(
+                          hour: minutes ~/ 60,
+                          minute: minutes % 60,
+                        );
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.only(
+                              left: 16,
+                              right: 4,
+                            ),
+                            leading: Icon(
+                              Icons.schedule_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            title: Text(
+                              time.format(context),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              color: theme.colorScheme.error,
+                              tooltip: localization.translate('delete'),
+                              onPressed: () =>
+                                  onRemoveScheduledNotification(minutes),
+                            ),
+                          ),
+                        );
+                      }),
+                    OutlinedButton.icon(
+                      onPressed: onAddScheduledNotification,
+                      icon: const Icon(Icons.add_alarm_rounded),
+                      label: Text(
+                        localization
+                            .translate('settings_notifications_add_scheduled'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ],
         ),
@@ -1422,7 +1626,7 @@ class _AccountManagementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
