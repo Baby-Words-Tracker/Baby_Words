@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   firebaseConfig: {
+    apikey:'AIzaSyCN25AvT7LoAfiNG0jSoTD5pA0-doyAAoo',
     authDomain: 'baby-word-tracker.firebaseapp.com',
     projectId: 'baby-word-tracker',
     storageBucket: 'baby-word-tracker.firebasestorage.app',
