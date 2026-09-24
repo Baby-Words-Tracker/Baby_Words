@@ -48,7 +48,8 @@ class AllLocalizations {
           "Phrases can include spaces but only alphabetic characters.",
       "validation_phrase_not_found":
           "We couldn't find any words in that phrase.",
-      "word_already_logged": "This word has already been logged for this child.",
+      "word_already_logged":
+          "This word has already been logged for this child.",
       "word_entry_success_new": '"{word}" queued for enrichment.',
       "word_entry_success_existing": '"{word}" is already enriched.',
       "phrase_entry_success_new": "Queued {count} new words from this phrase.",
@@ -177,7 +178,8 @@ class AllLocalizations {
       "settings_account_management_title": "Account Management",
       "settings_sign_out_confirm": "Are you sure you want to sign out?",
       "settings_confirm_password_title": "Confirm Password",
-      "settings_confirm_password_message": "Please enter your password to continue.",
+      "settings_confirm_password_message":
+          "Please enter your password to continue.",
       "password": "Password",
       "confirm": "Confirm",
       "settings_phone_label": "Phone Number",
@@ -188,7 +190,8 @@ class AllLocalizations {
       "settings_phone_number_label": "Phone Number",
       "settings_phone_invalid": "Please enter a valid 10-digit US phone number",
       "settings_phone_send_code": "Send Code",
-      "settings_phone_code_sent": "A verification code has been sent to your phone.",
+      "settings_phone_code_sent":
+          "A verification code has been sent to your phone.",
       "settings_phone_code_label": "Verification Code",
       "settings_phone_verify": "Verify",
       "settings_phone_code_required": "Please enter the verification code",
@@ -264,8 +267,14 @@ class AllLocalizations {
       "settings_notifications_label": "Enable Notifications",
       "settings_notifications_nightly": "Nightly Recommendations",
       "settings_notifications_weekly": "Weekly Summary",
+      "settings_notifications_scheduled_title": "Scheduled reminders",
+      "settings_notifications_scheduled_description":
+          "Choose one or more daily times to be reminded.",
+      "settings_notifications_no_scheduled": "No scheduled reminders yet.",
+      "settings_notifications_add_scheduled": "Add scheduled notification",
       "settings_notifications_update_success": "Notification settings updated.",
-      "settings_notifications_update_failed": "Failed to update notification settings.",
+      "settings_notifications_update_failed":
+          "Failed to update notification settings.",
     },
     'es': {
       "add_words": "Añadir Palabras",
@@ -315,7 +324,8 @@ class AllLocalizations {
           "Las frases pueden incluir espacios pero solo letras.",
       "validation_phrase_not_found":
           "No pudimos encontrar palabras en esa frase.",
-      "word_already_logged": "Esta palabra ya ha sido registrada para este hijo.",
+      "word_already_logged":
+          "Esta palabra ya ha sido registrada para este hijo.",
       "word_entry_success_new": "\"{word}\" se agregó para enriquecimiento.",
       "word_entry_success_existing": "\"{word}\" ya está enriquecida.",
       "phrase_entry_success_new":
@@ -389,9 +399,11 @@ class AllLocalizations {
       "settings": "Configuración",
       "parent_settings": "Configuración Para Padres",
       "settings_account_management_title": "Gestión de Cuenta",
-      "settings_sign_out_confirm": "¿Estás seguro de que quieres cerrar sesión?",
+      "settings_sign_out_confirm":
+          "¿Estás seguro de que quieres cerrar sesión?",
       "settings_confirm_password_title": "Confirmar Contraseña",
-      "settings_confirm_password_message": "Por favor, ingresa tu contraseña para continuar.",
+      "settings_confirm_password_message":
+          "Por favor, ingresa tu contraseña para continuar.",
       "password": "Contraseña",
       "confirm": "Confirmar",
       "settings_phone_label": "Número de Teléfono",
@@ -400,17 +412,22 @@ class AllLocalizations {
       "settings_add_phone_button": "Agregar Número de Teléfono",
       "settings_change_phone_title": "Cambiar Número de Teléfono",
       "settings_phone_number_label": "Número de Teléfono",
-      "settings_phone_invalid": "Por favor ingresa un número de teléfono de 10 dígitos válido",
+      "settings_phone_invalid":
+          "Por favor ingresa un número de teléfono de 10 dígitos válido",
       "settings_phone_send_code": "Enviar Código",
-      "settings_phone_code_sent": "Se ha enviado un código de verificación a tu teléfono.",
+      "settings_phone_code_sent":
+          "Se ha enviado un código de verificación a tu teléfono.",
       "settings_phone_code_label": "Código de Verificación",
       "settings_phone_verify": "Verificar",
-      "settings_phone_code_required": "Por favor ingresa el código de verificación",
+      "settings_phone_code_required":
+          "Por favor ingresa el código de verificación",
       "settings_phone_code_invalid": "Código de verificación inválido",
       "settings_phone_updated": "Número de teléfono actualizado correctamente",
-      "settings_phone_update_failed": "Error al actualizar el número de teléfono",
+      "settings_phone_update_failed":
+          "Error al actualizar el número de teléfono",
       "settings_phone_already_in_use": "Este número de teléfono ya está en uso",
-      "settings_phone_verification_failed": "La verificación del teléfono falló",
+      "settings_phone_verification_failed":
+          "La verificación del teléfono falló",
       "settings_profile_title": "Tu perfil",
       "settings_profile_edit_title": "Editar perfil",
       "settings_profile_name_label": "Nombre completo",
@@ -462,7 +479,8 @@ class AllLocalizations {
       "delete": "Eliminar",
       "cancel": "Cancelar",
       "save": "Guardar",
-      "settings_banner_text": "Por favor, actualiza el sexo del niño en la pestaña 'Niños'.",
+      "settings_banner_text":
+          "Por favor, actualiza el sexo del niño en la pestaña 'Niños'.",
       "entry_mode_label": "Modo de entrada",
       "word_mode": "Palabra",
       "phrase_mode": "Frase",
@@ -486,10 +504,8 @@ class AllLocalizations {
           "Se agregaron {count} palabra(s) para enriquecimiento.",
       "words_already_processed":
           "Las palabras seleccionadas ya están enriquecidas.",
-      "welcome_sign_in":
-          "¡Bienvenido a WordBuds, por favor inicia sesión!",
-      "welcome_sign_up":
-          "¡Bienvenido a WordBuds, por favor regístrate!",
+      "welcome_sign_in": "¡Bienvenido a WordBuds, por favor inicia sesión!",
+      "welcome_sign_up": "¡Bienvenido a WordBuds, por favor regístrate!",
       "terms_and_conditions":
           "Al iniciar sesión, aceptas nuestros términos y condiciones.",
       "over_num_days": "¿Durante cuántos días...",
@@ -529,8 +545,16 @@ class AllLocalizations {
       "settings_notifications_label": "Habilitar Notificaciones",
       "settings_notifications_nightly": "Recomendaciones Nocturnas",
       "settings_notifications_weekly": "Resumen Semanal",
-      "settings_notifications_update_success": "Configuración de notificaciones actualizada.",
-      "settings_notifications_update_failed": "Error al actualizar la configuración de notificaciones.",
+      "settings_notifications_scheduled_title": "Recordatorios programados",
+      "settings_notifications_scheduled_description":
+          "Elige una o más horas diarias para recibir recordatorios.",
+      "settings_notifications_no_scheduled":
+          "Aún no hay recordatorios programados.",
+      "settings_notifications_add_scheduled": "Agregar notificación programada",
+      "settings_notifications_update_success":
+          "Configuración de notificaciones actualizada.",
+      "settings_notifications_update_failed":
+          "Error al actualizar la configuración de notificaciones.",
     }
   };
 }
