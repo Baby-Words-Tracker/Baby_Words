@@ -18,6 +18,9 @@ class EmailVerificationPage extends StatefulWidget {
 }
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
+  static DateTime? _lastAutomaticVerificationEmailSentAt;
+  static const Duration _automaticEmailCooldown = Duration(minutes: 2);
+
   bool _isResending = false;
   bool _isChecking = false;
   Timer? _autoCheckTimer;
@@ -121,6 +124,19 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Future<void> _sendVerificationEmail({bool isInitial = false}) async {
     if (_isResending && !isInitial) return;
 
+    if (isInitial) {
+      final lastSent = _lastAutomaticVerificationEmailSentAt;
+      final now = DateTime.now();
+
+      if (lastSent != null &&
+          now.difference(lastSent) < _automaticEmailCooldown) {
+        debugPrint(
+          '📧 EmailVerificationPage: Skipping automatic verification email; one was sent recently',
+        );
+        return;
+      }
+    }
+
     setState(() {
       _isResending = true;
     });
@@ -130,6 +146,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
+        if (isInitial) {
+          _lastAutomaticVerificationEmailSentAt = DateTime.now();
+        }
 
         if (mounted && !isInitial) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -360,7 +379,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
                 // Help text
                 Text(
-                  'Didn\'t receive the email? Check your spam folder or try resending.',
+                  'Didn\'t receive the email? Check your spam folder or tap Resend Email, then use the newest email only.',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
