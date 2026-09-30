@@ -9,10 +9,10 @@ import 'package:collection/collection.dart';
 /// User roles in the system
 /// Lower index = higher priority/permissions
 enum UserRole {
-  admin,      // Full system access - web dashboard
+  admin, // Full system access - web dashboard
   researcher, // Read all data - web only
-  parent;     // Manage own children - mobile only
-  
+  parent; // Manage own children - mobile only
+
   int get priority {
     switch (this) {
       case UserRole.admin:
@@ -23,12 +23,12 @@ enum UserRole {
         return 5;
     }
   }
-  
+
   /// Check if this role can access data meant for target role
   bool canAccessData(UserRole targetRole) {
     return priority <= targetRole.priority;
   }
-  
+
   /// Get allowed platforms for this role
   List<String> get allowedPlatforms {
     switch (this) {
@@ -40,11 +40,11 @@ enum UserRole {
         return ['mobile']; // Mobile only
     }
   }
-  
+
   bool get requiresWebPlatform {
     return this == UserRole.researcher || this == UserRole.admin;
   }
-  
+
   bool get requiresMobilePlatform {
     return this == UserRole.parent;
   }
@@ -52,8 +52,8 @@ enum UserRole {
 
 /// User status in the system
 enum UserStatus {
-  active,    // Normal active user
-  demo,      // Demo/sandbox mode - isolated data
+  active, // Normal active user
+  demo, // Demo/sandbox mode - isolated data
   suspended; // Temporarily disabled
 }
 
@@ -61,11 +61,11 @@ enum UserStatus {
 /// Replaces Parent, Researcher, and User collections
 class UserProfile {
   static String collectionName = 'UserProfile';
-  
+
   final String id;
   final UserRole role;
   final UserStatus status;
-  
+
   // Contact info
   final String? email;
   final String? name;
@@ -73,25 +73,25 @@ class UserProfile {
   final String? lastName;
   final String? phoneNumber;
   final String? institution; // For researchers
-  
+
   // Auth state
   final bool emailVerified;
   final bool twoFactorEnabled;
   final DateTime? twoFactorEnabledAt;
-  
+
   // Privacy & consent (required for all users)
   final bool acceptedPrivacyPolicy;
   final String? policyVersion;
   final DateTime? consentDate;
-  
+
   // Survey (required for parents only)
   final bool surveyCompleted;
   final String? surveyVersion;
   final DateTime? surveyCompletedAt;
-  
+
   // Demographic data (optional)
   final Map<String, dynamic>? demographicData;
-  
+
   // Parent-specific fields
   final List<String> childIDs;
   final List<String> pendingChildIDs;
@@ -99,7 +99,8 @@ class UserProfile {
   final bool notificationsEnabled;
   final bool nightlyNotificationsEnabled;
   final bool weeklyNotificationsEnabled;
-  
+  final List<int>? _scheduledNotificationMinutes;
+
   // Metadata
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -130,11 +131,15 @@ class UserProfile {
     this.notificationsEnabled = true,
     this.nightlyNotificationsEnabled = true,
     this.weeklyNotificationsEnabled = true,
+    List<int>? scheduledNotificationMinutes,
     this.createdAt,
     this.updatedAt,
-  });
-  
+  }) : _scheduledNotificationMinutes = scheduledNotificationMinutes;
+
   // Helper getters
+  List<int> get scheduledNotificationMinutes =>
+      _scheduledNotificationMinutes ?? const <int>[];
+
   bool get isParent => role == UserRole.parent || role == UserRole.admin;
   bool get isResearcher => role == UserRole.researcher;
   bool get isAdmin => role == UserRole.admin;
@@ -152,21 +157,22 @@ class UserProfile {
     }
     return (firstName ?? lastName ?? '').trim();
   }
-  
+
   /// Check if user requires survey completion
-  bool get requiresSurvey => isParent && !surveyCompleted || surveyVersion != 'demographic-v1';
-  
+  bool get requiresSurvey =>
+      isParent && !surveyCompleted || surveyVersion != 'demographic-v1';
+
   /// Check if user requires 2FA (required for ALL users)
   bool get requires2FA => !twoFactorEnabled;
-  
+
   /// Check if user has 2FA enabled
   bool get has2FAEnabled => twoFactorEnabled;
-  
+
   /// Check if user can access given platform
   bool canAccessPlatform(String platform) {
     return role.allowedPlatforms.contains(platform.toLowerCase());
   }
-  
+
   /// Get collection name based on demo status
   String get effectiveCollectionName {
     return isDemoUser ? 'demo_$collectionName' : collectionName;
@@ -198,6 +204,7 @@ class UserProfile {
     bool? notificationsEnabled,
     bool? nightlyNotificationsEnabled,
     bool? weeklyNotificationsEnabled,
+    List<int>? scheduledNotificationMinutes,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -214,7 +221,8 @@ class UserProfile {
       emailVerified: emailVerified ?? this.emailVerified,
       twoFactorEnabled: twoFactorEnabled ?? this.twoFactorEnabled,
       twoFactorEnabledAt: twoFactorEnabledAt ?? this.twoFactorEnabledAt,
-      acceptedPrivacyPolicy: acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
+      acceptedPrivacyPolicy:
+          acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
       policyVersion: policyVersion ?? this.policyVersion,
       consentDate: consentDate ?? this.consentDate,
       surveyCompleted: surveyCompleted ?? this.surveyCompleted,
@@ -225,8 +233,12 @@ class UserProfile {
       pendingChildIDs: pendingChildIDs ?? this.pendingChildIDs,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      nightlyNotificationsEnabled: nightlyNotificationsEnabled ?? this.nightlyNotificationsEnabled,
-      weeklyNotificationsEnabled: weeklyNotificationsEnabled ?? this.weeklyNotificationsEnabled,
+      nightlyNotificationsEnabled:
+          nightlyNotificationsEnabled ?? this.nightlyNotificationsEnabled,
+      weeklyNotificationsEnabled:
+          weeklyNotificationsEnabled ?? this.weeklyNotificationsEnabled,
+      scheduledNotificationMinutes:
+          scheduledNotificationMinutes ?? this.scheduledNotificationMinutes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -258,6 +270,7 @@ class UserProfile {
       'notificationsEnabled': notificationsEnabled,
       'nightlyNotificationsEnabled': nightlyNotificationsEnabled,
       'weeklyNotificationsEnabled': weeklyNotificationsEnabled,
+      'scheduledNotificationMinutes': scheduledNotificationMinutes,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -290,10 +303,9 @@ class UserProfile {
           ? convertToDateTime(map['surveyCompletedAt'])
           : null,
       demographicData: map['demographicData'] as Map<String, dynamic>?,
-      childIDs: (map['childIDs'] as List<dynamic>?)
-              ?.whereType<String>()
-              .toList() ??
-          [],
+      childIDs:
+          (map['childIDs'] as List<dynamic>?)?.whereType<String>().toList() ??
+              [],
       pendingChildIDs: (map['pendingChildIDs'] as List<dynamic>?)
               ?.whereType<String>()
               .toList() ??
@@ -306,16 +318,29 @@ class UserProfile {
           map['nightlyNotificationsEnabled'] as bool? ?? true,
       weeklyNotificationsEnabled:
           map['weeklyNotificationsEnabled'] as bool? ?? true,
-      createdAt: map['createdAt'] != null
-          ? convertToDateTime(map['createdAt'])
-          : null,
-      updatedAt: map['updatedAt'] != null
-          ? convertToDateTime(map['updatedAt'])
-          : null,
+      scheduledNotificationMinutes: _parseScheduledNotificationMinutes(
+        map['scheduledNotificationMinutes'],
+      ),
+      createdAt:
+          map['createdAt'] != null ? convertToDateTime(map['createdAt']) : null,
+      updatedAt:
+          map['updatedAt'] != null ? convertToDateTime(map['updatedAt']) : null,
     );
   }
 
   String toJson() => json.encode(toMap());
+
+  static List<int> _parseScheduledNotificationMinutes(dynamic value) {
+    final times = (value as List<dynamic>?)
+            ?.whereType<num>()
+            .map((value) => value.toInt())
+            .where((value) => value >= 0 && value < 24 * 60)
+            .toSet()
+            .toList() ??
+        <int>[];
+    times.sort();
+    return times;
+  }
 
   factory UserProfile.fromJson(String source) =>
       UserProfile.fromMap(json.decode(source) as Map<String, dynamic>);
@@ -350,6 +375,7 @@ class UserProfile {
     bool? notificationsEnabled,
     bool? nightlyNotificationsEnabled,
     bool? weeklyNotificationsEnabled,
+    List<int>? scheduledNotificationMinutes,
   }) {
     Map<String, dynamic> map = {
       'updatedAt': DateTime.now(),
@@ -390,6 +416,9 @@ class UserProfile {
     if (weeklyNotificationsEnabled != null) {
       map['weeklyNotificationsEnabled'] = weeklyNotificationsEnabled;
     }
+    if (scheduledNotificationMinutes != null) {
+      map['scheduledNotificationMinutes'] = scheduledNotificationMinutes;
+    }
 
     return map;
   }
@@ -420,7 +449,9 @@ class UserProfile {
         other.acceptedPrivacyPolicy == acceptedPrivacyPolicy &&
         other.surveyCompleted == surveyCompleted &&
         listEquals(other.childIDs, childIDs) &&
-        listEquals(other.pendingChildIDs, pendingChildIDs);
+        listEquals(other.pendingChildIDs, pendingChildIDs) &&
+        listEquals(
+            other.scheduledNotificationMinutes, scheduledNotificationMinutes);
   }
 
   @override
@@ -440,5 +471,6 @@ class UserProfile {
         surveyCompleted,
         const DeepCollectionEquality().hash(childIDs),
         const DeepCollectionEquality().hash(pendingChildIDs),
+        const DeepCollectionEquality().hash(scheduledNotificationMinutes),
       ]);
 }
