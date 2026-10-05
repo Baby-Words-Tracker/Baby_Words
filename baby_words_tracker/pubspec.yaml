@@ -73,6 +73,9 @@ dependencies:
   webview_flutter: ^4.0.0 # For embedding the Qualtrics survey
   flutter_launcher_icons: ^0.14.4
   firebase_messaging: ^16.1.1
+  flutter_local_notifications: ^17.2.4
+  timezone: ^0.9.4
+  flutter_timezone: ^5.1.0
 
   # Options for video compression later
   # video_compress: ^3.1.4
