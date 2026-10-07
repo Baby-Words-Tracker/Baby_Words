@@ -23,7 +23,7 @@
   "private": true,
   "packageManager": "npm@11.8.0",
   "dependencies": {
-    "@angular/common": "^21.1.0",
+    "@angular/common": "^21.2.20",
     "@angular/compiler": "^21.1.0",
     "@angular/core": "^21.1.0",
     "@angular/fire": "^21.0.0-rc.0",
