@@ -25,7 +25,7 @@
   "dependencies": {
     "@angular/common": "^21.2.20",
     "@angular/compiler": "^21.2.20",
-    "@angular/core": "^21.1.0",
+    "@angular/core": "^21.2.20",
     "@angular/fire": "^21.0.0-rc.0",
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
