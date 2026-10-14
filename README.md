@@ -16,7 +16,11 @@ Detailed instructions can be found in `dev-docs/Development Guide.pdf`
 If you don't have flutter installed on you machine, follow the steps found here: https://docs.flutter.dev/get-started/install before trying to test this project.
 
 # The Admin Dashboard
-We have developed an admin and researcher dashboard that can be accessed on any web browser using
+The admin and researcher dashboard now lives in its own repository:
+
+https://github.com/Baby-Words-Tracker/Baby-Words-Researcher-Dashboard
+
+The deployed dashboard can be accessed on any web browser using
 
 http://wordbuds.info:8080
 
