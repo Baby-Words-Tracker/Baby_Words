@@ -61,18 +61,16 @@ class DefaultFirebaseOptions {
     messagingSenderId: '37552098276',
     projectId: 'baby-word-tracker',
     storageBucket: 'baby-word-tracker.firebasestorage.app',
-    androidClientId: '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com',
+    androidClientId:
+        '37552098276-cmotnbdu0toapp98j9duid91fuetlgg4.apps.googleusercontent.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDOG5i6PyQR6xnc0lccZ_ikDXGusZsnxUs',
-    appId: '1:37552098276:ios:707cf7ede5b178d160d5f1',
+    appId: '1:37552098276:ios:65d6f5e93b55b66360d5f1',
     messagingSenderId: '37552098276',
     projectId: 'baby-word-tracker',
     storageBucket: 'baby-word-tracker.firebasestorage.app',
-    androidClientId: '37552098276-62gnq8ula4275n94hoev1hdh6dd33vuc.apps.googleusercontent.com',
-    iosClientId: '37552098276-0okgdbhghlc9di6svkvf7losu9esrp29.apps.googleusercontent.com',
-    iosBundleId: 'com.example.babyWordsTracker',
+    iosBundleId: 'org.wordbuds.wordbuds',
   );
-
 }
