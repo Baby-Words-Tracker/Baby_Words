@@ -38,8 +38,8 @@ dependencies:
   provider: ^6.0.5
 
   # adds syncfusion and csv for graph figures
-  syncfusion_flutter_charts: ^32.1.25
-  csv: ^6.0.0
+  syncfusion_flutter_charts: ^35.1.41
+  csv: ^8.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -49,7 +49,7 @@ dependencies:
   # NOTE: Using exact versions (no ^) to prevent unexpected updates that break builds
   # Only update when necessary and after thorough testing
   firebase_core: ^4.2.1
-  cloud_firestore: 6.1.2
+  cloud_firestore: ^6.10.0
   firebase_auth: ^6.1.2
   firebase_ui_auth: ^3.0.1
   cloud_functions: ^6.0.4
@@ -60,11 +60,11 @@ dependencies:
 
   http: ^1.0.0
   collection: ^1.19.0
-  flutter_localization: ^0.3.1
-  file_picker: ^10.1.9
+  flutter_localization: ^0.4.1
+  file_picker: ^13.1.0
   path_provider: any
   video_player: ^2.9.5
-  file_saver: ^0.3.1
+  file_saver: ^0.7.0
   intl: ^0.20.2
   universal_html: ^2.2.4
   chewie: ^1.11.3
@@ -73,8 +73,8 @@ dependencies:
   webview_flutter: ^4.0.0 # For embedding the Qualtrics survey
   flutter_launcher_icons: ^0.14.4
   firebase_messaging: ^16.1.1
-  flutter_local_notifications: ^17.2.4
-  timezone: ^0.9.4
+  flutter_local_notifications: ^22.3.2
+  timezone: ^0.11.2
   flutter_timezone: ^5.1.0
 
   # Options for video compression later
@@ -90,7 +90,7 @@ dev_dependencies:
     sdk: flutter
   
   # Firebase mocking for testing
-  fake_cloud_firestore: 4.0.1
+  fake_cloud_firestore: ^4.4.0
   mockito: ^5.4.4
   build_runner: ^2.4.8
 
