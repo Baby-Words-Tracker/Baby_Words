@@ -24,12 +24,19 @@ import androidx.glance.text.TextStyle
 import androidx.glance.GlanceTheme
 import androidx.compose.ui.unit.sp
 import androidx.glance.text.FontWeight
+<<<<<<< Updated upstream
 import androidx.glance.layout.height
 import androidx.compose.ui.unit.dp
 import androidx.glance.layout.Spacer
 import androidx.core.os.ConfigurationCompat
 import java.util.Locale
 import androidx.glance.color.ColorProvider
+=======
+import androidx.core.os.ConfigurationCompat
+import java.util.Locale
+import androidx.glance.color.ColorProvider
+import androidx.compose.ui.unit.dp
+>>>>>>> Stashed changes
 import androidx.glance.layout.padding
 import androidx.glance.action.clickable
 import androidx.glance.action.actionStartActivity
@@ -50,7 +57,11 @@ class GreetingHomeWidget : GlanceAppWidget() {
     val hwPreviewData =
         GreetingData.fromPreferences(HomeWidgetPlugin.getData(context))
     return listOf(
+<<<<<<< Updated upstream
       "d7cdf27d",
+=======
+      "f8e4ca7f",
+>>>>>>> Stashed changes
       hwLocales.joinToString(","),
       hwPreviewData.toString(),
     ).joinToString("|")
@@ -65,7 +76,10 @@ class GreetingHomeWidget : GlanceAppWidget() {
                 Column(horizontalAlignment = Alignment.Start) {
                     Text(text = "Tracking Profile:", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Normal))
                     Text(text = widgetData.name ?: "", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 22.sp, fontWeight = FontWeight.Bold))
+<<<<<<< Updated upstream
                     Spacer(modifier = GlanceModifier.height(8.0.dp))
+=======
+>>>>>>> Stashed changes
                     Text(text = "Total Words:", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Normal))
                     Text(text = widgetData.wordsCount ?: "", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold))
                 }

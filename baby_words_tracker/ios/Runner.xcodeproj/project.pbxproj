@@ -280,6 +280,10 @@
 			);
 			dependencies = (
 			);
+<<<<<<< Updated upstream
+=======
+			
+>>>>>>> Stashed changes
 			name = GreetingHomeWidget;
 			productName = GreetingHomeWidget;
 			productReference = 5BCC929270044FD56361CD74 /* GreetingHomeWidget.appex */;
@@ -859,7 +863,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S3PCDVP82T;
 				GENERATE_INFOPLIST_FILE = YES;
+<<<<<<< Updated upstream
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+=======
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+>>>>>>> Stashed changes
 				INFOPLIST_FILE = GreetingHomeWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GreetingHomeWidget;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -885,7 +893,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S3PCDVP82T;
 				GENERATE_INFOPLIST_FILE = YES;
+<<<<<<< Updated upstream
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+=======
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+>>>>>>> Stashed changes
 				INFOPLIST_FILE = GreetingHomeWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GreetingHomeWidget;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -911,7 +923,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S3PCDVP82T;
 				GENERATE_INFOPLIST_FILE = YES;
+<<<<<<< Updated upstream
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+=======
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+>>>>>>> Stashed changes
 				INFOPLIST_FILE = GreetingHomeWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GreetingHomeWidget;
 				LD_RUNPATH_SEARCH_PATHS = (

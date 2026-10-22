@@ -19,17 +19,23 @@ pluginManagement {
 plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
     id "com.android.application" version "8.11.1" apply false
     // START: FlutterFire Configuration
     id "com.google.gms.google-services" version "4.4.2" apply false
     // END: FlutterFire Configuration
     id "org.jetbrains.kotlin.android" version "2.2.20" apply false
+<<<<<<< Updated upstream
 =======
     id "com.android.application" version "8.11.1" apply false //was 8.9.1
     // START: FlutterFire Configuration
     id "com.google.gms.google-services" version "4.4.2" apply false
     // END: FlutterFire Configuration
     id "org.jetbrains.kotlin.android" version "2.2.20" apply false //was 2.1.0
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
