@@ -55,6 +55,11 @@ import 'firebase_options.dart';
 
 import 'pages/settings.dart';
 
+// Home Screen Widgets
+import 'src/home_widget/greeting.home_widget.dart';
+import 'package:baby_words_tracker/services/widget_sync_service.dart';
+import 'dart:async';
+
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
@@ -142,6 +147,27 @@ void main() async {
                   Provider.of<UserProfileModelService>(context, listen: false),
             ),
             lazy: true,
+          ),
+          // Proxy to listen for updates, pushes data to home_screen widget
+          ProxyProvider<CurrentChildrenService, WidgetSyncService>(
+            create: (_) => WidgetSyncService(),
+            update: (context, currentChildrenService, widgetSyncService) {
+              final activeChild = currentChildrenService.getCurrChild();
+              
+              if (activeChild != null && activeChild.id != null) {
+                // A child has been loaded or selected! Start syncing live words.
+                widgetSyncService!.startGlobalSync(
+                  activeChild.id!, 
+                  activeChild.name ?? 'Baby',
+                );
+              } else {
+                // No child is loaded yet (e.g., app is booting up or user is logged out).
+                // Set a safe fallback so the home widget doesn't display empty string values.
+                widgetSyncService!.setPlaceholderState();
+              }
+              return widgetSyncService!;
+            },
+            lazy: false,
           ),
           // NotificationService
           ChangeNotifierProvider<NotificationService>(
@@ -413,4 +439,9 @@ TextTheme _buildTextTheme(TextTheme base, ColorScheme colorScheme) {
         bodyColor: colorScheme.onSurface,
         displayColor: colorScheme.onSurface,
       );
+}
+
+Future<void> setName(String name) async {
+  await GreetingHomeWidget.saveData(name: name);
+  await GreetingHomeWidget.updateWidget();
 }
