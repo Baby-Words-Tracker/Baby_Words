@@ -43,20 +43,11 @@ struct GreetingHomeWidgetEntryView: View {
   var entry: Provider.Entry
 
   var body: some View {
-<<<<<<< Updated upstream
-        VStack(alignment: .leading, spacing: 0) {
-=======
         VStack(alignment: .leading) {
->>>>>>> Stashed changes
             Text("Tracking Profile:")
                 .font(.caption)
             Text(entry.data.name ?? "")
                 .font(.title).fontWeight(.bold)
-<<<<<<< Updated upstream
-            Color.clear
-            .frame(width: 0.0, height: 8.0)
-=======
->>>>>>> Stashed changes
             Text("Total Words:")
                 .font(.caption)
             Text(entry.data.wordsCount ?? "")

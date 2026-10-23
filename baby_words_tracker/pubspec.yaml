@@ -81,17 +81,15 @@ dependencies:
   # video_compress: ^3.1.4
   # ffmpeg_kit_flutter_new: ^1.6.1
 
-<<<<<<< Updated upstream
-  # widget dependencies
-  home_widget: ^0.10.0
-=======
+  # Home Widget Dependencies
   home_widget: ^0.10.0
   home_widget_generator: ^0.1.0
->>>>>>> Stashed changes
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # Home Widget Dependency
   home_widget_cli: ^0.1.0
 
   # Testing utilities  
@@ -109,9 +107,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-
-  home_widget_generator: ^0.3.0
-  home_widget_cli: ^0.3.0
 
 # Pin transitive Firebase platform-interface packages to prevent version
 # mismatches between cloud_firestore and fake_cloud_firestore in CI.

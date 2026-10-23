@@ -54,16 +54,10 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'pages/settings.dart';
 
-<<<<<<< Updated upstream
-// Home Screen Widgets
-import 'src/home_widget/greeting.home_widget.dart';
-import 'package:baby_words_tracker/services/widget_sync_service.dart';
-import 'dart:async';
-=======
 // Home Screen Widget
 import 'dart:async';
 import 'data/services/widget_sync_service.dart';
->>>>>>> Stashed changes
+import 'package:home_widget/home_widget.dart';
 
 void main() async {
   try {
@@ -153,31 +147,18 @@ void main() async {
             ),
             lazy: true,
           ),
-<<<<<<< Updated upstream
-          // Proxy to listen for updates, pushes data to home_screen widget
-=======
           // ProxyProvider to send update to home screen widget
->>>>>>> Stashed changes
-          ProxyProvider<CurrentChildrenService, WidgetSyncService>(
+           ProxyProvider<CurrentChildrenService, WidgetSyncService>(
             create: (_) => WidgetSyncService(),
             update: (context, currentChildrenService, widgetSyncService) {
               final activeChild = currentChildrenService.getCurrChild();
               
               if (activeChild != null && activeChild.id != null) {
-<<<<<<< Updated upstream
-                // A child has been loaded or selected! Start syncing live words.
-=======
->>>>>>> Stashed changes
                 widgetSyncService!.startGlobalSync(
                   activeChild.id!, 
                   activeChild.name ?? 'Baby',
                 );
               } else {
-<<<<<<< Updated upstream
-                // No child is loaded yet (e.g., app is booting up or user is logged out).
-                // Set a safe fallback so the home widget doesn't display empty string values.
-=======
->>>>>>> Stashed changes
                 widgetSyncService!.setPlaceholderState();
               }
               return widgetSyncService!;
@@ -456,7 +437,7 @@ TextTheme _buildTextTheme(TextTheme base, ColorScheme colorScheme) {
       );
 }
 
-Future<void> setName(String name) async {
-  await GreetingHomeWidget.saveData(name: name);
-  await GreetingHomeWidget.updateWidget();
+void updateBabyProfile(String name) async { 
+  await HomeWidget.saveWidgetData<String>('name', name);
+  await HomeWidget.updateWidget(name: 'GreetingHomeWidgetReceiver');
 }

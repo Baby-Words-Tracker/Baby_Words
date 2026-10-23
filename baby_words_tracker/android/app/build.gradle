@@ -75,18 +75,10 @@ flutter {
     source = "../.."
 }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
-=======
+}
 
 dependencies {
     implementation 'androidx.glance:glance-appwidget:1.2.0'
->>>>>>> Stashed changes
-=======
-
-dependencies {
-    implementation 'androidx.glance:glance-appwidget:1.2.0'
->>>>>>> Stashed changes
 }
