@@ -38,11 +38,16 @@ struct GreetingHomeWidgetEntry: TimelineEntry {
   let data: GreetingData
 }
 
-
+// update font and themeing here!
 struct GreetingHomeWidgetEntryView: View {
   var entry: Provider.Entry
 
+  //create init to register font if we want to further down the line
+
   var body: some View {
+        ZStack{
+          Color.(hex:"#f1dedc")
+        }
         VStack(alignment: .leading) {
             Text("Tracking Profile:")
                 .font(.caption)
