@@ -6,6 +6,7 @@ import 'package:baby_words_tracker/data/models/data_with_id.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/data/services/child_data_service.dart';
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/new_auth_gate.dart';
 import 'package:baby_words_tracker/pages/shared/top_bar.dart';
 import 'package:baby_words_tracker/pages/shared/word_entry_sheets.dart';
 import 'package:baby_words_tracker/util/current_children_service.dart';
@@ -18,6 +19,7 @@ import 'package:baby_words_tracker/util/main_navigation_controller.dart';
 import 'package:baby_words_tracker/util/part_of_speech.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -614,6 +616,12 @@ class _HomeEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    //check if actually logged in
+    if(FirebaseAuth.instance.currentUser != null){
+      return NewAuthGate();
+    }
+
     final theme = Theme.of(context);
     return Center(
       child: Padding(
