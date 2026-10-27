@@ -46,7 +46,7 @@ struct GreetingHomeWidgetEntryView: View {
 
   var body: some View {
         ZStack{
-          Color.(hex:"#f1dedc")
+          Color(red: 0.945, green: 0.871, blue: 0.863)
         }
         VStack(alignment: .leading) {
             Text("Tracking Profile:")
@@ -79,7 +79,7 @@ extension View {
     if #available(iOSApplicationExtension 17.0, *) {
       self.containerBackground(.fill.tertiary, for: .widget)
     } else if #available(iOSApplicationExtension 15.0, *) {
-      self.background()
+      self.background(Color.clear)
     } else {
       self
     }
