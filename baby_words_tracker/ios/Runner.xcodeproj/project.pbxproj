@@ -17,6 +17,11 @@
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		9DC3063D0AE5E0834DA7D1B2 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B1891283F4180AB9DA345C2A /* Pods_Runner.framework */; };
 		AB4C77772EAABCEE00BCD159 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AB4C77762EAABCEE00BCD159 /* GoogleService-Info.plist */; };
+		FC33104FCD2E58ECD7D4E6DD /* GreetingHomeWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5BCC929270044FD56361CD74 /* GreetingHomeWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F75562003C66D77F33700356 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57A6DC8BCEEFBAB8C4EA2B75 /* WidgetKit.framework */; };
+		CEA35CEB535DF5508743E151 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E4DF34CB993C2F311F73276 /* SwiftUI.framework */; };
+		C211E0A3B4E19A4EEEE08B99 /* Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA2168A9B189AABC5B0D354 /* Widget.swift */; };
+		322160A32487C98EA5B999D1 /* WidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2417C2F241A30BFDB89BBC /* WidgetBundle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,6 +31,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		13B92684D2A3094BADA58132 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A85A374B09DAE7DA2698B66D;
+			remoteInfo = GreetingHomeWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -38,6 +50,17 @@
 			files = (
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F3756BA20218A6B7656B424 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FC33104FCD2E58ECD7D4E6DD /* GreetingHomeWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -68,6 +91,13 @@
 		AB4C77752EAAB8EC00BCD159 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		AB4C77762EAABCEE00BCD159 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		B1891283F4180AB9DA345C2A /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5BCC929270044FD56361CD74 /* GreetingHomeWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GreetingHomeWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		57A6DC8BCEEFBAB8C4EA2B75 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		2E4DF34CB993C2F311F73276 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		98FA9EF1887392A8B88F080F /* GreetingHomeWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GreetingHomeWidget.entitlements; sourceTree = "<group>"; };
+		9DA2168A9B189AABC5B0D354 /* Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Widget.swift; sourceTree = "<group>"; };
+		9E2417C2F241A30BFDB89BBC /* WidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBundle.swift; sourceTree = "<group>"; };
+		C244B38FED656FA65DA828C5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +114,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				9DC3063D0AE5E0834DA7D1B2 /* Pods_Runner.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37904A56D629ED83C7B2D8BC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEA35CEB535DF5508743E151 /* SwiftUI.framework in Frameworks */,
+				F75562003C66D77F33700356 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +170,8 @@
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				27A49578E9ACA9C1401488A7 /* Pods */,
 				BD78BF5C6BBA40B94BF69DAE /* Frameworks */,
+				98FA9EF1887392A8B88F080F /* GreetingHomeWidget.entitlements */,
+				EC355989D88CC68659EBBFC3 /* GreetingHomeWidget */,
 			);
 			sourceTree = "<group>";
 		};
@@ -139,6 +180,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+				5BCC929270044FD56361CD74 /* GreetingHomeWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -167,6 +209,16 @@
 				5A640F2D40722D99827B0222 /* Pods_RunnerTests.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		EC355989D88CC68659EBBFC3 /* GreetingHomeWidget */ = {
+			isa = PBXGroup;
+			children = (
+				9DA2168A9B189AABC5B0D354 /* Widget.swift */,
+				9E2417C2F241A30BFDB89BBC /* WidgetBundle.swift */,
+				C244B38FED656FA65DA828C5 /* Info.plist */,
+			);
+			path = GreetingHomeWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -201,18 +253,37 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
-				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				1F3756BA20218A6B7656B424 /* Embed Foundation Extensions */,
 				D8A5CE83757731E805018D5F /* [CP] Embed Pods Frameworks */,
 				A14C0D0264C631020F9A3F90 /* [CP] Copy Pods Resources */,
+				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5FE323CF902A041477FF8B55 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A85A374B09DAE7DA2698B66D /* GreetingHomeWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 304FF6EA7A854719ECE00F20 /* Build configuration list for PBXNativeTarget "GreetingHomeWidget" */;
+			buildPhases = (
+				54B1F2999F58891AF09B1383 /* Sources */,
+				37904A56D629ED83C7B2D8BC /* Frameworks */,
+				685CB5041F20CDCFFE6C8AD2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GreetingHomeWidget;
+			productName = GreetingHomeWidget;
+			productReference = 5BCC929270044FD56361CD74 /* GreetingHomeWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -252,6 +323,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				A85A374B09DAE7DA2698B66D /* GreetingHomeWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -273,6 +345,13 @@
 				AB4C77772EAABCEE00BCD159 /* GoogleService-Info.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		685CB5041F20CDCFFE6C8AD2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,6 +487,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		54B1F2999F58891AF09B1383 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C211E0A3B4E19A4EEEE08B99 /* Widget.swift in Sources */,
+				322160A32487C98EA5B999D1 /* WidgetBundle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -415,6 +503,11 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		5FE323CF902A041477FF8B55 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A85A374B09DAE7DA2698B66D /* GreetingHomeWidget */;
+			targetProxy = 13B92684D2A3094BADA58132 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -757,6 +850,84 @@
 			};
 			name = Release;
 		};
+		7BAFEDCD32B300C6C40DB6BB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GreetingHomeWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S3PCDVP82T;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = GreetingHomeWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GreetingHomeWidget;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wordbuds.wordbuds.GreetingHomeWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C8BF0A7FF964F988686C9035 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GreetingHomeWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S3PCDVP82T;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = GreetingHomeWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GreetingHomeWidget;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wordbuds.wordbuds.GreetingHomeWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E16DE2D35B4569D8EA8DCA6D /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GreetingHomeWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S3PCDVP82T;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = GreetingHomeWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GreetingHomeWidget;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wordbuds.wordbuds.GreetingHomeWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -786,6 +957,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		304FF6EA7A854719ECE00F20 /* Build configuration list for PBXNativeTarget "GreetingHomeWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7BAFEDCD32B300C6C40DB6BB /* Debug */,
+				C8BF0A7FF964F988686C9035 /* Release */,
+				E16DE2D35B4569D8EA8DCA6D /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
