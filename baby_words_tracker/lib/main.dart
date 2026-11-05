@@ -52,8 +52,12 @@ import 'package:provider/provider.dart';
 
 // Firebase Options
 import 'firebase_options.dart';
-
 import 'pages/settings.dart';
+
+// Home Screen Widget
+import 'dart:async';
+import 'data/services/widget_sync_service.dart';
+import 'package:home_widget/home_widget.dart';
 
 void main() async {
   try {
@@ -142,6 +146,24 @@ void main() async {
                   Provider.of<UserProfileModelService>(context, listen: false),
             ),
             lazy: true,
+          ),
+          // ProxyProvider to send update to home screen widget
+           ProxyProvider<CurrentChildrenService, WidgetSyncService>(
+            create: (_) => WidgetSyncService(),
+            update: (context, currentChildrenService, widgetSyncService) {
+              final activeChild = currentChildrenService.getCurrChild();
+              
+              if (activeChild != null && activeChild.id != null) {
+                widgetSyncService!.startGlobalSync(
+                  activeChild.id!, 
+                  activeChild.name ?? 'Baby',
+                );
+              } else {
+                widgetSyncService!.setPlaceholderState();
+              }
+              return widgetSyncService!;
+            },
+            lazy: false,
           ),
           // NotificationService
           ChangeNotifierProvider<NotificationService>(
@@ -410,4 +432,9 @@ TextTheme _buildTextTheme(TextTheme base, ColorScheme colorScheme) {
         bodyColor: colorScheme.onSurface,
         displayColor: colorScheme.onSurface,
       );
+}
+
+void updateBabyProfile(String name) async { 
+  await HomeWidget.saveWidgetData<String>('name', name);
+  await HomeWidget.updateWidget(name: 'GreetingHomeWidgetReceiver');
 }
