@@ -1,10 +1,11 @@
 import 'dart:async'; 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart'; // Required for debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:baby_words_tracker/data/models/child.dart';
 import 'package:baby_words_tracker/data/models/word_tracker.dart';
 import 'package:baby_words_tracker/src/home_widget/greeting.home_widget.dart';
 
+//This service pulls child data out to push into home screen widget
 class WidgetSyncService {
   StreamSubscription? _subscription;
   String? _lastTrackedId;
@@ -16,7 +17,7 @@ class WidgetSyncService {
       return;
     }
 
-    if (_lastTrackedId == childId) return; 
+    if (_lastTrackedId == childId) return;
     _lastTrackedId = childId;
     
     _subscription?.cancel();
@@ -29,20 +30,17 @@ class WidgetSyncService {
         .snapshots()
         .listen((snapshot) async {
 
-      // Grab the direct size of the array documents
       int totalWords = snapshot.docs.length;
-      debugPrint("WidgetSyncService: Firestore update caught! Total words found: $totalWords");
+      debugPrint("WidgetSyncService: Total words found: $totalWords");
 
       try {
-        // Push the values directly to the code-generated home widget wrapper
         await GreetingHomeWidget.saveData(
           name: childName,
           wordsCount: totalWords.toString(),
         );
         
-        // Signal the operating system to force a visual redraw on screen
         await GreetingHomeWidget.updateWidget();
-        debugPrint("WidgetSyncService: Native screen widget updated successfully.");
+        debugPrint("WidgetSyncService: Widget updated successfully.");
       } catch (e) {
         debugPrint("WidgetSyncService: Error saving data to home layout: $e");
       }

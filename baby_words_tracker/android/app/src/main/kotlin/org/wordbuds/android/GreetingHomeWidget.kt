@@ -24,11 +24,14 @@ import androidx.glance.text.TextStyle
 import androidx.glance.GlanceTheme
 import androidx.compose.ui.unit.sp
 import androidx.glance.text.FontWeight
+import androidx.glance.layout.Row
 import androidx.core.os.ConfigurationCompat
 import java.util.Locale
 import androidx.glance.color.ColorProvider
 import androidx.compose.ui.unit.dp
 import androidx.glance.layout.padding
+import androidx.glance.action.clickable
+import androidx.glance.action.actionStartActivity
 
 class GreetingHomeWidget : GlanceAppWidget() {
   override val stateDefinition = HomeWidgetGlanceStateDefinition()
@@ -46,7 +49,7 @@ class GreetingHomeWidget : GlanceAppWidget() {
     val hwPreviewData =
         GreetingData.fromPreferences(HomeWidgetPlugin.getData(context))
     return listOf(
-      "f8e4ca7f",
+      "d26785fa",
       hwLocales.joinToString(","),
       hwPreviewData.toString(),
     ).joinToString("|")
@@ -57,12 +60,13 @@ class GreetingHomeWidget : GlanceAppWidget() {
     val prefs = currentState.preferences
     val widgetData = GreetingData.fromPreferences(prefs)
     GlanceTheme {
-            Box(modifier = GlanceModifier.background(GlanceTheme.colors.widgetBackground).padding(16.dp).fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = GlanceModifier.background(ColorProvider(day = Color(0xFFFCEAE8), night = Color(0xFF322827))).padding(16.dp).fillMaxSize().clickable(onClick = actionStartActivity<MainActivity>()), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.Start) {
-                    Text(text = "Tracking Profile:", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Normal))
                     Text(text = widgetData.name ?: "", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 22.sp, fontWeight = FontWeight.Bold))
-                    Text(text = "Total Words:", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Normal))
-                    Text(text = widgetData.wordsCount ?: "", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = widgetData.wordsCount ?: "", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold))
+                        Text(text = " words", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold))
+                    }
                 }
             }
     }

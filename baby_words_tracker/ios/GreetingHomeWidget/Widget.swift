@@ -38,27 +38,24 @@ struct GreetingHomeWidgetEntry: TimelineEntry {
   let data: GreetingData
 }
 
-// update font and themeing here!
+
 struct GreetingHomeWidgetEntryView: View {
   var entry: Provider.Entry
 
-  //create init to register font if we want to further down the line
+  @Environment(\.colorScheme) var colorScheme
 
   var body: some View {
-        ZStack{
-          Color(red: 0.945, green: 0.871, blue: 0.863)
-        }
         VStack(alignment: .leading) {
-            Text("Tracking Profile:")
-                .font(.caption)
             Text(entry.data.name ?? "")
                 .font(.title).fontWeight(.bold)
-            Text("Total Words:")
-                .font(.caption)
-            Text(entry.data.wordsCount ?? "")
-                .font(.headline).fontWeight(.bold)
+            HStack(alignment: .center) {
+                Text(entry.data.wordsCount ?? "")
+                    .font(.headline).fontWeight(.bold)
+                Text(" words")
+                    .font(.headline).fontWeight(.bold)
+            }
         }
-    .applyContainerBackground()
+    .applyContainerBackground((colorScheme == .dark ? Color(red: 0.19607843137254902, green: 0.1568627450980392, blue: 0.15294117647058825, opacity: 1.0) : Color(red: 0.9882352941176471, green: 0.9176470588235294, blue: 0.9098039215686274, opacity: 1.0)))
   }
 }
 
@@ -75,13 +72,11 @@ struct GreetingHomeWidget: Widget {
 
 extension View {
   @ViewBuilder
-  func applyContainerBackground() -> some View {
+  func applyContainerBackground<T: View>(_ backgroundView: T) -> some View {
     if #available(iOSApplicationExtension 17.0, *) {
-      self.containerBackground(.fill.tertiary, for: .widget)
-    } else if #available(iOSApplicationExtension 15.0, *) {
-      self.background(Color.clear)
+      self.containerBackground(for: .widget) { backgroundView }
     } else {
-      self
+      self.background(backgroundView)
     }
   }
 }

@@ -147,7 +147,7 @@ void main() async {
             ),
             lazy: true,
           ),
-          // ProxyProvider to send update to home screen widget
+          // ProxyProvider - sends update to home screen widget
            ProxyProvider<CurrentChildrenService, WidgetSyncService>(
             create: (_) => WidgetSyncService(),
             update: (context, currentChildrenService, widgetSyncService) {
