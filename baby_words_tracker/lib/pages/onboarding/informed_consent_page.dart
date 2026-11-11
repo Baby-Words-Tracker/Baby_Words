@@ -31,33 +31,46 @@ class InformedConsentPage extends StatefulWidget {
 class _InformedConsentPageState extends State<InformedConsentPage> {
   // what variables do we need? idk
   bool _isResending = false;
-  Timer? _autoCheckTimer;
 
-  final Email email = Email(
-    body: 'Hello and Welcome to WordBuds! \n WordBuds is an IRB Certified Research Project hosted by the Literacy Education and Cognitive Science (LECS) lab. Please take the time to fill out the following informed consent form. \n /link goes here/',
-    subject: 'Email subject',
-    recipients: ['example@example.com'],
-  );
+  final user = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    // Send initial verification email
+    _sendInformedConsentEmail(isInitial: true);
+  }
 
   Future<void> _sendInformedConsentEmail({bool isInitial = false}) async {
     final capabilities = await FlutterEmailSender.getCapabilities();
 
     if (!capabilities.canSend) {
       // No configured mail account, simulator, or no available mail client.
+      // need some kind of error message
     }
+      final user = FirebaseAuth.instance.currentUser;
 
-    final result = await FlutterEmailSender.send(email);
+      if (user != null) {
+        final Email email = Email(
+        body: 'Email body',
+        subject: 'Email subject',
+        recipients: ['${user.email}'],
+        );
 
-    switch (result) {
-      case EmailSendResult.sent:
-      case EmailSendResult.saved:
-      case EmailSendResult.cancelled:
-        // iOS reports how the user left the composer.
-        break;
-      case EmailSendResult.unknown:
-        // Other platforms do not report the outcome.
-        break;
-    }
+        //send email
+        final result = await FlutterEmailSender.send(email);
+
+        switch (result) {
+          case EmailSendResult.sent:
+          case EmailSendResult.saved:
+          case EmailSendResult.cancelled:
+            // iOS reports how the user left the composer.
+            break;
+          case EmailSendResult.unknown:
+            // Other platforms do not report the outcome.
+            break;
+        }
+      }
   }
   @override
   Widget build(BuildContext context) {
@@ -199,7 +212,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
                         const SizedBox(height: 16),
                         _buildStep('1', 'Check your email inbox'),
                         const SizedBox(height: 12),
-                        _buildStep('2', 'Click the verification link'),
+                        _buildStep('2', 'Fill out the linked form'),
                         const SizedBox(height: 12),
                         _buildStep('3', 'Return to this app'),
                       ],
@@ -209,12 +222,15 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
                 const SizedBox(height: 32),
 
                 // THIS IS WHERE WE NEED TO DECIDE TO HONORS SYSTEM IT
-                FilledButton.icon(
+                /*FilledButton.icon(
                  
                 ),
+                */
+                const SizedBox(height: 16),
+                
                 OutlinedButton.icon(
                   onPressed: 
-                    _isResending ? null : () => /* ADD SEND EMAIL CONFIG HERE! */,
+                    _isResending ? null : () => _sendInformedConsentEmail(),
                   icon: _isResending
                     ? const SizedBox(
                       width: 16,
@@ -241,6 +257,38 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
           ),
         ),
       ),
+    );
+  }
+
+
+  Widget _buildStep(String number, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      ],
     );
   }
 
