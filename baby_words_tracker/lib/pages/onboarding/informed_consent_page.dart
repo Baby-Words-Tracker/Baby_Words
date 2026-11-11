@@ -30,13 +30,35 @@ class InformedConsentPage extends StatefulWidget {
 
 class _InformedConsentPageState extends State<InformedConsentPage> {
   // what variables do we need? idk
-  
+  bool _isResending = false;
+  Timer? _autoCheckTimer;
+
   final Email email = Email(
     body: 'Hello and Welcome to WordBuds! \n WordBuds is an IRB Certified Research Project hosted by the Literacy Education and Cognitive Science (LECS) lab. Please take the time to fill out the following informed consent form. \n /link goes here/',
     subject: 'Email subject',
     recipients: ['example@example.com'],
   );
 
+  Future<void> _sendInformedConsentEmail({bool isInitial = false}) async {
+    final capabilities = await FlutterEmailSender.getCapabilities();
+
+    if (!capabilities.canSend) {
+      // No configured mail account, simulator, or no available mail client.
+    }
+
+    final result = await FlutterEmailSender.send(email);
+
+    switch (result) {
+      case EmailSendResult.sent:
+      case EmailSendResult.saved:
+      case EmailSendResult.cancelled:
+        // iOS reports how the user left the composer.
+        break;
+      case EmailSendResult.unknown:
+        // Other platforms do not report the outcome.
+        break;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -90,9 +112,135 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
             tooltip: 'Sign Out',
           ),
         ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children:[
+                Icon(
+                  Icons.mark_email_unread_outlined,
+                  size: 100,
+                  color: Theme.of(context). colorScheme.primary,
+                ),
+                const SizedBox(height:32),
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                     children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: 
+                          Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                      const  SizedBox(width: 12),
+                      Expanded(child: Text(
+                        'Please fill out the form to make an account!',
+                        style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium?.copyWith(
+                            color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer,
+                          ),
+                      ),)
+                    ],),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-      )
-      //put the main page in heref
+                //Title
+                Text(
+                  'Fill Out The Form',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+
+                //Instructions
+                Text(
+                  'We\'ve sent a DocuSign Link to email:',
+                  style:Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+
+                //Email address
+                Text(
+                  email,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+
+                //Steps Card - 318
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Next Steps:',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildStep('1', 'Check your email inbox'),
+                        const SizedBox(height: 12),
+                        _buildStep('2', 'Click the verification link'),
+                        const SizedBox(height: 12),
+                        _buildStep('3', 'Return to this app'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // THIS IS WHERE WE NEED TO DECIDE TO HONORS SYSTEM IT
+                FilledButton.icon(
+                 
+                ),
+                OutlinedButton.icon(
+                  onPressed: 
+                    _isResending ? null : () => /* ADD SEND EMAIL CONFIG HERE! */,
+                  icon: _isResending
+                    ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Icon(Icons.refresh),
+                    label: Text(_isResending ? 'Sending...' : 'Resend Email'),
+                ),
+
+              const SizedBox(height: 16),
+
+              //Help Text
+              Text(
+                'Didn\'t get an email? Check your spam folder or tap Resend Email, then use the newest email only.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              ],
+            )
+          ),
+        ),
+      ),
     );
   }
 
