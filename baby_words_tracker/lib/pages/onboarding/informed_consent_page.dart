@@ -71,7 +71,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
               builder: (context) => AlertDialog(
                 title: const Text('Return to Sign In'),
                 content: const Text(
-                  'Signing out will take you back to the sign-in screen so you can fix your email or start over.',
+                  'Signing out will take you back to the sign-in screen. You\'ll need to restart onboarding if you come back later.',
                 ),
                 actions: [
                   TextButton(
