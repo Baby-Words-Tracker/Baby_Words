@@ -6,19 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:provider/provider.dart';
 
-/*
-Requirements for this page:
-
-- send docusign to provided email
-- keep tabs of whether or not info can be stored and used in firebase
-- determine whether an action has happened within the email 
-  - or make a "honor system" button 
-
-considerations: 
-- what if the email bounces?
-- resending possibilities (answers to this in the flutter_email_sender library docs)
-*/ 
-
 class InformedConsentPage extends StatefulWidget {
   static const routeName = '/onboarding/informed-consent';
   
@@ -29,48 +16,39 @@ class InformedConsentPage extends StatefulWidget {
 }
 
 class _InformedConsentPageState extends State<InformedConsentPage> {
-  // what variables do we need? idk
-  bool _isResending = false;
-
+  
   final user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
     // Send initial verification email
-    _sendInformedConsentEmail(isInitial: true);
+    _sendInformedConsentEmail();
   }
 
-  Future<void> _sendInformedConsentEmail({bool isInitial = false}) async {
+  Future<void> _sendInformedConsentEmail() async {
     final capabilities = await FlutterEmailSender.getCapabilities();
 
-    if (!capabilities.canSend) {
-      // No configured mail account, simulator, or no available mail client.
-      // need some kind of error message
+    if (!capabilities.canSend) { 
     }
-      final user = FirebaseAuth.instance.currentUser;
 
-      if (user != null) {
-        final Email email = Email(
-        body: 'Email body',
-        subject: 'Email subject',
-        recipients: ['${user.email}'],
-        );
+    final user = FirebaseAuth.instance.currentUser;
 
-        //send email
-        final result = await FlutterEmailSender.send(email);
+    if (user != null) {
+      final Email email = Email(
+      body: 'Email body',
+      subject: 'Email subject',
+      recipients: ['${user.email}'],
+      );
 
-        switch (result) {
-          case EmailSendResult.sent:
-          case EmailSendResult.saved:
-          case EmailSendResult.cancelled:
-            // iOS reports how the user left the composer.
-            break;
-          case EmailSendResult.unknown:
-            // Other platforms do not report the outcome.
-            break;
-        }
+      try {
+        await FlutterEmailSender.send(email);
+      } on FlutterEmailSenderNotAvailableException {
+        debugPrint('Error: FlutterEmailSenderNotAvailableException');
+      } on FlutterEmailSenderUnsupportedFeatureException catch (error) {
+        debugPrint('Unsupported: ${error.unsupportedFeatures}');
       }
+    }
   }
   @override
   Widget build(BuildContext context) {
@@ -229,23 +207,16 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
                 const SizedBox(height: 16),
                 
                 OutlinedButton.icon(
-                  onPressed: 
-                    _isResending ? null : () => _sendInformedConsentEmail(),
-                  icon: _isResending
-                    ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                    : const Icon(Icons.refresh),
-                    label: Text(_isResending ? 'Sending...' : 'Resend Email'),
+                  onPressed: () => _sendInformedConsentEmail(),
+                  icon:
+                    const Icon(Icons.refresh),
+                    label: Text('Resend Email'),
                 ),
-
               const SizedBox(height: 16),
 
               //Help Text
               Text(
-                'Didn\'t get an email? Check your spam folder or tap Resend Email, then use the newest email only.',
+                'Didn\'t get an email? Check your spam folder or tap Resend Email. Resending an email does not invalidate the original.',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -259,8 +230,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
       ),
     );
   }
-
-
+ 
   Widget _buildStep(String number, String text) {
     return Row(
       children: [
