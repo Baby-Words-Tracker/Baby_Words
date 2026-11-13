@@ -4,6 +4,7 @@ plugins {
     id 'com.google.gms.google-services'
     // END: FlutterFire Configuration
     id "kotlin-android"
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.1.0'
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -64,6 +65,10 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+    buildFeatures {
+        compose true
+    }
+
 }
 
 flutter {
@@ -72,4 +77,8 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}
+
+dependencies {
+    implementation 'androidx.glance:glance-appwidget:1.2.0'
 }
