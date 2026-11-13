@@ -30,14 +30,15 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
     final capabilities = await FlutterEmailSender.getCapabilities();
 
     if (!capabilities.canSend) { 
+      // TODO: figure out routing back to sign-in
     }
 
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
       final Email email = Email(
-      body: 'Email body',
-      subject: 'Email subject',
+      body: 'Hello and Welcome to WordBuds!\nWordBuds is an IRB Certified Research Project hosted by the Literacy Education and Cognitive Science (LECS) lab. Please take the time to fill out the following informed consent form before using the app \n\nhttps://demo.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=8e2e12d9-565e-42f9-ba5a-b8119aafe0d6&env=demo&acct=9cc9cbff-6e45-46a2-b9f7-4a598b1a8cb1&v=2',
+      subject: 'WordBuds Informed Consent Form',
       recipients: ['${user.email}'],
       );
 
