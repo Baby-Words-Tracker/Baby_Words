@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:provider/provider.dart';
 
+//await context.read<AuthenticationService>().signOut();
+
 class InformedConsentPage extends StatefulWidget {
   static const routeName = '/onboarding/informed-consent';
   
@@ -16,7 +18,7 @@ class InformedConsentPage extends StatefulWidget {
 }
 
 class _InformedConsentPageState extends State<InformedConsentPage> {
-  
+  final capabilities = FlutterEmailSender.getCapabilities();
   final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -27,19 +29,12 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
   }
 
   Future<void> _sendInformedConsentEmail() async {
-    final capabilities = await FlutterEmailSender.getCapabilities();
-
-    if (!capabilities.canSend) { 
-      // TODO: figure out routing back to sign-in
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
       final Email email = Email(
       body: 'Hello and Welcome to WordBuds!\nWordBuds is an IRB Certified Research Project hosted by the Literacy Education and Cognitive Science (LECS) lab. Please take the time to fill out the following informed consent form before using the app \n\nhttps://demo.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=8e2e12d9-565e-42f9-ba5a-b8119aafe0d6&env=demo&acct=9cc9cbff-6e45-46a2-b9f7-4a598b1a8cb1&v=2',
       subject: 'WordBuds Informed Consent Form',
-      recipients: ['${user.email}'],
+      recipients: ['${user!.email}'],
       );
 
       try {
@@ -51,10 +46,11 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
       }
     }
   }
+ 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email ?? 'your email';
+    final email = user?.email;
     
     return Scaffold(
       appBar: AppBar(
@@ -105,6 +101,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
           ),
         ],
       ),
+      
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -149,7 +146,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
 
                 //Title
                 Text(
-                  'Fill Out The Form',
+                  'Click the Button Below to Send your Informed Consent Form',
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -165,7 +162,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
 
                 //Email address
                 Text(
-                  email,
+                  email!,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
@@ -200,24 +197,17 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
                 ),
                 const SizedBox(height: 32),
 
-                // THIS IS WHERE WE NEED TO DECIDE TO HONORS SYSTEM IT
-                /*FilledButton.icon(
-                 
-                ),
-                */
-                const SizedBox(height: 16),
-                
                 OutlinedButton.icon(
                   onPressed: () => _sendInformedConsentEmail(),
                   icon:
                     const Icon(Icons.refresh),
-                    label: Text('Resend Email'),
+                    label: Text('Send Email'),
                 ),
               const SizedBox(height: 16),
 
               //Help Text
               Text(
-                'Didn\'t get an email? Check your spam folder or tap Resend Email. Resending an email does not invalidate the original.',
+                'Didn\'t get an email? Check your spam folder or tap Send Email again. Resending an email does not invalidate the original.',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -262,5 +252,4 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
       ],
     );
   }
-
 }

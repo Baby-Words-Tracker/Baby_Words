@@ -17,6 +17,7 @@ import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
 
 //L10n
 import 'package:baby_words_tracker/l10n/localization_service.dart';
+import 'package:baby_words_tracker/pages/onboarding/informed_consent_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 
@@ -353,6 +354,7 @@ class MyApp extends StatelessWidget {
           UploadVideoPage.routeName: (context) => const UploadVideoPage(),
           AdminPage.routeName: (context) => const AdminPage(),
           NotificationsPage.routeName: (context) => const NotificationsPage(),
+          InformedConsentPage.routeName: (context) => const InformedConsentPage(),
         },
         locale:
             Provider.of<LocalizationService>(context, listen: true).getLocale(),
