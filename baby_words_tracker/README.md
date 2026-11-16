@@ -15,6 +15,11 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+## TestFlight deployment
+
+See [Redeploy WordBuds to TestFlight](docs/testflight.md) for signing, building,
+uploading, and adding testers.
+
 ## Developer setup
 
 ### Email verification during local development
