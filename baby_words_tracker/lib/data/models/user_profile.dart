@@ -81,6 +81,7 @@ class UserProfile {
 
   // Privacy & consent (required for all users)
   final bool acceptedPrivacyPolicy;
+  final bool acceptedConsentForm;
   final String? policyVersion;
   final DateTime? consentDate;
 
@@ -120,6 +121,7 @@ class UserProfile {
     this.twoFactorEnabledAt,
     this.acceptedPrivacyPolicy = false,
     this.policyVersion,
+    this.acceptedConsentForm = false,
     this.consentDate,
     this.surveyCompleted = false,
     this.surveyVersion,

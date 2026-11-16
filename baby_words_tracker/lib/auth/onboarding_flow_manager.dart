@@ -10,6 +10,7 @@ enum OnboardingStep {
   emailVerification,
   phoneVerification, // 2FA setup
   privacyPolicy,
+  informedConsent,
   survey,
   completed;
 
@@ -23,6 +24,8 @@ enum OnboardingStep {
         return 'Phone Verification';
       case OnboardingStep.privacyPolicy:
         return 'Privacy Policy';
+      case OnboardingStep.informedConsent:
+        return 'Informed Consent';
       case OnboardingStep.survey:
         return 'Research Survey';
       case OnboardingStep.completed:
@@ -40,6 +43,8 @@ enum OnboardingStep {
         return Icons.phone_outlined;
       case OnboardingStep.privacyPolicy:
         return Icons.policy_outlined;
+      case OnboardingStep.informedConsent:
+        return Icons.email_outlined;
       case OnboardingStep.survey:
         return Icons.assignment_outlined;
       case OnboardingStep.completed:
@@ -65,6 +70,7 @@ class OnboardingFlowManager {
       if (_requirePhoneVerification) OnboardingStep.phoneVerification,
       OnboardingStep.privacyPolicy,
       if (profile.isParent && profile.requiresSurvey) OnboardingStep.survey,
+      OnboardingStep.informedConsent,
       OnboardingStep.completed,
     ];
     return steps;
@@ -104,6 +110,10 @@ class OnboardingFlowManager {
     // Everyone must accept privacy policy
     if (!userProfile.acceptedPrivacyPolicy) {
       return OnboardingStep.privacyPolicy;
+    }
+    if (!userProfile.acceptedConsentForm) {
+      return OnboardingStep.informedConsent;
+      //add qualifier for informed consent!
     }
 
     // Only parents must complete research survey

@@ -257,6 +257,21 @@ class UserProfileModelService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Fill out Informed Consent 
+  Future<void> informedConsent({
+    bool accepted = true,
+  }) async{
+    if (_userProfile == null) {
+      debugPrint("UserProfileModelService: Cannot accept policy - no profile");
+      return;
+    }
+    final success = await _userProfileService.(
+        _userProfile!.id,
+        policyVersion,
+        isDemo: isDemoUser,
+      );
+  }
+
   /// Mark survey as complete
   Future<void> completeSurvey({required String surveyVersion}) async {
     if (_userProfile == null) {
