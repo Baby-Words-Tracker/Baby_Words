@@ -37,26 +37,39 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final DateFormat _dateFormat = DateFormat.MMMd();
 
-  // Cache the current child ID to detect when we need to recreate streams
+ // Cache the current child ID to detect when we need to recreate streams
   String? _currentChildId;
   Stream<int>? _wordCountStream;
   Stream<List<WordTracker>>? _recentWordsStream;
 
   bool _showingShareDialog = false;
 
+  late UserProfileModelService _profileService;
+  bool _initialised = false;
+
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profileService = context.read<UserProfileModelService>();
-      profileService.addListener(_onProfileChanged);
-      _checkPendingShares(profileService);
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_initialised) {
+      _profileService = context.read<UserProfileModelService>();
+      _profileService.addListener(_onProfileChanged);
+      _initialised = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _checkPendingShares(_profileService);
+        }
+      });
+    }
   }
+
 
   @override
   void dispose() {
-    context.read<UserProfileModelService>().removeListener(_onProfileChanged);
+    if (_initialised) {
+      _profileService.removeListener(_onProfileChanged);
+    }
     _wordCountStream = null;
     _recentWordsStream = null;
     super.dispose();
