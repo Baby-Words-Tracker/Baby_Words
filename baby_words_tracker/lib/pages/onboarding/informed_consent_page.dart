@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 //await context.read<AuthenticationService>().signOut();
 
+///Informed Consent form in Onboarding Flow
 class InformedConsentPage extends StatefulWidget {
   static const routeName = '/onboarding/informed-consent';
   

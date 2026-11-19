@@ -9,6 +9,7 @@ import 'package:baby_words_tracker/pages/onboarding/profile_info_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/privacy_policy_page.dart';
 import 'package:baby_words_tracker/pages/onboarding/demographic_survey.dart';
 import 'package:baby_words_tracker/pages/onboarding/survey_page.dart';
+import 'package:baby_words_tracker/pages/onboarding/informed_consent_page.dart';
 import 'package:baby_words_tracker/pages/tutorial/welcome_page.dart';
 import 'package:baby_words_tracker/pages/tutorial/add_first_child_page.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
@@ -130,6 +131,9 @@ class _NewAuthGateState extends State<NewAuthGate> {
           
           case OnboardingStep.privacyPolicy:
             return const PrivacyPolicyPage();
+
+          case OnboardingStep.informedConsent:
+            return const InformedConsentPage();
           
           case OnboardingStep.survey:
             return const DemographicSurveyPage();

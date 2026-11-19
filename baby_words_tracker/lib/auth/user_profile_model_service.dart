@@ -265,11 +265,6 @@ class UserProfileModelService extends ChangeNotifier {
       debugPrint("UserProfileModelService: Cannot accept policy - no profile");
       return;
     }
-    final success = await _userProfileService.(
-        _userProfile!.id,
-        policyVersion,
-        isDemo: isDemoUser,
-      );
   }
 
   /// Mark survey as complete
