@@ -9,6 +9,20 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+// cloud_functions 6.2.x assumes AGP 9 always compiles Kotlin, but Flutter
+// disables built-in Kotlin while our remaining plugins still require KGP.
+subprojects { subproject ->
+    if (subproject.name == "cloud_functions") {
+        subproject.plugins.withId("com.android.library") {
+            if (subproject.findProperty("android.builtInKotlin")?.toString() == "false") {
+                subproject.apply plugin: "org.jetbrains.kotlin.android"
+                subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                    kotlinOptions.jvmTarget = "17"
+                }
+            }
+        }
+    }
+}
 subprojects {
     project.evaluationDependsOn(":app")
 }
