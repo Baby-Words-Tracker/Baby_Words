@@ -109,6 +109,18 @@ class UserProfileService extends ChangeNotifier {
       isDemo: isDemo,
     );
   }
+
+  ///Complete Informed Consent
+  Future<bool> acceptConsentForm(
+    String userId, 
+  ) async {
+    return updateUserProfile(
+      userId,
+      {
+        'acceptedConsentForm': true,
+      },
+    );
+  }
   
   /// Mark survey as complete
   Future<bool> markSurveyComplete(

@@ -222,6 +222,7 @@ class UserProfileModelService extends ChangeNotifier {
   bool get requires2FA => _userProfile?.requires2FA ?? false;
   
   bool get hasAcceptedPrivacyPolicy => _userProfile?.acceptedPrivacyPolicy ?? false;
+  bool get hasCompletedConsentForm => _userProfile?.acceptedConsentForm ?? false;
   bool get hasSurveyCompleted => _userProfile?.surveyCompleted ?? false;
   bool get has2FAEnabled => _userProfile?.twoFactorEnabled ?? false;
 
@@ -254,6 +255,30 @@ class UserProfileModelService extends ChangeNotifier {
     );
     debugPrint(
         "UserProfileModelService: notifyListeners() #${++_notifyCount} - privacy policy accepted");
+    notifyListeners();
+  }
+
+  /// Fill out Informed Consent 
+  Future<void> acceptConsentForm({
+    bool accepted = true,
+  }) async{
+    if (_userProfile == null) {
+      debugPrint("UserProfileModelService: Cannot complete consent form - no profile");
+      return;
+    }
+
+    final success = await _userProfileService.acceptConsentForm(_userProfile!.id);
+
+    if (!success) {
+      throw Exception('Failed to save consent form completion');
+    }
+
+    _userProfile = _userProfile!.copyWith(
+      acceptedConsentForm: accepted,
+    );
+
+    debugPrint(
+        "UserProfileModelService: notifyListeners() #${++_notifyCount} - consent form completed");
     notifyListeners();
   }
 
