@@ -21,6 +21,7 @@ class InformedConsentPage extends StatefulWidget {
 class _InformedConsentPageState extends State<InformedConsentPage> {
   final capabilities = FlutterEmailSender.getCapabilities();
   final user = FirebaseAuth.instance.currentUser;
+  bool _acceptedConsentForm = false;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
     if (user != null) {
       final Email email = Email(
       body: 'Hello and Welcome to WordBuds!\nWordBuds is an IRB Certified Research Project hosted by the Literacy Education and Cognitive Science (LECS) lab. Please take the time to fill out the following informed consent form before using the app \n\nhttps://demo.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=8e2e12d9-565e-42f9-ba5a-b8119aafe0d6&env=demo&acct=9cc9cbff-6e45-46a2-b9f7-4a598b1a8cb1&v=2',
-      subject: 'WordBuds Informed Consent Form',
+      subject: 'WordBuds Consent Form',
       recipients: ['${user!.email}'],
       );
 
@@ -118,36 +119,9 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
                   color: Theme.of(context). colorScheme.primary,
                 ),
                 const SizedBox(height:32),
-                Card(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                     children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        color: 
-                          Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                      const  SizedBox(width: 12),
-                      Expanded(child: Text(
-                        'Please fill out the form to make an account!',
-                        style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium?.copyWith(
-                            color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
-                          ),
-                      ),)
-                    ],),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
                 //Title
                 Text(
-                  'Click the Button Below to Send your Informed Consent Form',
+                  'Informed Consent Collection',
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -155,7 +129,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
 
                 //Instructions
                 Text(
-                  'We\'ve sent a DocuSign Link to email:',
+                  'As this is an IRB-certified research project, we ask that you please read and sign the consent form sent to email:,',
                   style:Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -169,6 +143,25 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+
+                // Checkbox to confirm reading
+                Card(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: CheckboxListTile(
+                    value: _acceptedConsentForm,
+                    onChanged: (value) {
+                      setState(() {
+                        _acceptedConsentForm = value ?? false;
+                      });
+                    },
+                    title: const Text(
+                      'I have read and signed the consent form',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -208,7 +201,7 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
 
               //Help Text
               Text(
-                'Didn\'t get an email? Check your spam folder or tap Send Email again. Resending an email does not invalidate the original.',
+                'Didn\'t get an email? Check your spam folder or tap Resend Email. Resending an email does not invalidate the original.',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

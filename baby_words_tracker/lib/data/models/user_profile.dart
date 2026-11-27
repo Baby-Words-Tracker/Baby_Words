@@ -449,6 +449,7 @@ class UserProfile {
         other.emailVerified == emailVerified &&
         other.twoFactorEnabled == twoFactorEnabled &&
         other.acceptedPrivacyPolicy == acceptedPrivacyPolicy &&
+        other.acceptedConsentForm == acceptedConsentForm &&
         other.surveyCompleted == surveyCompleted &&
         listEquals(other.childIDs, childIDs) &&
         listEquals(other.pendingChildIDs, pendingChildIDs) &&
@@ -470,6 +471,7 @@ class UserProfile {
         emailVerified,
         twoFactorEnabled,
         acceptedPrivacyPolicy,
+        acceptedConsentForm,
         surveyCompleted,
         const DeepCollectionEquality().hash(childIDs),
         const DeepCollectionEquality().hash(pendingChildIDs),
