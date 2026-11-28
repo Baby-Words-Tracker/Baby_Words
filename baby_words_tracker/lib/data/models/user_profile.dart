@@ -195,6 +195,7 @@ class UserProfile {
     DateTime? twoFactorEnabledAt,
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
+    bool? acceptedConsentForm,
     DateTime? consentDate,
     bool? surveyCompleted,
     String? surveyVersion,
@@ -227,6 +228,7 @@ class UserProfile {
           acceptedPrivacyPolicy ?? this.acceptedPrivacyPolicy,
       policyVersion: policyVersion ?? this.policyVersion,
       consentDate: consentDate ?? this.consentDate,
+      acceptedConsentForm: acceptedConsentForm ?? this.acceptedConsentForm,
       surveyCompleted: surveyCompleted ?? this.surveyCompleted,
       surveyVersion: surveyVersion ?? this.surveyVersion,
       surveyCompletedAt: surveyCompletedAt ?? this.surveyCompletedAt,
@@ -262,6 +264,7 @@ class UserProfile {
       'acceptedPrivacyPolicy': acceptedPrivacyPolicy,
       'policyVersion': policyVersion,
       'consentDate': consentDate,
+      'acceptedConsentForm': acceptedConsentForm,
       'surveyCompleted': surveyCompleted,
       'surveyVersion': surveyVersion,
       'surveyCompletedAt': surveyCompletedAt,
@@ -299,6 +302,7 @@ class UserProfile {
       consentDate: map['consentDate'] != null
           ? convertToDateTime(map['consentDate'])
           : null,
+      acceptedConsentForm: map['acceptedConsentForm'] as bool? ?? false,
       surveyCompleted: map['surveyCompleted'] as bool? ?? false,
       surveyVersion: map['surveyVersion'] as String?,
       surveyCompletedAt: map['surveyCompletedAt'] != null
@@ -368,6 +372,7 @@ class UserProfile {
     bool? acceptedPrivacyPolicy,
     String? policyVersion,
     DateTime? consentDate,
+    bool? acceptedConsentForm,
     bool? surveyCompleted,
     String? surveyVersion,
     DateTime? surveyCompletedAt,
@@ -401,6 +406,7 @@ class UserProfile {
     }
     if (policyVersion != null) map['policyVersion'] = policyVersion;
     if (consentDate != null) map['consentDate'] = consentDate;
+    if (acceptedConsentForm != null) map['acceptedConsentForm'] = acceptedConsentForm;
     if (surveyCompleted != null) map['surveyCompleted'] = surveyCompleted;
     if (surveyVersion != null) map['surveyVersion'] = surveyVersion;
     if (surveyCompletedAt != null) map['surveyCompletedAt'] = surveyCompletedAt;

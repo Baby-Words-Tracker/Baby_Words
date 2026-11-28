@@ -1,10 +1,11 @@
 import 'dart:async';
-
 import 'package:baby_words_tracker/auth/authentication_service.dart';
+import 'package:baby_words_tracker/auth/user_profile_model_service.dart';
+import 'package:baby_words_tracker/util/policies_and_consent/consent_form_information.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 //await context.read<AuthenticationService>().signOut();
 
@@ -19,40 +20,87 @@ class InformedConsentPage extends StatefulWidget {
 }
 
 class _InformedConsentPageState extends State<InformedConsentPage> {
-  final capabilities = FlutterEmailSender.getCapabilities();
   final user = FirebaseAuth.instance.currentUser;
-  bool _acceptedConsentForm = false;
+  bool _hasReadForm = false;
+  bool _completedConsentForm = false;
 
   @override
   void initState() {
     super.initState();
-    // Send initial verification email
-    _sendInformedConsentEmail();
   }
 
-  Future<void> _sendInformedConsentEmail() async {
+  Future<void> _openConsentForm() async {
+    final url = Uri.parse(ConsentFormInformation.consentFormUrl);
 
-    if (user != null) {
-      final Email email = Email(
-      body: 'Hello and Welcome to WordBuds!\nWordBuds is an IRB Certified Research Project hosted by the Literacy Education and Cognitive Science (LECS) lab. Please take the time to fill out the following informed consent form before using the app \n\nhttps://demo.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=8e2e12d9-565e-42f9-ba5a-b8119aafe0d6&env=demo&acct=9cc9cbff-6e45-46a2-b9f7-4a598b1a8cb1&v=2',
-      subject: 'WordBuds Consent Form',
-      recipients: ['${user!.email}'],
-      );
-
-      try {
-        await FlutterEmailSender.send(email);
-      } on FlutterEmailSenderNotAvailableException {
-        debugPrint('Error: FlutterEmailSenderNotAvailableException');
-      } on FlutterEmailSenderUnsupportedFeatureException catch (error) {
-        debugPrint('Unsupported: ${error.unsupportedFeatures}');
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open consent form link'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
+    } catch (e) {
+      debugPrint('InformedConsentPage: Error opening URL: $e');
     }
   }
- 
+
+  Future<void> _completeConsentForm() async {  
+    if (!_hasReadForm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please confirm that you have read and signed the consent form'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+      setState(() {
+        _completedConsentForm = true;
+      });
+
+      try {
+
+        final userModelService = context.read<UserProfileModelService>();
+        await userModelService.acceptConsentForm();
+
+        debugPrint('InformedConsentPage: Consent Form Completed');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Consent Form Completed'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        // AuthGate will automatically navigate to next step
+      } catch (e) {
+        debugPrint('InformedConsentPage: Error completing form: $e');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error completing form: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _completedConsentForm = false;
+          });
+        }
+      }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email;
     
     return Scaffold(
       appBar: AppBar(
@@ -114,11 +162,11 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children:[
                 Icon(
-                  Icons.mark_email_unread_outlined,
+                  Icons.checklist,
                   size: 100,
                   color: Theme.of(context). colorScheme.primary,
                 ),
-                const SizedBox(height:32),
+                const SizedBox(height:24),
                 //Title
                 Text(
                   'Informed Consent Collection',
@@ -129,85 +177,58 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
 
                 //Instructions
                 Text(
-                  'As this is an IRB-certified research project, we ask that you please read and sign the consent form sent to email:,',
+                  'As this is an IRB-certified research project, we ask that you please read and sign the consent form found by clicking the button below',
                   style:Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
 
-                //Email address
-                Text(
-                  email!,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-
-                // Checkbox to confirm reading
-                Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: CheckboxListTile(
-                    value: _acceptedConsentForm,
-                    onChanged: (value) {
-                      setState(() {
-                        _acceptedConsentForm = value ?? false;
-                      });
-                    },
-                    title: const Text(
-                      'I have read and signed the consent form',
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                //Steps Card - 318
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Next Steps:',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildStep('1', 'Check your email inbox'),
-                        const SizedBox(height: 12),
-                        _buildStep('2', 'Fill out the linked form'),
-                        const SizedBox(height: 12),
-                        _buildStep('3', 'Return to this app'),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                OutlinedButton.icon(
-                  onPressed: () => _sendInformedConsentEmail(),
+                 OutlinedButton.icon(
+                  onPressed: () => _openConsentForm(),
                   icon:
-                    const Icon(Icons.refresh),
-                    label: Text('Send Email'),
+                    const Icon(Icons.open_in_browser),
+                    label: Text('View Form'),
                 ),
               const SizedBox(height: 16),
 
-              //Help Text
-              Text(
-                'Didn\'t get an email? Check your spam folder or tap Resend Email. Resending an email does not invalidate the original.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
+              // Checkbox to confirm reading
+              Card(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: CheckboxListTile(
+                  value: _hasReadForm,
+                  onChanged: (value) {
+                    setState(() {
+                      _hasReadForm = value ?? false;
+                    });
+                  },
+                  title: const Text(
+                    'I certify that I have read and signed the consent form',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
                 ),
-                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 24),
+
+               FilledButton.icon(
+                  onPressed: (_completedConsentForm || !_hasReadForm)
+                      ? null
+                      : _completeConsentForm,
+                  icon: _completedConsentForm
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.check_circle),
+                  label: Text(
+                      _completedConsentForm ? 'Accepting...' : 'Accept and Continue'),
+                ),
+
               ],
             )
           ),
@@ -216,34 +237,4 @@ class _InformedConsentPageState extends State<InformedConsentPage> {
     );
   }
  
-  Widget _buildStep(String number, String text) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              number,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ),
-      ],
-    );
-  }
 }
